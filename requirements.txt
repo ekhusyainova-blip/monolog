@@ -2,3 +2,5 @@ gradio
 supabase
 groq
 requests
+gunicorn
+uvicorn
