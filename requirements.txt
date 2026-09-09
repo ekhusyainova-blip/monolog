@@ -1,7 +1,8 @@
 gradio==4.44.0
 huggingface-hub==0.24.0
-supabase
+supabase==2.5.0
 groq
 requests
 gunicorn
 uvicorn
+websockets==12.0
