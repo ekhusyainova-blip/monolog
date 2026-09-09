@@ -1,118 +1,76 @@
 import os
-import requests
-import json
-import time
-from datetime import datetime
 import gradio as gr
 from supabase import create_client, Client
 from groq import Groq
 
-# === НАСТРОИКИ ИЗ ПЕРЕМЕННЫХ ОКРУЖЕНИЯ ===
+# === ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ ===
 SUPABASE_URL = os.environ.get("SUPABASE_URL")
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 
-# === ПОДКЛЮЧЕНИЕ К БАЗЕ ДАННЫХ ===
+# === ПОДКЛЮЧЕНИЯ ===
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-# === ЛОГИКА АЛГОРИТМА (ЦИКЛЫ, ИНДЕКСЫ, ФИЛЬТРЫ) ===
-def process_query(user_query, session_id):
-    # 1. Сохраняем запрос в БД
-    supabase.table("chats").insert({
-        "session_id": session_id,
-        "role": "user",
-        "content": user_query,
-        "timestamp": datetime.now().isoformat()
-    }).execute()
+# === ФУНКЦИЯ ОБРАБОТКИ СООБЩЕНИЙ (ОСНОВНАЯ ЛОГИКА) ===
+def process_query(user_query, session_id="default"):
+    # 1. Сохраняем запрос в БД (опционально)
+    try:
+        supabase.table("chats").insert({
+            "session_id": session_id,
+            "role": "user",
+            "content": user_query,
+            "timestamp": "now()"
+        }).execute()
+    except Exception as e:
+        print(f"Ошибка сохранения в Supabase: {e}")
     
-    # 2. Вызов Groq для генерации ответа (с промптом алгоритма)
+    # 2. Генерация ответа через Groq
     prompt = f"""
-    Ты — ИИ-агент, работающии по когнитивнои модели с циклами мышления.
+    Ты — ИИ-агент, работающий по когнитивной модели с циклами мышления.
     Запрос пользователя: {user_query}
     
     Ответь в формате:
     1. Индекс стабильности ответа (0–1)
-    2. Основнои ответ
-    3. Стратегическии ориентир
-    4. Ближаишии шаг
+    2. Основной ответ
+    3. Стратегический ориентир
+    4. Ближайший шаг
     """
     
-    completion = groq_client.chat.completions.create(
-        model="llama-3.1-8b-instant",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7
-    )
-    reply = completion.choices[0].message.content
+    try:
+        completion = groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.7
+        )
+        reply = completion.choices[0].message.content
+    except Exception as e:
+        reply = f"Ошибка вызова Groq: {e}. Проверьте API-ключ."
     
     # 3. Сохраняем ответ в БД
-    supabase.table("chats").insert({
-        "session_id": session_id,
-        "role": "assistant",
-        "content": reply,
-        "timestamp": datetime.now().isoformat()
-    }).execute()
+    try:
+        supabase.table("chats").insert({
+            "session_id": session_id,
+            "role": "assistant",
+            "content": reply,
+            "timestamp": "now()"
+        }).execute()
+    except Exception as e:
+        print(f"Ошибка сохранения ответа: {e}")
     
     return reply
 
-# === ВЕБ-ИНТЕРФЕЙС (Gradio) ===
-import gradio as gr
-
+# === ПРОСТОЙ ИНТЕРФЕЙС (ChatInterface) ===
 def chat_interface(message, history):
-    if not message:
-        return history, ""
-    
-    # Здесь вставьте вашу логику обработки запроса (через Groq и Supabase)
-    # Пока для теста — простой ответ:
-    reply = f"Вы спросили: {message}. Я — ваш ИИ-агент, работаю по алгоритму."
-    
-    history = history or []
-    history.append((message, reply))
-    return history, ""
-
-# === ИНТЕРФЕЙС ===
-with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue"), title="Ваш ИИ-агент") as demo:
-    gr.Markdown("# 🤖 Ваш когнитивный агент")
-    gr.Markdown("Введите задачу, и агент предложит стабильное решение.")
-    
-    chatbot = gr.Chatbot(label="Диалог с агентом")
-    msg = gr.Textbox(label="Ваш запрос", placeholder="Напишите здесь...")
-    clear = gr.ClearButton([msg, chatbot])
-    
-    # ПРАВИЛЬНАЯ ПРИВЯЗКА (исправлено)
-    msg.submit(chat_interface, inputs=[msg, chatbot], outputs=[chatbot, msg])
-
-# === СОЗДАНИЕ ТАБЛИЦ В SUPABASE (выполняется один раз) ===
-def init_db():
-    try:
-        # Проверяем, есть ли таблица "chats"
-        supabase.table("chats").select("*").limit(1).execute()
-    except:
-        # Если нет — создаем через SQL (выполнить вручную в Supabase SQL Editor)
-        print("Таблица не наидена. Выполните SQL-скрипт из инструкции.")
-
-# === АВТОПИНГ (чтобы Render не засыпал) ===
-def keep_alive():
-    try:
-        requests.get("https://your-app-name.onrender.com")
-    except:
-        pass
+    return process_query(message)
 
 # === ЗАПУСК ===
-with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue"), title="Ваш ИИ-агент") as demo:
-    gr.Markdown("# 🤖 Ваш когнитивныи агент")
-    gr.Markdown("Введите задачу, и агент предложит стабильное решение по вашему алгоритму.")
-    
-    chatbot = gr.Chatbot()
-    msg = gr.Textbox(label="Ваш запрос", placeholder="Напишите здесь...")
-    clear = gr.ClearButton([msg, chatbot])
-    
-    def respond(message, chat_history):
-        reply = chat_interface(message, None)
-        chat_history.append((message, reply))
-        return "", chat_history
-    
-    msg.submit(respond, [msg, chatbot], [msg, chatbot])
+demo = gr.ChatInterface(
+    fn=chat_interface,
+    title="🤖 Ваш когнитивный агент",
+    description="Введите задачу, и агент предложит стабильное решение по вашему алгоритму.",
+    theme=gr.themes.Soft(primary_hue="blue")
+)
 
 if __name__ == "__main__":
     demo.launch()
