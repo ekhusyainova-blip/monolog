@@ -56,35 +56,31 @@ def process_query(user_query, session_id):
     return reply
 
 # === ВЕБ-ИНТЕРФЕЙС (Gradio) ===
+import gradio as gr
+
 def chat_interface(message, history):
     if not message:
         return history, ""
     
-    # Генерация ответа агента (имитация или через Groq)
-    reply = process_query(message, "session_123")  # Здесь process_query из вашего кода
+    # Здесь вставьте вашу логику обработки запроса (через Groq и Supabase)
+    # Пока для теста — простой ответ:
+    reply = f"Вы спросили: {message}. Я — ваш ИИ-агент, работаю по алгоритму."
     
-    # Добавляем в историю
     history = history or []
     history.append((message, reply))
     return history, ""
 
-# === СОЗДАНИЕ ИНТЕРФЕЙСА ===
+# === ИНТЕРФЕЙС ===
 with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue"), title="Ваш ИИ-агент") as demo:
     gr.Markdown("# 🤖 Ваш когнитивный агент")
-    gr.Markdown("Введите задачу, и агент предложит стабильное решение по вашему алгоритму.")
+    gr.Markdown("Введите задачу, и агент предложит стабильное решение.")
     
     chatbot = gr.Chatbot(label="Диалог с агентом")
     msg = gr.Textbox(label="Ваш запрос", placeholder="Напишите здесь...")
     clear = gr.ClearButton([msg, chatbot])
     
-    # Правильная привязка событий
-    msg.submit(chat_interface, [msg, chatbot], [chatbot, msg])
-    # Или для кнопки отправки:
-    # send_btn = gr.Button("Отправить")
-    # send_btn.click(chat_interface, [msg, chatbot], [chatbot, msg])
-
-if __name__ == "__main__":
-    demo.launch()
+    # ПРАВИЛЬНАЯ ПРИВЯЗКА (исправлено)
+    msg.submit(chat_interface, inputs=[msg, chatbot], outputs=[chatbot, msg])
 
 # === СОЗДАНИЕ ТАБЛИЦ В SUPABASE (выполняется один раз) ===
 def init_db():
