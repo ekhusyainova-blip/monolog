@@ -55,11 +55,36 @@ def process_query(user_query, session_id):
     
     return reply
 
-# === ВЕБ-ИНТЕРФЕИС (Gradio) ===
+# === ВЕБ-ИНТЕРФЕЙС (Gradio) ===
 def chat_interface(message, history):
-    session_id = str(time.time())  # простая сессия
-    reply = process_query(message, session_id)
-    return reply
+    if not message:
+        return history, ""
+    
+    # Генерация ответа агента (имитация или через Groq)
+    reply = process_query(message, "session_123")  # Здесь process_query из вашего кода
+    
+    # Добавляем в историю
+    history = history or []
+    history.append((message, reply))
+    return history, ""
+
+# === СОЗДАНИЕ ИНТЕРФЕЙСА ===
+with gr.Blocks(theme=gr.themes.Soft(primary_hue="blue"), title="Ваш ИИ-агент") as demo:
+    gr.Markdown("# 🤖 Ваш когнитивный агент")
+    gr.Markdown("Введите задачу, и агент предложит стабильное решение по вашему алгоритму.")
+    
+    chatbot = gr.Chatbot(label="Диалог с агентом")
+    msg = gr.Textbox(label="Ваш запрос", placeholder="Напишите здесь...")
+    clear = gr.ClearButton([msg, chatbot])
+    
+    # Правильная привязка событий
+    msg.submit(chat_interface, [msg, chatbot], [chatbot, msg])
+    # Или для кнопки отправки:
+    # send_btn = gr.Button("Отправить")
+    # send_btn.click(chat_interface, [msg, chatbot], [chatbot, msg])
+
+if __name__ == "__main__":
+    demo.launch()
 
 # === СОЗДАНИЕ ТАБЛИЦ В SUPABASE (выполняется один раз) ===
 def init_db():
