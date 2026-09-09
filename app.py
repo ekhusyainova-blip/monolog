@@ -76,12 +76,15 @@ def chat_interface(message, history):
     return process_query(message)
 
 # === ЗАПУСК ===
-demo = gr.ChatInterface(
+# Переименовываем demo в app, чтобы сервер мог его найти
+app = gr.ChatInterface(
     fn=chat_interface,
     title="🤖 Ваш когнитивный агент",
     description="Введите задачу, и агент предложит стабильное решение по вашему алгоритму.",
     theme=gr.themes.Soft(primary_hue="blue")
 )
 
+# Этот блок будет игнорироваться при запуске на Render, но полезен для локальных тестов
 if __name__ == "__main__":
-    demo.launch()
+    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
+
