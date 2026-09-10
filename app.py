@@ -4,24 +4,19 @@ from supabase import create_client, Client
 from groq import Groq
 
 # === ПЕРЕМЕННЫЕ ОКРУЖЕНИЯ ===
-# .strip() автоматически удалит случайные пробелы по краям
 SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 
-# === ЗАЩИТНАЯ ПРОВЕРКА ===
-if not SUPABASE_URL or not SUPABASE_URL.startswith("https://"):
-    raise ValueError(f"КРИТИЧЕСКАЯ ОШИБКА: SUPABASE_URL не задан или некорректен! Проверьте настройки Render. Получено: '{SUPABASE_URL}'")
-
-if not SUPABASE_KEY:
-    raise ValueError("КРИТИЧЕСКАЯ ОШИБКА: SUPABASE_KEY не задан! Проверьте настройки Render.")
-
-if not GROQ_API_KEY:
-    raise ValueError("КРИТИЧЕСКАЯ ОШИБКА: GROQ_API_KEY не задан! Проверьте настройки Render.")
+# === ВРЕМЕННАЯ ДИАГНОСТИКА (ВСТАВИТЬ РОВНО СЮДА) ===
+print(f"!!! DEBUG URL: длина={len(SUPABASE_URL)}, начало='{SUPABASE_URL[:15]}'")
+print(f"!!! DEBUG KEY: длина={len(SUPABASE_KEY)}, начало='{SUPABASE_KEY[:10]}'")
+print(f"!!! DEBUG GROQ: длина={len(GROQ_API_KEY)}")
+# ====================================================
 
 # === ИНИЦИАЛИЗАЦИЯ КЛИЕНТОВ ===
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
-groq_client = Groq(api_key=GROQ_API_KEY)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) # <-- Это строка ~23, где происходит краш
+
 
 # === ФУНКЦИЯ ОБРАБОТКИ СООБЩЕНИЙ (ОСНОВНАЯ ЛОГИКА) ===
 def process_query(user_query, session_id="default"):
