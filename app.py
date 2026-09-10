@@ -8,12 +8,6 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "").strip()
 SUPABASE_KEY = os.environ.get("SUPABASE_KEY", "").strip()
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "").strip()
 
-# === ВРЕМЕННАЯ ДИАГНОСТИКА (ВСТАВИТЬ РОВНО СЮДА) ===
-print(f"!!! DEBUG URL: длина={len(SUPABASE_URL)}, начало='{SUPABASE_URL[:15]}'")
-print(f"!!! DEBUG KEY: длина={len(SUPABASE_KEY)}, начало='{SUPABASE_KEY[:10]}'")
-print(f"!!! DEBUG GROQ: длина={len(GROQ_API_KEY)}")
-# ====================================================
-
 # === ИНИЦИАЛИЗАЦИЯ КЛИЕНТОВ ===
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY) # <-- Это строка ~23, где происходит краш
 
@@ -70,16 +64,4 @@ def process_query(user_query, session_id="default"):
 def chat_interface(message, history):
     return process_query(message)
 
-# === ЗАПУСК ===
-# Переименовываем demo в app, чтобы сервер мог его найти
-app = gr.ChatInterface(
-    fn=chat_interface,
-    title="🤖 Ваш когнитивный агент",
-    description="Введите задачу, и агент предложит стабильное решение по вашему алгоритму.",
-    theme=gr.themes.Soft(primary_hue="blue")
-)
-
-# Этот блок будет игнорироваться при запуске на Render, но полезен для локальных тестов
-if __name__ == "__main__":
-    app.launch(server_name="0.0.0.0", server_port=int(os.environ.get("PORT", 7860)))
-
+print
