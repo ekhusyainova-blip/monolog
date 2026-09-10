@@ -51,7 +51,7 @@ def process_query(user_query, session_id="default"):
 
     try:
         completion = groq_client.chat.completions.create(
-            model="openai/gpt-oss-120b",
+            model="llama-3.1-8b-instant",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.7
         )
