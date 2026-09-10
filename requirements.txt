@@ -6,3 +6,5 @@ requests
 gunicorn
 uvicorn
 websockets==12.0
+starlette<1.0.0
+fastapi<0.116.0
