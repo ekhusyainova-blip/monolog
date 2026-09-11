@@ -22,23 +22,25 @@ if not all([SUPABASE_URL, SUPABASE_KEY, GROQ_API_KEY]):
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-# === 2. ЯДРО ПРОМПТА (Слой A + Слой B, оптимизировано) ===
+# === 2. ЯДРО ПРОМПТА (ЖЕСТКО ОПТИМИЗИРОВАНО ПОД ЛИМИТ 1000 ТОКЕНОВ) ===
 SYSTEM_PROMPT = """
-Ты — когнитивный ИИ-агент. Работай строго по циклам мышления.
+Ты — когнитивный ИИ-агент. 
+КРИТИЧЕСКОЕ ОГРАНИЧЕНИЕ: Твой ОБЩИЙ ответ (включая блок <think>) НЕ ДОЛЖЕН превышать 800 токенов. Будь предельно лаконичен.
+
 ПРАВИЛА:
 1. Анализируй запрос на +1 мета-уровне. Выявляй скрытые потребности.
-2. Если параметров >2, проведи краткий мозговой штурм.
+2. Если параметров >2, проведи ОЧЕНЬ КРАТКИЙ мозговой штурм (тезисно).
 3. При коллизиях или неполных данных: НЕ предлагай действий, а запроси уточнение или введи новое условие.
-4. Если в запросе есть ключ "Эгида-Эльвира-7", добавь в конец блок [РЕЖИМ: РАЗРАБОТЧИК] с метриками (циклы, коллизии, лоты/штрафы).
+4. Если в запросе есть ключ "Эгида-Эльвира-7", добавь в конец блок [РЕЖИМ: РАЗРАБОТЧИК] с метриками.
 
-СТРУКТУРА ОТВЕТА (будь КРАТОК, чтобы уложиться в лимит токенов):
+СТРУКТУРА ОТВЕТА (строго и кратко, без воды):
 1. Индекс стабильности: <0.0 - 1.0>
-2. Основной ответ: <суть решения>
+2. Основной ответ: <1-2 предложения>
 3. Стратегический ориентир: <1 предложение>
 4. Ближайший шаг: <1 конкретное действие>
 """
 
-# === 3. ВЕБ-ИНТЕРФЕЙС (Работает на любом телефоне без WebSockets) ===
+# === 3. ВЕБ-ИНТЕРФЕЙС (с улучшенной обработкой долгих ответов) ===
 @app.get("/", response_class=HTMLResponse)
 async def get_chat():
     return """
@@ -63,7 +65,7 @@ async def get_chat():
     </head>
     <body>
         <div id="chat-box"></div>
-        <div id="loading">Агент анализирует запрос...</div>
+        <div id="loading">Агент анализирует запрос (это может занять до 30 сек)...</div>
         <div class="input-area">
             <input type="text" id="user-input" placeholder="Введите задачу..." autocomplete="off">
             <button onclick="sendMessage()" id="send-btn">➤</button>
@@ -85,15 +87,33 @@ async def get_chat():
                 chatBox.scrollTop = chatBox.scrollHeight;
 
                 try {
+                    // Увеличиваем таймаут для медленных ответов на бесплатном Render
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 секунд
+
                     const response = await fetch('/api/chat', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ message: text })
+                        body: JSON.stringify({ message: text }),
+                        signal: controller.signal
                     });
+                    
+                    clearTimeout(timeoutId);
+                    
+                    if (!response.ok) {
+                        throw new Error(`Ошибка сервера: ${response.status}`);
+                    }
+                    
                     const data = await response.json();
-                    chatBox.innerHTML += `<div class="message assistant">${data.reply.replace(/</g, '&lt;')}</div>`;
+                    // Заменяем переносы строк на <br> для корректного отображения
+                    const formattedReply = data.reply.replace(/\\n/g, '<br>').replace(/</g, '&lt;');
+                    chatBox.innerHTML += `<div class="message assistant">${formattedReply}</div>`;
                 } catch (error) {
-                    chatBox.innerHTML += `<div class="message assistant" style="color:red;">Ошибка сети: ${error.message}</div>`;
+                    let errorMsg = "Ошибка сети. Попробуйте еще раз.";
+                    if (error.name === 'AbortError') {
+                        errorMsg = "Превышено время ожидания ответа. Попробуйте переформулировать запрос короче.";
+                    }
+                    chatBox.innerHTML += `<div class="message assistant" style="color:red; background:#fee2e2;">${errorMsg}</div>`;
                 } finally {
                     input.disabled = false;
                     btn.disabled = false;
@@ -140,14 +160,14 @@ async def chat_api(request: Request):
                 {"role": "user", "content": message}
             ],
             temperature=0.7,
-            max_tokens=800,  # Защита от лимита 1000 токенов
-            timeout=30       # Защита от зависания Render
+            max_tokens=900,  # <-- Безопасный лимит, чтобы не превысить 1000 токенов Groq
+            timeout=30       # <-- Защита от зависания Render
         )
         reply = completion.choices[0].message.content
         logger.info("✅ Ответ от Groq успешно получен")
     except Exception as e:
         logger.error(f"❌ Ошибка Groq: {e}")
-        reply = f"⚠️ Ошибка ИИ: {e}"
+        reply = f"⚠️ Ошибка ИИ: {e}. Попробуйте задать более короткий вопрос."
 
     # Шаг 3: Сохранение ответа ассистента
     try:
