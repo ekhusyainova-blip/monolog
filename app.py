@@ -205,20 +205,31 @@ async def chat(request: Request):
     body = await request.json()
     user_message = (body.get("message") or "").strip()
     history = body.get("history") or []
-    if not user_message:
+    attachments = body.get("attachments") or []
+
+    if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
 
     api_key, source = pick_key(request)
     if not api_key:
         raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ Groq.")
 
-    log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)}")
+    log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)} | files={len(attachments)}")
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
     for h in history[-4:]:
         if h.get("role") and h.get("content"):
             messages.append({"role": h["role"], "content": h["content"]})
-    messages.append({"role": "user", "content": user_message})
+
+    # Вложения добавляются как отдельный блок
+    user_content = user_message or "Проанализируй вложения."
+    if attachments:
+        block = "\n\n=== ВЛОЖЕНИЯ ===\n"
+        for a in attachments[:3]:
+            block += f"\n[Файл: {a.get('name', 'без имени')}]\n{a.get('text', '')}\n"
+        user_content = user_content + block
+
+    messages.append({"role": "user", "content": user_content})
 
     raw = await groq_call(messages, api_key)
 
@@ -238,7 +249,6 @@ async def chat(request: Request):
         "metrics": {**BASE_METRICS, "protocol_integrity": False, "indicator_status": "warning"},
         "key_source": source,
     })
-
 
 if __name__ == "__main__":
     import uvicorn
