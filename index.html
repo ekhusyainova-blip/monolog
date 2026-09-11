@@ -182,7 +182,6 @@
   }
   @keyframes fadeIn { to { opacity: 1; } }
 
-  /* Сообщения: пользователь — плашка, агент — без */
   .row.user .bubble {
     background: var(--accent-soft);
     padding: 10px 14px;
@@ -205,11 +204,9 @@
     position: relative;
   }
 
-  /* Кнопка копирования сообщения */
   .msg-copy {
     position: absolute;
-    top: 0;
-    right: 0;
+    top: 0; right: 0;
     width: 28px; height: 28px;
     border-radius: 8px;
     border: 1px solid var(--border);
@@ -229,11 +226,9 @@
   .msg-copy:active { transform: scale(0.92); }
   .msg-copy svg { width: 14px; height: 14px; }
 
-  /* Кнопка "важное" */
   .msg-important {
     position: absolute;
-    top: 0;
-    right: 34px;
+    top: 0; right: 34px;
     width: 28px; height: 28px;
     border-radius: 8px;
     border: 1px solid var(--border);
@@ -253,7 +248,6 @@
   .msg-important.active svg { fill: var(--warning); }
   .msg-important svg { width: 13px; height: 13px; }
 
-  /* Markdown */
   .bubble h1, .bubble h2, .bubble h3 {
     margin: 14px 0 6px;
     line-height: 1.3;
@@ -277,11 +271,7 @@
     margin: 8px 0;
     color: var(--muted);
   }
-  .bubble hr {
-    border: none;
-    border-top: 1px solid var(--border);
-    margin: 12px 0;
-  }
+  .bubble hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
   .bubble code {
     background: var(--surface-2);
     padding: 1px 5px;
@@ -334,7 +324,6 @@
   }
   .bubble table th { font-weight: 600; font-size: 12.5px; }
 
-  /* Индикатор «думает» */
   .typing { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
   .typing span {
     width: 5px; height: 5px; border-radius: 50%;
@@ -354,7 +343,6 @@
     font-style: italic;
   }
 
-  /* Вложения */
   .attach-preview {
     display: flex;
     flex-wrap: wrap;
@@ -381,7 +369,6 @@
   }
   .attach-chip .remove:hover { color: var(--text); }
 
-  /* Input */
   .input-wrap {
     flex-shrink: 0;
     padding: 8px 0 calc(12px + var(--safe-bottom));
@@ -449,7 +436,7 @@
   .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .send-btn svg { width: 16px; height: 16px; }
 
-  /* Sheet (метрики) */
+  /* Sheet */
   .sheet-bg {
     position: fixed;
     inset: 0;
@@ -463,7 +450,7 @@
   .sheet {
     position: fixed;
     left: 0; right: 0; bottom: 0;
-    max-height: 80dvh;
+    max-height: 85dvh;
     background: var(--surface);
     border-radius: 20px 20px 0 0;
     padding: 12px 20px calc(20px + var(--safe-bottom));
@@ -520,6 +507,118 @@
   }
   .progress-fill.warning { background: var(--warning); }
   .progress-fill.critical { background: var(--critical); }
+
+  /* Паспорт проекта */
+  .passport-level {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .passport-title {
+    font-size: 20px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+  .passport-goal {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin-bottom: 18px;
+    line-height: 1.45;
+  }
+  .passport-field {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .passport-field:last-child { border-bottom: none; }
+  .passport-field-label {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 5px;
+  }
+  .passport-field-value {
+    font-size: 14px;
+    line-height: 1.5;
+    word-wrap: break-word;
+  }
+  .passport-field-value ul { list-style: none; padding: 0; margin: 0; }
+  .passport-field-value li {
+    padding: 3px 0 3px 14px;
+    position: relative;
+    font-size: 13.5px;
+  }
+  .passport-field-value li::before {
+    content: "";
+    position: absolute;
+    left: 2px;
+    top: 12px;
+    width: 4px; height: 4px;
+    background: var(--accent);
+    border-radius: 50%;
+  }
+
+  /* Профиль — ценностный компас */
+  .compass-wrap {
+    display: flex;
+    justify-content: center;
+    padding: 8px 0 14px;
+  }
+  .compass-svg { width: 220px; height: 220px; }
+  .compass-axis { stroke: var(--border); stroke-width: 1; fill: none; }
+  .compass-ring { stroke: var(--border); stroke-width: 1; fill: none; }
+  .compass-fill {
+    fill: var(--accent-soft);
+    stroke: var(--accent);
+    stroke-width: 1.5;
+    transition: opacity 0.3s;
+  }
+  .compass-label {
+    font-size: 9px;
+    fill: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .compass-dot {
+    fill: var(--accent);
+  }
+
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 10px;
+    background: var(--surface-2);
+    border-radius: 999px;
+    font-size: 12px;
+    color: var(--text);
+  }
+  .tag.warm { background: rgba(198, 139, 63, 0.12); color: var(--warning); }
+
+  .empty-note {
+    font-size: 13px;
+    color: var(--muted);
+    font-style: italic;
+    padding: 10px 0;
+  }
 
   /* Modal */
   .modal-bg {
@@ -625,7 +724,6 @@
   .modal .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
   .modal .danger { background: var(--critical); color: #fff; }
 
-  /* Частичный сброс — список сообщений */
   .reset-list {
     max-height: 40dvh;
     overflow-y: auto;
@@ -662,7 +760,6 @@
     margin-bottom: 2px;
   }
 
-  /* Toast */
   .toast {
     position: fixed;
     bottom: calc(80px + var(--safe-bottom));
@@ -714,6 +811,13 @@
         <span class="stability-bar"><span class="stability-fill" id="chipFill"></span></span>
         <span id="chipValue">—</span>
       </button>
+      <button class="icon-btn" id="passportBtn" title="Паспорт проекта">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/>
+          <path d="M8 13h8M8 17h5"/>
+        </svg>
+      </button>
       <button class="icon-btn" id="resetBtn" title="Управление контекстом">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
@@ -750,6 +854,7 @@
   </div>
 </div>
 
+<!-- Sheet: метрики -->
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="sheetHandle"></div>
@@ -775,7 +880,19 @@
   <div class="metric"><div class="metric-row"><span>Ключ</span><span id="mKeySource">—</span></div></div>
 </div>
 
-<!-- Модальное окно сброса -->
+<!-- Sheet: паспорт проекта -->
+<div class="sheet" id="passportSheet">
+  <div class="sheet-handle" id="passportHandle"></div>
+  <div id="passportContent"></div>
+</div>
+
+<!-- Sheet: профиль -->
+<div class="sheet" id="profileSheet">
+  <div class="sheet-handle" id="profileHandle"></div>
+  <div id="profileContent"></div>
+</div>
+
+<!-- Modal: управление контекстом -->
 <div class="modal-bg" id="resetModalBg">
   <div class="modal">
     <h2>Управление контекстом</h2>
@@ -799,7 +916,7 @@
   </div>
 </div>
 
-<!-- Модальное окно настроек -->
+<!-- Modal: настройки -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <h2>Настройки</h2>
@@ -817,8 +934,11 @@
     </div>
 
     <div class="row">
+      <button class="action ghost" id="profileBtn">Профиль</button>
       <button class="action ghost" id="exportData">Экспорт</button>
       <button class="action ghost" id="importData">Импорт</button>
+    </div>
+    <div class="row">
       <button class="action primary" id="saveSettings">Сохранить</button>
     </div>
     <input type="file" id="importFile" accept="application/json" style="display:none" />
@@ -836,13 +956,14 @@
   const LS_PROFILE = "monolog_profile";
   const LS_CHAT = "monolog_chat";
   const LS_METRICS = "monolog_last_metrics";
+  const LS_PASSPORT = "monolog_passport";
+  const LS_COGNITIVE = "monolog_cognitive_profile";
 
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const MAX_TEXT_CHARS = 3000;
   const MAX_FILES = 3;
-  const CONTEXT_TOKEN_BUDGET = 3000;
+  const CONTEXT_TOKEN_BUDGET = 1200;
 
-  // SVG-силуэты
   const AVATAR_STRATEGIST = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="11" r="5"/><path d="M5 27c0-5 5-9 11-9s11 4 11 9"/></svg>';
   const AVATAR_ANALYST = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="11" r="5"/><path d="M5 27c0-5 5-9 11-9 2 0 4 .4 5.5 1.2"/><rect x="18" y="20" width="9" height="7" rx="1.5"/><path d="M20 23h5"/></svg>';
 
@@ -851,6 +972,14 @@
     "Проверяю коллизии…",
     "Строю карту восприятия…",
     "Оцениваю стабильность…"
+  ];
+
+  const COMPASS_AXES = [
+    { key: "развитие", label: "Развитие" },
+    { key: "стабильность", label: "Стабильность" },
+    { key: "свобода", label: "Свобода" },
+    { key: "контроль", label: "Контроль" },
+    { key: "связь", label: "Связь" },
   ];
 
   const state = {
@@ -862,6 +991,8 @@
     lastMetrics: null,
     importantIds: new Set(),
     shownAvatarLabels: new Set(),
+    passport: null,
+    cognitive: null,
   };
 
   try { state.apiKey = localStorage.getItem(LS_KEY) || ""; } catch (e) {}
@@ -871,6 +1002,8 @@
   } catch (e) {}
   try { state.history = JSON.parse(localStorage.getItem(LS_CHAT) || "[]"); } catch (e) { state.history = []; }
   try { state.lastMetrics = JSON.parse(localStorage.getItem(LS_METRICS) || "null"); } catch (e) {}
+  try { state.passport = JSON.parse(localStorage.getItem(LS_PASSPORT) || "null"); } catch (e) {}
+  try { state.cognitive = JSON.parse(localStorage.getItem(LS_COGNITIVE) || "null"); } catch (e) {}
 
   if (window.pdfjsLib) {
     window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
@@ -882,6 +1015,8 @@
       localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
       localStorage.setItem(LS_CHAT, JSON.stringify(state.history.slice(-100)));
       if (state.lastMetrics) localStorage.setItem(LS_METRICS, JSON.stringify(state.lastMetrics));
+      if (state.passport) localStorage.setItem(LS_PASSPORT, JSON.stringify(state.passport));
+      if (state.cognitive) localStorage.setItem(LS_COGNITIVE, JSON.stringify(state.cognitive));
     } catch (e) {}
   }
 
@@ -906,6 +1041,11 @@
     }
     const esc = safe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
+  }
+
+  function escHtml(t) {
+    return String(t == null ? "" : t)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   }
 
   function pickAvatar(metrics) {
@@ -940,7 +1080,6 @@
         state.shownAvatarLabels.add(av.label);
       }
       row.appendChild(wrap);
-      row._avatarWrap = wrap;
       row._avatar = avatar;
     }
 
@@ -950,7 +1089,6 @@
     if (role === "agent") {
       bubble.innerHTML = renderMarkdown(content);
 
-      // Кнопка копирования сообщения
       const copyBtn = document.createElement("button");
       copyBtn.className = "msg-copy";
       copyBtn.type = "button";
@@ -962,7 +1100,6 @@
       });
       bubble.appendChild(copyBtn);
 
-      // Кнопка "важное"
       const impBtn = document.createElement("button");
       impBtn.className = "msg-important";
       impBtn.type = "button";
@@ -977,7 +1114,6 @@
       });
       bubble.appendChild(impBtn);
 
-      // Кнопки копирования кода внутри pre
       bubble.querySelectorAll("pre").forEach(function (pre) {
         const btn = document.createElement("button");
         btn.className = "copy-code-btn";
@@ -1018,9 +1154,29 @@
   function updateMetrics(metrics) {
     const m = metrics || {};
     state.lastMetrics = m;
-    persist();
-    const si = typeof m.stability_index === "number" ? m.stability_index : 0;
 
+    if (m.passport) {
+      state.passport = Object.assign(state.passport || {}, m.passport);
+    }
+    if (m.profile) {
+      state.cognitive = state.cognitive || { values: {}, patterns: [], distortions: [], insights: [] };
+      if (m.profile.values && typeof m.profile.values === "object") {
+        state.cognitive.values = Object.assign(state.cognitive.values || {}, m.profile.values);
+      }
+      ["patterns", "distortions", "insights"].forEach(function (k) {
+        const old = state.cognitive[k] || [];
+        const incoming = m.profile[k] || [];
+        const seen = new Set(old.map(String));
+        incoming.forEach(function (it) {
+          if (!seen.has(String(it))) { old.push(it); seen.add(String(it)); }
+        });
+        state.cognitive[k] = old;
+      });
+    }
+
+    persist();
+
+    const si = typeof m.stability_index === "number" ? m.stability_index : 0;
     document.getElementById("mStability").textContent = si.toFixed(2);
     const prog = document.getElementById("mProgress");
     prog.style.width = (si * 100) + "%";
@@ -1044,13 +1200,11 @@
     updateChip(m);
   }
 
-  // --- Умный селектор контекста ---
   function estimateTokens(text) {
     return Math.ceil((text || "").length / 4);
   }
 
   function selectContext() {
-    // Приоритет: последние 2 + помеченные важными. Ограничение по бюджету токенов.
     const result = [];
     let usedTokens = 0;
 
@@ -1062,11 +1216,9 @@
       else normal.push(m);
     }
 
-    // Последние 2 — всегда
     const tail = normal.slice(-2);
     const rest = normal.slice(0, Math.max(0, normal.length - 2));
 
-    // Сначала важные
     for (let i = important.length - 1; i >= 0; i--) {
       const m = important[i];
       const t = estimateTokens(m.content);
@@ -1075,7 +1227,6 @@
       usedTokens += t;
     }
 
-    // Потом хвост
     for (const m of tail) {
       const t = estimateTokens(m.content);
       if (usedTokens + t > CONTEXT_TOKEN_BUDGET) continue;
@@ -1083,7 +1234,6 @@
       usedTokens += t;
     }
 
-    // Потом остальные с конца
     for (let i = rest.length - 1; i >= 0; i--) {
       const m = rest[i];
       const t = estimateTokens(m.content);
@@ -1092,10 +1242,9 @@
       usedTokens += t;
     }
 
-    return result.slice(-8);
+    return result.slice(-4);
   }
 
-  // --- Работа с файлами ---
   function fileIcon(type) {
     if (type && type.startsWith("image/")) {
       return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
@@ -1143,7 +1292,7 @@
       const chip = document.createElement("div");
       chip.className = "attach-chip";
       chip.innerHTML = fileIcon(a.type)
-        + '<span class="name">' + a.name + '</span>'
+        + '<span class="name">' + escHtml(a.name) + '</span>'
         + '<button class="remove" title="Удалить">×</button>';
       chip.querySelector(".remove").addEventListener("click", function () {
         state.attachments.splice(idx, 1);
@@ -1193,6 +1342,12 @@
 
     const context = selectContext();
 
+    // carried_metrics — накопленные passport/profile из localStorage
+    const carried = {
+      passport: state.passport || {},
+      profile: state.cognitive || {},
+    };
+
     try {
       const r = await fetch(API_BASE + "/chat", {
         method: "POST",
@@ -1201,6 +1356,7 @@
           message: text || "Проанализируй вложения.",
           history: context,
           attachments: attachmentsPayload,
+          carried_metrics: carried,
         }),
       });
 
@@ -1233,7 +1389,7 @@
     }
   }
 
-  // --- Sheets и модальные окна ---
+  // --- Sheet: метрики ---
   function openSheet() {
     document.getElementById("sheetBg").classList.add("open");
     document.getElementById("metricsSheet").classList.add("open");
@@ -1242,23 +1398,194 @@
     document.getElementById("sheetBg").classList.remove("open");
     document.getElementById("metricsSheet").classList.remove("open");
   }
+
+  // --- Sheet: паспорт ---
+  function renderPassport() {
+    const box = document.getElementById("passportContent");
+    const p = state.passport;
+
+    if (!p || (!p.title && !p.goal && !p.result)) {
+      box.innerHTML = '<h3>Паспорт проекта</h3><div class="sheet-sub">Пока не заполнен</div>'
+        + '<div class="empty-note">Паспорт заполняется автоматически по мере диалога. Начни описывать проект — Monolog соберёт данные.</div>';
+      return;
+    }
+
+    const levelLabels = {
+      micro: "Микро",
+      tactical: "Тактический",
+      strategic: "Стратегический",
+      systemic: "Системный",
+    };
+    const lvl = p.level || "micro";
+    const completion = Math.max(0, Math.min(100, p.completion || 0));
+
+    let html = '<h3>Паспорт проекта</h3>';
+    html += '<div class="sheet-sub">Обновляется автоматически</div>';
+    html += '<span class="passport-level">' + (levelLabels[lvl] || lvl) + '</span>';
+
+    if (p.title) html += '<div class="passport-title">' + escHtml(p.title) + '</div>';
+    if (p.goal) html += '<div class="passport-goal">' + escHtml(p.goal) + '</div>';
+
+    html += '<div class="metric" style="margin-top:12px;">'
+      + '<div class="metric-row"><span>Наполнение</span><span>' + completion + '%</span></div>'
+      + '<div class="progress"><div class="progress-fill" style="width:' + completion + '%"></div></div>'
+      + '</div>';
+
+    function field(label, value) {
+      if (!value) return "";
+      if (Array.isArray(value)) {
+        if (value.length === 0) return "";
+        return '<div class="passport-field"><div class="passport-field-label">' + label + '</div>'
+          + '<div class="passport-field-value"><ul>'
+          + value.map(function (v) { return '<li>' + escHtml(typeof v === "string" ? v : JSON.stringify(v)) + '</li>'; }).join("")
+          + '</ul></div></div>';
+      }
+      return '<div class="passport-field"><div class="passport-field-label">' + label + '</div>'
+        + '<div class="passport-field-value">' + escHtml(value) + '</div></div>';
+    }
+
+    html += field("Результат", p.result);
+    html += field("Миссия", p.mission);
+    html += field("Ценности", p.values);
+    html += field("Ограничения", p.constraints);
+    html += field("Стейкхолдеры", p.stakeholders);
+    html += field("Риски", p.risks);
+    html += field("Метрики успеха", p.metrics);
+
+    box.innerHTML = html;
+  }
+
+  function openPassport() {
+    renderPassport();
+    document.getElementById("sheetBg").classList.add("open");
+    document.getElementById("passportSheet").classList.add("open");
+  }
+
+  // --- Sheet: профиль ---
+  function renderCompass(values) {
+    const size = 220;
+    const cx = size / 2;
+    const cy = size / 2;
+    const radius = 80;
+    const n = COMPASS_AXES.length;
+
+    function point(i, r) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
+    }
+
+    let svg = '<svg class="compass-svg" viewBox="0 0 ' + size + ' ' + size + '">';
+
+    [1, 0.66, 0.33].forEach(function (scale) {
+      let ring = "";
+      for (let i = 0; i < n; i++) {
+        const [x, y] = point(i, radius * scale);
+        ring += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      }
+      ring += "Z";
+      svg += '<path class="compass-ring" d="' + ring + '"/>';
+    });
+
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius);
+      svg += '<line class="compass-axis" x1="' + cx + '" y1="' + cy + '" x2="' + x.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>';
+    }
+
+    const vals = COMPASS_AXES.map(function (a) {
+      const v = values && typeof values[a.key] === "number" ? values[a.key] : 0;
+      return Math.max(0, Math.min(1, v));
+    });
+
+    if (vals.some(function (v) { return v > 0; })) {
+      let poly = "";
+      vals.forEach(function (v, i) {
+        const [x, y] = point(i, radius * v);
+        poly += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      });
+      poly += "Z";
+      svg += '<path class="compass-fill" d="' + poly + '"/>';
+
+      vals.forEach(function (v, i) {
+        if (v <= 0) return;
+        const [x, y] = point(i, radius * v);
+        svg += '<circle class="compass-dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5"/>';
+      });
+    }
+
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius + 20);
+      const anchor = Math.abs(x - cx) < 4 ? "middle" : (x > cx ? "start" : "end");
+      svg += '<text class="compass-label" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" dominant-baseline="middle">' + COMPASS_AXES[i].label + '</text>';
+    }
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderProfile() {
+    const box = document.getElementById("profileContent");
+    const c = state.cognitive;
+
+    let html = '<h3>Профиль</h3>';
+    html += '<div class="sheet-sub">Когнитивная карта пользователя</div>';
+
+    html += '<div class="group-title">Ценностный компас</div>';
+    if (!c || !c.values || Object.keys(c.values).length === 0) {
+      html += '<div class="empty-note">Пока нет данных. Продолжай диалог — Monolog накопит информацию.</div>';
+    } else {
+      html += '<div class="compass-wrap">' + renderCompass(c.values) + '</div>';
+    }
+
+    html += '<div class="group-title">Паттерны мышления</div>';
+    if (!c || !c.patterns || c.patterns.length === 0) {
+      html += '<div class="empty-note">Пока не выявлены.</div>';
+    } else {
+      html += '<div class="tag-list">'
+        + c.patterns.map(function (p) { return '<span class="tag">' + escHtml(p) + '</span>'; }).join("")
+        + '</div>';
+    }
+
+    html += '<div class="group-title">Когнитивные искажения</div>';
+    if (!c || !c.distortions || c.distortions.length === 0) {
+      html += '<div class="empty-note">Не обнаружены.</div>';
+    } else {
+      html += '<div class="tag-list">'
+        + c.distortions.map(function (p) { return '<span class="tag warm">' + escHtml(p) + '</span>'; }).join("")
+        + '</div>';
+    }
+
+    html += '<div class="group-title">Наблюдения</div>';
+    if (!c || !c.insights || c.insights.length === 0) {
+      html += '<div class="empty-note">Пока нет.</div>';
+    } else {
+      html += '<div style="display:flex; flex-direction:column; gap:8px;">'
+        + c.insights.map(function (i) { return '<div class="passport-field-value">' + escHtml(i) + '</div>'; }).join("")
+        + '</div>';
+    }
+
+    box.innerHTML = html;
+  }
+
+  function openProfile() {
+    renderProfile();
+    document.getElementById("sheetBg").classList.add("open");
+    document.getElementById("profileSheet").classList.add("open");
+  }
+
+  // --- Модальные окна ---
   function openModal() {
     document.getElementById("keyInput").value = state.apiKey || "";
     document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
     applyProfile();
     document.getElementById("modalBg").classList.add("open");
   }
-  function closeModal() {
-    document.getElementById("modalBg").classList.remove("open");
-  }
+  function closeModal() { document.getElementById("modalBg").classList.remove("open"); }
 
   function openResetModal() {
     document.getElementById("partialSection").style.display = "none";
     document.getElementById("resetModalBg").classList.add("open");
   }
-  function closeResetModal() {
-    document.getElementById("resetModalBg").classList.remove("open");
-  }
+  function closeResetModal() { document.getElementById("resetModalBg").classList.remove("open"); }
 
   function renderResetList() {
     const list = document.getElementById("resetList");
@@ -1269,7 +1596,7 @@
       const checked = state.importantIds.has(idx) ? "checked" : "";
       const roleLabel = m.role === "user" ? "Вы" : "ИИ";
       item.innerHTML = '<input type="checkbox" data-idx="' + idx + '" ' + checked + '>'
-        + '<div><div class="role">' + roleLabel + '</div><div class="preview">' + (m.content || "").replace(/</g, "&lt;") + '</div></div>';
+        + '<div><div class="role">' + roleLabel + '</div><div class="preview">' + escHtml(m.content || "") + '</div></div>';
       item.querySelector("input").addEventListener("change", function (e) {
         const i = parseInt(e.target.dataset.idx, 10);
         if (e.target.checked) state.importantIds.add(i);
@@ -1279,32 +1606,40 @@
     });
   }
 
-  function setupSwipeToClose() {
-    const sheet = document.getElementById("metricsSheet");
-    const handle = document.getElementById("sheetHandle");
-    if (!sheet || !handle) return;
+  function setupSwipeToClose(sheetEl, handleEl) {
+    if (!sheetEl || !handleEl) return;
     let startY = 0, currentY = 0, dragging = false;
-    function onStart(e) { dragging = true; startY = (e.touches ? e.touches[0].clientY : e.clientY); sheet.style.transition = "none"; }
-    function onMove(e) { if (!dragging) return; currentY = (e.touches ? e.touches[0].clientY : e.clientY); const dy = Math.max(0, currentY - startY); sheet.style.transform = "translateY(" + dy + "px)"; }
-    function onEnd() { if (!dragging) return; dragging = false; sheet.style.transition = ""; sheet.style.transform = ""; if (currentY - startY > 70) closeSheet(); }
-    handle.addEventListener("touchstart", onStart, { passive: true });
-    handle.addEventListener("touchmove", onMove, { passive: true });
-    handle.addEventListener("touchend", onEnd);
-    handle.addEventListener("mousedown", onStart);
+    function onStart(e) { dragging = true; startY = (e.touches ? e.touches[0].clientY : e.clientY); sheetEl.style.transition = "none"; }
+    function onMove(e) { if (!dragging) return; currentY = (e.touches ? e.touches[0].clientY : e.clientY); const dy = Math.max(0, currentY - startY); sheetEl.style.transform = "translateY(" + dy + "px)"; }
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      sheetEl.style.transition = "";
+      sheetEl.style.transform = "";
+      if (currentY - startY > 70) {
+        sheetEl.classList.remove("open");
+        document.getElementById("sheetBg").classList.remove("open");
+      }
+    }
+    handleEl.addEventListener("touchstart", onStart, { passive: true });
+    handleEl.addEventListener("touchmove", onMove, { passive: true });
+    handleEl.addEventListener("touchend", onEnd);
+    handleEl.addEventListener("mousedown", onStart);
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onEnd);
   }
 
   function init() {
     applyProfile();
-    setupSwipeToClose();
 
-    // Восстановление истории
+    setupSwipeToClose(document.getElementById("metricsSheet"), document.getElementById("sheetHandle"));
+    setupSwipeToClose(document.getElementById("passportSheet"), document.getElementById("passportHandle"));
+    setupSwipeToClose(document.getElementById("profileSheet"), document.getElementById("profileHandle"));
+
     state.history.forEach(function (m, idx) {
       addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
     });
 
-    // Восстановление чипа метрик
     if (state.lastMetrics) updateChip(state.lastMetrics);
 
     const sendBtn = document.getElementById("sendBtn");
@@ -1324,10 +1659,19 @@
     fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
 
     document.getElementById("stabilityChip").addEventListener("click", openSheet);
-    document.getElementById("sheetBg").addEventListener("click", closeSheet);
+    document.getElementById("passportBtn").addEventListener("click", openPassport);
+    document.getElementById("sheetBg").addEventListener("click", function () {
+      closeSheet();
+      document.getElementById("passportSheet").classList.remove("open");
+      document.getElementById("profileSheet").classList.remove("open");
+    });
 
     document.getElementById("settingsBtn").addEventListener("click", openModal);
     document.getElementById("modalBg").addEventListener("click", function (e) { if (e.target === this) closeModal(); });
+    document.getElementById("profileBtn").addEventListener("click", function () {
+      closeModal();
+      openProfile();
+    });
 
     document.getElementById("resetBtn").addEventListener("click", openResetModal);
     document.getElementById("resetModalBg").addEventListener("click", function (e) { if (e.target === this) closeResetModal(); });
@@ -1342,7 +1686,7 @@
       document.getElementById("chipValue").textContent = "—";
       document.getElementById("chipFill").style.width = "0%";
       closeResetModal();
-      toast("Контекст сброшен");
+      toast("Контекст сброшен, паспорт сохранён");
     });
     document.getElementById("resetPartial").addEventListener("click", function () {
       renderResetList();
@@ -1389,7 +1733,12 @@
     });
 
     document.getElementById("exportData").addEventListener("click", function () {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify({
+        history: state.history,
+        profile: state.profile,
+        passport: state.passport,
+        cognitive: state.cognitive,
+      }, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "monolog_export_" + Date.now() + ".json";
@@ -1408,8 +1757,12 @@
           const data = JSON.parse(reader.result);
           state.history = data.history || [];
           state.profile = Object.assign(state.profile, data.profile || {});
+          state.passport = data.passport || null;
+          state.cognitive = data.cognitive || null;
           localStorage.setItem(LS_CHAT, JSON.stringify(state.history));
           localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+          if (state.passport) localStorage.setItem(LS_PASSPORT, JSON.stringify(state.passport));
+          if (state.cognitive) localStorage.setItem(LS_COGNITIVE, JSON.stringify(state.cognitive));
           location.reload();
         } catch (err) { alert("Некорректный файл"); }
       };
