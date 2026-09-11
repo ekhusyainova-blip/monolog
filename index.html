@@ -1,317 +1,350 @@
-```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Monolog</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dompurify@3.0.6/dist/purify.min.js"></script>
 <style>
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html, body {
-  height: 100%; overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro", sans-serif;
-  background: #FAFAFA; color: #1A1A1A;
-  -webkit-font-smoothing: antialiased;
-}
-body {
-  display: flex; flex-direction: column;
-  padding: 12px;
-  padding-bottom: calc(12px + env(safe-area-inset-bottom));
-  position: relative;
-}
-body::before {
-  content: ''; position: fixed; top: -50%; left: -50%;
-  width: 200%; height: 200%;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(255, 200, 200, 0.25), transparent 40%),
-    radial-gradient(circle at 70% 80%, rgba(255, 220, 210, 0.2), transparent 45%),
-    radial-gradient(circle at 50% 50%, rgba(255, 230, 235, 0.15), transparent 50%);
-  animation: drift 30s ease-in-out infinite;
-  z-index: 0; pointer-events: none;
-}
-@keyframes drift {
-  0%, 100% { transform: translate(0, 0) rotate(0deg); }
-  50% { transform: translate(-3%, 2%) rotate(3deg); }
-}
-header {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 12px; margin-bottom: 10px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 16px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  z-index: 2;
-}
-header h1 { font-size: 17px; font-weight: 600; letter-spacing: -0.3px; }
-.header-actions { display: flex; gap: 6px; }
-.icon-btn {
-  width: 36px; height: 36px; border-radius: 10px;
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; font-size: 14px; color: #6B7280;
-  transition: all 0.2s;
-}
-.icon-btn:hover { background: rgba(255, 255, 255, 0.9); color: #1A1A1A; }
-.icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 2; }
-#chat-box {
-  flex: 1; overflow-y: auto;
-  padding: 8px 4px;
-  -webkit-overflow-scrolling: touch;
-  z-index: 1;
-}
-.message {
-  margin-bottom: 14px; padding: 12px 16px;
-  border-radius: 18px; max-width: 88%;
-  line-height: 1.55; font-size: 15px;
-  word-wrap: break-word;
-  animation: fadeIn 0.3s ease;
-}
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-.message.user {
-  background: linear-gradient(135deg, rgba(255, 200, 200, 0.4), rgba(255, 220, 210, 0.3));
-  border: 1px solid rgba(255, 200, 200, 0.5);
-  color: #1A1A1A;
-  margin-left: auto;
-  border-bottom-right-radius: 4px;
-}
-.message.assistant {
-  background: rgba(255, 255, 255, 0.75);
-  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  color: #1A1A1A;
-  width: 100%; max-width: 100%;
-  border-bottom-left-radius: 4px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
-}
-.message.assistant h1, .message.assistant h2, .message.assistant h3 {
-  margin: 12px 0 6px; font-weight: 600;
-}
-.message.assistant h1 { font-size: 19px; }
-.message.assistant h2 { font-size: 17px; }
-.message.assistant h3 { font-size: 15px; color: #4B5563; }
-.message.assistant p { margin: 6px 0; }
-.message.assistant ul, .message.assistant ol { margin: 6px 0 6px 20px; }
-.message.assistant li { margin: 3px 0; }
-.message.assistant code {
-  background: rgba(0,0,0,0.05); padding: 2px 6px;
-  border-radius: 4px; font-size: 13px;
-  font-family: "SF Mono", Monaco, monospace;
-}
-.message.assistant pre {
-  background: rgba(0,0,0,0.04); padding: 10px;
-  border-radius: 8px; overflow-x: auto;
-  margin: 8px 0; font-size: 13px;
-  position: relative;
-}
-.message.assistant pre code { background: transparent; padding: 0; }
-.message.assistant blockquote {
-  border-left: 2px solid rgba(255, 180, 180, 0.6);
-  padding-left: 12px; margin: 8px 0;
-  color: #4B5563; font-style: italic;
-}
-.message.assistant table {
-  border-collapse: collapse; margin: 8px 0;
-  width: 100%; font-size: 14px;
-}
-.message.assistant th, .message.assistant td {
-  border: 1px solid rgba(0,0,0,0.1);
-  padding: 6px 10px; text-align: left;
-}
-.message.assistant th { background: rgba(0,0,0,0.03); font-weight: 600; }
-.message.assistant hr { border: none; border-top: 1px solid rgba(0,0,0,0.1); margin: 12px 0; }
-.message.assistant strong { font-weight: 600; }
-.metrics-bar {
-  display: flex; gap: 8px; margin-top: 8px;
-  padding-top: 8px; border-top: 1px solid rgba(0,0,0,0.06);
-  font-size: 12px; color: #6B7280;
-  flex-wrap: wrap;
-}
-.metric-pill {
-  display: flex; align-items: center; gap: 4px;
-  padding: 3px 8px; border-radius: 10px;
-  background: rgba(0,0,0,0.03);
-  cursor: pointer; transition: background 0.2s;
-}
-.metric-pill:hover { background: rgba(0,0,0,0.07); }
-.stability-dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  display: inline-block;
-}
-.stability-dot.high { background: #10B981; }
-.stability-dot.mid { background: #F59E0B; }
-.stability-dot.low { background: #EF4444; }
-.input-area {
-  display: flex; gap: 8px; margin-top: 10px;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-  border-radius: 20px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
-  z-index: 2;
-}
-#user-input {
-  flex: 1; padding: 10px 14px;
-  border: none; background: transparent;
-  font-size: 15px; outline: none;
-  color: #1A1A1A; font-family: inherit;
-  resize: none; max-height: 120px;
-  min-height: 20px;
-}
-#send-btn {
-  padding: 8px 16px;
-  background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
-  color: white; border: none;
-  border-radius: 14px;
-  font-size: 15px; font-weight: 600;
-  cursor: pointer; transition: all 0.2s;
-  flex-shrink: 0;
-}
-#send-btn:disabled { background: #D1D5DB; cursor: not-allowed; }
-#send-btn:active:not(:disabled) { transform: scale(0.96); }
-#loading { display: none; text-align: center; color: #9CA3AF; font-size: 13px; margin: 6px 0; }
-.copy-btn {
-  position: absolute; top: 6px; right: 6px;
-  padding: 4px 8px; font-size: 11px;
-  background: rgba(255,255,255,0.9);
-  border: 1px solid rgba(0,0,0,0.1);
-  border-radius: 6px; cursor: pointer;
-  color: #6B7280; transition: all 0.2s;
-}
-.copy-btn:hover { background: white; color: #1A1A1A; }
-.modal-overlay {
-  display: none; position: fixed; inset: 0;
-  background: rgba(0,0,0,0.3); backdrop-filter: blur(4px);
-  z-index: 100; align-items: center; justify-content: center;
-  padding: 20px;
-}
-.modal-overlay.active { display: flex; }
-.modal {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(20px);
-  border-radius: 20px; padding: 20px;
-  max-width: 500px; width: 100%;
-  max-height: 80vh; overflow-y: auto;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-}
-.modal h2 { font-size: 17px; margin-bottom: 12px; }
-.modal-row {
-  display: flex; justify-content: space-between;
-  padding: 8px 0; border-bottom: 1px solid rgba(0,0,0,0.05);
-  font-size: 14px;
-}
-.modal-row:last-child { border-bottom: none; }
-.modal-row .label { color: #6B7280; }
-.modal-row .value { font-weight: 500; }
-.modal-close {
-  margin-top: 14px; width: 100%;
-  padding: 10px; border: none; border-radius: 12px;
-  background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
-  color: white; font-weight: 600; cursor: pointer;
-}
-.risk-modal .risk-header {
-  display: flex; align-items: center; gap: 10px;
-  padding: 10px; border-radius: 10px;
-  background: rgba(239, 68, 68, 0.1);
-  margin-bottom: 12px;
-}
-.risk-modal .risk-header.critical { background: rgba(239, 68, 68, 0.15); }
-.risk-modal .risk-header.warning { background: rgba(245, 158, 11, 0.15); }
-.risk-modal .risk-dot {
-  width: 12px; height: 12px; border-radius: 50%;
-}
-.risk-modal .risk-dot.critical { background: #EF4444; }
-.risk-modal .risk-dot.warning { background: #F59E0B; }
-.risk-modal .alternative {
-  padding: 12px; border-radius: 10px;
-  background: rgba(16, 185, 129, 0.1);
-  border-left: 3px solid #10B981;
-  margin: 12px 0;
-}
-.risk-modal .actions { display: flex; gap: 8px; margin-top: 14px; }
-.risk-modal .btn-safe {
-  flex: 1; padding: 10px;
-  background: #10B981; color: white;
-  border: none; border-radius: 12px;
-  font-weight: 600; cursor: pointer;
-}
-.risk-modal .btn-cancel {
-  flex: 1; padding: 10px;
-  background: rgba(0,0,0,0.05); color: #1A1A1A;
-  border: none; border-radius: 12px;
-  font-weight: 600; cursor: pointer;
-}
-.skills-panel {
-  margin-top: 12px; padding: 12px;
-  background: rgba(99, 102, 241, 0.05);
-  border-radius: 12px;
-  border-left: 3px solid #6366F1;
-}
-.skills-panel h4 { font-size: 13px; color: #6366F1; margin-bottom: 8px; }
-.skill-item {
-  padding: 8px 0;
-  border-bottom: 1px solid rgba(0,0,0,0.05);
-  font-size: 14px;
-}
-.skill-item:last-child { border-bottom: none; }
-.skill-recs {
-  margin-top: 6px; padding-left: 12px;
-  font-size: 12px; color: #6B7280;
-  display: none;
-}
-.skill-recs.open { display: block; }
-.skill-toggle {
-  font-size: 11px; color: #6366F1;
-  cursor: pointer; margin-top: 4px;
-  display: inline-block;
-}
+  :root {
+    --bg: #ffffff;
+    --text: #1a1a1a;
+    --muted: #6b7280;
+    --panel: rgba(255, 255, 255, 0.7);
+    --accent: #f5c6c6;
+    --accent-2: #f8d8c8;
+    --shadow: 0 8px 32px rgba(0,0,0,0.06);
+    --radius: 16px;
+  }
+  [data-theme="amber"] {
+    --accent: #f5d6a6;
+    --accent-2: #f8c8a8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, 'SF Pro', system-ui, sans-serif;
+    color: var(--text);
+    background: var(--bg);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+  }
+  body::before, body::after {
+    content: ""; position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.5; z-index: 0;
+  }
+  body::before { width: 500px; height: 500px; background: var(--accent); top: -150px; left: -100px; }
+  body::after { width: 400px; height: 400px; background: var(--accent-2); bottom: -100px; right: -100px; }
+
+  .app { position: relative; z-index: 1; max-width: 980px; margin: 0 auto; padding: 24px 16px 120px; }
+
+  header { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
+  .logo { font-weight: 600; font-size: 18px; letter-spacing: 0.02em; }
+  .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-left: 8px; background: #4caf50; cursor: pointer; }
+  .status-dot.warning { background: #ffb300; }
+  .status-dot.critical { background: #e57373; }
+
+  .settings-btn { background: none; border: none; cursor: pointer; padding: 8px; border-radius: 8px; }
+  .settings-btn:hover { background: rgba(0,0,0,0.04); }
+
+  .chat { display: flex; flex-direction: column; gap: 16px; margin-top: 16px; }
+  .msg { padding: 14px 18px; border-radius: var(--radius); line-height: 1.6; }
+  .msg.user { align-self: flex-end; max-width: 70%; background: var(--accent); }
+  .msg.agent { align-self: stretch; background: var(--panel); backdrop-filter: blur(12px); box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.6); }
+  .msg.agent h1, .msg.agent h2, .msg.agent h3 { margin: 12px 0 8px; }
+  .msg.agent p { margin: 8px 0; }
+  .msg.agent ul, .msg.agent ol { margin: 8px 0 8px 20px; }
+  .msg.agent code { background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 4px; font-family: ui-monospace, monospace; font-size: 0.9em; }
+  .msg.agent pre { background: rgba(0,0,0,0.05); padding: 12px; border-radius: 10px; overflow-x: auto; margin: 10px 0; position: relative; }
+  .copy-btn { position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.9); border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 12px; }
+
+  .input-bar {
+    position: fixed; bottom: 0; left: 0; right: 0; padding: 16px;
+    background: linear-gradient(to top, rgba(255,255,255,0.95), rgba(255,255,255,0));
+  }
+  .input-inner {
+    max-width: 980px; margin: 0 auto; display: flex; gap: 8px;
+    background: var(--panel); backdrop-filter: blur(12px);
+    border-radius: var(--radius); padding: 8px; box-shadow: var(--shadow);
+    border: 1px solid rgba(255,255,255,0.6);
+  }
+  textarea {
+    flex: 1; border: none; outline: none; resize: none; background: transparent;
+    padding: 10px 12px; font-family: inherit; font-size: 15px; line-height: 1.5;
+    max-height: 200px; min-height: 24px;
+  }
+  .send-btn {
+    background: var(--accent); border: none; border-radius: 12px; padding: 0 18px;
+    cursor: pointer; font-weight: 500; color: var(--text); align-self: flex-end;
+    height: 44px; transition: opacity 0.2s;
+  }
+  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .metrics-panel {
+    display: none; background: var(--panel); backdrop-filter: blur(12px);
+    border-radius: var(--radius); padding: 16px; margin-top: 16px;
+    box-shadow: var(--shadow); border: 1px solid rgba(255,255,255,0.6);
+  }
+  .metrics-panel.open { display: block; }
+  .metric-row { display: flex; justify-content: space-between; padding: 6px 0; font-size: 14px; }
+  .metric-row span:first-child { color: var(--muted); }
+  .progress { height: 6px; border-radius: 3px; background: rgba(0,0,0,0.08); overflow: hidden; margin-top: 4px; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #a8e6cf, #4caf50); transition: width 0.4s; }
+
+  .modal-bg {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+    z-index: 100; align-items: center; justify-content: center; padding: 16px;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #fff; border-radius: var(--radius); padding: 24px; max-width: 440px; width: 100%;
+    box-shadow: 0 16px 48px rgba(0,0,0,0.15);
+  }
+  .modal h2 { font-size: 18px; margin-bottom: 12px; }
+  .modal label { display: block; font-size: 13px; color: var(--muted); margin: 12px 0 4px; }
+  .modal input[type="text"], .modal input[type="password"] {
+    width: 100%; padding: 10px 12px; border-radius: 10px;
+    border: 1px solid rgba(0,0,0,0.12); font-family: inherit; font-size: 14px;
+  }
+  .modal .row { display: flex; gap: 8px; margin-top: 16px; }
+  .modal button { flex: 1; padding: 10px; border-radius: 10px; border: none; cursor: pointer; font-weight: 500; }
+  .modal .primary { background: var(--accent); }
+  .modal .ghost { background: rgba(0,0,0,0.06); }
+
+  .typing { display: inline-block; }
+  .typing::after { content: "…"; animation: dots 1.4s infinite; }
+  @keyframes dots { 0%,20% { content: "."; } 40% { content: ".."; } 60%,100% { content: "..."; } }
 </style>
 </head>
 <body>
-<header>
-  <h1>Monolog</h1>
-  <div class="header-actions">
-    <button class="icon-btn" onclick="exportData()" title="Экспорт">
-      <svg viewBox="0 0 24 24"><path d="M12 3v12m0 0l-4-4m4 4l4-4M5 21h14"/></svg>
-    </button>
-    <button class="icon-btn" onclick="document.getElementById('import-file').click()" title="Импорт">
-      <svg viewBox="0 0 24 24"><path d="M12 21V9m0 0l-4 4m4-4l4 4M5 3h14"/></svg>
-    </button>
-    <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
-    <button class="icon-btn" onclick="clearChat()" title="Очистить">
-      <svg viewBox="0 0 24 24"><path d="M6 6l12 12M6 18L18 6"/></svg>
-    </button>
-  </div>
-</header>
-<div id="chat-box"></div>
-<div id="loading">Monolog думает...</div>
-<div class="input-area">
-  <textarea id="user-input" placeholder="Ваш запрос..." rows="1"></textarea>
-  <button id="send-btn" onclick="sendMessage()">➤</button>
-</div>
-
-<div class="modal-overlay" id="metrics-modal">
-  <div class="modal">
-    <h2>Метрики ответа</h2>
-    <div id="metrics-content"></div>
-    <button class="modal-close" onclick="closeModal('metrics-modal')">Закрыть</button>
-  </div>
-</div>
-
-<div class="modal-overlay" id="risk-modal">
-  <div class="modal risk-modal">
-    <h2>Внимание: обнаружен риск</h2>
-    <div id="risk-content"></div>
-    <div class="actions">
-      <button class="btn-safe" onclick="applySafeAlternative()">Применить альтернативу</button>
-      <button class="btn-cancel" onclick="closeModal('risk-modal')">Отменить</button>
+<div class="app">
+  <header>
+    <div class="logo">
+      Monolog <span class="status-dot" id="statusDot" title="Стабильность"></span>
     </div>
+    <button class="settings-btn" id="settingsBtn" title="Настройки">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="3"/>
+        <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+      </svg>
+    </button>
+  </header>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="metrics-panel" id="metricsPanel"></div>
+</div>
+
+<div class="input-bar">
+  <div class="input-inner">
+    <textarea id="input" placeholder="Напишите запрос…" rows="1"></textarea>
+    <button class="send-btn" id="sendBtn">Отправить</button>
   </div>
 </div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Настройки</h2>
+    <label for="keyInput">Groq API Key (gsk_…)</label>
+    <input type="password" id="keyInput" placeholder="gsk_..." autocomplete="off" />
+    <label style="display:flex; align-items:center; gap:8px; margin-top:12px;">
+      <input type="checkbox" id="rememberKey" /> Запомнить ключ на этом устройстве
+    </label>
+    <div class="row">
+      <button class="ghost" id="clearChat">Очистить чат</button>
+      <button class="primary" id="saveSettings">Сохранить</button>
+    </div>
+    <div class="row">
+      <button class="ghost" id="exportData">Экспорт</button>
+      <button class="ghost" id="importData">Импорт</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none" />
+  </div>
+</div>
+
+<script>
+const API_BASE = window.location.origin;
+const LS_KEY = "monolog_api_key";
+const LS_PROFILE = "monolog_profile";
+const LS_CHAT = "monolog_chat";
+
+let state = {
+  apiKey: localStorage.getItem(LS_KEY) || "",
+  profile: JSON.parse(localStorage.getItem(LS_PROFILE) || '{"theme":"light","mind_scale":"micro"}'),
+  history: JSON.parse(localStorage.getItem(LS_CHAT) || "[]"),
+};
+
+function persist() {
+  if (state.apiKey) localStorage.setItem(LS_KEY, state.apiKey);
+  localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+  localStorage.setItem(LS_CHAT, JSON.stringify(state.history.slice(-50)));
+}
+
+function applyTheme() {
+  document.documentElement.setAttribute("data-theme", state.profile.theme || "light");
+}
+
+function setStatus(value) {
+  const dot = document.getElementById("statusDot");
+  dot.className = "status-dot";
+  if (value < 0.5) dot.classList.add("critical");
+  else if (value < 0.75) dot.classList.add("warning");
+}
+
+function renderMarkdown(text) {
+  return marked.parse(text || "");
+}
+
+function addMessage(role, content) {
+  const chat = document.getElementById("chat");
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  if (role === "agent") {
+    div.innerHTML = renderMarkdown(content);
+    div.querySelectorAll("pre").forEach(pre => {
+      const btn = document.createElement("button");
+      btn.className = "copy-btn";
+      btn.textContent = "Копировать";
+      btn.onclick = () => navigator.clipboard.writeText(pre.innerText);
+      pre.appendChild(btn);
+    });
+  } else {
+    div.textContent = content;
+  }
+  chat.appendChild(div);
+  window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" });
+}
+
+function renderMetrics(metrics) {
+  const panel = document.getElementById("metricsPanel");
+  const m = metrics || {};
+  panel.innerHTML = `
+    <div class="metric-row"><span>Стабильность</span><span>${(m.stability_index ?? 0).toFixed(2)}</span></div>
+    <div class="progress"><div class="progress-fill" style="width:${(m.stability_index ?? 0) * 100}%"></div></div>
+    <div class="metric-row"><span>Стадия</span><span>${m.mind_scale || "—"}</span></div>
+    <div class="metric-row"><span>Циклы</span><span>${m.cycles_completed ?? 0}</span></div>
+    <div class="metric-row"><span>Коллизии</span><span>${m.collisions_resolved || "0/0"}</span></div>
+    <div class="metric-row"><span>Вклад человека</span><span>${((m.human_contribution ?? 0) * 100).toFixed(0)}%</span></div>
+    <div class="metric-row"><span>Протокол</span><span>${m.protocol_integrity ? "соблюдён" : "сбой"}</span></div>
+  `;
+  panel.classList.add("open");
+  setStatus(m.stability_index ?? 1);
+
+  if ((m.stability_index ?? 1) < 0.5) {
+    state.profile.theme = "amber";
+  } else {
+    state.profile.theme = "light";
+  }
+  applyTheme();
+}
+
+async function send() {
+  const input = document.getElementById("input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = "";
+  input.style.height = "auto";
+  addMessage("user", text);
+
+  const btn = document.getElementById("sendBtn");
+  btn.disabled = true;
+  addMessage("agent", '<span class="typing"></span>');
+
+  const headers = { "Content-Type": "application/json" };
+  if (state.apiKey) headers["X-Groq-Key"] = state.apiKey;
+
+  try {
+    const r = await fetch(`${API_BASE}/chat`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        message: text,
+        history: state.history.slice(-6),
+      }),
+    });
+    const data = await r.json();
+
+    const chat = document.getElementById("chat");
+    chat.removeChild(chat.lastChild);
+
+    if (!r.ok) {
+      addMessage("agent", `Ошибка: ${data.detail || r.statusText}`);
+    } else {
+      addMessage("agent", data.reply_text || "");
+      renderMetrics(data.metrics);
+      state.history.push({ role: "user", content: text });
+      state.history.push({ role: "assistant", content: data.reply_text || "" });
+      persist();
+    }
+  } catch (e) {
+    const chat = document.getElementById("chat");
+    chat.removeChild(chat.lastChild);
+    addMessage("agent", `Сбой сети: ${e.message}`);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+document.getElementById("sendBtn").onclick = send;
+document.getElementById("input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+document.getElementById("input").addEventListener("input", (e) => {
+  e.target.style.height = "auto";
+  e.target.style.height = Math.min(e.target.scrollHeight, 200) + "px";
+});
+document.getElementById("statusDot").onclick = () => {
+  document.getElementById("metricsPanel").classList.toggle("open");
+};
+
+const modalBg = document.getElementById("modalBg");
+document.getElementById("settingsBtn").onclick = () => {
+  document.getElementById("keyInput").value = state.apiKey || "";
+  document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
+  modalBg.classList.add("open");
+};
+document.getElementById("saveSettings").onclick = () => {
+  const key = document.getElementById("keyInput").value.trim();
+  const remember = document.getElementById("rememberKey").checked;
+  state.apiKey = key;
+  if (remember && key) localStorage.setItem(LS_KEY, key);
+  else localStorage.removeItem(LS_KEY);
+  modalBg.classList.remove("open");
+};
+document.getElementById("clearChat").onclick = () => {
+  state.history = [];
+  document.getElementById("chat").innerHTML = "";
+  persist();
+  modalBg.classList.remove("open");
+};
+document.getElementById("exportData").onclick = () => {
+  const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `monolog_export_${Date.now()}.json`;
+  a.click();
+};
+document.getElementById("importData").onclick = () => document.getElementById("importFile").click();
+document.getElementById("importFile").onchange = (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try {
+      const data = JSON.parse(reader.result);
+      state.history = data.history || [];
+      state.profile = data.profile || state.profile;
+      localStorage.setItem(LS_CHAT, JSON.stringify(state.history));
+      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+      location.reload();
+    } catch (err) { alert("Некорректный файл"); }
+  };
+  reader.readAsText(file);
+};
+
+// Восстановление истории при загрузке
+applyTheme();
+state.history.forEach(m => addMessage(m.role === "user" ? "user" : "agent", m.content));
+</script>
+</body>
+</html>
