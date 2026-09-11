@@ -2,9 +2,8 @@ import os
 import json
 import re
 import time
-import uuid
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client, Client
 from groq import Groq
@@ -93,9 +92,8 @@ def call_groq_with_rotation(messages, temperature=0.7, max_tokens=4000, timeout=
     
     raise Exception(f"Все {len(GROQ_API_KEYS)} ключей исчерпали лимит. Последняя ошибка: {last_error}")
 
-# === 3. СИСТЕМНЫЙ ПРОМПТ (Слой A v3 + элементы Слоя B v6 для генерации метрик) ===
-# Мы добавляем инструкцию выводить метрики в JSON-блоке в конце, чтобы бэкенд мог их распарсить.
-SYSTEM_PROMPT = """Ты — когнитивный AI-партнёр Monolog. Отвечай как эксперт-консультант. Используй Markdown. Без эмодзи. Без жёстких служебных заголовков.
+# === 3. СИСТЕМНЫЙ ПРОМПТ (Слой A v5 + инструкция генерации JSON) ===
+SYSTEM_PROMPT = '''Ты — когнитивный AI-партнёр Monolog. Отвечай как эксперт-консультант. Используй Markdown. Без эмодзи. Без жёстких служебных заголовков.
 
 [ПРАВИЛА]
 1. Текст ответа должен быть естественным диалогом. Начинай с главного вывода, давай структурированное объяснение, завершай следующим шагом.
@@ -122,12 +120,10 @@ SYSTEM_PROMPT = """Ты — когнитивный AI-партнёр Monolog. О
 === 4. API: ПОЛУЧЕНИЕ ИЛИ СОЗДАНИЕ ПРОЕКТА ===
 @app.get(”/api/project”)
 async def get_or_create_project(user_id: str = “anonymous_test”):
-# Ищем активный проект пользователя
 result = supabase.table(“projects”).select(”*”).eq(“user_id”, user_id).eq(“is_archived”, False).order(“created_at”, desc=True).limit(1).execute()
 if result.data:
     return JSONResponse(content={"project": result.data[0]})
 
-# Если нет, создаём новый
 new_project = {
     "user_id": user_id,
     "name": "Новый проект",
@@ -144,7 +140,6 @@ project_id = data.get(“project_id”, None)
 user_id = data.get(“user_id”, “anonymous_test”)
 logger.info(f"🚀 НАЧАЛО ОБРАБОТКИ: {message[:40]}...")
 
-# Если project_id не передан, получаем или создаём проект
 if not project_id:
     proj_res = supabase.table("projects").select("id").eq("user_id", user_id).eq("is_archived", False).order("created_at", desc=True).limit(1).execute()
     if proj_res.data:
@@ -209,7 +204,6 @@ if json_match:
     except json.JSONDecodeError:
         logger.warning("⚠️ Не удалось распарсить JSON метрик, используются значения по умолчанию")
 else:
-    # Если модель не вывела JSON, пытаемся найти <metrics>...</metrics> или просто оставляем дефолт
     logger.warning("⚠️ Блок JSON метрик не найден в ответе модели")
 
 # Шаг 4: Сохранение ответа ассистента с метриками
@@ -219,7 +213,7 @@ try:
         "user_id": user_id,
         "role": "assistant",
         "content": reply_text,
-        "metrics": metrics  # Сохраняем объект метрик в колонку JSONB
+        "metrics": metrics
     }).execute()
     logger.info("✅ Ответ ассистента сохранён в Supabase")
 except Exception as e:
