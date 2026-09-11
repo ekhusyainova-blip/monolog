@@ -840,4 +840,931 @@
         </svg>
       </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Настройки">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="input-wrap">
+    <div class="attach-preview" id="attachPreview"></div>
+    <div class="input-inner">
+      <button class="attach-btn" id="attachBtn" aria-label="Прикрепить файл">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
+      <textarea id="input" placeholder="Напишите запрос…" rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" aria-label="Отправить">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </button>
+    </div>
+    <input type="file" id="fileInput" accept=".txt,.pdf,.docx,image/*" multiple style="display:none" />
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetBg"></div>
+
+<div class="sheet" id="metricsSheet">
+  <div class="sheet-handle" id="sheetHandle"></div>
+  <h3>Метрики сессии</h3>
+  <div class="sheet-sub">Данные по последнему ответу</div>
+  <div class="group-title">Стабильность</div>
+  <div class="metric">
+    <div class="metric-row"><span>Индекс</span><span id="mStability">—</span></div>
+    <div class="progress"><div class="progress-fill" id="mProgress" style="width:0%"></div></div>
+  </div>
+  <div class="metric"><div class="metric-row"><span>Статус</span><span id="mStatus">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Протокол</span><span id="mProtocol">—</span></div></div>
+  <div class="group-title">Мышление</div>
+  <div class="metric"><div class="metric-row"><span>Масштаб</span><span id="mScale">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Циклы</span><span id="mCycles">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Коллизии</span><span id="mCollisions">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Импульс</span><span id="mPulse">—</span></div></div>
+  <div class="group-title">Вклад</div>
+  <div class="metric"><div class="metric-row"><span>Человек / ИИ</span><span id="mHuman">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Ключ</span><span id="mKeySource">—</span></div></div>
+</div>
+
+<div class="sheet" id="passportSheet">
+  <div class="sheet-handle" id="passportHandle"></div>
+  <div id="passportContent"></div>
+</div>
+
+<div class="sheet" id="profileSheet">
+  <div class="sheet-handle" id="profileHandle"></div>
+  <div id="profileContent"></div>
+</div>
+
+<div class="modal-bg" id="resetModalBg">
+  <div class="modal">
+    <h2>Сбросить контекст?</h2>
+    <div class="sub" id="resetReason">Модель рекомендует сбросить проблемную ветку диалога.</div>
+    <div class="row">
+      <button class="action ghost" id="resetCancel">Отмена</button>
+      <button class="action danger" id="resetConfirm">Сбросить</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2>Настройки</h2>
+    <label for="keyInput">Groq API Key (gsk_…)</label>
+    <input type="password" id="keyInput" placeholder="gsk_..." autocomplete="off" />
+    <label class="check">
+      <input type="checkbox" id="rememberKey" />
+      Запомнить ключ на этом устройстве
+    </label>
+    <label>Режим глубины</label>
+    <div class="segmented" id="depthSeg">
+      <button data-depth="quiet">Тихий</button>
+      <button data-depth="deep">Глубокий</button>
+    </div>
+    <div class="row">
+      <button class="action ghost" id="exportData">Экспорт</button>
+      <button class="action ghost" id="importData">Импорт</button>
+    </div>
+    <div class="row">
+      <button class="action primary" id="saveSettings">Сохранить</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none" />
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const API_BASE = window.location.origin;
+  const LS_KEY = "monolog_api_key";
+  const LS_PROFILE = "monolog_profile";
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  const MAX_TEXT_CHARS = 3000;
+  const MAX_FILES = 3;
+
+  const DB_NAME = "monolog_db";
+  const DB_VERSION = 1;
+  const STORE = "state";
+
+  const LOTTIE_STRATEGIST = "https://assets10.lottiefiles.com/packages/lf20_kkflmtur.json";
+  const LOTTIE_ANALYST = "https://assets10.lottiefiles.com/packages/lf20_yr6zz3wv.json";
+
+  const FALLBACK_SVG = {
+    strategist: '<svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="12" r="5" fill="#4A6CF7" opacity="0.9"/><path d="M6 28c0-5 4.5-9 10-9s10 4 10 9" fill="#4A6CF7" opacity="0.7"/></svg>',
+    analyst: '<svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="12" r="5" fill="#E07A5F" opacity="0.9"/><path d="M6 28c0-5 4.5-9 10-9s10 4 10 9" fill="#E07A5F" opacity="0.7"/></svg>'
+  };
+
+  const THINKING_PHRASES = [
+    "Синхронизирую с плоскостью…",
+    "Проверяю коллизии…",
+    "Строю карту восприятия…",
+    "Оцениваю стабильность…"
+  ];
+
+  const COMPASS_AXES = [
+    { key: "развитие", label: "Развитие" },
+    { key: "стабильность", label: "Стабильность" },
+    { key: "свобода", label: "Свобода" },
+    { key: "контроль", label: "Контроль" },
+    { key: "связь", label: "Связь" },
+  ];
+
+  const state = {
+    apiKey: "",
+    profile: { depth: "deep" },
+    history: [],
+    attachments: [],
+    lastKeySource: null,
+    lastMetrics: null,
+    importantIds: new Set(),
+    shownAvatarLabels: new Set(),
+    passport: null,
+    cognitive: null,
+  };
+
+  // --- IndexedDB ---
+  let _db = null;
+  function openDB() {
+    return new Promise(function (resolve, reject) {
+      if (_db) return resolve(_db);
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = function (e) {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+      };
+      req.onsuccess = function (e) { _db = e.target.result; resolve(_db); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+  async function dbGet(key) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(STORE, "readonly");
+        const req = tx.objectStore(STORE).get(key);
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { resolve(null); };
+      });
+    } catch (e) { return null; }
+  }
+  async function dbSet(key, val) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).put(val, key);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(false); };
+      });
+    } catch (e) { return false; }
+  }
+  async function dbDel(key) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(STORE, "readwrite");
+        tx.objectStore(STORE).delete(key);
+        tx.oncomplete = function () { resolve(true); };
+      });
+    } catch (e) { return false; }
+  }
+
+  async function loadState() {
+    const data = await dbGet("core");
+    if (!data) return;
+    state.history = data.history || [];
+    state.passport = data.passport || null;
+    state.cognitive = data.cognitive || null;
+    state.lastMetrics = data.lastMetrics || null;
+    if (Array.isArray(data.importantIds)) state.importantIds = new Set(data.importantIds);
+  }
+
+  async function persist() {
+    try {
+      if (state.apiKey) localStorage.setItem(LS_KEY, state.apiKey);
+      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+    } catch (e) {}
+    await dbSet("core", {
+      history: state.history.slice(-200),
+      passport: state.passport,
+      cognitive: state.cognitive,
+      lastMetrics: state.lastMetrics,
+      importantIds: Array.from(state.importantIds),
+    });
+  }
+
+  function toast(text) {
+    const el = document.getElementById("toast");
+    el.textContent = text;
+    el.classList.add("show");
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.classList.remove("show"); }, 1600);
+  }
+
+  function applyProfile() {
+    document.querySelectorAll("#depthSeg button").forEach(function (el) {
+      el.classList.toggle("active", el.dataset.depth === state.profile.depth);
+    });
+  }
+
+  function renderMarkdown(text) {
+    const safe = text == null ? "" : String(text);
+    if (typeof marked !== "undefined" && marked && typeof marked.parse === "function") {
+      try { return marked.parse(safe); } catch (e) {}
+    }
+    const esc = safe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
+  }
+
+  function escHtml(t) {
+    return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function pickAvatar(metrics) {
+    const scale = (metrics && metrics.mind_scale) || "";
+    if (scale === "strategic" || scale === "systemic") {
+      return { kind: "strategist", label: "Стратег", lottie: LOTTIE_STRATEGIST, fb: FALLBACK_SVG.strategist };
+    }
+    return { kind: "analyst", label: "Аналитик", lottie: LOTTIE_ANALYST, fb: FALLBACK_SVG.analyst };
+  }
+
+  function mountLottie(box, url, fallbackSvg) {
+    if (!box) return;
+    if (typeof lottie === "undefined") {
+      box.innerHTML = '<div class="fallback">' + fallbackSvg + '</div>';
+      return;
+    }
+    try {
+      const anim = lottie.loadAnimation({
+        container: box,
+        renderer: "svg",
+        loop: true,
+        autoplay: true,
+        path: url,
+      });
+      anim.addEventListener("data_failed", function () {
+        box.innerHTML = '<div class="fallback">' + fallbackSvg + '</div>';
+      });
+    } catch (e) {
+      box.innerHTML = '<div class="fallback">' + fallbackSvg + '</div>';
+    }
+  }
+
+  function addRow(role, content, metrics, options) {
+    options = options || {};
+    const chat = document.getElementById("chat");
+    if (!chat) return null;
+
+    const row = document.createElement("div");
+    row.className = "row " + role;
+
+    if (role === "agent") {
+      const wrap = document.createElement("div");
+      wrap.className = "avatar-wrap";
+      const av = pickAvatar(metrics);
+      const avatar = document.createElement("div");
+      avatar.className = "avatar";
+      const lottieBox = document.createElement("div");
+      lottieBox.className = "lottie-box";
+      avatar.appendChild(lottieBox);
+      mountLottie(lottieBox, av.lottie, av.fb);
+      wrap.appendChild(avatar);
+      if (!state.shownAvatarLabels.has(av.label)) {
+        const lbl = document.createElement("span");
+        lbl.className = "avatar-label";
+        lbl.textContent = av.label;
+        wrap.appendChild(lbl);
+        state.shownAvatarLabels.add(av.label);
+      }
+      row.appendChild(wrap);
+      row._avatar = avatar;
+    }
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    if (role === "agent") {
+      bubble.innerHTML = renderMarkdown(content);
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "msg-copy";
+      copyBtn.type = "button";
+      copyBtn.title = "Копировать сообщение";
+      copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      copyBtn.addEventListener("click", function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(content || "");
+        toast("Скопировано");
+      });
+      bubble.appendChild(copyBtn);
+
+      const impBtn = document.createElement("button");
+      impBtn.className = "msg-important";
+      impBtn.type = "button";
+      impBtn.title = "Пометить как важное";
+      impBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>';
+      const msgId = options.msgId != null ? options.msgId : state.history.length;
+      if (state.importantIds.has(msgId)) impBtn.classList.add("active");
+      impBtn.addEventListener("click", function () {
+        if (state.importantIds.has(msgId)) state.importantIds.delete(msgId);
+        else state.importantIds.add(msgId);
+        impBtn.classList.toggle("active");
+      });
+      bubble.appendChild(impBtn);
+
+      bubble.querySelectorAll("pre").forEach(function (pre) {
+        const btn = document.createElement("button");
+        btn.className = "copy-code-btn";
+        btn.type = "button";
+        btn.textContent = "Копировать";
+        btn.addEventListener("click", function () {
+          const code = pre.querySelector("code");
+          const text = code ? code.innerText : pre.innerText;
+          if (navigator.clipboard) navigator.clipboard.writeText(text);
+          btn.textContent = "Готово";
+          setTimeout(function () { btn.textContent = "Копировать"; }, 1200);
+        });
+        pre.appendChild(btn);
+      });
+    } else {
+      bubble.textContent = content;
+    }
+
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+    return { row: row, bubble: bubble, avatar: row._avatar };
+  }
+
+  function updateChip(metrics) {
+    const chip = document.getElementById("stabilityChip");
+    const val = document.getElementById("chipValue");
+    if (!chip || !val) return;
+    const si = metrics && typeof metrics.stability_index === "number" ? metrics.stability_index : 0;
+    chip.className = "stability-chip";
+    if (si < 0.5) chip.classList.add("critical");
+    else if (si < 0.75) chip.classList.add("warning");
+    val.textContent = si.toFixed(2);
+  }
+
+  function updateConditionalUI(metrics) {
+    // Паспорт — при strategic / systemic
+    const scale = metrics && metrics.mind_scale;
+    const passportBtn = document.getElementById("passportBtn");
+    if (scale === "strategic" || scale === "systemic") {
+      passportBtn.style.display = "inline-flex";
+    } else {
+      passportBtn.style.display = "none";
+    }
+
+    // Сброс — по reset_proposal
+    const rp = metrics && metrics.reset_proposal;
+    const chip = document.getElementById("resetChip");
+    if (rp && rp.recommended) {
+      let label = "Сбросить";
+      if (rp.reset_point) {
+        const m = String(rp.reset_point).match(/#?(\d+)/);
+        if (m) label = "Сбросить с #" + m[1];
+      }
+      document.getElementById("resetChipLabel").textContent = label;
+      chip.classList.add("show");
+      chip.dataset.reason = rp.reason || "";
+      chip.dataset.point = rp.reset_point || "";
+    } else {
+      chip.classList.remove("show");
+    }
+  }
+
+  function updateMetrics(metrics) {
+    const m = metrics || {};
+    state.lastMetrics = m;
+
+    if (m.passport) {
+      state.passport = Object.assign(state.passport || {}, m.passport);
+    }
+    if (m.profile) {
+      state.cognitive = state.cognitive || { values: {}, patterns: [], distortions: [], insights: [] };
+      if (m.profile.values && typeof m.profile.values === "object") {
+        state.cognitive.values = Object.assign(state.cognitive.values || {}, m.profile.values);
+      }
+      ["patterns", "distortions", "insights"].forEach(function (k) {
+        const old = state.cognitive[k] || [];
+        const incoming = m.profile[k] || [];
+        const seen = new Set(old.map(String));
+        incoming.forEach(function (it) {
+          if (!seen.has(String(it))) { old.push(it); seen.add(String(it)); }
+        });
+        state.cognitive[k] = old;
+      });
+    }
+
+    persist();
+
+    const si = typeof m.stability_index === "number" ? m.stability_index : 0;
+    document.getElementById("mStability").textContent = si.toFixed(2);
+    const prog = document.getElementById("mProgress");
+    prog.style.width = (si * 100) + "%";
+    prog.className = "progress-fill";
+    if (si < 0.5) prog.classList.add("critical");
+    else if (si < 0.75) prog.classList.add("warning");
+
+    document.getElementById("mStatus").textContent = m.indicator_status || "—";
+    document.getElementById("mProtocol").textContent = m.protocol_integrity === false ? "сбой" : "соблюдён";
+    document.getElementById("mScale").textContent = m.mind_scale || "—";
+    document.getElementById("mCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
+    document.getElementById("mCollisions").textContent = m.collisions_resolved || "—";
+    document.getElementById("mPulse").textContent = m.cognitive_pulse || "—";
+
+    const hc = typeof m.human_contribution === "number" ? m.human_contribution : null;
+    document.getElementById("mHuman").textContent = hc != null
+      ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%"
+      : "—";
+    document.getElementById("mKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
+
+    updateChip(m);
+    updateConditionalUI(m);
+  }
+
+  function fileIcon(type) {
+    if (type && type.startsWith("image/")) {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+  }
+
+  async function extractTextFromFile(file) {
+    const name = file.name || "";
+    const type = file.type || "";
+    const ext = name.split(".").pop().toLowerCase();
+
+    if (type.startsWith("image/")) return "[Изображение: " + name + "]";
+    if (ext === "txt" || type === "text/plain") return await file.text();
+
+    if (ext === "docx" && window.mammoth) {
+      try {
+        const buf = await file.arrayBuffer();
+        const r = await window.mammoth.extractRawText({ arrayBuffer: buf });
+        return r.value || "";
+      } catch (e) { return "[Не удалось прочитать DOCX]"; }
+    }
+
+    if (ext === "pdf" && window.pdfjsLib) {
+      try {
+        const buf = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+        let out = "";
+        const pages = Math.min(pdf.numPages, 10);
+        for (let i = 1; i <= pages; i++) {
+          const page = await pdf.getPage(i);
+          const c = await page.getTextContent();
+          out += c.items.map(function (it) { return it.str; }).join(" ") + "\n";
+        }
+        return out;
+      } catch (e) { return "[Не удалось прочитать PDF]"; }
+    }
+    return "[Формат не поддерживается: " + name + "]";
+  }
+
+  function renderAttachPreview() {
+    const box = document.getElementById("attachPreview");
+    box.innerHTML = "";
+    state.attachments.forEach(function (a, idx) {
+      const chip = document.createElement("div");
+      chip.className = "attach-chip";
+      chip.innerHTML = fileIcon(a.type)
+        + '<span class="name">' + escHtml(a.name) + '</span>'
+        + '<button class="remove" title="Удалить">×</button>';
+      chip.querySelector(".remove").addEventListener("click", function () {
+        state.attachments.splice(idx, 1);
+        renderAttachPreview();
+      });
+      box.appendChild(chip);
+    });
+  }
+
+  async function handleFiles(files) {
+    const list = Array.from(files || []);
+    for (const f of list) {
+      if (state.attachments.length >= MAX_FILES) { alert("Максимум " + MAX_FILES + " файла"); break; }
+      if (f.size > MAX_FILE_SIZE) { alert("Файл " + f.name + " больше 5 МБ"); continue; }
+      let text = await extractTextFromFile(f);
+      if (text.length > MAX_TEXT_CHARS) text = text.slice(0, MAX_TEXT_CHARS) + "\n…[обрезано]";
+      state.attachments.push({ name: f.name, type: f.type, text: text });
+    }
+    renderAttachPreview();
+  }
+
+  async function send() {
+    const input = document.getElementById("input");
+    const btn = document.getElementById("sendBtn");
+    const text = (input.value || "").trim();
+    if (!text && state.attachments.length === 0) return;
+
+    const userDisplay = text || ("[Вложение: " + state.attachments.map(function (a) { return a.name; }).join(", ") + "]");
+    input.value = "";
+    input.style.height = "auto";
+    addRow("user", userDisplay);
+
+    const attachmentsPayload = state.attachments.slice();
+    state.attachments = [];
+    renderAttachPreview();
+
+    btn.disabled = true;
+    const thinking = addRow("agent", "");
+    const bubble = thinking.bubble;
+    if (thinking.avatar) thinking.avatar.classList.add("thinking");
+    bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>'
+      + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
+
+    const headers = { "Content-Type": "application/json" };
+    if (state.apiKey) headers["X-Groq-Key"] = state.apiKey;
+
+    // carried_metrics — только passport и profile, без истории
+    const carried = {
+      passport: state.passport || {},
+      profile: state.cognitive || {},
+    };
+
+    try {
+      const r = await fetch(API_BASE + "/chat", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          message: text || "Проанализируй вложения.",
+          attachments: attachmentsPayload,
+          carried_metrics: carried,
+        }),
+      });
+
+      let data = null;
+      try { data = await r.json(); } catch (e) {}
+
+      const chat = document.getElementById("chat");
+      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
+
+      if (!r.ok) {
+        addRow("agent", "Ошибка: " + ((data && data.detail) || r.statusText));
+      } else if (data) {
+        state.lastKeySource = data.key_source || null;
+        const newMsgId = state.history.length;
+        addRow("agent", data.reply_text || "", data.metrics, { msgId: newMsgId });
+        updateMetrics(data.metrics);
+        state.history.push({ role: "user", content: userDisplay });
+        state.history.push({ role: "assistant", content: data.reply_text || "" });
+        persist();
+      } else {
+        addRow("agent", "Пустой ответ сервера.");
+      }
+    } catch (e) {
+      const chat = document.getElementById("chat");
+      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
+      addRow("agent", "Сбой сети: " + (e && e.message ? e.message : "unknown"));
+    } finally {
+      btn.disabled = false;
+      input.focus();
+    }
+  }
+
+  function openSheet(id) {
+    document.getElementById("sheetBg").classList.add("open");
+    document.getElementById(id).classList.add("open");
+  }
+  function closeAllSheets() {
+    document.getElementById("sheetBg").classList.remove("open");
+    document.querySelectorAll(".sheet").forEach(function (s) { s.classList.remove("open"); });
+  }
+
+  function renderPassport() {
+    const box = document.getElementById("passportContent");
+    const p = state.passport;
+
+    if (!p || (!p.title && !p.goal && !p.result)) {
+      box.innerHTML = '<h3>Паспорт проекта</h3><div class="sheet-sub">Пока не заполнен</div>'
+        + '<div class="empty-note">Паспорт заполняется автоматически по мере диалога. Начни описывать проект — Monolog соберёт данные.</div>';
+      return;
+    }
+
+    const levelLabels = {
+      micro: "Микро",
+      tactical: "Тактический",
+      strategic: "Стратегический",
+      systemic: "Системный",
+    };
+    const lvl = p.level || "micro";
+    const completion = Math.max(0, Math.min(100, p.completion || 0));
+
+    let html = '<h3>Паспорт проекта</h3>';
+    html += '<div class="sheet-sub">Обновляется автоматически</div>';
+    html += '<span class="passport-level">' + (levelLabels[lvl] || lvl) + '</span>';
+
+    if (p.title) html += '<div class="passport-title">' + escHtml(p.title) + '</div>';
+    if (p.goal) html += '<div class="passport-goal">' + escHtml(p.goal) + '</div>';
+
+    html += '<div class="metric" style="margin-top:12px;">'
+      + '<div class="metric-row"><span>Наполнение</span><span>' + completion + '%</span></div>'
+      + '<div class="progress"><div class="progress-fill" style="width:' + completion + '%"></div></div>'
+      + '</div>';
+
+    function field(label, value) {
+      if (!value) return "";
+      if (Array.isArray(value)) {
+        if (value.length === 0) return "";
+        return '<div class="passport-field"><div class="passport-field-label">' + label + '</div>'
+          + '<div class="passport-field-value"><ul>'
+          + value.map(function (v) { return '<li>' + escHtml(typeof v === "string" ? v : JSON.stringify(v)) + '</li>'; }).join("")
+          + '</ul></div></div>';
+      }
+      return '<div class="passport-field"><div class="passport-field-label">' + label + '</div>'
+        + '<div class="passport-field-value">' + escHtml(value) + '</div></div>';
+    }
+
+    html += field("Результат", p.result);
+    html += field("Миссия", p.mission);
+    html += field("Ценности", p.values);
+    html += field("Ограничения", p.constraints);
+    html += field("Стейкхолдеры", p.stakeholders);
+    html += field("Риски", p.risks);
+    html += field("Метрики успеха", p.metrics);
+
+    box.innerHTML = html;
+  }
+
+  function renderCompass(values) {
+    const size = 220;
+    const cx = size / 2;
+    const cy = size / 2;
+    const radius = 80;
+    const n = COMPASS_AXES.length;
+
+    function point(i, r) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
+    }
+
+    let svg = '<svg class="compass-svg" viewBox="0 0 ' + size + ' ' + size + '">';
+
+    [1, 0.66, 0.33].forEach(function (scale) {
+      let ring = "";
+      for (let i = 0; i < n; i++) {
+        const [x, y] = point(i, radius * scale);
+        ring += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      }
+      ring += "Z";
+      svg += '<path class="compass-ring" d="' + ring + '"/>';
+    });
+
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius);
+      svg += '<line class="compass-axis" x1="' + cx + '" y1="' + cy + '" x2="' + x.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>';
+    }
+
+    const vals = COMPASS_AXES.map(function (a) {
+      const v = values && typeof values[a.key] === "number" ? values[a.key] : 0;
+      return Math.max(0, Math.min(1, v));
+    });
+
+    if (vals.some(function (v) { return v > 0; })) {
+      let poly = "";
+      vals.forEach(function (v, i) {
+        const [x, y] = point(i, radius * v);
+        poly += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      });
+      poly += "Z";
+      svg += '<path class="compass-fill" d="' + poly + '"/>';
+      vals.forEach(function (v, i) {
+        if (v <= 0) return;
+        const [x, y] = point(i, radius * v);
+        svg += '<circle class="compass-dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5"/>';
+      });
+    }
+
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius + 20);
+      const anchor = Math.abs(x - cx) < 4 ? "middle" : (x > cx ? "start" : "end");
+      svg += '<text class="compass-label" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" dominant-baseline="middle">' + COMPASS_AXES[i].label + '</text>';
+    }
+
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderProfile() {
+    const box = document.getElementById("profileContent");
+    const c = state.cognitive;
+
+    let html = '<h3>Профиль</h3>';
+    html += '<div class="sheet-sub">Когнитивная карта пользователя</div>';
+
+    html += '<div class="group-title">Ценностный компас</div>';
+    if (!c || !c.values || Object.keys(c.values).length === 0) {
+      html += '<div class="empty-note">Пока нет данных. Продолжай диалог — Monolog накопит информацию.</div>';
+    } else {
+      html += '<div class="compass-wrap">' + renderCompass(c.values) + '</div>';
+    }
+
+    html += '<div class="group-title">Паттерны мышления</div>';
+    if (!c || !c.patterns || c.patterns.length === 0) {
+      html += '<div class="empty-note">Пока не выявлены.</div>';
+    } else {
+      html += '<div class="tag-list">'
+        + c.patterns.map(function (p) { return '<span class="tag">' + escHtml(p) + '</span>'; }).join("")
+        + '</div>';
+    }
+
+    html += '<div class="group-title">Когнитивные искажения</div>';
+    if (!c || !c.distortions || c.distortions.length === 0) {
+      html += '<div class="empty-note">Не обнаружены.</div>';
+    } else {
+      html += '<div class="tag-list">'
+        + c.distortions.map(function (p) { return '<span class="tag warm">' + escHtml(p) + '</span>'; }).join("")
+        + '</div>';
+    }
+
+    html += '<div class="group-title">Наблюдения</div>';
+    if (!c || !c.insights || c.insights.length === 0) {
+      html += '<div class="empty-note">Пока нет.</div>';
+    } else {
+      html += '<div style="display:flex; flex-direction:column; gap:8px;">'
+        + c.insights.map(function (i) { return '<div class="passport-field-value">' + escHtml(i) + '</div>'; }).join("")
+        + '</div>';
+    }
+
+    box.innerHTML = html;
+  }
+
+  function openModal() {
+    document.getElementById("keyInput").value = state.apiKey || "";
+    document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
+    applyProfile();
+    document.getElementById("modalBg").classList.add("open");
+  }
+  function closeModal() { document.getElementById("modalBg").classList.remove("open"); }
+
+  function openResetModal() {
+    const chip = document.getElementById("resetChip");
+    document.getElementById("resetReason").textContent = chip.dataset.reason || "Модель рекомендует сбросить проблемную ветку диалога.";
+    document.getElementById("resetModalBg").classList.add("open");
+  }
+  function closeResetModal() { document.getElementById("resetModalBg").classList.remove("open"); }
+
+  function setupSwipeToClose(sheetEl, handleEl) {
+    if (!sheetEl || !handleEl) return;
+    let startY = 0, currentY = 0, dragging = false;
+    function onStart(e) { dragging = true; startY = (e.touches ? e.touches[0].clientY : e.clientY); sheetEl.style.transition = "none"; }
+    function onMove(e) { if (!dragging) return; currentY = (e.touches ? e.touches[0].clientY : e.clientY); const dy = Math.max(0, currentY - startY); sheetEl.style.transform = "translateY(" + dy + "px)"; }
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      sheetEl.style.transition = "";
+      sheetEl.style.transform = "";
+      if (currentY - startY > 70) closeAllSheets();
+    }
+    handleEl.addEventListener("touchstart", onStart, { passive: true });
+    handleEl.addEventListener("touchmove", onMove, { passive: true });
+    handleEl.addEventListener("touchend", onEnd);
+    handleEl.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+  }
+
+  async function init() {
+    applyProfile();
+    await loadState();
+
+    setupSwipeToClose(document.getElementById("metricsSheet"), document.getElementById("sheetHandle"));
+    setupSwipeToClose(document.getElementById("passportSheet"), document.getElementById("passportHandle"));
+    setupSwipeToClose(document.getElementById("profileSheet"), document.getElementById("profileHandle"));
+
+    state.history.forEach(function (m, idx) {
+      addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
+    });
+
+    if (state.lastMetrics) {
+      updateChip(state.lastMetrics);
+      updateConditionalUI(state.lastMetrics);
+    }
+
+    const sendBtn = document.getElementById("sendBtn");
+    const input = document.getElementById("input");
+    const fileInput = document.getElementById("fileInput");
+
+    sendBtn.addEventListener("click", send);
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    input.addEventListener("input", function () {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 110) + "px";
+    });
+
+    document.getElementById("attachBtn").addEventListener("click", function () { fileInput.click(); });
+    fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
+
+    document.getElementById("stabilityChip").addEventListener("click", function () { openSheet("metricsSheet"); });
+    document.getElementById("passportBtn").addEventListener("click", function () {
+      renderPassport();
+      openSheet("passportSheet");
+    });
+    document.getElementById("profileBtn").addEventListener("click", function () {
+      renderProfile();
+      openSheet("profileSheet");
+    });
+    document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
+
+    document.getElementById("resetChip").addEventListener("click", openResetModal);
+    document.getElementById("resetModalBg").addEventListener("click", function (e) { if (e.target === this) closeResetModal(); });
+    document.getElementById("resetCancel").addEventListener("click", closeResetModal);
+    document.getElementById("resetConfirm").addEventListener("click", function () {
+      // Частичный сброс: обрезаем историю от точки, рекомендованной моделью.
+      const chip = document.getElementById("resetChip");
+      const point = chip.dataset.point || "";
+      const match = String(point).match(/#?(\d+)/);
+      if (match) {
+        const idx = parseInt(match[1], 10);
+        if (idx >= 0 && idx < state.history.length) {
+          state.history = state.history.slice(0, idx);
+        }
+      } else {
+        state.history = [];
+      }
+      document.getElementById("chat").innerHTML = "";
+      state.history.forEach(function (m, idx) {
+        addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
+      });
+      persist();
+      chip.classList.remove("show");
+      closeResetModal();
+      toast("Контекст сброшен");
+    });
+
+    document.getElementById("settingsBtn").addEventListener("click", openModal);
+    document.getElementById("modalBg").addEventListener("click", function (e) { if (e.target === this) closeModal(); });
+
+    document.querySelectorAll("#depthSeg button").forEach(function (el) {
+      el.addEventListener("click", function () {
+        state.profile.depth = el.dataset.depth;
+        applyProfile();
+      });
+    });
+
+    document.getElementById("saveSettings").addEventListener("click", function () {
+      const key = (document.getElementById("keyInput").value || "").trim();
+      const remember = document.getElementById("rememberKey").checked;
+      state.apiKey = key;
+      if (remember && key) localStorage.setItem(LS_KEY, key);
+      else localStorage.removeItem(LS_KEY);
+      persist();
+      closeModal();
+    });
+
+    document.getElementById("exportData").addEventListener("click", function () {
+      const blob = new Blob([JSON.stringify({
+        history: state.history,
+        profile: state.profile,
+        passport: state.passport,
+        cognitive: state.cognitive,
+      }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "monolog_export_" + Date.now() + ".json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    document.getElementById("importData").addEventListener("click", function () {
+      document.getElementById("importFile").click();
+    });
+    document.getElementById("importFile").addEventListener("change", function (e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function () {
+        try {
+          const data = JSON.parse(reader.result);
+          state.history = data.history || [];
+          state.profile = Object.assign(state.profile, data.profile || {});
+          state.passport = data.passport || null;
+          state.cognitive = data.cognitive || null;
+          await persist();
+          location.reload();
+        } catch (err) { alert("Некорректный файл"); }
+      };
+      reader.readAsText(file);
+    });
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
