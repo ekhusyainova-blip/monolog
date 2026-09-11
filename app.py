@@ -118,6 +118,7 @@ SYSTEM_PROMPT = '''Ты — когнитивный AI-партнёр Monolog. О
   "human_contribution": 0.60,
   "protocol_integrity": true
 }
+‘’’
 === 4. API: ПОЛУЧЕНИЕ ИЛИ СОЗДАНИЕ ПРОЕКТА ===
 @app.get(”/api/project”)
 async def get_or_create_project(user_id: str = “anonymous_test”):
