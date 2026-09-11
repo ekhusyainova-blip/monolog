@@ -1,11 +1,12 @@
 # app.py
-# Monolog — stateless-прокси к Groq.
+# Monolog — stateless-прокси к Groq + блог автора через GitHub API.
 # Слой B НЕ отправляется в LLM. История НЕ отправляется.
-# Модель работает с текущим запросом + carried_metrics.
 
 import os
 import re
 import json
+import time
+import base64
 import logging
 import itertools
 from typing import Optional, List, Dict, Any
@@ -30,6 +31,13 @@ _DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(
 _dev_key_cycle = itertools.cycle(_DEV_KEYS) if _DEV_KEYS else None
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
 
+# --- Blog config ---
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
+GITHUB_REPO = os.getenv("GITHUB_REPO", "ekhusyainova-blip/monolog").strip()
+GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
+BLOG_PATH = "blog/posts.json"
+AUTHOR_SECRET = os.getenv("AUTHOR_SECRET", "").strip()
+
 
 def _load(path: str) -> str:
     try:
@@ -40,8 +48,6 @@ def _load(path: str) -> str:
         return ""
 
 LAYER_A = _load("prompts/layer_a.txt")
-# LAYER_B сознательно НЕ подгружается в промпт.
-# Файл prompts/layer_b.txt остаётся как документация методологии.
 
 
 def mask_key(key: str) -> str:
@@ -67,6 +73,14 @@ def pick_key(request: Request):
     return None, "none"
 
 
+def check_author(request: Request):
+    if not AUTHOR_SECRET:
+        raise HTTPException(status_code=503, detail="AUTHOR_SECRET не настроен на сервере")
+    key = request.headers.get("X-Author-Key", "").strip()
+    if key != AUTHOR_SECRET:
+        raise HTTPException(status_code=403, detail="Неверный ключ автора")
+
+
 BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
@@ -84,7 +98,6 @@ BASE_METRICS = {
     "impact_map": None,
     "reset_proposal": None,
     "artifact_status": None,
-    "artifacts": [],
     "required_skills": [],
     "risk_intercept": None,
     "reasoning_trace": None,
@@ -93,24 +106,14 @@ BASE_METRICS = {
     "protocol_integrity": True,
     "developer_mode": False,
     "reminder": None,
+    "artifacts": [],
     "passport": {
-        "level": "micro",
-        "title": None,
-        "goal": None,
-        "result": None,
-        "mission": None,
-        "values": [],
-        "constraints": [],
-        "stakeholders": [],
-        "risks": [],
-        "metrics": [],
-        "completion": 0,
+        "level": "micro", "title": None, "goal": None, "result": None,
+        "mission": None, "values": [], "constraints": [], "stakeholders": [],
+        "risks": [], "metrics": [], "completion": 0,
     },
     "profile": {
-        "values": {},
-        "patterns": [],
-        "distortions": [],
-        "insights": [],
+        "values": {}, "patterns": [], "distortions": [], "insights": [],
     },
 }
 
@@ -165,7 +168,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         if v is not None:
             result[k] = v
 
-    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -182,14 +184,11 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
-    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
-
     if isinstance(inc_prof.get("values"), dict) and inc_prof["values"]:
         merged_prof["values"] = {**merged_prof.get("values", {}), **inc_prof["values"]}
-
     for list_key in ("patterns", "distortions", "insights"):
         old = list(merged_prof.get(list_key) or [])
         new = inc_prof.get(list_key) or []
@@ -202,11 +201,9 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         merged_prof[list_key] = old
     result["profile"] = merged_prof
 
-    # reminder
     inc_rem = (incoming or {}).get("reminder")
     result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
 
-    # artifacts — дедупликация по id
     inc_art = (incoming or {}).get("artifacts") or []
     car_art = list(carried.get("artifacts") or [])
     seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
@@ -230,7 +227,7 @@ SYSTEM_PROMPT = (
     "reply_text — Markdown-текст ответа на русском языке. БЕЗ ЭМОДЗИ. "
     "Используй Markdown: заголовки, списки, таблицы, код. "
     "metrics — строго по схеме ниже. "
-    "Блоки passport, profile и reminder заполняй постепенно, только тем, что знаешь. "
+    "Блоки passport, profile, reminder, artifacts заполняй постепенно. "
     "Пустые поля — null или []. Не выдумывай.\n\n"
     f"=== ИНСТРУКЦИЯ ===\n{LAYER_A}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
@@ -238,16 +235,10 @@ SYSTEM_PROMPT = (
 
 
 async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
-    headers = {
-        "Authorization": f"Bearer {api_key}",
-        "Content-Type": "application/json",
-    }
+    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
-        "model": MODEL,
-        "messages": messages,
-        "max_tokens": MAX_TOKENS,
-        "temperature": 0.6,
-        "reasoning_effort": "none",
+        "model": MODEL, "messages": messages, "max_tokens": MAX_TOKENS,
+        "temperature": 0.6, "reasoning_effort": "none",
     }
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         r = await client.post(GROQ_URL, headers=headers, json=payload)
@@ -257,10 +248,7 @@ async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
 
     if r.status_code == 429:
         retry_after = r.headers.get("retry-after", "неизвестно")
-        raise HTTPException(
-            status_code=429,
-            detail=f"Лимит Groq исчерпан. Повторите через {retry_after} сек. Или введите свой ключ."
-        )
+        raise HTTPException(status_code=429, detail=f"Лимит Groq исчерпан. Повторите через {retry_after} сек. Или введите свой ключ.")
     if r.status_code >= 400:
         log.error(f"Groq error {r.status_code}: {r.text[:300]}")
         raise HTTPException(status_code=r.status_code, detail="Ошибка Groq API")
@@ -270,12 +258,84 @@ async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
     return strip_thinking(content)
 
 
+# --- GitHub API ---
+GITHUB_API = "https://api.github.com"
+
+_blog_cache = {"posts": None, "etag": None, "fetched_at": 0}
+BLOG_CACHE_TTL = 300
+
+
+async def github_get_file():
+    """Возвращает (posts_list, sha). Из кэша, если свежий."""
+    now = time.time()
+    if _blog_cache["posts"] is not None and (now - _blog_cache["fetched_at"]) < BLOG_CACHE_TTL:
+        return _blog_cache["posts"], _blog_cache.get("sha")
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{BLOG_PATH}"
+    headers = {"Accept": "application/vnd.github+json"}
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
+
+    if r.status_code == 404:
+        return [], None
+    if r.status_code >= 400:
+        log.error(f"GitHub get error {r.status_code}: {r.text[:200]}")
+        raise HTTPException(status_code=502, detail="Не удалось прочитать блог из GitHub")
+
+    data = r.json()
+    content_b64 = data.get("content", "")
+    try:
+        raw = base64.b64decode(content_b64).decode("utf-8")
+        posts = json.loads(raw) if raw.strip() else []
+    except Exception:
+        posts = []
+
+    _blog_cache["posts"] = posts
+    _blog_cache["sha"] = data.get("sha")
+    _blog_cache["fetched_at"] = now
+    return posts, data.get("sha")
+
+
+async def github_put_file(posts: list, message: str):
+    """Обновляет blog/posts.json в GitHub."""
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+
+    _, sha = await github_get_file()
+
+    content = json.dumps(posts, ensure_ascii=False, indent=2)
+    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{BLOG_PATH}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
+    body = {"message": message, "content": content_b64, "branch": GITHUB_BRANCH}
+    if sha:
+        body["sha"] = sha
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.put(url, headers=headers, json=body)
+
+    if r.status_code >= 400:
+        log.error(f"GitHub put error {r.status_code}: {r.text[:200]}")
+        raise HTTPException(status_code=502, detail="Не удалось сохранить блог в GitHub")
+
+    # Инвалидируем кэш
+    _blog_cache["posts"] = posts
+    _blog_cache["sha"] = r.json().get("content", {}).get("sha")
+    _blog_cache["fetched_at"] = time.time()
+    return True
+
+
 app = FastAPI(title="Monolog MVP")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
 
 
@@ -286,7 +346,13 @@ async def root():
 
 @app.get("/health")
 async def health():
-    return {"status": "ok", "dev_keys": len(_DEV_KEYS), "byok": ALLOW_BYOK}
+    return {
+        "status": "ok",
+        "dev_keys": len(_DEV_KEYS),
+        "byok": ALLOW_BYOK,
+        "blog_ready": bool(GITHUB_TOKEN),
+        "author_secret_set": bool(AUTHOR_SECRET),
+    }
 
 
 @app.post("/chat")
@@ -295,7 +361,6 @@ async def chat(request: Request):
     user_message = (body.get("message") or "").strip()
     attachments = body.get("attachments") or []
     carried_metrics = body.get("carried_metrics") or {}
-    # history сознательно НЕ читается.
 
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
@@ -307,37 +372,124 @@ async def chat(request: Request):
     log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)} | files={len(attachments)}")
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-
     user_content = user_message or "Проанализируй вложения."
     if attachments:
         block = "\n\n=== ВЛОЖЕНИЯ ===\n"
         for a in attachments[:3]:
             block += f"\n[Файл: {a.get('name', 'без имени')}]\n{a.get('text', '')}\n"
         user_content = user_content + block
-
     messages.append({"role": "user", "content": user_content})
 
     raw = await groq_call(messages, api_key)
-
     parsed = extract_json(raw)
+
     if parsed and "reply_text" in parsed:
         metrics = merge_metrics(parsed.get("metrics") or {}, carried_metrics)
-        return JSONResponse({
-            "reply_text": parsed["reply_text"],
-            "metrics": metrics,
-            "key_source": source,
-        })
+        return JSONResponse({"reply_text": parsed["reply_text"], "metrics": metrics, "key_source": source})
 
     log.warning(f"JSON parse failed. Raw (first 300): {raw[:300]}")
     cleaned = strip_thinking(raw)
     fallback_metrics = merge_metrics({}, carried_metrics)
     fallback_metrics["protocol_integrity"] = False
     fallback_metrics["indicator_status"] = "warning"
-    return JSONResponse({
-        "reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.",
-        "metrics": fallback_metrics,
-        "key_source": source,
-    })
+    return JSONResponse({"reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.", "metrics": fallback_metrics, "key_source": source})
+
+
+# --- Blog endpoints ---
+
+@app.get("/blog")
+async def blog_list():
+    posts, _ = await github_get_file()
+    # Возвращаем без тяжёлого body, только мета
+    metas = []
+    for p in posts:
+        metas.append({
+            "id": p.get("id"),
+            "title": p.get("title"),
+            "tags": p.get("tags", []),
+            "author": p.get("author", "Эльвира"),
+            "created_at": p.get("created_at"),
+            "updated_at": p.get("updated_at"),
+            "preview": (p.get("body") or "")[:180],
+        })
+    metas.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+    return JSONResponse({"posts": metas, "count": len(metas)})
+
+
+@app.get("/blog/{post_id}")
+async def blog_get(post_id: str):
+    posts, _ = await github_get_file()
+    for p in posts:
+        if p.get("id") == post_id:
+            return JSONResponse(p)
+    raise HTTPException(status_code=404, detail="Статья не найдена")
+
+
+@app.post("/blog/publish")
+async def blog_publish(request: Request):
+    check_author(request)
+    body = await request.json()
+    title = (body.get("title") or "").strip()
+    text = (body.get("body") or "").strip()
+    tags = body.get("tags") or []
+    author = (body.get("author") or "Эльвира").strip()
+
+    if not title or not text:
+        raise HTTPException(status_code=400, detail="Нужны заголовок и текст")
+
+    posts, _ = await github_get_file()
+    post_id = "post_" + str(int(time.time() * 1000))
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    new_post = {
+        "id": post_id,
+        "title": title,
+        "body": text,
+        "tags": tags if isinstance(tags, list) else [],
+        "author": author,
+        "created_at": now,
+        "updated_at": now,
+    }
+    posts.append(new_post)
+    await github_put_file(posts, f"Blog: publish '{title[:50]}'")
+    return JSONResponse({"ok": True, "id": post_id})
+
+
+@app.put("/blog/{post_id}")
+async def blog_update(post_id: str, request: Request):
+    check_author(request)
+    body = await request.json()
+    posts, _ = await github_get_file()
+
+    found = None
+    for p in posts:
+        if p.get("id") == post_id:
+            found = p
+            break
+    if not found:
+        raise HTTPException(status_code=404, detail="Статья не найдена")
+
+    if "title" in body and body["title"] is not None:
+        found["title"] = (body["title"] or "").strip()
+    if "body" in body and body["body"] is not None:
+        found["body"] = body["body"]
+    if "tags" in body and isinstance(body["tags"], list):
+        found["tags"] = body["tags"]
+    found["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
+    await github_put_file(posts, f"Blog: update '{post_id}'")
+    return JSONResponse({"ok": True, "id": post_id})
+
+
+@app.delete("/blog/{post_id}")
+async def blog_delete(post_id: str, request: Request):
+    check_author(request)
+    posts, _ = await github_get_file()
+    new_posts = [p for p in posts if p.get("id") != post_id]
+    if len(new_posts) == len(posts):
+        raise HTTPException(status_code=404, detail="Статья не найдена")
+    await github_put_file(new_posts, f"Blog: delete '{post_id}'")
+    return JSONResponse({"ok": True})
 
 
 if __name__ == "__main__":
