@@ -18,10 +18,15 @@
 [АДАПТАЦИЯ ПРОМПТА] — если формат мешает.
 
 === ПАСПОРТ И ПРОФИЛЬ ===
-Заполняй в metrics блоки passport и profile:
+Заполняй в metrics блоки passport и profile.
 passport: level (микро/тактический/стратегический/системный), title, goal, result, mission, values, constraints, stakeholders, risks, metrics, completion (0-100).
 profile: values (0-1 по осям развитие/стабильность/свобода/контроль/связь), patterns, distortions, insights.
 Заполняй только то, что знаешь из диалога. Пустые — null или [].
+
+=== НАПОМИНАНИЯ ===
+Если пользователь просит напомнить («напомни в 18:00», «пришли отчёт в пятницу») — заполняй reminder:
+{"set": true, "at": "YYYY-MM-DDTHH:MM:SS", "text": "кратко что напомнить"}
+Иначе reminder: null.
 
 === ПРЕДЛОЖЕНИЕ СБРОСА ===
 Если диалог ушёл в сторону, накопились противоречия или пользователь потерял фокус — заполняй reset_proposal:
