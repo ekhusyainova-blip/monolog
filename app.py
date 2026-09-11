@@ -1,7 +1,6 @@
 # app.py
 # Monolog — когнитивный AI-партнёр. Stateless-прокси к Groq.
-# ASSUMPTION: BYOK приоритетнее ротации ключей разработчика.
-# ASSUMPTION: ключ пользователя не сохраняется, не логируется, маскируется.
+# Один этап вызова, сокращённый Слой B, обработка 429.
 
 import os
 import re
@@ -13,7 +12,6 @@ from typing import Optional, List, Dict, Any
 import httpx
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, FileResponse
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -24,15 +22,14 @@ log = logging.getLogger("monolog")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "qwen/qwen3.6-27b"
-MAX_TOKENS = 4000
+MAX_TOKENS = 2000
 TIMEOUT = 60.0
 
-# --- Ротация ключей разработчика ---
 _DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
 _dev_key_cycle = itertools.cycle(_DEV_KEYS) if _DEV_KEYS else None
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
 
-# --- Загрузка промптов ---
+
 def _load(path: str) -> str:
     try:
         with open(path, "r", encoding="utf-8") as f:
@@ -57,8 +54,7 @@ def next_dev_key() -> Optional[str]:
     return next(_dev_key_cycle)
 
 
-def pick_key(request: Request) -> tuple[Optional[str], str]:
-    """Возвращает (ключ, источник). BYOK приоритетнее."""
+def pick_key(request: Request):
     if ALLOW_BYOK:
         user_key = request.headers.get("X-Groq-Key", "").strip()
         if user_key.startswith("gsk_"):
@@ -69,7 +65,6 @@ def pick_key(request: Request) -> tuple[Optional[str], str]:
     return None, "none"
 
 
-# --- JSON-схема (полная) ---
 BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
@@ -98,22 +93,18 @@ BASE_METRICS = {
 
 
 def extract_json(text: str) -> Optional[Dict[str, Any]]:
-    """Ищет последний JSON-объект в тексте ответа модели."""
     if not text:
         return None
-    # Прямой парсинг
     try:
         return json.loads(text)
     except Exception:
         pass
-    # Поиск блока ```json ... ```
     m = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
     if m:
         try:
             return json.loads(m.group(1))
         except Exception:
             pass
-    # Поиск последнего { ... } с балансировкой
     start = text.rfind("{")
     while start != -1:
         depth = 0
@@ -132,6 +123,16 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+SYSTEM_PROMPT = (
+    "Ты — когнитивный AI-партнёр Monolog. Работай по методологии ниже. "
+    "Верни ответ СТРОГО в формате JSON: {\"reply_text\": \"...\", \"metrics\": {...}}. "
+    "reply_text — Markdown-текст ответа. metrics — метрики по схеме.\n\n"
+    f"=== СЛОЙ A ===\n{LAYER_A}\n\n"
+    f"=== СЛОЙ B ===\n{LAYER_B}\n\n"
+    f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
+)
+
+
 async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
     headers = {
         "Authorization": f"Bearer {api_key}",
@@ -145,30 +146,22 @@ async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
     }
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         r = await client.post(GROQ_URL, headers=headers, json=payload)
+
+    remaining = r.headers.get("x-ratelimit-remaining-tokens", "?")
+    log.info(f"Groq response: {r.status_code} | remaining tokens: {remaining}")
+
     if r.status_code == 429:
-        raise HTTPException(status_code=429, detail="Лимит Groq исчерпан. Попробуйте позже или введите свой ключ.")
+        retry_after = r.headers.get("retry-after", "неизвестно")
+        raise HTTPException(
+            status_code=429,
+            detail=f"Лимит Groq исчерпан. Повторите через {retry_after} сек. Или введите свой ключ."
+        )
     if r.status_code >= 400:
         log.error(f"Groq error {r.status_code}: {r.text[:300]}")
         raise HTTPException(status_code=r.status_code, detail="Ошибка Groq API")
+
     data = r.json()
     return data["choices"][0]["message"]["content"]
-
-
-SYSTEM_STAGE1 = (
-    "Ты — внутренний планировщик когнитивной модели Monolog. "
-    "Проанализируй запрос пользователя и сгенерируй Скрытый рабочий промпт: "
-    "оценку картины восприятия, план циклов проверки, потенциальные коллизии и ограничения. "
-    "Ответь ТОЛЬКО текстом скрытого промпта, без пояснений."
-)
-
-SYSTEM_STAGE2 = (
-    "Ты — когнитивный AI-партнёр Monolog. Работай по методологии ниже. "
-    "Верни ответ СТРОГО в формате JSON: {\"reply_text\": \"...\", \"metrics\": {...}}. "
-    "reply_text — Markdown-текст ответа. metrics — метрики по схеме.\n\n"
-    f"=== СЛОЙ A ===\n{LAYER_A}\n\n"
-    f"=== СЛОЙ B ===\n{LAYER_B}\n\n"
-    f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
-)
 
 
 app = FastAPI(title="Monolog MVP")
@@ -204,23 +197,13 @@ async def chat(request: Request):
 
     log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)}")
 
-    # Этап 1: скрытый промпт
-    stage1_messages = [
-        {"role": "system", "content": SYSTEM_STAGE1},
-        {"role": "user", "content": user_message},
-    ]
-    hidden_prompt = await groq_call(stage1_messages, api_key)
-
-    # Этап 2: финальный ответ
-    stage2_messages = [{"role": "system", "content": SYSTEM_STAGE2}]
-    for h in history[-6:]:
+    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    for h in history[-4:]:
         if h.get("role") and h.get("content"):
-            stage2_messages.append({"role": h["role"], "content": h["content"]})
-    stage2_messages.append({
-        "role": "user",
-        "content": f"Запрос: {user_message}\n\nСкрытый рабочий промпт:\n{hidden_prompt}"
-    })
-    raw = await groq_call(stage2_messages, api_key)
+            messages.append({"role": h["role"], "content": h["content"]})
+    messages.append({"role": "user", "content": user_message})
+
+    raw = await groq_call(messages, api_key)
 
     parsed = extract_json(raw)
     if parsed and "reply_text" in parsed:
@@ -231,7 +214,6 @@ async def chat(request: Request):
             "key_source": source,
         })
 
-    # Fallback: модель не вернула JSON
     return JSONResponse({
         "reply_text": raw,
         "metrics": {**BASE_METRICS, "protocol_integrity": False, "indicator_status": "warning"},
@@ -242,4 +224,3 @@ async def chat(request: Request):
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
-    
