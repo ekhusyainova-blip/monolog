@@ -1,6 +1,5 @@
 # app.py
-# Monolog — когнитивный AI-партнёр. Stateless-прокси к Groq.
-# Один этап вызова, сокращённый Слой B, обработка 429.
+# Monolog — stateless-прокси к Groq. Один этап, отключён thinking, отрезан reasoning-блок.
 
 import os
 import re
@@ -22,7 +21,7 @@ log = logging.getLogger("monolog")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "qwen/qwen3.6-27b"
-MAX_TOKENS = 2000
+MAX_TOKENS = 2500
 TIMEOUT = 60.0
 
 _DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
@@ -92,20 +91,36 @@ BASE_METRICS = {
 }
 
 
+def strip_thinking(text: str) -> str:
+    """Убирает блоки рассуждений qwen3.6."""
+    if not text:
+        return text
+    #  thinking...
+    text = re.sub(r" thinking.*?", "", text, flags=re.DOTALL)
+    # <reasoning>...</reasoning> (на всякий случай)
+    text = re.sub(r"<reasoning>.*?</reasoning>", "", text, flags=re.DOTALL)
+    return text.strip()
+
+
 def extract_json(text: str) -> Optional[Dict[str, Any]]:
     if not text:
         return None
+    text = strip_thinking(text)
+
     try:
         return json.loads(text)
     except Exception:
         pass
+
     m = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
     if m:
         try:
             return json.loads(m.group(1))
         except Exception:
             pass
-    start = text.rfind("{")
+
+    # Ищем сбалансированный { ... }
+    start = text.find("{")
     while start != -1:
         depth = 0
         for i in range(start, len(text)):
@@ -119,14 +134,17 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
                         return json.loads(chunk)
                     except Exception:
                         break
-        start = text.rfind("{", 0, start)
+        start = text.find("{", start + 1)
     return None
 
 
 SYSTEM_PROMPT = (
-    "Ты — когнитивный AI-партнёр Monolog. Работай по методологии ниже. "
-    "Верни ответ СТРОГО в формате JSON: {\"reply_text\": \"...\", \"metrics\": {...}}. "
-    "reply_text — Markdown-текст ответа. metrics — метрики по схеме.\n\n"
+    "Ты — когнитивный AI-партнёр Monolog. "
+    "Отвечай ТОЛЬКО валидным JSON, без пояснений и размышлений. "
+    "Ничего до { и ничего после }. "
+    "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
+    "reply_text — Markdown-текст ответа на русском языке.\n"
+    "metrics — строго по схеме ниже, все поля обязательны.\n\n"
     f"=== СЛОЙ A ===\n{LAYER_A}\n\n"
     f"=== СЛОЙ B ===\n{LAYER_B}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
@@ -142,7 +160,8 @@ async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
         "model": MODEL,
         "messages": messages,
         "max_tokens": MAX_TOKENS,
-        "temperature": 0.7,
+        "temperature": 0.6,
+        "reasoning_effort": "none",
     }
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         r = await client.post(GROQ_URL, headers=headers, json=payload)
@@ -161,7 +180,8 @@ async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
         raise HTTPException(status_code=r.status_code, detail="Ошибка Groq API")
 
     data = r.json()
-    return data["choices"][0]["message"]["content"]
+    content = data["choices"][0]["message"]["content"]
+    return strip_thinking(content)
 
 
 app = FastAPI(title="Monolog MVP")
@@ -214,8 +234,11 @@ async def chat(request: Request):
             "key_source": source,
         })
 
+    # Fallback: JSON не найден — отдаём очищенный текст
+    log.warning(f"JSON parse failed. Raw (first 300): {raw[:300]}")
+    cleaned = strip_thinking(raw)
     return JSONResponse({
-        "reply_text": raw,
+        "reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.",
         "metrics": {**BASE_METRICS, "protocol_integrity": False, "indicator_status": "warning"},
         "key_source": source,
     })
