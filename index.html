@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#F6F8F7" />
+<meta name="theme-color" content="#F7F8FA" />
 <title>Monolog</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
   :root {
-    --bg: #F6F8F7;
+    --bg: #F7F8FA;
     --surface: #FFFFFF;
-    --surface-2: #F0F4F2;
-    --text: #0F1A16;
-    --muted: #6B7A72;
-    --border: rgba(15, 26, 22, 0.08);
-    --accent: #2E9E7B;
-    --accent-soft: rgba(46, 158, 123, 0.12);
-    --warm: #F4A17B;
-    --warm-soft: rgba(244, 161, 123, 0.14);
-    --shadow: 0 4px 24px rgba(15, 26, 22, 0.05);
-    --radius: 16px;
+    --surface-2: #F1F3F6;
+    --text: #0A0B0D;
+    --muted: #6B7280;
+    --border: rgba(10, 11, 13, 0.08);
+    --accent: #1A1F36;
+    --accent-soft: rgba(26, 31, 54, 0.08);
+    --warning: #C68B3F;
+    --critical: #B85450;
+    --shadow: 0 1px 3px rgba(10, 11, 13, 0.04), 0 4px 16px rgba(10, 11, 13, 0.04);
+    --radius: 14px;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
   }
@@ -29,59 +29,63 @@
   html, body {
     height: 100%;
     font-family: 'Inter', -apple-system, 'SF Pro', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
     color: var(--text);
     background: var(--bg);
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
   body::before {
     content: "";
     position: fixed;
-    inset: 0;
-    background: radial-gradient(600px 500px at 100% -10%, var(--accent-soft) 0%, transparent 60%);
+    inset: -100px 0 0 0;
+    background: radial-gradient(700px 500px at 80% 0%, rgba(26, 31, 54, 0.05) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
   }
 
-  /* Единый контейнер — ничего не разъезжается */
   .app {
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    max-width: 720px;
+    max-width: 700px;
     margin: 0 auto;
-    padding: 0 20px;
+    padding: 0 16px;
   }
 
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: calc(var(--safe-top) + 16px) 0 14px;
+    gap: 8px;
+    padding: calc(var(--safe-top) + 14px) 0 12px;
     flex-shrink: 0;
   }
   .brand {
     display: flex;
     align-items: center;
-    gap: 9px;
+    gap: 8px;
     font-weight: 600;
-    font-size: 16px;
-    letter-spacing: -0.01em;
+    font-size: 15px;
+    letter-spacing: -0.02em;
   }
-  .brand svg { width: 22px; height: 22px; color: var(--accent); }
+  .brand svg { width: 20px; height: 20px; color: var(--accent); }
+
+  .header-actions { display: flex; gap: 6px; align-items: center; }
 
   .stability-chip {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 7px;
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 999px;
-    padding: 5px 11px 5px 9px;
-    font-size: 12px;
+    padding: 5px 10px 5px 8px;
+    font-size: 11.5px;
     font-weight: 600;
     color: var(--text);
     cursor: pointer;
@@ -90,7 +94,7 @@
   }
   .stability-chip:active { transform: scale(0.96); }
   .stability-bar {
-    width: 30px; height: 4px; border-radius: 2px;
+    width: 28px; height: 3px; border-radius: 2px;
     background: var(--border); overflow: hidden;
   }
   .stability-fill {
@@ -98,12 +102,12 @@
     background: var(--accent);
     transition: width 0.5s ease, background 0.3s;
   }
-  .stability-chip.warning .stability-fill { background: var(--warm); }
-  .stability-chip.critical .stability-fill { background: #C9614B; }
+  .stability-chip.warning .stability-fill { background: var(--warning); }
+  .stability-chip.critical .stability-fill { background: var(--critical); }
 
   .icon-btn {
-    width: 36px; height: 36px;
-    border-radius: 12px;
+    width: 34px; height: 34px;
+    border-radius: 10px;
     background: var(--surface);
     border: 1px solid var(--border);
     color: var(--text);
@@ -111,33 +115,32 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.15s;
+    transition: transform 0.15s, background 0.15s;
     box-shadow: var(--shadow);
   }
+  .icon-btn:hover { background: var(--surface-2); }
   .icon-btn:active { transform: scale(0.94); }
-  .icon-btn svg { width: 18px; height: 18px; }
+  .icon-btn svg { width: 16px; height: 16px; }
 
-  /* Chat */
   .chat {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    gap: 20px;
-    padding: 8px 0 20px;
+    gap: 16px;
+    padding: 6px 0 16px;
     scroll-behavior: smooth;
   }
   .chat::-webkit-scrollbar { width: 0; }
 
   .row {
     display: flex;
-    gap: 12px;
+    gap: 10px;
     align-items: flex-start;
   }
   .row.user { justify-content: flex-end; }
 
-  /* Аватары */
   .avatar {
     width: 32px;
     height: 32px;
@@ -147,29 +150,46 @@
     align-items: center;
     justify-content: center;
     background: var(--surface);
-    border: 1.5px solid var(--accent);
+    border: 1px solid var(--border);
     color: var(--accent);
-    margin-top: 2px;
-    transition: transform 0.3s, border-color 0.3s, color 0.3s;
+    margin-top: 1px;
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease;
   }
-  .avatar.analyst { border-color: var(--warm); color: var(--warm); }
-  .avatar svg { width: 16px; height: 16px; }
-  .avatar.thinking {
-    animation: breathe 1.6s ease-in-out infinite;
-  }
+  .avatar svg { width: 22px; height: 22px; display: block; }
+  .avatar.analyst { color: var(--muted); }
+  .avatar.thinking { animation: breathe 1.8s ease-in-out infinite; }
   @keyframes breathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.06); opacity: 0.85; }
   }
 
-  /* Сообщения: пользователь — плашка, ИИ — без */
+  .avatar-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+  .avatar-label {
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+    opacity: 0;
+    animation: fadeIn 0.4s 0.3s forwards;
+  }
+  @keyframes fadeIn { to { opacity: 1; } }
+
+  /* Сообщения: пользователь — плашка, агент — без */
   .row.user .bubble {
     background: var(--accent-soft);
-    padding: 11px 16px;
-    border-radius: 18px;
-    border-top-right-radius: 6px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    border-top-right-radius: 4px;
     max-width: 78%;
-    font-size: 15px;
+    font-size: 14px;
     line-height: 1.5;
     word-wrap: break-word;
   }
@@ -178,99 +198,146 @@
     padding: 2px 0 0;
     flex: 1;
     min-width: 0;
-    font-size: 15px;
-    line-height: 1.65;
+    font-size: 14px;
+    line-height: 1.5;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    position: relative;
   }
 
+  /* Кнопка копирования сообщения */
+  .msg-copy {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, transform 0.15s, color 0.15s;
+    box-shadow: var(--shadow);
+  }
+  .bubble:hover .msg-copy { opacity: 1; }
+  .row.agent .bubble .msg-copy { opacity: 0.4; }
+  .row.agent .bubble .msg-copy:hover { opacity: 1; color: var(--accent); }
+  .msg-copy:active { transform: scale(0.92); }
+  .msg-copy svg { width: 14px; height: 14px; }
+
+  /* Кнопка "важное" */
+  .msg-important {
+    position: absolute;
+    top: 0;
+    right: 34px;
+    width: 28px; height: 28px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.15s, color 0.15s;
+    box-shadow: var(--shadow);
+  }
+  .row.agent .bubble .msg-important { opacity: 0.4; }
+  .row.agent .bubble .msg-important:hover { opacity: 1; }
+  .msg-important.active { color: var(--warning); opacity: 1; }
+  .msg-important.active svg { fill: var(--warning); }
+  .msg-important svg { width: 13px; height: 13px; }
+
+  /* Markdown */
   .bubble h1, .bubble h2, .bubble h3 {
-    margin: 16px 0 8px;
+    margin: 14px 0 6px;
     line-height: 1.3;
     font-weight: 600;
-    letter-spacing: -0.01em;
+    letter-spacing: -0.02em;
   }
   .bubble h1:first-child, .bubble h2:first-child, .bubble h3:first-child { margin-top: 0; }
-  .bubble h1 { font-size: 18px; }
-  .bubble h2 { font-size: 16px; }
-  .bubble h3 { font-size: 15px; }
-  .bubble p { margin: 8px 0; }
+  .bubble h1 { font-size: 16px; }
+  .bubble h2 { font-size: 15px; }
+  .bubble h3 { font-size: 14px; }
+  .bubble p { margin: 6px 0; }
   .bubble p:first-child { margin-top: 0; }
-  .bubble ul, .bubble ol { margin: 8px 0 8px 22px; }
-  .bubble li { margin: 4px 0; }
+  .bubble ul, .bubble ol { margin: 6px 0 6px 20px; }
+  .bubble li { margin: 3px 0; }
   .bubble li::marker { color: var(--accent); }
   .bubble strong { font-weight: 600; }
   .bubble a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
   .bubble blockquote {
-    border-left: 3px solid var(--accent);
-    padding-left: 12px;
-    margin: 10px 0;
+    border-left: 2px solid var(--accent);
+    padding-left: 10px;
+    margin: 8px 0;
     color: var(--muted);
   }
   .bubble hr {
     border: none;
     border-top: 1px solid var(--border);
-    margin: 14px 0;
+    margin: 12px 0;
   }
   .bubble code {
     background: var(--surface-2);
-    padding: 2px 6px;
-    border-radius: 6px;
+    padding: 1px 5px;
+    border-radius: 5px;
     font-family: ui-monospace, SFMono-Regular, monospace;
     font-size: 0.88em;
-    color: var(--text);
   }
   .bubble pre {
-    background: #0F1A16;
-    color: #E6EFEA;
-    padding: 14px;
-    padding-top: 38px;
-    border-radius: 14px;
+    background: #0A0B0D;
+    color: #E8EAED;
+    padding: 12px;
+    padding-top: 34px;
+    border-radius: 12px;
     overflow-x: auto;
-    margin: 12px 0;
+    margin: 10px 0;
     position: relative;
-    font-size: 12.5px;
+    font-size: 12px;
     line-height: 1.55;
   }
   .bubble pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
-  .copy-btn {
+  .copy-code-btn {
     position: absolute;
     top: 8px; right: 8px;
     background: rgba(255,255,255,0.1);
     border: none;
-    padding: 4px 10px;
+    padding: 4px 9px;
     border-radius: 6px;
-    font-size: 11px;
-    color: #E6EFEA;
+    font-size: 10.5px;
+    color: #E8EAED;
     cursor: pointer;
   }
-  .copy-btn:active { transform: scale(0.95); }
+  .copy-code-btn:active { transform: scale(0.95); }
 
-  /* Таблицы */
   .bubble table {
     width: 100%;
     border-collapse: collapse;
-    margin: 12px 0;
-    font-size: 13.5px;
+    margin: 10px 0;
+    font-size: 13px;
     display: block;
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
-    border-radius: 10px;
+    border-radius: 8px;
   }
   .bubble table thead { background: var(--surface-2); }
   .bubble table th, .bubble table td {
     text-align: left;
-    padding: 8px 12px;
+    padding: 7px 10px;
     border-bottom: 1px solid var(--border);
     white-space: nowrap;
   }
-  .bubble table th { font-weight: 600; font-size: 13px; }
-  .bubble table tr:last-child td { border-bottom: none; }
+  .bubble table th { font-weight: 600; font-size: 12.5px; }
 
   /* Индикатор «думает» */
-  .typing { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
+  .typing { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
   .typing span {
-    width: 6px; height: 6px; border-radius: 50%;
+    width: 5px; height: 5px; border-radius: 50%;
     background: var(--muted);
     animation: pulse 1.3s infinite;
   }
@@ -281,40 +348,36 @@
     40% { opacity: 1; transform: scale(1); }
   }
   .thinking-text {
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--muted);
-    margin-left: 10px;
+    margin-left: 8px;
     font-style: italic;
   }
 
-  /* Вложения — превью */
+  /* Вложения */
   .attach-preview {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    padding: 8px 4px 4px;
+    gap: 6px;
+    padding: 6px 2px 4px;
   }
   .attach-chip {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 6px 10px;
-    font-size: 12.5px;
-    max-width: 220px;
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 12px;
+    max-width: 200px;
     box-shadow: var(--shadow);
   }
-  .attach-chip svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
-  .attach-chip .name {
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    flex: 1;
-  }
+  .attach-chip svg { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; }
+  .attach-chip .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; flex: 1; }
   .attach-chip .remove {
     background: none; border: none; cursor: pointer;
-    color: var(--muted); font-size: 16px; line-height: 1;
-    padding: 0 2px;
+    color: var(--muted); font-size: 15px; line-height: 1; padding: 0 2px;
   }
   .attach-chip .remove:hover { color: var(--text); }
 
@@ -328,18 +391,18 @@
   }
   .input-inner {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     align-items: flex-end;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 22px;
-    padding: 5px 5px 5px 8px;
+    border-radius: 20px;
+    padding: 4px 4px 4px 6px;
     box-shadow: var(--shadow);
     transition: border-color 0.2s;
   }
   .input-inner:focus-within { border-color: var(--accent); }
   .attach-btn {
-    width: 34px; height: 34px;
+    width: 32px; height: 32px;
     border-radius: 50%;
     border: none;
     background: transparent;
@@ -353,25 +416,25 @@
   }
   .attach-btn:hover { color: var(--accent); }
   .attach-btn:active { transform: scale(0.92); }
-  .attach-btn svg { width: 20px; height: 20px; }
+  .attach-btn svg { width: 18px; height: 18px; }
   textarea {
     flex: 1;
     border: none;
     outline: none;
     resize: none;
     background: transparent;
-    padding: 9px 4px;
+    padding: 8px 4px;
     font-family: inherit;
-    font-size: 16px;
-    line-height: 1.4;
+    font-size: 14px;
+    line-height: 1.5;
     color: var(--text);
-    max-height: 120px;
-    min-height: 24px;
+    max-height: 110px;
+    min-height: 22px;
   }
   textarea::placeholder { color: var(--muted); }
   .send-btn {
     flex-shrink: 0;
-    width: 38px; height: 38px;
+    width: 34px; height: 34px;
     border-radius: 50%;
     border: none;
     background: var(--accent);
@@ -380,17 +443,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.15s, opacity 0.2s, background 0.2s;
+    transition: transform 0.15s, opacity 0.2s;
   }
   .send-btn:active { transform: scale(0.92); }
-  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
-  .send-btn svg { width: 18px; height: 18px; }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .send-btn svg { width: 16px; height: 16px; }
 
-  /* Sheet */
+  /* Sheet (метрики) */
   .sheet-bg {
     position: fixed;
     inset: 0;
-    background: rgba(15, 26, 22, 0.28);
+    background: rgba(10, 11, 13, 0.25);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s;
@@ -402,39 +465,39 @@
     left: 0; right: 0; bottom: 0;
     max-height: 80dvh;
     background: var(--surface);
-    border-radius: 22px 22px 0 0;
-    padding: 14px 22px calc(22px + var(--safe-bottom));
+    border-radius: 20px 20px 0 0;
+    padding: 12px 20px calc(20px + var(--safe-bottom));
     transform: translateY(100%);
-    transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 51;
     overflow-y: auto;
-    box-shadow: 0 -8px 32px rgba(15, 26, 22, 0.12);
-    max-width: 720px;
+    box-shadow: 0 -8px 32px rgba(10, 11, 13, 0.12);
+    max-width: 700px;
     margin: 0 auto;
   }
   .sheet.open { transform: translateY(0); }
   .sheet-handle {
-    width: 36px; height: 4px;
+    width: 32px; height: 3px;
     background: var(--border);
     border-radius: 2px;
-    margin: 0 auto 16px;
+    margin: 0 auto 14px;
     cursor: grab;
   }
-  .sheet h3 { font-size: 15px; margin-bottom: 4px; font-weight: 600; letter-spacing: -0.01em; }
-  .sheet-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; }
+  .sheet h3 { font-size: 14px; margin-bottom: 3px; font-weight: 600; letter-spacing: -0.02em; }
+  .sheet-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
   .group-title {
-    font-size: 11px;
+    font-size: 10.5px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--muted);
-    margin: 18px 0 8px;
+    margin: 16px 0 6px;
     font-weight: 600;
   }
   .group-title:first-of-type { margin-top: 0; }
   .metric {
-    padding: 10px 0;
+    padding: 8px 0;
     border-bottom: 1px solid var(--border);
-    font-size: 14px;
+    font-size: 13px;
   }
   .metric:last-child { border-bottom: none; }
   .metric-row {
@@ -446,23 +509,23 @@
   .metric-row span:first-child { color: var(--muted); }
   .metric-row span:last-child { font-weight: 500; text-align: right; }
   .progress {
-    height: 5px; border-radius: 3px;
+    height: 4px; border-radius: 2px;
     background: var(--border); overflow: hidden;
-    margin-top: 8px;
+    margin-top: 6px;
   }
   .progress-fill {
     height: 100%;
     background: var(--accent);
     transition: width 0.5s ease, background 0.3s;
   }
-  .progress-fill.warning { background: var(--warm); }
-  .progress-fill.critical { background: #C9614B; }
+  .progress-fill.warning { background: var(--warning); }
+  .progress-fill.critical { background: var(--critical); }
 
   /* Modal */
   .modal-bg {
     position: fixed;
     inset: 0;
-    background: rgba(15, 26, 22, 0.35);
+    background: rgba(10, 11, 13, 0.35);
     display: none;
     align-items: flex-end;
     justify-content: center;
@@ -471,28 +534,29 @@
   .modal-bg.open { display: flex; }
   .modal {
     background: var(--surface);
-    border-radius: 22px 22px 0 0;
-    padding: 24px 22px calc(24px + var(--safe-bottom));
+    border-radius: 20px 20px 0 0;
+    padding: 22px 20px calc(22px + var(--safe-bottom));
     width: 100%;
-    max-width: 720px;
+    max-width: 700px;
     max-height: 90dvh;
     overflow-y: auto;
   }
-  .modal h2 { font-size: 17px; margin-bottom: 18px; font-weight: 600; letter-spacing: -0.01em; }
+  .modal h2 { font-size: 16px; margin-bottom: 4px; font-weight: 600; letter-spacing: -0.02em; }
+  .modal .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 16px; }
   .modal label {
     display: block;
-    font-size: 12.5px;
+    font-size: 12px;
     color: var(--muted);
-    margin: 14px 0 6px;
+    margin: 12px 0 5px;
     font-weight: 500;
   }
   .modal input[type="text"], .modal input[type="password"] {
     width: 100%;
-    padding: 12px 14px;
-    border-radius: 12px;
+    padding: 11px 13px;
+    border-radius: 10px;
     border: 1px solid var(--border);
     font-family: inherit;
-    font-size: 15px;
+    font-size: 14px;
     background: var(--surface-2);
     color: var(--text);
     transition: border-color 0.2s, background 0.2s;
@@ -505,31 +569,31 @@
   .modal .check {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 14px;
-    font-size: 14px;
+    gap: 9px;
+    margin-top: 12px;
+    font-size: 13.5px;
     cursor: pointer;
   }
-  .modal .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .modal .check input { width: 17px; height: 17px; accent-color: var(--accent); }
 
   .segmented {
     display: flex;
     background: var(--surface-2);
     border: 1px solid var(--border);
-    border-radius: 12px;
+    border-radius: 10px;
     padding: 3px;
     gap: 3px;
-    margin-top: 6px;
+    margin-top: 5px;
   }
   .segmented button {
     flex: 1;
-    padding: 9px;
-    border-radius: 9px;
+    padding: 8px;
+    border-radius: 7px;
     border: none;
     background: transparent;
     color: var(--muted);
     font-family: inherit;
-    font-size: 13.5px;
+    font-size: 13px;
     font-weight: 500;
     cursor: pointer;
     transition: all 0.15s;
@@ -537,42 +601,100 @@
   .segmented button.active {
     background: var(--surface);
     color: var(--text);
-    box-shadow: 0 1px 3px rgba(15, 26, 22, 0.06);
+    box-shadow: 0 1px 3px rgba(10, 11, 13, 0.06);
   }
 
   .modal .row {
     display: flex;
     gap: 8px;
-    margin-top: 22px;
+    margin-top: 18px;
   }
   .modal button.action {
     flex: 1;
-    padding: 13px;
-    border-radius: 13px;
+    padding: 12px;
+    border-radius: 11px;
     border: none;
     cursor: pointer;
     font-weight: 500;
-    font-size: 14.5px;
+    font-size: 14px;
     font-family: inherit;
     transition: transform 0.15s;
   }
   .modal button.action:active { transform: scale(0.97); }
   .modal .primary { background: var(--accent); color: #fff; }
   .modal .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
+  .modal .danger { background: var(--critical); color: #fff; }
+
+  /* Частичный сброс — список сообщений */
+  .reset-list {
+    max-height: 40dvh;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+  .reset-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .reset-item:last-child { border-bottom: none; }
+  .reset-item input { margin-top: 2px; accent-color: var(--accent); flex-shrink: 0; }
+  .reset-item .preview {
+    flex: 1;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+  .reset-item .role {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: calc(80px + var(--safe-bottom));
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent);
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s;
+    z-index: 100;
+    box-shadow: 0 4px 16px rgba(10, 11, 13, 0.2);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   @media (min-width: 768px) {
     .sheet {
       left: 50%; right: auto;
       transform: translate(-50%, 100%);
-      width: 600px;
-      border-radius: 22px;
+      width: 580px;
+      border-radius: 20px;
       bottom: 24px;
     }
     .sheet.open { transform: translate(-50%, 0); }
     .modal {
-      border-radius: 22px;
+      border-radius: 20px;
       margin-bottom: 24px;
-      width: 520px;
+      width: 500px;
     }
   }
 </style>
@@ -587,10 +709,16 @@
       </svg>
       Monolog
     </div>
-    <div style="display:flex; gap:8px; align-items:center;">
+    <div class="header-actions">
       <button class="stability-chip" id="stabilityChip" title="Метрики сессии">
         <span class="stability-bar"><span class="stability-fill" id="chipFill"></span></span>
         <span id="chipValue">—</span>
+      </button>
+      <button class="icon-btn" id="resetBtn" title="Управление контекстом">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
       </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Настройки">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
@@ -637,508 +765,4 @@
   <div class="metric"><div class="metric-row"><span>Протокол</span><span id="mProtocol">—</span></div></div>
 
   <div class="group-title">Мышление</div>
-  <div class="metric"><div class="metric-row"><span>Масштаб</span><span id="mScale">—</span></div></div>
-  <div class="metric"><div class="metric-row"><span>Циклы</span><span id="mCycles">—</span></div></div>
-  <div class="metric"><div class="metric-row"><span>Коллизии</span><span id="mCollisions">—</span></div></div>
-  <div class="metric"><div class="metric-row"><span>Импульс</span><span id="mPulse">—</span></div></div>
-
-  <div class="group-title">Вклад</div>
-  <div class="metric"><div class="metric-row"><span>Человек / ИИ</span><span id="mHuman">—</span></div></div>
-  <div class="metric"><div class="metric-row"><span>Ключ</span><span id="mKeySource">—</span></div></div>
-</div>
-
-<div class="modal-bg" id="modalBg">
-  <div class="modal">
-    <h2>Настройки</h2>
-    <label for="keyInput">Groq API Key (gsk_…)</label>
-    <input type="password" id="keyInput" placeholder="gsk_..." autocomplete="off" />
-    <label class="check">
-      <input type="checkbox" id="rememberKey" />
-      Запомнить ключ на этом устройстве
-    </label>
-
-    <label>Режим глубины</label>
-    <div class="segmented" id="depthSeg">
-      <button data-depth="quiet">Тихий</button>
-      <button data-depth="deep">Глубокий</button>
-    </div>
-
-    <div class="row">
-      <button class="action ghost" id="clearChat">Очистить чат</button>
-      <button class="action primary" id="saveSettings">Сохранить</button>
-    </div>
-    <div class="row">
-      <button class="action ghost" id="exportData">Экспорт</button>
-      <button class="action ghost" id="importData">Импорт</button>
-    </div>
-    <input type="file" id="importFile" accept="application/json" style="display:none" />
-  </div>
-</div>
-
-<script>
-(function () {
-  "use strict";
-
-  const API_BASE = window.location.origin;
-  const LS_KEY = "monolog_api_key";
-  const LS_PROFILE = "monolog_profile";
-  const LS_CHAT = "monolog_chat";
-
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;    // 5 МБ
-  const MAX_TEXT_CHARS = 3000;              // символов из файла
-  const MAX_FILES = 3;
-
-  const ICONS = {
-    strategist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
-    analyst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>'
-  };
-
-  const THINKING_PHRASES = [
-    "Синхронизирую с плоскостью…",
-    "Проверяю коллизии…",
-    "Строю карту восприятия…",
-    "Оцениваю стабильность…"
-  ];
-
-  const state = {
-    apiKey: "",
-    profile: { depth: "deep" },
-    history: [],
-    attachments: [],
-    lastKeySource: null,
-  };
-
-  try { state.apiKey = localStorage.getItem(LS_KEY) || ""; } catch (e) {}
-  try {
-    const p = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
-    if (p) state.profile = Object.assign(state.profile, p);
-  } catch (e) {}
-  try { state.history = JSON.parse(localStorage.getItem(LS_CHAT) || "[]"); } catch (e) { state.history = []; }
-
-  if (window.pdfjsLib) {
-    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
-  }
-
-  function persist() {
-    try {
-      if (state.apiKey) localStorage.setItem(LS_KEY, state.apiKey);
-      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
-      localStorage.setItem(LS_CHAT, JSON.stringify(state.history.slice(-50)));
-    } catch (e) {}
-  }
-
-  function applyProfile() {
-    document.querySelectorAll("#depthSeg button").forEach(function (el) {
-      el.classList.toggle("active", el.dataset.depth === state.profile.depth);
-    });
-  }
-
-  function renderMarkdown(text) {
-    const safe = text == null ? "" : String(text);
-    if (typeof marked !== "undefined" && marked && typeof marked.parse === "function") {
-      try { return marked.parse(safe); } catch (e) {}
-    }
-    const esc = safe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-    return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
-  }
-
-  function pickAvatar(metrics) {
-    const scale = (metrics && metrics.mind_scale) || "";
-    if (scale === "strategic" || scale === "systemic") {
-      return { html: ICONS.strategist, cls: "" };
-    }
-    return { html: ICONS.analyst, cls: "analyst" };
-  }
-
-  function addRow(role, content, metrics) {
-    const chat = document.getElementById("chat");
-    if (!chat) return null;
-
-    const row = document.createElement("div");
-    row.className = "row " + role;
-
-    if (role === "agent") {
-      const av = pickAvatar(metrics);
-      const avatar = document.createElement("div");
-      avatar.className = "avatar " + av.cls;
-      avatar.innerHTML = av.html;
-      row.appendChild(avatar);
-    }
-
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-
-    if (role === "agent") {
-      bubble.innerHTML = renderMarkdown(content);
-      bubble.querySelectorAll("pre").forEach(function (pre) {
-        const btn = document.createElement("button");
-        btn.className = "copy-btn";
-        btn.type = "button";
-        btn.textContent = "Копировать";
-        btn.addEventListener("click", function () {
-          const code = pre.querySelector("code");
-          const text = code ? code.innerText : pre.innerText;
-          if (navigator.clipboard) navigator.clipboard.writeText(text);
-          btn.textContent = "Готово";
-          setTimeout(function () { btn.textContent = "Копировать"; }, 1200);
-        });
-        pre.appendChild(btn);
-      });
-    } else {
-      bubble.textContent = content;
-    }
-
-    row.appendChild(bubble);
-    chat.appendChild(row);
-    chat.scrollTop = chat.scrollHeight;
-    return { row: row, bubble: bubble, avatar: role === "agent" ? row.firstChild : null };
-  }
-
-  function updateChip(metrics) {
-    const chip = document.getElementById("stabilityChip");
-    const fill = document.getElementById("chipFill");
-    const val = document.getElementById("chipValue");
-    if (!chip || !fill || !val) return;
-    const si = metrics && typeof metrics.stability_index === "number" ? metrics.stability_index : 0;
-    chip.className = "stability-chip";
-    if (si < 0.5) chip.classList.add("critical");
-    else if (si < 0.75) chip.classList.add("warning");
-    fill.style.width = (si * 100) + "%";
-    val.textContent = si.toFixed(2);
-  }
-
-  function updateMetrics(metrics) {
-    const m = metrics || {};
-    const si = typeof m.stability_index === "number" ? m.stability_index : 0;
-
-    document.getElementById("mStability").textContent = si.toFixed(2);
-    const prog = document.getElementById("mProgress");
-    prog.style.width = (si * 100) + "%";
-    prog.className = "progress-fill";
-    if (si < 0.5) prog.classList.add("critical");
-    else if (si < 0.75) prog.classList.add("warning");
-
-    document.getElementById("mStatus").textContent = m.indicator_status || "—";
-    document.getElementById("mProtocol").textContent = m.protocol_integrity === false ? "сбой" : "соблюдён";
-    document.getElementById("mScale").textContent = m.mind_scale || "—";
-    document.getElementById("mCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
-    document.getElementById("mCollisions").textContent = m.collisions_resolved || "—";
-    document.getElementById("mPulse").textContent = m.cognitive_pulse || "—";
-
-    const hc = typeof m.human_contribution === "number" ? m.human_contribution : null;
-    document.getElementById("mHuman").textContent = hc != null
-      ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%"
-      : "—";
-    document.getElementById("mKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
-
-    updateChip(m);
-  }
-
-  // --- Работа с файлами ---
-
-  function fileIcon(type, name) {
-    const ext = (name || "").split(".").pop().toLowerCase();
-    if (type && type.startsWith("image/")) {
-      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
-    }
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
-  }
-
-  async function extractTextFromFile(file) {
-    const name = file.name || "";
-    const type = file.type || "";
-    const ext = name.split(".").pop().toLowerCase();
-
-    if (type.startsWith("image/")) {
-      return "[Изображение: " + name + " — содержимое не извлечено]";
-    }
-
-    if (ext === "txt" || type === "text/plain") {
-      return await file.text();
-    }
-
-    if (ext === "docx" && window.mammoth) {
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const result = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer });
-        return result.value || "";
-      } catch (e) {
-        return "[Не удалось прочитать DOCX: " + e.message + "]";
-      }
-    }
-
-    if (ext === "pdf" && window.pdfjsLib) {
-      try {
-        const arrayBuffer = await file.arrayBuffer();
-        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-        let out = "";
-        const pages = Math.min(pdf.numPages, 10);
-        for (let i = 1; i <= pages; i++) {
-          const page = await pdf.getPage(i);
-          const content = await page.getTextContent();
-          out += content.items.map(function (it) { return it.str; }).join(" ") + "\n";
-        }
-        return out;
-      } catch (e) {
-        return "[Не удалось прочитать PDF: " + e.message + "]";
-      }
-    }
-
-    return "[Формат не поддерживается: " + name + "]";
-  }
-
-  function renderAttachPreview() {
-    const box = document.getElementById("attachPreview");
-    box.innerHTML = "";
-    state.attachments.forEach(function (a, idx) {
-      const chip = document.createElement("div");
-      chip.className = "attach-chip";
-      chip.innerHTML = fileIcon(a.type, a.name)
-        + '<span class="name">' + a.name + '</span>'
-        + '<button class="remove" title="Удалить">×</button>';
-      chip.querySelector(".remove").addEventListener("click", function () {
-        state.attachments.splice(idx, 1);
-        renderAttachPreview();
-      });
-      box.appendChild(chip);
-    });
-  }
-
-  async function handleFiles(files) {
-    const list = Array.from(files || []);
-    for (const f of list) {
-      if (state.attachments.length >= MAX_FILES) {
-        alert("Максимум " + MAX_FILES + " файла");
-        break;
-      }
-      if (f.size > MAX_FILE_SIZE) {
-        alert("Файл " + f.name + " больше 5 МБ");
-        continue;
-      }
-      let text = await extractTextFromFile(f);
-      if (text.length > MAX_TEXT_CHARS) {
-        text = text.slice(0, MAX_TEXT_CHARS) + "\n…[обрезано]";
-      }
-      state.attachments.push({ name: f.name, type: f.type, text: text });
-    }
-    renderAttachPreview();
-  }
-
-  async function send() {
-    const input = document.getElementById("input");
-    const btn = document.getElementById("sendBtn");
-    const text = (input.value || "").trim();
-    if (!text && state.attachments.length === 0) return;
-
-    const userDisplay = text || ("[Вложение: " + state.attachments.map(function (a) { return a.name; }).join(", ") + "]");
-    input.value = "";
-    input.style.height = "auto";
-    addRow("user", userDisplay);
-
-    const attachmentsPayload = state.attachments.slice();
-    state.attachments = [];
-    renderAttachPreview();
-
-    btn.disabled = true;
-
-    const thinking = addRow("agent", "");
-    const bubble = thinking.bubble;
-    if (thinking.avatar) thinking.avatar.classList.add("thinking");
-    bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>'
-      + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
-
-    const headers = { "Content-Type": "application/json" };
-    if (state.apiKey) headers["X-Groq-Key"] = state.apiKey;
-
-    try {
-      const r = await fetch(API_BASE + "/chat", {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({
-          message: text || "Проанализируй вложения.",
-          history: state.history.slice(-4),
-          attachments: attachmentsPayload,
-        }),
-      });
-
-      let data = null;
-      try { data = await r.json(); } catch (e) {}
-
-      const chat = document.getElementById("chat");
-      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
-
-      if (!r.ok) {
-        addRow("agent", "Ошибка: " + ((data && data.detail) || r.statusText));
-      } else if (data) {
-        state.lastKeySource = data.key_source || null;
-        addRow("agent", data.reply_text || "", data.metrics);
-        updateMetrics(data.metrics);
-        state.history.push({ role: "user", content: userDisplay });
-        state.history.push({ role: "assistant", content: data.reply_text || "" });
-        persist();
-      } else {
-        addRow("agent", "Пустой ответ сервера.");
-      }
-    } catch (e) {
-      const chat = document.getElementById("chat");
-      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
-      addRow("agent", "Сбой сети: " + (e && e.message ? e.message : "unknown"));
-    } finally {
-      btn.disabled = false;
-      input.focus();
-    }
-  }
-
-  function openSheet() {
-    document.getElementById("sheetBg").classList.add("open");
-    document.getElementById("metricsSheet").classList.add("open");
-  }
-  function closeSheet() {
-    document.getElementById("sheetBg").classList.remove("open");
-    document.getElementById("metricsSheet").classList.remove("open");
-  }
-  function openModal() {
-    document.getElementById("keyInput").value = state.apiKey || "";
-    document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
-    applyProfile();
-    document.getElementById("modalBg").classList.add("open");
-  }
-  function closeModal() {
-    document.getElementById("modalBg").classList.remove("open");
-  }
-
-  function setupSwipeToClose() {
-    const sheet = document.getElementById("metricsSheet");
-    const handle = document.getElementById("sheetHandle");
-    if (!sheet || !handle) return;
-    let startY = 0, currentY = 0, dragging = false;
-    function onStart(e) {
-      dragging = true;
-      startY = (e.touches ? e.touches[0].clientY : e.clientY);
-      sheet.style.transition = "none";
-    }
-    function onMove(e) {
-      if (!dragging) return;
-      currentY = (e.touches ? e.touches[0].clientY : e.clientY);
-      const dy = Math.max(0, currentY - startY);
-      sheet.style.transform = "translateY(" + dy + "px)";
-    }
-    function onEnd() {
-      if (!dragging) return;
-      dragging = false;
-      sheet.style.transition = "";
-      sheet.style.transform = "";
-      if (currentY - startY > 80) closeSheet();
-    }
-    handle.addEventListener("touchstart", onStart, { passive: true });
-    handle.addEventListener("touchmove", onMove, { passive: true });
-    handle.addEventListener("touchend", onEnd);
-    handle.addEventListener("mousedown", onStart);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onEnd);
-  }
-
-  function init() {
-    applyProfile();
-    setupSwipeToClose();
-
-    state.history.forEach(function (m) {
-      addRow(m.role === "user" ? "user" : "agent", m.content || "");
-    });
-
-    const sendBtn = document.getElementById("sendBtn");
-    const input = document.getElementById("input");
-    const fileInput = document.getElementById("fileInput");
-
-    sendBtn.addEventListener("click", send);
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && !e.shiftKey) {
-        e.preventDefault();
-        send();
-      }
-    });
-    input.addEventListener("input", function () {
-      input.style.height = "auto";
-      input.style.height = Math.min(input.scrollHeight, 120) + "px";
-    });
-
-    document.getElementById("attachBtn").addEventListener("click", function () {
-      fileInput.click();
-    });
-    fileInput.addEventListener("change", function (e) {
-      handleFiles(e.target.files);
-      fileInput.value = "";
-    });
-
-    document.getElementById("stabilityChip").addEventListener("click", openSheet);
-    document.getElementById("sheetBg").addEventListener("click", closeSheet);
-
-    document.getElementById("settingsBtn").addEventListener("click", openModal);
-    document.getElementById("modalBg").addEventListener("click", function (e) {
-      if (e.target === this) closeModal();
-    });
-
-    document.querySelectorAll("#depthSeg button").forEach(function (el) {
-      el.addEventListener("click", function () {
-        state.profile.depth = el.dataset.depth;
-        applyProfile();
-      });
-    });
-
-    document.getElementById("saveSettings").addEventListener("click", function () {
-      const key = (document.getElementById("keyInput").value || "").trim();
-      const remember = document.getElementById("rememberKey").checked;
-      state.apiKey = key;
-      if (remember && key) localStorage.setItem(LS_KEY, key);
-      else localStorage.removeItem(LS_KEY);
-      persist();
-      closeModal();
-    });
-
-    document.getElementById("clearChat").addEventListener("click", function () {
-      state.history = [];
-      document.getElementById("chat").innerHTML = "";
-      persist();
-      closeModal();
-    });
-
-    document.getElementById("exportData").addEventListener("click", function () {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "monolog_export_" + Date.now() + ".json";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
-
-    document.getElementById("importData").addEventListener("click", function () {
-      document.getElementById("importFile").click();
-    });
-
-    document.getElementById("importFile").addEventListener("change", function (e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function () {
-        try {
-          const data = JSON.parse(reader.result);
-          state.history = data.history || [];
-          state.profile = Object.assign(state.profile, data.profile || {});
-          localStorage.setItem(LS_CHAT, JSON.stringify(state.history));
-          localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
-          location.reload();
-        } catch (err) { alert("Некорректный файл"); }
-      };
-      reader.readAsText(file);
-    });
-  }
-
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
-  } else {
-    init();
-  }
-})();
-</script>
-</body>
-</html>
+  <div class="metric"><div class="metric-row"><span>Масштаб</span><span id="mScale">—</span
