@@ -3,34 +3,27 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#fafafa" />
+<meta name="theme-color" content="#F6F8F7" />
 <title>Monolog</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
   :root {
-    --bg: #fafafa;
-    --surface: #ffffff;
-    --text: #14161a;
-    --muted: #6b7280;
-    --border: rgba(0,0,0,0.08);
-    --accent: #d99a5b;
-    --accent-soft: rgba(217, 154, 91, 0.14);
-    --shadow: 0 4px 20px rgba(0,0,0,0.05);
+    --bg: #F6F8F7;
+    --surface: #FFFFFF;
+    --surface-2: #F0F4F2;
+    --text: #0F1A16;
+    --muted: #6B7A72;
+    --border: rgba(15, 26, 22, 0.08);
+    --accent: #2E9E7B;
+    --accent-soft: rgba(46, 158, 123, 0.12);
+    --warm: #F4A17B;
+    --warm-soft: rgba(244, 161, 123, 0.14);
+    --shadow: 0 4px 24px rgba(15, 26, 22, 0.05);
     --radius: 16px;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
-  }
-  [data-accent="indigo"] {
-    --accent: #6b7bd6;
-    --accent-soft: rgba(107, 123, 214, 0.14);
-  }
-  [data-accent="forest"] {
-    --accent: #5d9a6b;
-    --accent-soft: rgba(93, 154, 107, 0.14);
-  }
-  [data-accent="amber"] {
-    --accent: #d99a5b;
-    --accent-soft: rgba(217, 154, 91, 0.14);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -45,36 +38,35 @@
     content: "";
     position: fixed;
     inset: 0;
-    background: radial-gradient(500px 400px at 90% -10%, var(--accent-soft) 0%, transparent 65%);
+    background: radial-gradient(600px 500px at 100% -10%, var(--accent-soft) 0%, transparent 60%);
     pointer-events: none;
     z-index: 0;
-    transition: background 0.6s ease;
   }
 
+  /* Единый контейнер — ничего не разъезжается */
   .app {
     position: relative;
     z-index: 1;
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    max-width: 760px;
+    max-width: 720px;
     margin: 0 auto;
-    padding: 0 14px;
+    padding: 0 20px;
   }
 
-  /* Header */
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 10px;
-    padding: calc(var(--safe-top) + 14px) 2px 12px;
+    padding: calc(var(--safe-top) + 16px) 0 14px;
     flex-shrink: 0;
   }
   .brand {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 9px;
     font-weight: 600;
     font-size: 16px;
     letter-spacing: -0.01em;
@@ -88,7 +80,7 @@
     background: var(--surface);
     border: 1px solid var(--border);
     border-radius: 999px;
-    padding: 5px 10px 5px 8px;
+    padding: 5px 11px 5px 9px;
     font-size: 12px;
     font-weight: 600;
     color: var(--text);
@@ -98,24 +90,19 @@
   }
   .stability-chip:active { transform: scale(0.96); }
   .stability-bar {
-    width: 32px;
-    height: 4px;
-    border-radius: 2px;
-    background: var(--border);
-    overflow: hidden;
+    width: 30px; height: 4px; border-radius: 2px;
+    background: var(--border); overflow: hidden;
   }
   .stability-fill {
-    height: 100%;
-    width: 0%;
+    height: 100%; width: 0%;
     background: var(--accent);
     transition: width 0.5s ease, background 0.3s;
   }
-  .stability-chip.warning .stability-fill { background: #e0a244; }
-  .stability-chip.critical .stability-fill { background: #d16b6b; }
+  .stability-chip.warning .stability-fill { background: var(--warm); }
+  .stability-chip.critical .stability-fill { background: #C9614B; }
 
   .icon-btn {
-    width: 36px;
-    height: 36px;
+    width: 36px; height: 36px;
     border-radius: 12px;
     background: var(--surface);
     border: 1px solid var(--border);
@@ -137,116 +124,155 @@
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    padding: 6px 0 16px;
+    gap: 20px;
+    padding: 8px 0 20px;
     scroll-behavior: smooth;
   }
   .chat::-webkit-scrollbar { width: 0; }
 
-  .row { display: flex; gap: 10px; align-items: flex-start; }
-  .row.user { flex-direction: row-reverse; }
+  .row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+  .row.user { justify-content: flex-end; }
 
+  /* Аватары */
   .avatar {
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
     flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--surface);
-    border: 1px solid var(--border);
+    border: 1.5px solid var(--accent);
     color: var(--accent);
     margin-top: 2px;
+    transition: transform 0.3s, border-color 0.3s, color 0.3s;
   }
+  .avatar.analyst { border-color: var(--warm); color: var(--warm); }
   .avatar svg { width: 16px; height: 16px; }
-  .avatar.user { color: var(--muted); }
+  .avatar.thinking {
+    animation: breathe 1.6s ease-in-out infinite;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
 
-  .bubble {
-    padding: 12px 14px;
-    border-radius: var(--radius);
-    line-height: 1.55;
-    font-size: 15px;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    max-width: 100%;
-    position: relative;
-  }
-  .row.agent .bubble {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-top-left-radius: 6px;
-    box-shadow: var(--shadow);
-    flex: 1;
-  }
+  /* Сообщения: пользователь — плашка, ИИ — без */
   .row.user .bubble {
     background: var(--accent-soft);
+    padding: 11px 16px;
+    border-radius: 18px;
     border-top-right-radius: 6px;
-    max-width: 85%;
-    color: var(--text);
+    max-width: 78%;
+    font-size: 15px;
+    line-height: 1.5;
+    word-wrap: break-word;
   }
+  .row.agent .bubble {
+    background: transparent;
+    padding: 2px 0 0;
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    line-height: 1.65;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
   .bubble h1, .bubble h2, .bubble h3 {
-    margin: 12px 0 6px;
+    margin: 16px 0 8px;
     line-height: 1.3;
     font-weight: 600;
+    letter-spacing: -0.01em;
   }
-  .bubble h1 { font-size: 17px; }
-  .bubble h2 { font-size: 15.5px; }
-  .bubble h3 { font-size: 14.5px; }
-  .bubble p { margin: 6px 0; }
-  .bubble ul, .bubble ol { margin: 6px 0 6px 18px; }
-  .bubble li { margin: 3px 0; }
+  .bubble h1:first-child, .bubble h2:first-child, .bubble h3:first-child { margin-top: 0; }
+  .bubble h1 { font-size: 18px; }
+  .bubble h2 { font-size: 16px; }
+  .bubble h3 { font-size: 15px; }
+  .bubble p { margin: 8px 0; }
+  .bubble p:first-child { margin-top: 0; }
+  .bubble ul, .bubble ol { margin: 8px 0 8px 22px; }
+  .bubble li { margin: 4px 0; }
+  .bubble li::marker { color: var(--accent); }
+  .bubble strong { font-weight: 600; }
+  .bubble a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  .bubble blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 12px;
+    margin: 10px 0;
+    color: var(--muted);
+  }
+  .bubble hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+  }
   .bubble code {
-    background: rgba(0,0,0,0.05);
+    background: var(--surface-2);
     padding: 2px 6px;
     border-radius: 6px;
     font-family: ui-monospace, SFMono-Regular, monospace;
     font-size: 0.88em;
+    color: var(--text);
   }
   .bubble pre {
-    background: #14161a;
-    color: #e6e6e6;
-    padding: 12px;
-    padding-top: 36px;
-    border-radius: 12px;
+    background: #0F1A16;
+    color: #E6EFEA;
+    padding: 14px;
+    padding-top: 38px;
+    border-radius: 14px;
     overflow-x: auto;
-    margin: 10px 0;
+    margin: 12px 0;
     position: relative;
     font-size: 12.5px;
-    line-height: 1.5;
+    line-height: 1.55;
   }
   .bubble pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
   .copy-btn {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: rgba(255,255,255,0.12);
+    top: 8px; right: 8px;
+    background: rgba(255,255,255,0.1);
     border: none;
     padding: 4px 10px;
     border-radius: 6px;
     font-size: 11px;
-    color: #e6e6e6;
+    color: #E6EFEA;
     cursor: pointer;
   }
   .copy-btn:active { transform: scale(0.95); }
 
-  .msg-status {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: #4caf50;
+  /* Таблицы */
+  .bubble table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0;
+    font-size: 13.5px;
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 10px;
   }
-  .msg-status.warning { background: #e0a244; }
-  .msg-status.critical { background: #d16b6b; }
+  .bubble table thead { background: var(--surface-2); }
+  .bubble table th, .bubble table td {
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  .bubble table th { font-weight: 600; font-size: 13px; }
+  .bubble table tr:last-child td { border-bottom: none; }
 
-  .typing { display: inline-flex; gap: 3px; align-items: center; }
+  /* Индикатор «думает» */
+  .typing { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
   .typing span {
-    width: 5px; height: 5px; border-radius: 50%;
+    width: 6px; height: 6px; border-radius: 50%;
     background: var(--muted);
-    animation: pulse 1.2s infinite;
+    animation: pulse 1.3s infinite;
   }
   .typing span:nth-child(2) { animation-delay: 0.15s; }
   .typing span:nth-child(3) { animation-delay: 0.3s; }
@@ -255,51 +281,97 @@
     40% { opacity: 1; transform: scale(1); }
   }
   .thinking-text {
-    font-size: 12px;
+    font-size: 12.5px;
     color: var(--muted);
-    margin-left: 8px;
+    margin-left: 10px;
     font-style: italic;
   }
+
+  /* Вложения — превью */
+  .attach-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 8px 4px 4px;
+  }
+  .attach-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 6px 10px;
+    font-size: 12.5px;
+    max-width: 220px;
+    box-shadow: var(--shadow);
+  }
+  .attach-chip svg { width: 14px; height: 14px; color: var(--muted); flex-shrink: 0; }
+  .attach-chip .name {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1;
+  }
+  .attach-chip .remove {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 16px; line-height: 1;
+    padding: 0 2px;
+  }
+  .attach-chip .remove:hover { color: var(--text); }
 
   /* Input */
   .input-wrap {
     flex-shrink: 0;
-    padding: 8px 0 calc(10px + var(--safe-bottom));
+    padding: 8px 0 calc(12px + var(--safe-bottom));
     background: linear-gradient(to top, var(--bg) 70%, transparent);
     position: sticky;
     bottom: 0;
   }
   .input-inner {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: flex-end;
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 20px;
-    padding: 5px 5px 5px 14px;
+    border-radius: 22px;
+    padding: 5px 5px 5px 8px;
     box-shadow: var(--shadow);
     transition: border-color 0.2s;
   }
   .input-inner:focus-within { border-color: var(--accent); }
+  .attach-btn {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .attach-btn:hover { color: var(--accent); }
+  .attach-btn:active { transform: scale(0.92); }
+  .attach-btn svg { width: 20px; height: 20px; }
   textarea {
     flex: 1;
     border: none;
     outline: none;
     resize: none;
     background: transparent;
-    padding: 10px 0;
+    padding: 9px 4px;
     font-family: inherit;
     font-size: 16px;
     line-height: 1.4;
     color: var(--text);
     max-height: 120px;
-    min-height: 22px;
+    min-height: 24px;
   }
   textarea::placeholder { color: var(--muted); }
   .send-btn {
     flex-shrink: 0;
-    width: 38px;
-    height: 38px;
+    width: 38px; height: 38px;
     border-radius: 50%;
     border: none;
     background: var(--accent);
@@ -308,17 +380,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: transform 0.15s, opacity 0.2s;
+    transition: transform 0.15s, opacity 0.2s, background 0.2s;
   }
   .send-btn:active { transform: scale(0.92); }
   .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .send-btn svg { width: 18px; height: 18px; }
 
-  /* Sheet (metrics) */
+  /* Sheet */
   .sheet-bg {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.28);
+    background: rgba(15, 26, 22, 0.28);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s;
@@ -327,41 +399,29 @@
   .sheet-bg.open { opacity: 1; pointer-events: auto; }
   .sheet {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    left: 0; right: 0; bottom: 0;
     max-height: 80dvh;
     background: var(--surface);
     border-radius: 22px 22px 0 0;
-    padding: 14px 20px calc(20px + var(--safe-bottom));
+    padding: 14px 22px calc(22px + var(--safe-bottom));
     transform: translateY(100%);
     transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 51;
     overflow-y: auto;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.14);
-    max-width: 760px;
+    box-shadow: 0 -8px 32px rgba(15, 26, 22, 0.12);
+    max-width: 720px;
     margin: 0 auto;
   }
   .sheet.open { transform: translateY(0); }
   .sheet-handle {
-    width: 36px;
-    height: 4px;
+    width: 36px; height: 4px;
     background: var(--border);
     border-radius: 2px;
     margin: 0 auto 16px;
     cursor: grab;
   }
-  .sheet h3 {
-    font-size: 15px;
-    margin-bottom: 4px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
-  .sheet-sub {
-    font-size: 12.5px;
-    color: var(--muted);
-    margin-bottom: 18px;
-  }
+  .sheet h3 { font-size: 15px; margin-bottom: 4px; font-weight: 600; letter-spacing: -0.01em; }
+  .sheet-sub { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; }
   .group-title {
     font-size: 11px;
     text-transform: uppercase;
@@ -386,10 +446,8 @@
   .metric-row span:first-child { color: var(--muted); }
   .metric-row span:last-child { font-weight: 500; text-align: right; }
   .progress {
-    height: 5px;
-    border-radius: 3px;
-    background: var(--border);
-    overflow: hidden;
+    height: 5px; border-radius: 3px;
+    background: var(--border); overflow: hidden;
     margin-top: 8px;
   }
   .progress-fill {
@@ -397,14 +455,14 @@
     background: var(--accent);
     transition: width 0.5s ease, background 0.3s;
   }
-  .progress-fill.warning { background: #e0a244; }
-  .progress-fill.critical { background: #d16b6b; }
+  .progress-fill.warning { background: var(--warm); }
+  .progress-fill.critical { background: #C9614B; }
 
-  /* Modal (settings) */
+  /* Modal */
   .modal-bg {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.35);
+    background: rgba(15, 26, 22, 0.35);
     display: none;
     align-items: flex-end;
     justify-content: center;
@@ -414,18 +472,13 @@
   .modal {
     background: var(--surface);
     border-radius: 22px 22px 0 0;
-    padding: 22px 20px calc(24px + var(--safe-bottom));
+    padding: 24px 22px calc(24px + var(--safe-bottom));
     width: 100%;
-    max-width: 760px;
+    max-width: 720px;
     max-height: 90dvh;
     overflow-y: auto;
   }
-  .modal h2 {
-    font-size: 17px;
-    margin-bottom: 18px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-  }
+  .modal h2 { font-size: 17px; margin-bottom: 18px; font-weight: 600; letter-spacing: -0.01em; }
   .modal label {
     display: block;
     font-size: 12.5px;
@@ -440,7 +493,7 @@
     border: 1px solid var(--border);
     font-family: inherit;
     font-size: 15px;
-    background: var(--bg);
+    background: var(--surface-2);
     color: var(--text);
     transition: border-color 0.2s, background 0.2s;
   }
@@ -461,7 +514,7 @@
 
   .segmented {
     display: flex;
-    background: var(--bg);
+    background: var(--surface-2);
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 3px;
@@ -484,28 +537,8 @@
   .segmented button.active {
     background: var(--surface);
     color: var(--text);
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    box-shadow: 0 1px 3px rgba(15, 26, 22, 0.06);
   }
-
-  .palette-row {
-    display: flex;
-    gap: 10px;
-    margin-top: 8px;
-  }
-  .palette-swatch {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: transform 0.15s, border-color 0.15s;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-  .palette-swatch:active { transform: scale(0.92); }
-  .palette-swatch.active { border-color: var(--text); }
-  .palette-swatch[data-accent="amber"] { background: #d99a5b; }
-  .palette-swatch[data-accent="indigo"] { background: #6b7bd6; }
-  .palette-swatch[data-accent="forest"] { background: #5d9a6b; }
 
   .modal .row {
     display: flex;
@@ -525,13 +558,11 @@
   }
   .modal button.action:active { transform: scale(0.97); }
   .modal .primary { background: var(--accent); color: #fff; }
-  .modal .ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+  .modal .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border); }
 
   @media (min-width: 768px) {
-    .app { padding: 0 24px; }
     .sheet {
-      left: 50%;
-      right: auto;
+      left: 50%; right: auto;
       transform: translate(-50%, 100%);
       width: 600px;
       border-radius: 22px;
@@ -573,7 +604,13 @@
   <div class="chat" id="chat"></div>
 
   <div class="input-wrap">
+    <div class="attach-preview" id="attachPreview"></div>
     <div class="input-inner">
+      <button class="attach-btn" id="attachBtn" aria-label="Прикрепить файл">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
       <textarea id="input" placeholder="Напишите запрос…" rows="1"></textarea>
       <button class="send-btn" id="sendBtn" aria-label="Отправить">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -581,6 +618,7 @@
         </svg>
       </button>
     </div>
+    <input type="file" id="fileInput" accept=".txt,.pdf,.docx,image/*" multiple style="display:none" />
   </div>
 </div>
 
@@ -588,7 +626,7 @@
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="sheetHandle"></div>
   <h3>Метрики сессии</h3>
-  <div class="sheet-sub" id="sheetSub">Данные по последнему ответу</div>
+  <div class="sheet-sub">Данные по последнему ответу</div>
 
   <div class="group-title">Стабильность</div>
   <div class="metric">
@@ -625,13 +663,6 @@
       <button data-depth="deep">Глубокий</button>
     </div>
 
-    <label>Акцент</label>
-    <div class="palette-row">
-      <div class="palette-swatch" data-accent="amber" title="Янтарь"></div>
-      <div class="palette-swatch" data-accent="indigo" title="Индиго"></div>
-      <div class="palette-swatch" data-accent="forest" title="Лес"></div>
-    </div>
-
     <div class="row">
       <button class="action ghost" id="clearChat">Очистить чат</button>
       <button class="action primary" id="saveSettings">Сохранить</button>
@@ -653,10 +684,13 @@
   const LS_PROFILE = "monolog_profile";
   const LS_CHAT = "monolog_chat";
 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;    // 5 МБ
+  const MAX_TEXT_CHARS = 3000;              // символов из файла
+  const MAX_FILES = 3;
+
   const ICONS = {
     strategist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
-    analyst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>',
-    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>'
+    analyst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>'
   };
 
   const THINKING_PHRASES = [
@@ -668,13 +702,9 @@
 
   const state = {
     apiKey: "",
-    profile: {
-      accent: "amber",
-      depth: "deep",
-      theme: "light"
-    },
+    profile: { depth: "deep" },
     history: [],
-    lastMetrics: null,
+    attachments: [],
     lastKeySource: null,
   };
 
@@ -685,6 +715,10 @@
   } catch (e) {}
   try { state.history = JSON.parse(localStorage.getItem(LS_CHAT) || "[]"); } catch (e) { state.history = []; }
 
+  if (window.pdfjsLib) {
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  }
+
   function persist() {
     try {
       if (state.apiKey) localStorage.setItem(LS_KEY, state.apiKey);
@@ -694,10 +728,6 @@
   }
 
   function applyProfile() {
-    document.documentElement.setAttribute("data-accent", state.profile.accent || "amber");
-    document.querySelectorAll(".palette-swatch").forEach(function (el) {
-      el.classList.toggle("active", el.dataset.accent === state.profile.accent);
-    });
     document.querySelectorAll("#depthSeg button").forEach(function (el) {
       el.classList.toggle("active", el.dataset.depth === state.profile.depth);
     });
@@ -712,11 +742,12 @@
     return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
   }
 
-  function pickAvatar(role, metrics) {
-    if (role === "user") return ICONS.user;
+  function pickAvatar(metrics) {
     const scale = (metrics && metrics.mind_scale) || "";
-    if (scale === "strategic" || scale === "systemic") return ICONS.strategist;
-    return ICONS.analyst;
+    if (scale === "strategic" || scale === "systemic") {
+      return { html: ICONS.strategist, cls: "" };
+    }
+    return { html: ICONS.analyst, cls: "analyst" };
   }
 
   function addRow(role, content, metrics) {
@@ -726,22 +757,19 @@
     const row = document.createElement("div");
     row.className = "row " + role;
 
-    const avatar = document.createElement("div");
-    avatar.className = "avatar " + role;
-    avatar.innerHTML = pickAvatar(role, metrics);
+    if (role === "agent") {
+      const av = pickAvatar(metrics);
+      const avatar = document.createElement("div");
+      avatar.className = "avatar " + av.cls;
+      avatar.innerHTML = av.html;
+      row.appendChild(avatar);
+    }
 
     const bubble = document.createElement("div");
     bubble.className = "bubble";
 
     if (role === "agent") {
       bubble.innerHTML = renderMarkdown(content);
-      const status = document.createElement("span");
-      status.className = "msg-status";
-      const si = metrics && typeof metrics.stability_index === "number" ? metrics.stability_index : 1;
-      if (si < 0.5) status.classList.add("critical");
-      else if (si < 0.75) status.classList.add("warning");
-      bubble.appendChild(status);
-
       bubble.querySelectorAll("pre").forEach(function (pre) {
         const btn = document.createElement("button");
         btn.className = "copy-btn";
@@ -760,11 +788,10 @@
       bubble.textContent = content;
     }
 
-    row.appendChild(avatar);
     row.appendChild(bubble);
     chat.appendChild(row);
     chat.scrollTop = chat.scrollHeight;
-    return { row: row, bubble: bubble };
+    return { row: row, bubble: bubble, avatar: role === "agent" ? row.firstChild : null };
   }
 
   function updateChip(metrics) {
@@ -782,7 +809,6 @@
 
   function updateMetrics(metrics) {
     const m = metrics || {};
-    state.lastMetrics = m;
     const si = typeof m.stability_index === "number" ? m.stability_index : 0;
 
     document.getElementById("mStability").textContent = si.toFixed(2);
@@ -808,20 +834,116 @@
     updateChip(m);
   }
 
+  // --- Работа с файлами ---
+
+  function fileIcon(type, name) {
+    const ext = (name || "").split(".").pop().toLowerCase();
+    if (type && type.startsWith("image/")) {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+  }
+
+  async function extractTextFromFile(file) {
+    const name = file.name || "";
+    const type = file.type || "";
+    const ext = name.split(".").pop().toLowerCase();
+
+    if (type.startsWith("image/")) {
+      return "[Изображение: " + name + " — содержимое не извлечено]";
+    }
+
+    if (ext === "txt" || type === "text/plain") {
+      return await file.text();
+    }
+
+    if (ext === "docx" && window.mammoth) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const result = await window.mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+        return result.value || "";
+      } catch (e) {
+        return "[Не удалось прочитать DOCX: " + e.message + "]";
+      }
+    }
+
+    if (ext === "pdf" && window.pdfjsLib) {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let out = "";
+        const pages = Math.min(pdf.numPages, 10);
+        for (let i = 1; i <= pages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          out += content.items.map(function (it) { return it.str; }).join(" ") + "\n";
+        }
+        return out;
+      } catch (e) {
+        return "[Не удалось прочитать PDF: " + e.message + "]";
+      }
+    }
+
+    return "[Формат не поддерживается: " + name + "]";
+  }
+
+  function renderAttachPreview() {
+    const box = document.getElementById("attachPreview");
+    box.innerHTML = "";
+    state.attachments.forEach(function (a, idx) {
+      const chip = document.createElement("div");
+      chip.className = "attach-chip";
+      chip.innerHTML = fileIcon(a.type, a.name)
+        + '<span class="name">' + a.name + '</span>'
+        + '<button class="remove" title="Удалить">×</button>';
+      chip.querySelector(".remove").addEventListener("click", function () {
+        state.attachments.splice(idx, 1);
+        renderAttachPreview();
+      });
+      box.appendChild(chip);
+    });
+  }
+
+  async function handleFiles(files) {
+    const list = Array.from(files || []);
+    for (const f of list) {
+      if (state.attachments.length >= MAX_FILES) {
+        alert("Максимум " + MAX_FILES + " файла");
+        break;
+      }
+      if (f.size > MAX_FILE_SIZE) {
+        alert("Файл " + f.name + " больше 5 МБ");
+        continue;
+      }
+      let text = await extractTextFromFile(f);
+      if (text.length > MAX_TEXT_CHARS) {
+        text = text.slice(0, MAX_TEXT_CHARS) + "\n…[обрезано]";
+      }
+      state.attachments.push({ name: f.name, type: f.type, text: text });
+    }
+    renderAttachPreview();
+  }
+
   async function send() {
     const input = document.getElementById("input");
     const btn = document.getElementById("sendBtn");
     const text = (input.value || "").trim();
-    if (!text) return;
+    if (!text && state.attachments.length === 0) return;
 
+    const userDisplay = text || ("[Вложение: " + state.attachments.map(function (a) { return a.name; }).join(", ") + "]");
     input.value = "";
     input.style.height = "auto";
-    addRow("user", text);
+    addRow("user", userDisplay);
+
+    const attachmentsPayload = state.attachments.slice();
+    state.attachments = [];
+    renderAttachPreview();
 
     btn.disabled = true;
 
     const thinking = addRow("agent", "");
     const bubble = thinking.bubble;
+    if (thinking.avatar) thinking.avatar.classList.add("thinking");
     bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>'
       + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
 
@@ -833,8 +955,9 @@
         method: "POST",
         headers: headers,
         body: JSON.stringify({
-          message: text,
+          message: text || "Проанализируй вложения.",
           history: state.history.slice(-4),
+          attachments: attachmentsPayload,
         }),
       });
 
@@ -850,7 +973,7 @@
         state.lastKeySource = data.key_source || null;
         addRow("agent", data.reply_text || "", data.metrics);
         updateMetrics(data.metrics);
-        state.history.push({ role: "user", content: text });
+        state.history.push({ role: "user", content: userDisplay });
         state.history.push({ role: "assistant", content: data.reply_text || "" });
         persist();
       } else {
@@ -888,10 +1011,7 @@
     const sheet = document.getElementById("metricsSheet");
     const handle = document.getElementById("sheetHandle");
     if (!sheet || !handle) return;
-    let startY = 0;
-    let currentY = 0;
-    let dragging = false;
-
+    let startY = 0, currentY = 0, dragging = false;
     function onStart(e) {
       dragging = true;
       startY = (e.touches ? e.touches[0].clientY : e.clientY);
@@ -910,7 +1030,6 @@
       sheet.style.transform = "";
       if (currentY - startY > 80) closeSheet();
     }
-
     handle.addEventListener("touchstart", onStart, { passive: true });
     handle.addEventListener("touchmove", onMove, { passive: true });
     handle.addEventListener("touchend", onEnd);
@@ -919,27 +1038,17 @@
     window.addEventListener("mouseup", onEnd);
   }
 
-  function setupViewport() {
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", function () {
-        document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px");
-      });
-    }
-  }
-
   function init() {
     applyProfile();
-    setupViewport();
     setupSwipeToClose();
 
     state.history.forEach(function (m) {
       addRow(m.role === "user" ? "user" : "agent", m.content || "");
     });
 
-    if (state.lastMetrics) updateChip(state.lastMetrics);
-
     const sendBtn = document.getElementById("sendBtn");
     const input = document.getElementById("input");
+    const fileInput = document.getElementById("fileInput");
 
     sendBtn.addEventListener("click", send);
     input.addEventListener("keydown", function (e) {
@@ -953,19 +1062,20 @@
       input.style.height = Math.min(input.scrollHeight, 120) + "px";
     });
 
+    document.getElementById("attachBtn").addEventListener("click", function () {
+      fileInput.click();
+    });
+    fileInput.addEventListener("change", function (e) {
+      handleFiles(e.target.files);
+      fileInput.value = "";
+    });
+
     document.getElementById("stabilityChip").addEventListener("click", openSheet);
     document.getElementById("sheetBg").addEventListener("click", closeSheet);
 
     document.getElementById("settingsBtn").addEventListener("click", openModal);
     document.getElementById("modalBg").addEventListener("click", function (e) {
       if (e.target === this) closeModal();
-    });
-
-    document.querySelectorAll(".palette-swatch").forEach(function (el) {
-      el.addEventListener("click", function () {
-        state.profile.accent = el.dataset.accent;
-        applyProfile();
-      });
     });
 
     document.querySelectorAll("#depthSeg button").forEach(function (el) {
@@ -1017,9 +1127,7 @@
           localStorage.setItem(LS_CHAT, JSON.stringify(state.history));
           localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
           location.reload();
-        } catch (err) {
-          alert("Некорректный файл");
-        }
+        } catch (err) { alert("Некорректный файл"); }
       };
       reader.readAsText(file);
     });
