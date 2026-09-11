@@ -3,24 +3,34 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<meta name="theme-color" content="#ffffff" />
+<meta name="theme-color" content="#fafafa" />
 <title>Monolog</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
   :root {
-    --bg: #ffffff;
-    --text: #1a1a1a;
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text: #14161a;
     --muted: #6b7280;
-    --panel: rgba(255, 255, 255, 0.72);
-    --accent: #f5c6c6;
-    --accent-2: #f8d8c8;
-    --shadow: 0 4px 24px rgba(0,0,0,0.06);
-    --radius: 18px;
+    --border: rgba(0,0,0,0.08);
+    --accent: #d99a5b;
+    --accent-soft: rgba(217, 154, 91, 0.14);
+    --shadow: 0 4px 20px rgba(0,0,0,0.05);
+    --radius: 16px;
     --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
   }
-  [data-theme="amber"] {
-    --accent: #f5d6a6;
-    --accent-2: #f8c8a8;
+  [data-accent="indigo"] {
+    --accent: #6b7bd6;
+    --accent-soft: rgba(107, 123, 214, 0.14);
+  }
+  [data-accent="forest"] {
+    --accent: #5d9a6b;
+    --accent-soft: rgba(93, 154, 107, 0.14);
+  }
+  [data-accent="amber"] {
+    --accent: #d99a5b;
+    --accent-soft: rgba(217, 154, 91, 0.14);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -29,164 +39,233 @@
     color: var(--text);
     background: var(--bg);
     overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
   }
   body::before {
     content: "";
     position: fixed;
     inset: 0;
-    background:
-      radial-gradient(600px 400px at 20% 0%, var(--accent) 0%, transparent 60%),
-      radial-gradient(500px 400px at 100% 100%, var(--accent-2) 0%, transparent 60%);
-    opacity: 0.55;
-    z-index: -1;
+    background: radial-gradient(500px 400px at 90% -10%, var(--accent-soft) 0%, transparent 65%);
     pointer-events: none;
+    z-index: 0;
+    transition: background 0.6s ease;
   }
 
   .app {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     height: 100dvh;
-    max-width: 720px;
+    max-width: 760px;
     margin: 0 auto;
-    padding: 0 12px;
+    padding: 0 14px;
   }
 
+  /* Header */
   header {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: calc(env(safe-area-inset-top, 0px) + 12px) 4px 12px;
+    gap: 10px;
+    padding: calc(var(--safe-top) + 14px) 2px 12px;
     flex-shrink: 0;
   }
-  .logo {
-    font-weight: 600;
-    font-size: 17px;
-    letter-spacing: 0.01em;
+  .brand {
     display: flex;
     align-items: center;
     gap: 8px;
+    font-weight: 600;
+    font-size: 16px;
+    letter-spacing: -0.01em;
   }
-  .dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: #4caf50;
-    display: inline-block;
-    transition: background 0.3s;
+  .brand svg { width: 22px; height: 22px; color: var(--accent); }
+
+  .stability-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 5px 10px 5px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    transition: transform 0.15s;
+    box-shadow: var(--shadow);
   }
-  .dot.warning { background: #ffb300; }
-  .dot.critical { background: #e57373; }
+  .stability-chip:active { transform: scale(0.96); }
+  .stability-bar {
+    width: 32px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--border);
+    overflow: hidden;
+  }
+  .stability-fill {
+    height: 100%;
+    width: 0%;
+    background: var(--accent);
+    transition: width 0.5s ease, background 0.3s;
+  }
+  .stability-chip.warning .stability-fill { background: #e0a244; }
+  .stability-chip.critical .stability-fill { background: #d16b6b; }
 
   .icon-btn {
-    background: var(--panel);
-    border: 1px solid rgba(255,255,255,0.6);
+    width: 36px;
+    height: 36px;
     border-radius: 12px;
-    padding: 8px 12px;
-    font-size: 13px;
-    font-weight: 500;
+    background: var(--surface);
+    border: 1px solid var(--border);
     color: var(--text);
     cursor: pointer;
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    backdrop-filter: blur(8px);
+    justify-content: center;
     transition: transform 0.15s;
+    box-shadow: var(--shadow);
   }
-  .icon-btn:active { transform: scale(0.96); }
-  .icon-btn svg { width: 16px; height: 16px; }
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn svg { width: 18px; height: 18px; }
 
+  /* Chat */
   .chat {
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 8px 0 16px;
+    gap: 14px;
+    padding: 6px 0 16px;
     scroll-behavior: smooth;
   }
   .chat::-webkit-scrollbar { width: 0; }
 
-  .msg {
-    padding: 12px 16px;
+  .row { display: flex; gap: 10px; align-items: flex-start; }
+  .row.user { flex-direction: row-reverse; }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--accent);
+    margin-top: 2px;
+  }
+  .avatar svg { width: 16px; height: 16px; }
+  .avatar.user { color: var(--muted); }
+
+  .bubble {
+    padding: 12px 14px;
     border-radius: var(--radius);
     line-height: 1.55;
     font-size: 15px;
     word-wrap: break-word;
     overflow-wrap: break-word;
+    max-width: 100%;
+    position: relative;
   }
-  .msg.user {
-    align-self: flex-end;
-    max-width: 85%;
-    background: var(--accent);
-    border-bottom-right-radius: 6px;
-  }
-  .msg.agent {
-    align-self: stretch;
-    background: var(--panel);
-    backdrop-filter: blur(8px);
-    border: 1px solid rgba(255,255,255,0.6);
+  .row.agent .bubble {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top-left-radius: 6px;
     box-shadow: var(--shadow);
-    border-bottom-left-radius: 6px;
+    flex: 1;
   }
-  .msg.agent h1, .msg.agent h2, .msg.agent h3 {
-    margin: 14px 0 8px;
+  .row.user .bubble {
+    background: var(--accent-soft);
+    border-top-right-radius: 6px;
+    max-width: 85%;
+    color: var(--text);
+  }
+  .bubble h1, .bubble h2, .bubble h3 {
+    margin: 12px 0 6px;
     line-height: 1.3;
+    font-weight: 600;
   }
-  .msg.agent h1 { font-size: 18px; }
-  .msg.agent h2 { font-size: 16px; }
-  .msg.agent h3 { font-size: 15px; }
-  .msg.agent p { margin: 8px 0; }
-  .msg.agent ul, .msg.agent ol { margin: 8px 0 8px 20px; }
-  .msg.agent li { margin: 4px 0; }
-  .msg.agent code {
-    background: rgba(0,0,0,0.06);
+  .bubble h1 { font-size: 17px; }
+  .bubble h2 { font-size: 15.5px; }
+  .bubble h3 { font-size: 14.5px; }
+  .bubble p { margin: 6px 0; }
+  .bubble ul, .bubble ol { margin: 6px 0 6px 18px; }
+  .bubble li { margin: 3px 0; }
+  .bubble code {
+    background: rgba(0,0,0,0.05);
     padding: 2px 6px;
     border-radius: 6px;
     font-family: ui-monospace, SFMono-Regular, monospace;
     font-size: 0.88em;
   }
-  .msg.agent pre {
-    background: rgba(0,0,0,0.05);
+  .bubble pre {
+    background: #14161a;
+    color: #e6e6e6;
     padding: 12px;
     padding-top: 36px;
     border-radius: 12px;
     overflow-x: auto;
     margin: 10px 0;
     position: relative;
-    font-size: 13px;
+    font-size: 12.5px;
+    line-height: 1.5;
   }
-  .msg.agent pre code { background: none; padding: 0; font-size: inherit; }
+  .bubble pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
   .copy-btn {
     position: absolute;
     top: 8px;
     right: 8px;
-    background: rgba(255,255,255,0.95);
-    border: 1px solid rgba(0,0,0,0.06);
+    background: rgba(255,255,255,0.12);
+    border: none;
     padding: 4px 10px;
-    border-radius: 8px;
-    font-size: 12px;
-    color: var(--muted);
+    border-radius: 6px;
+    font-size: 11px;
+    color: #e6e6e6;
     cursor: pointer;
   }
-  .copy-btn:active { transform: scale(0.96); }
+  .copy-btn:active { transform: scale(0.95); }
 
-  .typing { display: inline-block; color: var(--muted); }
-  .typing::after {
-    content: "·";
-    animation: dots 1.4s infinite;
-    display: inline-block;
-    width: 12px;
-    text-align: left;
+  .msg-status {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #4caf50;
   }
-  @keyframes dots {
-    0%,20% { content: "·"; }
-    40% { content: "··"; }
-    60%,100% { content: "···"; }
+  .msg-status.warning { background: #e0a244; }
+  .msg-status.critical { background: #d16b6b; }
+
+  .typing { display: inline-flex; gap: 3px; align-items: center; }
+  .typing span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--muted);
+    animation: pulse 1.2s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  .thinking-text {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: 8px;
+    font-style: italic;
   }
 
+  /* Input */
   .input-wrap {
     flex-shrink: 0;
-    padding: 8px 0 calc(8px + var(--safe-bottom));
-    background: linear-gradient(to top, var(--bg) 60%, transparent);
+    padding: 8px 0 calc(10px + var(--safe-bottom));
+    background: linear-gradient(to top, var(--bg) 70%, transparent);
     position: sticky;
     bottom: 0;
   }
@@ -194,13 +273,14 @@
     display: flex;
     gap: 8px;
     align-items: flex-end;
-    background: var(--panel);
-    backdrop-filter: blur(12px);
-    border: 1px solid rgba(255,255,255,0.7);
-    border-radius: 22px;
-    padding: 6px 6px 6px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 5px 5px 5px 14px;
     box-shadow: var(--shadow);
+    transition: border-color 0.2s;
   }
+  .input-inner:focus-within { border-color: var(--accent); }
   textarea {
     flex: 1;
     border: none;
@@ -218,26 +298,27 @@
   textarea::placeholder { color: var(--muted); }
   .send-btn {
     flex-shrink: 0;
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     border-radius: 50%;
     border: none;
     background: var(--accent);
-    color: var(--text);
+    color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: transform 0.15s, opacity 0.2s;
   }
-  .send-btn:active { transform: scale(0.94); }
-  .send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .send-btn:active { transform: scale(0.92); }
+  .send-btn:disabled { opacity: 0.35; cursor: not-allowed; }
   .send-btn svg { width: 18px; height: 18px; }
 
+  /* Sheet (metrics) */
   .sheet-bg {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.25);
+    background: rgba(0,0,0,0.28);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.25s;
@@ -249,34 +330,50 @@
     left: 0;
     right: 0;
     bottom: 0;
-    max-height: 75dvh;
-    background: #fff;
-    border-radius: 24px 24px 0 0;
-    padding: 20px 20px calc(20px + var(--safe-bottom));
+    max-height: 80dvh;
+    background: var(--surface);
+    border-radius: 22px 22px 0 0;
+    padding: 14px 20px calc(20px + var(--safe-bottom));
     transform: translateY(100%);
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 51;
     overflow-y: auto;
-    box-shadow: 0 -8px 32px rgba(0,0,0,0.12);
-    max-width: 720px;
+    box-shadow: 0 -8px 32px rgba(0,0,0,0.14);
+    max-width: 760px;
     margin: 0 auto;
   }
   .sheet.open { transform: translateY(0); }
   .sheet-handle {
-    width: 40px;
+    width: 36px;
     height: 4px;
-    background: rgba(0,0,0,0.15);
+    background: var(--border);
     border-radius: 2px;
     margin: 0 auto 16px;
+    cursor: grab;
   }
   .sheet h3 {
-    font-size: 16px;
-    margin-bottom: 16px;
+    font-size: 15px;
+    margin-bottom: 4px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .sheet-sub {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin-bottom: 18px;
+  }
+  .group-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    margin: 18px 0 8px;
     font-weight: 600;
   }
+  .group-title:first-of-type { margin-top: 0; }
   .metric {
     padding: 10px 0;
-    border-bottom: 1px solid rgba(0,0,0,0.06);
+    border-bottom: 1px solid var(--border);
     font-size: 14px;
   }
   .metric:last-child { border-bottom: none; }
@@ -284,22 +381,26 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 12px;
   }
   .metric-row span:first-child { color: var(--muted); }
-  .metric-row span:last-child { font-weight: 500; }
+  .metric-row span:last-child { font-weight: 500; text-align: right; }
   .progress {
-    height: 6px;
+    height: 5px;
     border-radius: 3px;
-    background: rgba(0,0,0,0.08);
+    background: var(--border);
     overflow: hidden;
     margin-top: 8px;
   }
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, #a8e6cf, #4caf50);
-    transition: width 0.5s ease;
+    background: var(--accent);
+    transition: width 0.5s ease, background 0.3s;
   }
+  .progress-fill.warning { background: #e0a244; }
+  .progress-fill.critical { background: #d16b6b; }
 
+  /* Modal (settings) */
   .modal-bg {
     position: fixed;
     inset: 0;
@@ -308,38 +409,45 @@
     align-items: flex-end;
     justify-content: center;
     z-index: 60;
-    padding: 0;
   }
   .modal-bg.open { display: flex; }
   .modal {
-    background: #fff;
-    border-radius: 24px 24px 0 0;
-    padding: 24px 20px calc(24px + var(--safe-bottom));
+    background: var(--surface);
+    border-radius: 22px 22px 0 0;
+    padding: 22px 20px calc(24px + var(--safe-bottom));
     width: 100%;
-    max-width: 720px;
+    max-width: 760px;
     max-height: 90dvh;
     overflow-y: auto;
   }
-  .modal h2 { font-size: 18px; margin-bottom: 16px; }
+  .modal h2 {
+    font-size: 17px;
+    margin-bottom: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
   .modal label {
     display: block;
-    font-size: 13px;
+    font-size: 12.5px;
     color: var(--muted);
     margin: 14px 0 6px;
+    font-weight: 500;
   }
   .modal input[type="text"], .modal input[type="password"] {
     width: 100%;
     padding: 12px 14px;
     border-radius: 12px;
-    border: 1px solid rgba(0,0,0,0.12);
+    border: 1px solid var(--border);
     font-family: inherit;
-    font-size: 16px;
-    background: #fafafa;
+    font-size: 15px;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.2s, background 0.2s;
   }
   .modal input:focus {
     outline: none;
     border-color: var(--accent);
-    background: #fff;
+    background: var(--surface);
   }
   .modal .check {
     display: flex;
@@ -347,44 +455,93 @@
     gap: 10px;
     margin-top: 14px;
     font-size: 14px;
-    color: var(--text);
+    cursor: pointer;
   }
-  .modal .check input { width: 18px; height: 18px; }
+  .modal .check input { width: 18px; height: 18px; accent-color: var(--accent); }
+
+  .segmented {
+    display: flex;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 3px;
+    gap: 3px;
+    margin-top: 6px;
+  }
+  .segmented button {
+    flex: 1;
+    padding: 9px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: inherit;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .segmented button.active {
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  .palette-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+  }
+  .palette-swatch {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+  .palette-swatch:active { transform: scale(0.92); }
+  .palette-swatch.active { border-color: var(--text); }
+  .palette-swatch[data-accent="amber"] { background: #d99a5b; }
+  .palette-swatch[data-accent="indigo"] { background: #6b7bd6; }
+  .palette-swatch[data-accent="forest"] { background: #5d9a6b; }
+
   .modal .row {
     display: flex;
     gap: 8px;
-    margin-top: 18px;
+    margin-top: 22px;
   }
-  .modal button {
+  .modal button.action {
     flex: 1;
-    padding: 14px;
-    border-radius: 14px;
+    padding: 13px;
+    border-radius: 13px;
     border: none;
     cursor: pointer;
     font-weight: 500;
-    font-size: 15px;
+    font-size: 14.5px;
     font-family: inherit;
+    transition: transform 0.15s;
   }
-  .modal button:active { transform: scale(0.97); }
-  .modal .primary { background: var(--accent); color: var(--text); }
-  .modal .ghost { background: rgba(0,0,0,0.06); color: var(--text); }
+  .modal button.action:active { transform: scale(0.97); }
+  .modal .primary { background: var(--accent); color: #fff; }
+  .modal .ghost { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
 
   @media (min-width: 768px) {
     .app { padding: 0 24px; }
-    .msg { font-size: 15px; }
     .sheet {
       left: 50%;
       right: auto;
       transform: translate(-50%, 100%);
-      width: 560px;
-      border-radius: 24px;
+      width: 600px;
+      border-radius: 22px;
       bottom: 24px;
     }
     .sheet.open { transform: translate(-50%, 0); }
     .modal {
-      border-radius: 24px;
+      border-radius: 22px;
       margin-bottom: 24px;
-      width: 480px;
+      width: 520px;
     }
   }
 </style>
@@ -392,20 +549,20 @@
 <body>
 <div class="app">
   <header>
-    <div class="logo">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 7v5l3 2"/>
+      </svg>
       Monolog
-      <span class="dot" id="statusDot"></span>
     </div>
-    <div style="display:flex; gap:8px;">
-      <button class="icon-btn" id="metricsBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 3v18h18"/>
-          <path d="M7 14l4-4 4 4 5-5"/>
-        </svg>
-        Метрики
+    <div style="display:flex; gap:8px; align-items:center;">
+      <button class="stability-chip" id="stabilityChip" title="Метрики сессии">
+        <span class="stability-bar"><span class="stability-fill" id="chipFill"></span></span>
+        <span id="chipValue">—</span>
       </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Настройки">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
@@ -419,7 +576,7 @@
     <div class="input-inner">
       <textarea id="input" placeholder="Напишите запрос…" rows="1"></textarea>
       <button class="send-btn" id="sendBtn" aria-label="Отправить">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M5 12h14M13 6l6 6-6 6"/>
         </svg>
       </button>
@@ -429,19 +586,27 @@
 
 <div class="sheet-bg" id="sheetBg"></div>
 <div class="sheet" id="metricsSheet">
-  <div class="sheet-handle"></div>
+  <div class="sheet-handle" id="sheetHandle"></div>
   <h3>Метрики сессии</h3>
-  <div id="metricsContent">
-    <div class="metric">
-      <div class="metric-row"><span>Стабильность</span><span id="mStability">—</span></div>
-      <div class="progress"><div class="progress-fill" id="mProgress" style="width:0%"></div></div>
-    </div>
-    <div class="metric"><div class="metric-row"><span>Масштаб</span><span id="mScale">—</span></div></div>
-    <div class="metric"><div class="metric-row"><span>Циклы</span><span id="mCycles">—</span></div></div>
-    <div class="metric"><div class="metric-row"><span>Коллизии</span><span id="mCollisions">—</span></div></div>
-    <div class="metric"><div class="metric-row"><span>Вклад человека</span><span id="mHuman">—</span></div></div>
-    <div class="metric"><div class="metric-row"><span>Протокол</span><span id="mProtocol">—</span></div></div>
+  <div class="sheet-sub" id="sheetSub">Данные по последнему ответу</div>
+
+  <div class="group-title">Стабильность</div>
+  <div class="metric">
+    <div class="metric-row"><span>Индекс</span><span id="mStability">—</span></div>
+    <div class="progress"><div class="progress-fill" id="mProgress" style="width:0%"></div></div>
   </div>
+  <div class="metric"><div class="metric-row"><span>Статус</span><span id="mStatus">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Протокол</span><span id="mProtocol">—</span></div></div>
+
+  <div class="group-title">Мышление</div>
+  <div class="metric"><div class="metric-row"><span>Масштаб</span><span id="mScale">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Циклы</span><span id="mCycles">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Коллизии</span><span id="mCollisions">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Импульс</span><span id="mPulse">—</span></div></div>
+
+  <div class="group-title">Вклад</div>
+  <div class="metric"><div class="metric-row"><span>Человек / ИИ</span><span id="mHuman">—</span></div></div>
+  <div class="metric"><div class="metric-row"><span>Ключ</span><span id="mKeySource">—</span></div></div>
 </div>
 
 <div class="modal-bg" id="modalBg">
@@ -453,13 +618,27 @@
       <input type="checkbox" id="rememberKey" />
       Запомнить ключ на этом устройстве
     </label>
+
+    <label>Режим глубины</label>
+    <div class="segmented" id="depthSeg">
+      <button data-depth="quiet">Тихий</button>
+      <button data-depth="deep">Глубокий</button>
+    </div>
+
+    <label>Акцент</label>
+    <div class="palette-row">
+      <div class="palette-swatch" data-accent="amber" title="Янтарь"></div>
+      <div class="palette-swatch" data-accent="indigo" title="Индиго"></div>
+      <div class="palette-swatch" data-accent="forest" title="Лес"></div>
+    </div>
+
     <div class="row">
-      <button class="ghost" id="clearChat">Очистить чат</button>
-      <button class="primary" id="saveSettings">Сохранить</button>
+      <button class="action ghost" id="clearChat">Очистить чат</button>
+      <button class="action primary" id="saveSettings">Сохранить</button>
     </div>
     <div class="row">
-      <button class="ghost" id="exportData">Экспорт</button>
-      <button class="ghost" id="importData">Импорт</button>
+      <button class="action ghost" id="exportData">Экспорт</button>
+      <button class="action ghost" id="importData">Импорт</button>
     </div>
     <input type="file" id="importFile" accept="application/json" style="display:none" />
   </div>
@@ -474,14 +653,36 @@
   const LS_PROFILE = "monolog_profile";
   const LS_CHAT = "monolog_chat";
 
+  const ICONS = {
+    strategist: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
+    analyst: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>',
+    user: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>'
+  };
+
+  const THINKING_PHRASES = [
+    "Синхронизирую с плоскостью…",
+    "Проверяю коллизии…",
+    "Строю карту восприятия…",
+    "Оцениваю стабильность…"
+  ];
+
   const state = {
     apiKey: "",
-    profile: { theme: "light", mind_scale: "micro" },
+    profile: {
+      accent: "amber",
+      depth: "deep",
+      theme: "light"
+    },
     history: [],
+    lastMetrics: null,
+    lastKeySource: null,
   };
 
   try { state.apiKey = localStorage.getItem(LS_KEY) || ""; } catch (e) {}
-  try { state.profile = JSON.parse(localStorage.getItem(LS_PROFILE) || "null") || state.profile; } catch (e) {}
+  try {
+    const p = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
+    if (p) state.profile = Object.assign(state.profile, p);
+  } catch (e) {}
   try { state.history = JSON.parse(localStorage.getItem(LS_CHAT) || "[]"); } catch (e) { state.history = []; }
 
   function persist() {
@@ -492,16 +693,14 @@
     } catch (e) {}
   }
 
-  function applyTheme() {
-    document.documentElement.setAttribute("data-theme", state.profile.theme || "light");
-  }
-
-  function setDot(value) {
-    const dot = document.getElementById("statusDot");
-    if (!dot) return;
-    dot.className = "dot";
-    if (value < 0.5) dot.classList.add("critical");
-    else if (value < 0.75) dot.classList.add("warning");
+  function applyProfile() {
+    document.documentElement.setAttribute("data-accent", state.profile.accent || "amber");
+    document.querySelectorAll(".palette-swatch").forEach(function (el) {
+      el.classList.toggle("active", el.dataset.accent === state.profile.accent);
+    });
+    document.querySelectorAll("#depthSeg button").forEach(function (el) {
+      el.classList.toggle("active", el.dataset.depth === state.profile.depth);
+    });
   }
 
   function renderMarkdown(text) {
@@ -509,21 +708,41 @@
     if (typeof marked !== "undefined" && marked && typeof marked.parse === "function") {
       try { return marked.parse(safe); } catch (e) {}
     }
-    const esc = safe
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+    const esc = safe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
   }
 
-  function addMessage(role, content) {
+  function pickAvatar(role, metrics) {
+    if (role === "user") return ICONS.user;
+    const scale = (metrics && metrics.mind_scale) || "";
+    if (scale === "strategic" || scale === "systemic") return ICONS.strategist;
+    return ICONS.analyst;
+  }
+
+  function addRow(role, content, metrics) {
     const chat = document.getElementById("chat");
     if (!chat) return null;
-    const div = document.createElement("div");
-    div.className = "msg " + role;
+
+    const row = document.createElement("div");
+    row.className = "row " + role;
+
+    const avatar = document.createElement("div");
+    avatar.className = "avatar " + role;
+    avatar.innerHTML = pickAvatar(role, metrics);
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
     if (role === "agent") {
-      div.innerHTML = renderMarkdown(content);
-      div.querySelectorAll("pre").forEach(function (pre) {
+      bubble.innerHTML = renderMarkdown(content);
+      const status = document.createElement("span");
+      status.className = "msg-status";
+      const si = metrics && typeof metrics.stability_index === "number" ? metrics.stability_index : 1;
+      if (si < 0.5) status.classList.add("critical");
+      else if (si < 0.75) status.classList.add("warning");
+      bubble.appendChild(status);
+
+      bubble.querySelectorAll("pre").forEach(function (pre) {
         const btn = document.createElement("button");
         btn.className = "copy-btn";
         btn.type = "button";
@@ -538,30 +757,55 @@
         pre.appendChild(btn);
       });
     } else {
-      div.textContent = content;
+      bubble.textContent = content;
     }
-    chat.appendChild(div);
+
+    row.appendChild(avatar);
+    row.appendChild(bubble);
+    chat.appendChild(row);
     chat.scrollTop = chat.scrollHeight;
-    return div;
+    return { row: row, bubble: bubble };
+  }
+
+  function updateChip(metrics) {
+    const chip = document.getElementById("stabilityChip");
+    const fill = document.getElementById("chipFill");
+    const val = document.getElementById("chipValue");
+    if (!chip || !fill || !val) return;
+    const si = metrics && typeof metrics.stability_index === "number" ? metrics.stability_index : 0;
+    chip.className = "stability-chip";
+    if (si < 0.5) chip.classList.add("critical");
+    else if (si < 0.75) chip.classList.add("warning");
+    fill.style.width = (si * 100) + "%";
+    val.textContent = si.toFixed(2);
   }
 
   function updateMetrics(metrics) {
     const m = metrics || {};
+    state.lastMetrics = m;
     const si = typeof m.stability_index === "number" ? m.stability_index : 0;
+
     document.getElementById("mStability").textContent = si.toFixed(2);
-    document.getElementById("mProgress").style.width = (si * 100) + "%";
+    const prog = document.getElementById("mProgress");
+    prog.style.width = (si * 100) + "%";
+    prog.className = "progress-fill";
+    if (si < 0.5) prog.classList.add("critical");
+    else if (si < 0.75) prog.classList.add("warning");
+
+    document.getElementById("mStatus").textContent = m.indicator_status || "—";
+    document.getElementById("mProtocol").textContent = m.protocol_integrity === false ? "сбой" : "соблюдён";
     document.getElementById("mScale").textContent = m.mind_scale || "—";
     document.getElementById("mCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
     document.getElementById("mCollisions").textContent = m.collisions_resolved || "—";
-    const hc = typeof m.human_contribution === "number" ? m.human_contribution : 0;
-    document.getElementById("mHuman").textContent = (hc * 100).toFixed(0) + "%";
-    document.getElementById("mProtocol").textContent = m.protocol_integrity === false ? "сбой" : "соблюдён";
+    document.getElementById("mPulse").textContent = m.cognitive_pulse || "—";
 
-    setDot(si);
+    const hc = typeof m.human_contribution === "number" ? m.human_contribution : null;
+    document.getElementById("mHuman").textContent = hc != null
+      ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%"
+      : "—";
+    document.getElementById("mKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
 
-    if (si > 0 && si < 0.5) state.profile.theme = "amber";
-    else state.profile.theme = "light";
-    applyTheme();
+    updateChip(m);
   }
 
   async function send() {
@@ -572,10 +816,14 @@
 
     input.value = "";
     input.style.height = "auto";
-    addMessage("user", text);
+    addRow("user", text);
 
     btn.disabled = true;
-    const thinking = addMessage("agent", '<span class="typing"></span>');
+
+    const thinking = addRow("agent", "");
+    const bubble = thinking.bubble;
+    bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>'
+      + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
 
     const headers = { "Content-Type": "application/json" };
     if (state.apiKey) headers["X-Groq-Key"] = state.apiKey;
@@ -586,7 +834,7 @@
         headers: headers,
         body: JSON.stringify({
           message: text,
-          history: state.history.slice(-6),
+          history: state.history.slice(-4),
         }),
       });
 
@@ -594,24 +842,24 @@
       try { data = await r.json(); } catch (e) {}
 
       const chat = document.getElementById("chat");
-      if (thinking && chat && thinking.parentNode === chat) chat.removeChild(thinking);
+      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
 
       if (!r.ok) {
-        const detail = (data && data.detail) ? data.detail : r.statusText;
-        addMessage("agent", "Ошибка: " + detail);
+        addRow("agent", "Ошибка: " + ((data && data.detail) || r.statusText));
       } else if (data) {
-        addMessage("agent", data.reply_text || "");
+        state.lastKeySource = data.key_source || null;
+        addRow("agent", data.reply_text || "", data.metrics);
         updateMetrics(data.metrics);
         state.history.push({ role: "user", content: text });
         state.history.push({ role: "assistant", content: data.reply_text || "" });
         persist();
       } else {
-        addMessage("agent", "Пустой ответ сервера.");
+        addRow("agent", "Пустой ответ сервера.");
       }
     } catch (e) {
       const chat = document.getElementById("chat");
-      if (thinking && chat && thinking.parentNode === chat) chat.removeChild(thinking);
-      addMessage("agent", "Сбой сети: " + (e && e.message ? e.message : "unknown"));
+      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
+      addRow("agent", "Сбой сети: " + (e && e.message ? e.message : "unknown"));
     } finally {
       btn.disabled = false;
       input.focus();
@@ -626,22 +874,69 @@
     document.getElementById("sheetBg").classList.remove("open");
     document.getElementById("metricsSheet").classList.remove("open");
   }
-
   function openModal() {
     document.getElementById("keyInput").value = state.apiKey || "";
     document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
+    applyProfile();
     document.getElementById("modalBg").classList.add("open");
   }
   function closeModal() {
     document.getElementById("modalBg").classList.remove("open");
   }
 
+  function setupSwipeToClose() {
+    const sheet = document.getElementById("metricsSheet");
+    const handle = document.getElementById("sheetHandle");
+    if (!sheet || !handle) return;
+    let startY = 0;
+    let currentY = 0;
+    let dragging = false;
+
+    function onStart(e) {
+      dragging = true;
+      startY = (e.touches ? e.touches[0].clientY : e.clientY);
+      sheet.style.transition = "none";
+    }
+    function onMove(e) {
+      if (!dragging) return;
+      currentY = (e.touches ? e.touches[0].clientY : e.clientY);
+      const dy = Math.max(0, currentY - startY);
+      sheet.style.transform = "translateY(" + dy + "px)";
+    }
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      sheet.style.transition = "";
+      sheet.style.transform = "";
+      if (currentY - startY > 80) closeSheet();
+    }
+
+    handle.addEventListener("touchstart", onStart, { passive: true });
+    handle.addEventListener("touchmove", onMove, { passive: true });
+    handle.addEventListener("touchend", onEnd);
+    handle.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+  }
+
+  function setupViewport() {
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", function () {
+        document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px");
+      });
+    }
+  }
+
   function init() {
-    applyTheme();
+    applyProfile();
+    setupViewport();
+    setupSwipeToClose();
 
     state.history.forEach(function (m) {
-      addMessage(m.role === "user" ? "user" : "agent", m.content || "");
+      addRow(m.role === "user" ? "user" : "agent", m.content || "");
     });
+
+    if (state.lastMetrics) updateChip(state.lastMetrics);
 
     const sendBtn = document.getElementById("sendBtn");
     const input = document.getElementById("input");
@@ -658,12 +953,26 @@
       input.style.height = Math.min(input.scrollHeight, 120) + "px";
     });
 
-    document.getElementById("metricsBtn").addEventListener("click", openSheet);
+    document.getElementById("stabilityChip").addEventListener("click", openSheet);
     document.getElementById("sheetBg").addEventListener("click", closeSheet);
 
     document.getElementById("settingsBtn").addEventListener("click", openModal);
     document.getElementById("modalBg").addEventListener("click", function (e) {
       if (e.target === this) closeModal();
+    });
+
+    document.querySelectorAll(".palette-swatch").forEach(function (el) {
+      el.addEventListener("click", function () {
+        state.profile.accent = el.dataset.accent;
+        applyProfile();
+      });
+    });
+
+    document.querySelectorAll("#depthSeg button").forEach(function (el) {
+      el.addEventListener("click", function () {
+        state.profile.depth = el.dataset.depth;
+        applyProfile();
+      });
     });
 
     document.getElementById("saveSettings").addEventListener("click", function () {
@@ -672,6 +981,7 @@
       state.apiKey = key;
       if (remember && key) localStorage.setItem(LS_KEY, key);
       else localStorage.removeItem(LS_KEY);
+      persist();
       closeModal();
     });
 
@@ -703,7 +1013,7 @@
         try {
           const data = JSON.parse(reader.result);
           state.history = data.history || [];
-          state.profile = data.profile || state.profile;
+          state.profile = Object.assign(state.profile, data.profile || {});
           localStorage.setItem(LS_CHAT, JSON.stringify(state.history));
           localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
           location.reload();
