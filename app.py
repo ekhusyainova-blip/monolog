@@ -91,6 +91,7 @@ BASE_METRICS = {
     "cognitive_pulse": "slow",
     "protocol_integrity": True,
     "developer_mode": False,
+    "reminder": None,
     "passport": {
         "level": "micro",
         "title": None,
@@ -158,11 +159,12 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     result = {**BASE_METRICS, **carried}
 
     for k, v in (incoming or {}).items():
-        if k in ("passport", "profile"):
+        if k in ("passport", "profile", "reminder"):
             continue
         if v is not None:
             result[k] = v
 
+    # passport — мерж по полям
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -179,6 +181,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
+    # profile — мерж по полям
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
@@ -198,6 +201,13 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         merged_prof[list_key] = old
     result["profile"] = merged_prof
 
+    # reminder — новое значение перезаписывает
+    inc_rem = (incoming or {}).get("reminder")
+    if inc_rem is not None:
+        result["reminder"] = inc_rem
+    else:
+        result["reminder"] = carried.get("reminder")
+
     return result
 
 
@@ -207,8 +217,9 @@ SYSTEM_PROMPT = (
     "Ничего до { и ничего после }. "
     "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
     "reply_text — Markdown-текст ответа на русском языке. БЕЗ ЭМОДЗИ. "
+    "Используй Markdown: заголовки, списки, таблицы, код. "
     "metrics — строго по схеме ниже. "
-    "Блоки passport и profile заполняй постепенно, только тем, что знаешь. "
+    "Блоки passport, profile и reminder заполняй постепенно, только тем, что знаешь. "
     "Пустые поля — null или []. Не выдумывай.\n\n"
     f"=== ИНСТРУКЦИЯ ===\n{LAYER_A}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
