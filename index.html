@@ -24,8 +24,6 @@
     --critical: #B85450;
     --critical-soft: rgba(184, 84, 80, 0.12);
     --success: #4F8A6B;
-    --strategist: #4A6CF7;
-    --analyst: #E07A5F;
     --shadow: 0 1px 3px rgba(10, 11, 13, 0.04), 0 4px 16px rgba(10, 11, 13, 0.04);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
@@ -43,24 +41,14 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Один блоб — тише фон */
   .bg-anim {
-    position: fixed;
-    inset: -10% 0 0 0;
-    z-index: 0;
-    pointer-events: none;
-    overflow: hidden;
-    opacity: 0.4;
+    position: fixed; inset: -10% 0 0 0; z-index: 0;
+    pointer-events: none; overflow: hidden; opacity: 0.4;
   }
   .bg-blob {
-    position: absolute;
-    width: 560px;
-    height: 560px;
-    border-radius: 50%;
-    filter: blur(120px);
-    background: rgba(74, 108, 247, 0.14);
-    top: -100px;
-    right: -140px;
+    position: absolute; width: 560px; height: 560px; border-radius: 50%;
+    filter: blur(120px); background: rgba(74, 108, 247, 0.14);
+    top: -100px; right: -140px;
     animation: floatA 32s ease-in-out infinite;
   }
   @keyframes floatA {
@@ -70,22 +58,14 @@
   @media (prefers-reduced-motion: reduce) { .bg-blob { animation: none; } }
 
   .splash {
-    position: fixed;
-    inset: 0;
-    z-index: 999;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--bg); display: flex; align-items: center; justify-content: center;
     transition: opacity 0.4s ease;
   }
   .splash.hide { opacity: 0; pointer-events: none; }
   .splash-text {
-    font-size: 22px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    color: var(--accent);
-    animation: splashPulse 2s ease-in-out infinite;
+    font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+    color: var(--accent); animation: splashPulse 2s ease-in-out infinite;
   }
   @keyframes splashPulse {
     0%, 100% { opacity: 1; transform: scale(1); }
@@ -93,23 +73,13 @@
   }
 
   .app {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    height: 100dvh;
-    max-width: 700px;
-    margin: 0 auto;
-    padding: 0 12px;
+    position: relative; z-index: 1; display: flex; flex-direction: column;
+    height: 100dvh; max-width: 700px; margin: 0 auto; padding: 0 12px;
   }
 
   header {
-    position: sticky;
-    top: 0;
-    z-index: 20;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 8px;
     padding: calc(var(--safe-top) + 10px) 12px 10px;
     margin: 0 -12px;
     background: rgba(247, 248, 250, 0.5);
@@ -119,165 +89,89 @@
     mask-image: linear-gradient(to bottom, black calc(100% - 12px), transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 12px), transparent 100%);
   }
-
-  .header-left {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-shrink: 0;
-  }
+  .header-left { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
   .header-middle {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    padding: 2px 0;
-    scrollbar-width: none;
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding: 2px 0; scrollbar-width: none;
   }
   .header-middle::-webkit-scrollbar { display: none; }
-  .header-right {
-    display: flex;
-    gap: 6px;
-    align-items: center;
-    flex-shrink: 0;
-  }
+  .header-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
   .icon-btn {
-    width: 34px; height: 34px;
-    border-radius: 12px;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    color: var(--text);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    width: 34px; height: 34px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    color: var(--text); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
     transition: transform 0.15s, background 0.15s, border-color 0.15s;
-    box-shadow: var(--shadow);
-    position: relative;
-    flex-shrink: 0;
+    box-shadow: var(--shadow); position: relative; flex-shrink: 0;
   }
   .icon-btn:hover { background: var(--surface-2); border-color: var(--border); }
   .icon-btn:active { transform: scale(0.94); }
   .icon-btn svg { width: 16px; height: 16px; stroke-width: 1.6; }
   .icon-btn.hidden { display: none; }
 
-  /* Аватар-портрет в профиле */
   .profile-btn {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    padding: 0;
-    border: 1px solid var(--border-soft);
-    background: var(--surface);
-    cursor: pointer;
-    overflow: hidden;
-    box-shadow: var(--shadow);
-    transition: transform 0.15s;
-    flex-shrink: 0;
+    width: 34px; height: 34px; border-radius: 50%; padding: 0;
+    border: 1px solid var(--border-soft); background: var(--surface);
+    cursor: pointer; overflow: hidden; box-shadow: var(--shadow);
+    transition: transform 0.15s; flex-shrink: 0;
   }
   .profile-btn:active { transform: scale(0.94); }
   .profile-btn svg { width: 100%; height: 100%; display: block; }
 
-  /* Проекты — кружки */
   .project-tab {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    border: 2px solid transparent;
-    padding: 0;
-    cursor: pointer;
-    position: relative;
-    transition: transform 0.15s, border-color 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 12px;
-    font-weight: 700;
-    color: #fff;
-    letter-spacing: -0.02em;
-    box-shadow: var(--shadow);
+    width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+    border: 2px solid transparent; padding: 0; cursor: pointer;
+    position: relative; transition: transform 0.15s, border-color 0.15s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 700; color: #fff;
+    letter-spacing: -0.02em; box-shadow: var(--shadow);
   }
   .project-tab:active { transform: scale(0.94); }
-  .project-tab.active {
-    border-color: var(--text);
-    transform: scale(1.06);
-  }
-  .project-tab.archive {
-    opacity: 0.4;
-    font-style: italic;
-  }
+  .project-tab.active { border-color: var(--text); transform: scale(1.06); }
 
   .project-add {
-    width: 34px;
-    height: 34px;
-    border-radius: 50%;
-    border: 1px dashed var(--border);
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: transform 0.15s, color 0.15s, border-color 0.15s;
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 1px dashed var(--border); background: transparent;
+    color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: transform 0.15s, color 0.15s, border-color 0.15s;
   }
   .project-add:hover { color: var(--accent); border-color: var(--accent); }
   .project-add:active { transform: scale(0.94); }
   .project-add svg { width: 16px; height: 16px; stroke-width: 1.8; }
 
-  .lots-badge {
-    display: none;
-    align-items: center;
-    gap: 4px;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    padding: 0 9px;
-    height: 34px;
-    font-size: 11.5px;
-    font-weight: 600;
-    color: var(--accent);
-    box-shadow: var(--shadow);
-    font-variant-numeric: tabular-nums;
-    flex-shrink: 0;
-  }
-  .lots-badge.show { display: inline-flex; }
-  .lots-badge.negative { color: var(--critical); }
-
   .reset-chip {
-    display: none;
-    align-items: center;
-    gap: 6px;
-    background: var(--warning-soft);
-    border: 1px solid rgba(198, 139, 63, 0.28);
-    color: var(--warning);
-    padding: 0 10px;
-    height: 34px;
-    border-radius: 12px;
-    font-size: 11.5px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 0.15s;
-    flex-shrink: 0;
+    display: none; align-items: center; gap: 6px;
+    background: var(--warning-soft); border: 1px solid rgba(198, 139, 63, 0.28);
+    color: var(--warning); padding: 0 10px; height: 34px; border-radius: 12px;
+    font-size: 11.5px; font-weight: 600; cursor: pointer;
+    transition: transform 0.15s; flex-shrink: 0;
   }
   .reset-chip.show { display: inline-flex; }
   .reset-chip:active { transform: scale(0.96); }
   .reset-chip svg { width: 13px; height: 13px; }
 
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 0 10px; height: 34px;
+    font-size: 11.5px; font-weight: 600; color: var(--text);
+    cursor: pointer; transition: transform 0.15s;
+    box-shadow: var(--shadow);
+  }
+  .chip:active { transform: scale(0.96); }
+  .chip svg { width: 14px; height: 14px; color: var(--accent); stroke-width: 1.8; }
+  .chip.warning svg { color: var(--warning); }
+  .chip.critical svg { color: var(--critical); }
+  .chip .value { font-variant-numeric: tabular-nums; }
+
   .chat {
-    flex: 1;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    padding: 8px 0 16px;
-    scroll-behavior: smooth;
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    display: flex; flex-direction: column; gap: 14px;
+    padding: 8px 0 16px; scroll-behavior: smooth;
   }
   .chat::-webkit-scrollbar { width: 0; }
 
@@ -285,25 +179,14 @@
   .row.user { justify-content: flex-end; }
 
   .avatar-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-    flex-shrink: 0;
-    margin-left: -6px;
+    display: flex; flex-direction: column; align-items: center;
+    gap: 2px; flex-shrink: 0; margin-left: -6px;
   }
   .avatar {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: transparent;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-top: 0;
-    flex-shrink: 0;
-    position: relative;
+    width: 36px; height: 36px; border-radius: 50%;
+    overflow: hidden; background: transparent;
+    display: flex; align-items: center; justify-content: center;
+    margin-top: 0; flex-shrink: 0; position: relative;
   }
   .avatar svg { width: 100%; height: 100%; display: block; }
   .avatar.thinking { animation: breathe 1.8s ease-in-out infinite; }
@@ -312,59 +195,36 @@
     50% { transform: scale(1.05); opacity: 0.9; }
   }
   .avatar-label {
-    font-size: 8.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--muted);
-    font-weight: 600;
+    font-size: 8.5px; text-transform: uppercase;
+    letter-spacing: 0.06em; color: var(--muted); font-weight: 600;
   }
 
   .row.user .bubble {
-    background: var(--accent-soft);
-    padding: 10px 14px;
-    border-radius: 16px;
-    border-top-right-radius: 4px;
-    max-width: 78%;
-    font-size: 14px;
-    line-height: 1.5;
+    background: var(--accent-soft); padding: 10px 14px;
+    border-radius: 16px; border-top-right-radius: 4px;
+    max-width: 78%; font-size: 14px; line-height: 1.5;
     word-wrap: break-word;
   }
   .row.agent .bubble {
-    background: transparent;
-    padding: 2px 8px 24px 0;
-    flex: 1;
-    min-width: 0;
-    font-size: 14px;
-    line-height: 1.5;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
-    position: relative;
-    text-align: left;
+    background: transparent; padding: 2px 8px 24px 0;
+    flex: 1; min-width: 0; font-size: 14px; line-height: 1.5;
+    word-wrap: break-word; overflow-wrap: break-word;
+    position: relative; text-align: left;
   }
 
   .msg-actions {
-    position: absolute;
-    bottom: 0;
-    right: 8px;
-    display: flex;
-    gap: 4px;
-    opacity: 0;
+    position: absolute; bottom: 0; right: 8px;
+    display: flex; gap: 4px; opacity: 0;
     transition: opacity 0.15s;
   }
   .row.agent .bubble .msg-actions { opacity: 0.45; }
   .row.agent .bubble:hover .msg-actions { opacity: 1; }
   .msg-action {
-    width: 26px; height: 26px;
-    border-radius: 8px;
-    border: 1px solid var(--border-soft);
-    background: var(--surface);
-    color: var(--muted);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    transition: transform 0.15s, color 0.15s;
-    box-shadow: var(--shadow);
+    width: 26px; height: 26px; border-radius: 8px;
+    border: 1px solid var(--border-soft); background: var(--surface);
+    color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, color 0.15s; box-shadow: var(--shadow);
   }
   .msg-action:hover { color: var(--accent); }
   .msg-action:active { transform: scale(0.92); }
@@ -373,86 +233,56 @@
   .msg-action svg { width: 13px; height: 13px; stroke-width: 1.8; }
 
   .bubble h1, .bubble h2, .bubble h3 {
-    margin: 12px 0 5px;
-    line-height: 1.3;
-    font-weight: 600;
+    margin: 12px 0 5px; line-height: 1.3; font-weight: 600;
     letter-spacing: -0.02em;
   }
   .bubble h1:first-child, .bubble h2:first-child, .bubble h3:first-child { margin-top: 0; }
-  .bubble h1 { font-size: 16px; }
-  .bubble h2 { font-size: 15px; }
-  .bubble h3 { font-size: 14px; }
-  .bubble p { margin: 5px 0; }
-  .bubble p:first-child { margin-top: 0; }
-  .bubble ul, .bubble ol { margin: 5px 0 5px 18px; }
-  .bubble li { margin: 2px 0; }
+  .bubble h1 { font-size: 16px; } .bubble h2 { font-size: 15px; } .bubble h3 { font-size: 14px; }
+  .bubble p { margin: 5px 0; } .bubble p:first-child { margin-top: 0; }
+  .bubble ul, .bubble ol { margin: 5px 0 5px 18px; } .bubble li { margin: 2px 0; }
   .bubble li::marker { color: var(--accent); }
   .bubble strong { font-weight: 600; }
   .bubble a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
   .bubble blockquote {
     border-left: 2px solid var(--accent);
-    padding-left: 10px;
-    margin: 8px 0;
-    color: var(--muted);
+    padding-left: 10px; margin: 8px 0; color: var(--muted);
   }
   .bubble hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
   .bubble code {
-    background: var(--surface-2);
-    padding: 1px 5px;
-    border-radius: 5px;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    font-size: 0.88em;
+    background: var(--surface-2); padding: 1px 5px; border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.88em;
   }
   .bubble pre {
-    background: #0A0B0D;
-    color: #E8EAED;
-    padding: 12px;
-    padding-top: 34px;
-    border-radius: 12px;
-    overflow-x: auto;
-    margin: 10px 0;
-    position: relative;
-    font-size: 11.5px;
-    line-height: 1.5;
+    background: #0A0B0D; color: #E8EAED; padding: 12px;
+    padding-top: 34px; border-radius: 12px;
+    overflow-x: auto; margin: 10px 0; position: relative;
+    font-size: 11.5px; line-height: 1.5;
   }
   .bubble pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
   .copy-code-btn {
-    position: absolute;
-    top: 8px; right: 8px;
-    background: rgba(255,255,255,0.1);
-    border: none;
-    padding: 4px 9px;
-    border-radius: 6px;
-    font-size: 10.5px;
-    color: #E8EAED;
-    cursor: pointer;
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255,255,255,0.1); border: none;
+    padding: 4px 9px; border-radius: 6px;
+    font-size: 10.5px; color: #E8EAED; cursor: pointer;
   }
   .copy-code-btn:active { transform: scale(0.95); }
 
   .bubble table {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 10px 0;
-    font-size: 13px;
-    display: block;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    border-radius: 8px;
+    width: 100%; border-collapse: collapse; margin: 10px 0;
+    font-size: 13px; display: block; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; border-radius: 8px;
   }
   .bubble table thead { background: var(--surface-2); }
   .bubble table th, .bubble table td {
-    text-align: left;
-    padding: 7px 10px;
-    border-bottom: 1px solid var(--border);
-    white-space: nowrap;
+    text-align: left; padding: 7px 10px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
   }
   .bubble table th { font-weight: 600; font-size: 12.5px; }
 
   .typing { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
   .typing span {
     width: 5px; height: 5px; border-radius: 50%;
-    background: var(--muted);
-    animation: pulse 1.3s infinite;
+    background: var(--muted); animation: pulse 1.3s infinite;
   }
   .typing span:nth-child(2) { animation-delay: 0.15s; }
   .typing span:nth-child(3) { animation-delay: 0.3s; }
@@ -461,49 +291,29 @@
     40% { opacity: 1; transform: scale(1); }
   }
   .thinking-text {
-    font-size: 12px;
-    color: var(--muted);
-    margin-left: 8px;
-    font-style: italic;
+    font-size: 12px; color: var(--muted);
+    margin-left: 8px; font-style: italic;
   }
 
-  /* Карточки решений */
-  .decision-cards {
-    margin-top: 12px;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
+  .decision-cards { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
   .decision-title {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    font-weight: 600;
-    margin-bottom: 2px;
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+    font-weight: 600; margin-bottom: 2px;
   }
   .decision-card {
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    padding: 12px 14px;
-    cursor: pointer;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 12px 14px; cursor: pointer;
     transition: transform 0.15s, border-color 0.15s, background 0.15s;
-    text-align: left;
-    font-family: inherit;
-    color: var(--text);
-    width: 100%;
-    box-shadow: var(--shadow);
+    text-align: left; font-family: inherit; color: var(--text);
+    width: 100%; box-shadow: var(--shadow);
   }
   .decision-card:hover { border-color: var(--accent); background: var(--accent-soft); }
   .decision-card:active { transform: scale(0.98); }
   .decision-card.disabled { opacity: 0.5; cursor: not-allowed; }
   .decision-card-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 8px; margin-bottom: 4px;
   }
   .decision-card-label { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; }
   .decision-card-tag {
@@ -514,24 +324,13 @@
   .decision-card-text { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
   .decision-card-text strong { color: var(--text); font-weight: 500; }
 
-  /* Артефакты в сообщении */
   .artifact-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-top: 10px;
-    cursor: pointer;
-    transition: transform 0.15s, border-color 0.15s;
-    font-family: inherit;
-    color: var(--text);
-    font-size: 13px;
-    box-shadow: var(--shadow);
-    width: 100%;
-    text-align: left;
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 10px 12px; margin-top: 10px;
+    cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+    font-family: inherit; color: var(--text); font-size: 13px;
+    box-shadow: var(--shadow); width: 100%; text-align: left;
   }
   .artifact-row:hover { border-color: var(--accent); }
   .artifact-row:active { transform: scale(0.98); }
@@ -541,25 +340,25 @@
   .artifact-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .artifact-row .arrow { color: var(--muted); flex-shrink: 0; }
 
-  /* Attachments */
-  .attach-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 6px 2px 4px;
+  .publish-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: #fff;
+    border: none; border-radius: 10px;
+    padding: 10px 14px; margin-top: 10px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; box-shadow: var(--shadow);
+    transition: transform 0.15s, opacity 0.2s;
   }
+  .publish-btn:active { transform: scale(0.97); }
+  .publish-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .publish-btn svg { width: 14px; height: 14px; }
+
+  .attach-preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 2px 4px; }
   .attach-chip {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 10px;
-    padding: 6px 10px;
-    font-size: 12px;
-    max-width: 220px;
-    box-shadow: var(--shadow);
-    transition: border-color 0.15s;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 6px 10px; font-size: 12px;
+    max-width: 220px; box-shadow: var(--shadow); transition: border-color 0.15s;
   }
   .attach-chip:hover { border-color: var(--border); }
   .attach-chip svg { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; }
@@ -574,25 +373,16 @@
   }
   .attach-chip .remove:hover { color: var(--text); }
 
-  /* Секция артефактов под чатом */
-  .artifacts-section {
-    flex-shrink: 0;
-    padding: 8px 0;
-    display: none;
-  }
+  .artifacts-section { flex-shrink: 0; padding: 8px 0; display: none; }
   .artifacts-section.show { display: block; }
   .artifacts-section-inner {
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid var(--border-soft);
-    border-radius: 14px;
-    padding: 10px 12px;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    cursor: pointer;
-    transition: border-color 0.15s;
+    border-radius: 14px; padding: 10px 12px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: border-color 0.15s;
   }
   .artifacts-section-inner:hover { border-color: var(--border); }
   .artifacts-section-inner svg { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; }
@@ -600,23 +390,17 @@
   .artifacts-section-inner .title { font-size: 13px; font-weight: 500; }
   .artifacts-section-inner .sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
 
-  /* Input */
   .input-wrap {
-    flex-shrink: 0;
-    padding: 8px 0 calc(12px + var(--safe-bottom));
-    position: sticky;
-    bottom: 0;
+    flex-shrink: 0; padding: 8px 0 calc(12px + var(--safe-bottom));
+    position: sticky; bottom: 0;
   }
   .input-inner {
-    display: flex;
-    gap: 4px;
-    align-items: center;
+    display: flex; gap: 4px; align-items: center;
     background: rgba(255, 255, 255, 0.55);
     backdrop-filter: blur(20px) saturate(150%);
     -webkit-backdrop-filter: blur(20px) saturate(150%);
     border: 1px solid rgba(10, 11, 13, 0.05);
-    border-radius: 24px;
-    padding: 4px 4px 4px 6px;
+    border-radius: 24px; padding: 4px 4px 4px 6px;
     box-shadow: 0 4px 20px rgba(10, 11, 13, 0.06);
     transition: border-color 0.2s, background 0.2s;
   }
@@ -625,410 +409,356 @@
     background: rgba(255, 255, 255, 0.7);
   }
   .attach-btn {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: color 0.15s, transform 0.15s;
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: transparent; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: color 0.15s, transform 0.15s;
   }
   .attach-btn:hover { color: var(--accent); }
   .attach-btn:active { transform: scale(0.92); }
   .attach-btn svg { width: 17px; height: 17px; stroke-width: 1.8; }
   textarea {
-    flex: 1;
-    border: none;
-    outline: none;
-    resize: none;
-    background: transparent;
-    padding: 8px 4px;
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.45;
-    color: var(--text);
-    max-height: 96px;
-    min-height: 20px;
+    flex: 1; border: none; outline: none; resize: none;
+    background: transparent; padding: 8px 4px;
+    font-family: inherit; font-size: 14px; line-height: 1.45;
+    color: var(--text); max-height: 96px; min-height: 20px;
     overflow-y: auto;
   }
   textarea::placeholder { color: var(--muted); }
   .send-btn {
-    flex-shrink: 0;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    border: none;
-    background: var(--accent);
-    color: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: var(--accent); color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
     transition: transform 0.15s, opacity 0.2s, background 0.2s;
   }
   .send-btn:active { transform: scale(0.92); }
   .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
   .send-btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
 
-  /* Sheets */
   .sheet-bg {
-    position: fixed;
-    inset: 0;
-    background: rgba(10, 11, 13, 0.25);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s;
-    z-index: 50;
+    position: fixed; inset: 0; background: rgba(10, 11, 13, 0.25);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 50;
   }
   .sheet-bg.open { opacity: 1; pointer-events: auto; }
   .sheet {
-    position: fixed;
-    left: 0; right: 0; bottom: 0;
-    max-height: 85dvh;
-    background: var(--surface);
-    border-radius: 20px 20px 0 0;
+    position: fixed; left: 0; right: 0; bottom: 0; max-height: 85dvh;
+    background: var(--surface); border-radius: 20px 20px 0 0;
     padding: 12px 18px calc(20px + var(--safe-bottom));
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-    z-index: 51;
-    overflow-y: auto;
+    z-index: 51; overflow-y: auto;
     box-shadow: 0 -8px 32px rgba(10, 11, 13, 0.12);
-    max-width: 700px;
-    margin: 0 auto;
+    max-width: 700px; margin: 0 auto;
   }
   .sheet.open { transform: translateY(0); }
   .sheet-handle {
-    width: 32px; height: 3px;
-    background: var(--border);
-    border-radius: 2px;
-    margin: 0 auto 14px;
-    cursor: grab;
+    width: 32px; height: 3px; background: var(--border);
+    border-radius: 2px; margin: 0 auto 14px; cursor: grab;
   }
   .sheet h3 { font-size: 14px; margin-bottom: 3px; font-weight: 600; letter-spacing: -0.02em; }
   .sheet-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 
-  /* Метрики — аккордеоны */
   .acc {
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    margin-bottom: 8px;
-    background: var(--surface-2);
-    overflow: hidden;
+    border: 1px solid var(--border-soft); border-radius: 12px;
+    margin-bottom: 8px; background: var(--surface-2); overflow: hidden;
   }
   .acc-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 14px;
-    cursor: pointer;
-    user-select: none;
-    transition: background 0.15s;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px; cursor: pointer; user-select: none;
+    transition: background 0.15s; gap: 10px;
   }
   .acc-head:hover { background: rgba(10, 11, 13, 0.02); }
-  .acc-title { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .acc-title { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; flex: 1; }
   .acc-summary { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
   .acc-arrow {
-    width: 14px; height: 14px;
-    color: var(--muted);
-    transition: transform 0.25s;
-    flex-shrink: 0;
+    width: 14px; height: 14px; color: var(--muted);
+    transition: transform 0.25s; flex-shrink: 0;
   }
   .acc.open .acc-arrow { transform: rotate(180deg); }
-  .acc-body {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease;
-  }
+  .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
   .acc.open .acc-body { max-height: 900px; }
   .acc-body-inner { padding: 0 14px 14px; }
 
   .stability-ring {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 4px 0 10px;
-    position: relative;
+    display: flex; justify-content: center; align-items: center;
+    padding: 4px 0 10px; position: relative;
   }
   .ring-svg { width: 130px; height: 130px; transform: rotate(-90deg); }
   .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
   .ring-fill {
-    fill: none;
-    stroke: var(--accent);
-    stroke-width: 8;
+    fill: none; stroke: var(--accent); stroke-width: 8;
     stroke-linecap: round;
     transition: stroke-dashoffset 0.6s ease, stroke 0.3s;
   }
   .ring-fill.warning { stroke: var(--warning); }
   .ring-fill.critical { stroke: var(--critical); }
   .ring-label {
-    position: absolute;
-    top: 50%; left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); text-align: center;
   }
   .ring-value {
-    font-size: 26px;
-    font-weight: 600;
-    letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums;
-    line-height: 1;
+    font-size: 26px; font-weight: 600; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; line-height: 1;
   }
   .ring-caption {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    font-weight: 600;
-    margin-top: 4px;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 600; margin-top: 4px;
   }
 
   .sparkline-wrap {
-    padding: 8px 0 6px;
-    display: flex;
-    align-items: flex-end;
-    justify-content: center;
-    gap: 4px;
-    height: 40px;
+    padding: 8px 0 6px; display: flex; align-items: flex-end;
+    justify-content: center; gap: 4px; height: 40px;
   }
   .spark-bar {
-    width: 10px;
-    background: var(--accent);
-    border-radius: 3px;
-    min-height: 4px;
-    transition: height 0.3s, background 0.3s;
-    opacity: 0.75;
+    width: 10px; background: var(--accent); border-radius: 3px;
+    min-height: 4px; transition: height 0.3s, background 0.3s; opacity: 0.75;
   }
   .spark-bar.warning { background: var(--warning); }
   .spark-bar.critical { background: var(--critical); }
   .spark-bar.empty { background: var(--border); opacity: 0.5; }
 
   .metric-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 13px;
-    gap: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--border-soft);
+    font-size: 13px; gap: 10px;
   }
   .metric-row:last-child { border-bottom: none; }
   .metric-row-label { color: var(--text); }
   .metric-row-value {
-    font-weight: 600;
-    color: var(--accent);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
+    font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
     text-align: right;
   }
   .metric-row-value.warning { color: var(--warning); }
   .metric-row-value.critical { color: var(--critical); }
 
   .hint {
-    font-size: 12px;
-    line-height: 1.45;
-    color: var(--muted);
-    margin-top: 6px;
-    padding: 8px 10px;
-    background: var(--surface);
-    border-radius: 8px;
+    font-size: 12px; line-height: 1.45; color: var(--muted);
+    margin-top: 6px; padding: 8px 10px;
+    background: var(--surface); border-radius: 8px;
     border: 1px solid var(--border-soft);
   }
   .hint strong { color: var(--text); font-weight: 600; }
 
   .report-btn {
-    width: 100%;
-    padding: 12px;
-    border-radius: 11px;
-    border: 1px solid var(--border);
-    background: var(--surface-2);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13.5px;
-    font-weight: 500;
-    cursor: pointer;
-    margin-top: 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
+    width: 100%; padding: 12px; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+    font-family: inherit; font-size: 13.5px; font-weight: 500;
+    cursor: pointer; margin-top: 16px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
     transition: transform 0.15s, background 0.15s;
   }
   .report-btn:hover { background: var(--surface); }
   .report-btn:active { transform: scale(0.98); }
   .report-btn svg { width: 15px; height: 15px; }
 
-  /* Passport */
   .passport-level {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 10.5px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 12px;
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-soft); color: var(--accent);
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 12px;
   }
   .passport-title {
-    font-size: 20px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    line-height: 1.25;
-    margin-bottom: 6px;
+    font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
+    line-height: 1.25; margin-bottom: 6px;
   }
-  .passport-goal {
-    font-size: 13.5px;
-    color: var(--muted);
-    margin-bottom: 18px;
-    line-height: 1.45;
-  }
-  .passport-field {
-    padding: 10px 0;
-    border-bottom: 1px solid var(--border);
-  }
+  .passport-goal { font-size: 13.5px; color: var(--muted); margin-bottom: 18px; line-height: 1.45; }
+  .passport-field { padding: 10px 0; border-bottom: 1px solid var(--border); }
   .passport-field:last-child { border-bottom: none; }
   .passport-field-label {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    font-weight: 600;
-    margin-bottom: 5px;
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 600; margin-bottom: 5px;
   }
-  .passport-field-value {
-    font-size: 14px;
-    line-height: 1.5;
-    word-wrap: break-word;
-  }
+  .passport-field-value { font-size: 14px; line-height: 1.5; word-wrap: break-word; }
   .passport-field-value ul { list-style: none; padding: 0; margin: 0; }
   .passport-field-value li {
-    padding: 3px 0 3px 14px;
-    position: relative;
-    font-size: 13.5px;
+    padding: 3px 0 3px 14px; position: relative; font-size: 13.5px;
   }
   .passport-field-value li::before {
-    content: "";
-    position: absolute;
-    left: 2px;
-    top: 12px;
-    width: 4px; height: 4px;
-    background: var(--accent);
-    border-radius: 50%;
+    content: ""; position: absolute; left: 2px; top: 12px;
+    width: 4px; height: 4px; background: var(--accent); border-radius: 50%;
   }
 
-  /* Profile */
   .compass-wrap { display: flex; justify-content: center; padding: 8px 0 14px; }
   .compass-svg { width: 220px; height: 220px; }
   .compass-axis { stroke: var(--border); stroke-width: 1; fill: none; }
   .compass-ring { stroke: var(--border); stroke-width: 1; fill: none; }
   .compass-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
-  .compass-label { font-size: 9px; fill: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+  .compass-label {
+    font-size: 9px; fill: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
   .compass-dot { fill: var(--accent); }
 
   .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
   .tag {
     display: inline-flex; align-items: center;
-    padding: 4px 10px;
-    background: var(--surface-2);
-    border-radius: 999px;
-    font-size: 12px;
-    color: var(--text);
+    padding: 4px 10px; background: var(--surface-2);
+    border-radius: 999px; font-size: 12px; color: var(--text);
   }
   .tag.warm { background: var(--warning-soft); color: var(--warning); }
 
   .empty-note {
-    font-size: 13px;
-    color: var(--muted);
-    font-style: italic;
-    padding: 10px 0;
+    font-size: 13px; color: var(--muted);
+    font-style: italic; padding: 10px 0;
   }
 
-  /* Artifacts sheet */
   .artifact-item {
-    background: var(--surface-2);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    transition: border-color 0.15s;
+    background: var(--surface-2); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+    cursor: pointer; transition: border-color 0.15s;
   }
   .artifact-item:hover { border-color: var(--border); }
   .artifact-item-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 4px;
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 8px; margin-bottom: 4px;
   }
   .artifact-item-name { font-size: 13.5px; font-weight: 600; }
   .artifact-item-stage {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: 999px;
-    background: var(--accent-soft);
-    color: var(--accent);
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent);
   }
   .artifact-item-stage.prototype { background: var(--warning-soft); color: var(--warning); }
   .artifact-item-stage.working { background: rgba(79, 138, 107, 0.12); color: var(--success); }
   .artifact-item-meta {
-    font-size: 11.5px;
-    color: var(--muted);
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
+    font-size: 11.5px; color: var(--muted);
+    display: flex; gap: 10px; flex-wrap: wrap;
   }
 
-  /* Модалки */
+  /* Блог */
+  .blog-post-item {
+    background: var(--surface-2); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+  }
+  .blog-post-item:hover { border-color: var(--border); transform: translateY(-1px); }
+  .blog-post-title {
+    font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+    line-height: 1.35; margin-bottom: 6px;
+  }
+  .blog-post-meta {
+    font-size: 11.5px; color: var(--muted);
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .blog-post-preview {
+    font-size: 12.5px; color: var(--muted);
+    line-height: 1.5; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .blog-post-tags {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+  }
+  .blog-post-tag {
+    font-size: 10.5px; color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 8px; border-radius: 999px; font-weight: 500;
+  }
+
+  .blog-view-title {
+    font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+    line-height: 1.25; margin-bottom: 8px;
+  }
+  .blog-view-meta {
+    font-size: 12px; color: var(--muted);
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .blog-view-body {
+    font-size: 14px; line-height: 1.65;
+  }
+  .blog-view-body h1, .blog-view-body h2, .blog-view-body h3 {
+    margin: 20px 0 8px; font-weight: 600; letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+  .blog-view-body h1:first-child, .blog-view-body h2:first-child, .blog-view-body h3:first-child { margin-top: 0; }
+  .blog-view-body h1 { font-size: 19px; }
+  .blog-view-body h2 { font-size: 17px; }
+  .blog-view-body h3 { font-size: 15px; }
+  .blog-view-body p { margin: 10px 0; }
+  .blog-view-body ul, .blog-view-body ol { margin: 10px 0 10px 20px; }
+  .blog-view-body li { margin: 4px 0; }
+  .blog-view-body blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 14px; margin: 14px 0; color: var(--muted);
+    font-style: italic;
+  }
+  .blog-view-body code {
+    background: var(--surface-2); padding: 2px 6px;
+    border-radius: 5px; font-family: ui-monospace, monospace;
+    font-size: 0.9em;
+  }
+  .blog-view-body pre {
+    background: #0A0B0D; color: #E8EAED; padding: 14px;
+    border-radius: 10px; overflow-x: auto; margin: 14px 0;
+    font-size: 12.5px; line-height: 1.55;
+  }
+  .blog-view-body pre code { background: none; padding: 0; color: inherit; }
+  .blog-view-body img { max-width: 100%; border-radius: 10px; margin: 12px 0; }
+
+  .blog-edit-field {
+    margin-top: 12px;
+  }
+  .blog-edit-field label {
+    display: block; font-size: 12px; color: var(--muted);
+    margin-bottom: 5px; font-weight: 500;
+  }
+  .blog-edit-field input,
+  .blog-edit-field textarea {
+    width: 100%; padding: 11px 13px; border-radius: 10px;
+    border: 1px solid var(--border-soft); font-family: inherit;
+    font-size: 14px; background: var(--surface-2); color: var(--text);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .blog-edit-field textarea {
+    min-height: 220px; resize: vertical; line-height: 1.55;
+    font-size: 13.5px;
+  }
+  .blog-edit-field input:focus,
+  .blog-edit-field textarea:focus {
+    outline: none; border-color: var(--accent); background: var(--surface);
+  }
+
+  .blog-tabs {
+    display: flex; gap: 4px; margin-bottom: 14px;
+    background: var(--surface-2); border-radius: 10px; padding: 3px;
+  }
+  .blog-tab {
+    flex: 1; padding: 9px; border-radius: 8px; border: none;
+    background: transparent; color: var(--muted);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .blog-tab.active {
+    background: var(--surface); color: var(--text);
+    box-shadow: 0 1px 3px rgba(10, 11, 13, 0.06);
+  }
+
   .modal-bg {
-    position: fixed;
-    inset: 0;
-    background: rgba(10, 11, 13, 0.35);
-    display: none;
-    align-items: flex-end;
-    justify-content: center;
-    z-index: 60;
+    position: fixed; inset: 0; background: rgba(10, 11, 13, 0.35);
+    display: none; align-items: flex-end; justify-content: center; z-index: 60;
   }
   .modal-bg.open { display: flex; }
   .modal {
-    position: relative;
-    background: var(--surface);
+    position: relative; background: var(--surface);
     border-radius: 20px 20px 0 0;
     padding: 20px 18px calc(20px + var(--safe-bottom));
-    width: 100%;
-    max-width: 700px;
-    max-height: 90dvh;
-    overflow-y: auto;
+    width: 100%; max-width: 700px; max-height: 90dvh; overflow-y: auto;
   }
   .modal h2 {
-    font-size: 16px;
-    margin-bottom: 4px;
-    font-weight: 600;
-    letter-spacing: -0.02em;
-    padding-right: 40px;
+    font-size: 16px; margin-bottom: 4px; font-weight: 600;
+    letter-spacing: -0.02em; padding-right: 40px;
   }
   .modal .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
   .modal-close {
-    position: absolute;
-    top: 16px; right: 16px;
-    width: 30px; height: 30px;
-    border-radius: 8px;
-    border: 1px solid var(--border-soft);
-    background: var(--surface);
-    color: var(--muted);
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
+    position: absolute; top: 16px; right: 16px;
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1px solid var(--border-soft); background: var(--surface);
+    color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
     transition: transform 0.15s, color 0.15s;
   }
   .modal-close:hover { color: var(--text); }
@@ -1036,77 +766,45 @@
   .modal-close svg { width: 14px; height: 14px; stroke-width: 1.8; }
 
   .modal label {
-    display: block;
-    font-size: 12px;
-    color: var(--muted);
-    margin: 12px 0 5px;
-    font-weight: 500;
+    display: block; font-size: 12px; color: var(--muted);
+    margin: 12px 0 5px; font-weight: 500;
   }
-  .modal input[type="text"], .modal input[type="password"] {
-    width: 100%;
-    padding: 11px 13px;
-    border-radius: 10px;
-    border: 1px solid var(--border-soft);
-    font-family: inherit;
-    font-size: 14px;
-    background: var(--surface-2);
-    color: var(--text);
+  .modal input[type="text"], .modal input[type="password"], .modal textarea {
+    width: 100%; padding: 11px 13px; border-radius: 10px;
+    border: 1px solid var(--border-soft); font-family: inherit;
+    font-size: 14px; background: var(--surface-2); color: var(--text);
     transition: border-color 0.2s, background 0.2s;
   }
-  .modal input:focus {
-    outline: none;
-    border-color: var(--accent);
-    background: var(--surface);
+  .modal textarea { min-height: 200px; resize: vertical; line-height: 1.55; }
+  .modal input:focus, .modal textarea:focus {
+    outline: none; border-color: var(--accent); background: var(--surface);
   }
   .modal .check {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin-top: 12px;
-    font-size: 13.5px;
-    cursor: pointer;
+    display: flex; align-items: center; gap: 9px;
+    margin-top: 12px; font-size: 13.5px; cursor: pointer;
   }
   .modal .check input { width: 17px; height: 17px; accent-color: var(--accent); }
-
   .segmented {
-    display: flex;
-    background: var(--surface-2);
-    border: 1px solid var(--border-soft);
-    border-radius: 10px;
-    padding: 3px;
-    gap: 3px;
-    margin-top: 5px;
+    display: flex; background: var(--surface-2);
+    border: 1px solid var(--border-soft); border-radius: 10px;
+    padding: 3px; gap: 3px; margin-top: 5px;
   }
   .segmented button {
-    flex: 1;
-    padding: 8px;
-    border-radius: 7px;
-    border: none;
-    background: transparent;
-    color: var(--muted);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.15s;
+    flex: 1; padding: 8px; border-radius: 7px; border: none;
+    background: transparent; color: var(--muted);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
   }
   .segmented button.active {
-    background: var(--surface);
-    color: var(--text);
+    background: var(--surface); color: var(--text);
     box-shadow: 0 1px 3px rgba(10, 11, 13, 0.06);
   }
 
   .modal .row { display: flex; gap: 8px; margin-top: 16px; }
   .modal button.action {
-    flex: 1;
-    padding: 12px;
-    border-radius: 11px;
-    border: none;
-    cursor: pointer;
-    font-weight: 500;
-    font-size: 14px;
-    font-family: inherit;
-    transition: transform 0.15s;
+    flex: 1; padding: 12px; border-radius: 11px; border: none;
+    cursor: pointer; font-weight: 500; font-size: 14px;
+    font-family: inherit; transition: transform 0.15s;
   }
   .modal button.action:active { transform: scale(0.97); }
   .modal .primary { background: var(--accent); color: #fff; }
@@ -1114,75 +812,42 @@
   .modal .danger { background: var(--critical); color: #fff; }
   .modal .success { background: var(--success); color: #fff; }
 
-  /* Risk modal */
   .risk-level {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 999px;
-    font-size: 10.5px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
     margin-bottom: 12px;
   }
   .risk-level.critical { background: var(--critical-soft); color: var(--critical); }
   .risk-level.warning { background: var(--warning-soft); color: var(--warning); }
   .risk-block {
-    background: var(--surface-2);
-    border-radius: 12px;
-    padding: 12px 14px;
-    margin-bottom: 10px;
+    background: var(--surface-2); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px;
   }
   .risk-block-label {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    font-weight: 600;
-    margin-bottom: 5px;
+    font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+    font-weight: 600; margin-bottom: 5px;
   }
-  .risk-block-value {
-    font-size: 13.5px;
-    line-height: 1.5;
-    color: var(--text);
-  }
+  .risk-block-value { font-size: 13.5px; line-height: 1.5; color: var(--text); }
 
-  /* Project name input */
-  .color-picker {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-    flex-wrap: wrap;
-  }
+  .color-picker { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
   .color-swatch {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 2px solid transparent;
-    cursor: pointer;
-    transition: transform 0.15s, border-color 0.15s;
-    padding: 0;
+    width: 32px; height: 32px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s; padding: 0;
   }
   .color-swatch:active { transform: scale(0.92); }
   .color-swatch.active { border-color: var(--text); }
 
   .toast {
-    position: fixed;
-    bottom: calc(80px + var(--safe-bottom));
-    left: 50%;
+    position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--accent);
-    color: #fff;
-    padding: 8px 16px;
-    border-radius: 999px;
-    font-size: 13px;
-    font-weight: 500;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.25s, transform 0.25s;
-    z-index: 100;
+    background: var(--accent); color: #fff; padding: 8px 16px;
+    border-radius: 999px; font-size: 13px; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s; z-index: 100;
     box-shadow: 0 4px 16px rgba(10, 11, 13, 0.2);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -1191,16 +856,10 @@
     .sheet {
       left: 50%; right: auto;
       transform: translate(-50%, 100%);
-      width: 580px;
-      border-radius: 20px;
-      bottom: 24px;
+      width: 580px; border-radius: 20px; bottom: 24px;
     }
     .sheet.open { transform: translate(-50%, 0); }
-    .modal {
-      border-radius: 20px;
-      margin-bottom: 24px;
-      width: 500px;
-    }
+    .modal { border-radius: 20px; margin-bottom: 24px; width: 500px; }
   }
 </style>
 </head>
@@ -1218,15 +877,11 @@
   <header>
     <div class="header-left">
       <button class="profile-btn" id="profileBtn" title="Профиль">
-        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" id="profileAvatarSvg">
-          <!-- replaced JS -->
-        </svg>
+        <svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg" id="profileAvatarSvg"></svg>
       </button>
     </div>
 
-    <div class="header-middle" id="projectsBar">
-      <!-- tabs рендерятся JS -->
-    </div>
+    <div class="header-middle" id="projectsBar"></div>
 
     <div class="header-right">
       <button class="reset-chip" id="resetChip" title="Рекомендован сброс">
@@ -1248,6 +903,12 @@
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
           <polyline points="7 10 12 15 17 10"/>
           <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="blogBtn" title="Блог">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
         </svg>
       </button>
       <button class="chip" id="stabilityChip" title="Метрики">
@@ -1339,22 +1000,10 @@
     </div>
     <div class="acc-body">
       <div class="acc-body-inner">
-        <div class="metric-row">
-          <span class="metric-row-label">Масштаб задачи</span>
-          <span class="metric-row-value" id="cMindScale">—</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Циклы мышления</span>
-          <span class="metric-row-value" id="cCycles">—</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Коллизии</span>
-          <span class="metric-row-value" id="cCollisions">—</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Импульс</span>
-          <span class="metric-row-value" id="cPulse">—</span>
-        </div>
+        <div class="metric-row"><span class="metric-row-label">Масштаб задачи</span><span class="metric-row-value" id="cMindScale">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Циклы мышления</span><span class="metric-row-value" id="cCycles">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Коллизии</span><span class="metric-row-value" id="cCollisions">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Импульс</span><span class="metric-row-value" id="cPulse">—</span></div>
       </div>
     </div>
   </div>
@@ -1367,30 +1016,12 @@
     </div>
     <div class="acc-body">
       <div class="acc-body-inner">
-        <div class="metric-row">
-          <span class="metric-row-label">Запросов</span>
-          <span class="metric-row-value" id="cSessionCount">0</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Длительность</span>
-          <span class="metric-row-value" id="cSessionTime">—</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Баланс лотов</span>
-          <span class="metric-row-value" id="cLots">—</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Вклад человек / ИИ</span>
-          <span class="metric-row-value" id="cHuman">—</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Ключ</span>
-          <span class="metric-row-value" id="cKeySource">—</span>
-        </div>
-        <div class="metric-row">
-          <span class="metric-row-label">Протокол</span>
-          <span class="metric-row-value" id="cProtocol">—</span>
-        </div>
+        <div class="metric-row"><span class="metric-row-label">Запросов</span><span class="metric-row-value" id="cSessionCount">0</span></div>
+        <div class="metric-row"><span class="metric-row-label">Длительность</span><span class="metric-row-value" id="cSessionTime">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Баланс лотов</span><span class="metric-row-value" id="cLots">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Вклад человек / ИИ</span><span class="metric-row-value" id="cHuman">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Ключ</span><span class="metric-row-value" id="cKeySource">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Протокол</span><span class="metric-row-value" id="cProtocol">—</span></div>
       </div>
     </div>
   </div>
@@ -1400,7 +1031,7 @@
 <div class="sheet" id="artifactsSheet">
   <div class="sheet-handle" id="artifactsHandle"></div>
   <h3>Артефакты проекта</h3>
-  <div class="sheet-sub" id="artifactsSheetSub">Документы, планы, отчёты, код</div>
+  <div class="sheet-sub">Документы, планы, отчёты, код</div>
   <div id="artifactsList"></div>
 </div>
 
@@ -1422,7 +1053,49 @@
   <div id="profileContent"></div>
 </div>
 
-<!-- Риск -->
+<!-- Блог — список -->
+<div class="sheet" id="blogSheet">
+  <div class="sheet-handle" id="blogHandle"></div>
+  <h3>Блог автора</h3>
+  <div class="sheet-sub" id="blogSub">Лонгриды и заметки</div>
+
+  <div class="blog-tabs" id="blogTabs">
+    <button class="blog-tab active" data-tab="list">Статьи</button>
+    <button class="blog-tab" data-tab="editor">Редактор</button>
+  </div>
+
+  <div id="blogListPane">
+    <div id="blogList"></div>
+  </div>
+
+  <div id="blogEditorPane" style="display:none;">
+    <div class="blog-edit-field">
+      <label>Заголовок</label>
+      <input type="text" id="blogEditTitle" placeholder="О чём статья" maxlength="200" />
+    </div>
+    <div class="blog-edit-field">
+      <label>Текст (Markdown)</label>
+      <textarea id="blogEditBody" placeholder="## Подзаголовок&#10;&#10;Текст статьи…"></textarea>
+    </div>
+    <div class="blog-edit-field">
+      <label>Теги (через запятую)</label>
+      <input type="text" id="blogEditTags" placeholder="идеи, разработка" />
+    </div>
+    <div class="row" style="display:flex; gap:8px; margin-top:16px;">
+      <button class="action ghost" id="blogEditorClear" style="flex:1; padding:12px; border-radius:11px; border:1px solid var(--border-soft); background:var(--surface-2); color:var(--text); font-family:inherit; font-size:14px; font-weight:500; cursor:pointer;">Очистить</button>
+      <button class="action primary" id="blogEditorPublish" style="flex:1; padding:12px; border-radius:11px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:14px; font-weight:500; cursor:pointer;">Опубликовать</button>
+    </div>
+    <div id="blogEditorStatus" style="font-size:12px; color:var(--muted); margin-top:10px; text-align:center;"></div>
+  </div>
+</div>
+
+<!-- Блог — просмотр статьи -->
+<div class="sheet" id="blogViewSheet">
+  <div class="sheet-handle" id="blogViewHandle"></div>
+  <div id="blogViewContent"></div>
+</div>
+
+<!-- Модалка рисков -->
 <div class="modal-bg" id="riskModalBg">
   <div class="modal">
     <button class="modal-close" id="riskClose" aria-label="Закрыть">
@@ -1465,6 +1138,28 @@
   </div>
 </div>
 
+<!-- Публикация в блог -->
+<div class="modal-bg" id="publishModalBg">
+  <div class="modal">
+    <button class="modal-close" id="publishModalClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h2>Опубликовать в блог</h2>
+    <div class="sub">Статья станет видна всем пользователям</div>
+    <label for="publishTitle">Заголовок</label>
+    <input type="text" id="publishTitle" maxlength="200" />
+    <label for="publishTags">Теги (через запятую)</label>
+    <input type="text" id="publishTags" placeholder="идеи, разработка" />
+    <div class="row">
+      <button class="action ghost" id="publishCancel">Отмена</button>
+      <button class="action primary" id="publishConfirm">Опубликовать</button>
+    </div>
+    <div id="publishStatus" style="font-size:12px; color:var(--muted); margin-top:10px; text-align:center;"></div>
+  </div>
+</div>
+
 <!-- Новый проект -->
 <div class="modal-bg" id="projectModalBg">
   <div class="modal">
@@ -1503,6 +1198,12 @@
       <input type="checkbox" id="rememberKey" />
       Запомнить ключ на этом устройстве
     </label>
+    <label for="authorKeyInput">Ключ автора блога</label>
+    <input type="password" id="authorKeyInput" placeholder="Секретная строка" autocomplete="off" />
+    <label class="check">
+      <input type="checkbox" id="rememberAuthorKey" />
+      Запомнить ключ автора
+    </label>
     <label>Режим глубины</label>
     <div class="segmented" id="depthSeg">
       <button data-depth="quiet">Тихий</button>
@@ -1528,6 +1229,7 @@
   const API_BASE = window.location.origin;
   const LS_KEY = "monolog_api_key";
   const LS_PROFILE = "monolog_profile";
+  const LS_AUTHOR = "monolog_author_key";
   const LS_FALLBACK = "monolog_state_fallback";
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const MAX_TEXT_CHARS = 3000;
@@ -1537,20 +1239,16 @@
   const DB_VERSION = 1;
   const STORE_PROJECTS = "projects";
   const STORE_META = "meta";
-
   const PROJECT_COLORS = ["#4A6CF7", "#E07A5F", "#4F8A6B", "#C68B3F", "#7B6BED", "#B85450", "#1A1F36", "#5D9A6B"];
 
-  // Аватары-портреты 40×40 — вписаны в круг
   const AVATAR_STRATEGIST =
     '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'
     + '<defs>'
     + '<radialGradient id="sgS" cx="50%" cy="30%" r="70%">'
-    + '<stop offset="0%" stop-color="#8FA8FF"/>'
-    + '<stop offset="100%" stop-color="#3B58D6"/>'
+    + '<stop offset="0%" stop-color="#8FA8FF"/><stop offset="100%" stop-color="#3B58D6"/>'
     + '</radialGradient>'
     + '<linearGradient id="sgBody" x1="0" y1="0" x2="0" y2="1">'
-    + '<stop offset="0%" stop-color="#F0F4FF"/>'
-    + '<stop offset="100%" stop-color="#C8D2F5"/>'
+    + '<stop offset="0%" stop-color="#F0F4FF"/><stop offset="100%" stop-color="#C8D2F5"/>'
     + '</linearGradient>'
     + '</defs>'
     + '<circle cx="20" cy="20" r="20" fill="url(#sgS)"/>'
@@ -1568,12 +1266,10 @@
     '<svg viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">'
     + '<defs>'
     + '<radialGradient id="agS" cx="50%" cy="30%" r="70%">'
-    + '<stop offset="0%" stop-color="#F5A888"/>'
-    + '<stop offset="100%" stop-color="#C95C41"/>'
+    + '<stop offset="0%" stop-color="#F5A888"/><stop offset="100%" stop-color="#C95C41"/>'
     + '</radialGradient>'
     + '<linearGradient id="agBody" x1="0" y1="0" x2="0" y2="1">'
-    + '<stop offset="0%" stop-color="#FFF0E8"/>'
-    + '<stop offset="100%" stop-color="#F2C8B5"/>'
+    + '<stop offset="0%" stop-color="#FFF0E8"/><stop offset="100%" stop-color="#F2C8B5"/>'
     + '</linearGradient>'
     + '</defs>'
     + '<circle cx="20" cy="20" r="20" fill="url(#agS)"/>'
@@ -1588,8 +1284,6 @@
     + '<path d="M10 40 Q10 28 20 27 Q30 28 30 40 Z" fill="url(#agBody)" opacity="0.95"/>'
     + '</svg>';
 
-  const AVATAR_PROFILE = AVATAR_ANALYST;
-
   const THINKING_PHRASES = ["Синхронизирую с плоскостью…","Проверяю коллизии…","Строю карту восприятия…","Оцениваю стабильность…"];
   const COMPASS_AXES = [
     { key: "развитие", label: "Развитие" },
@@ -1599,20 +1293,20 @@
     { key: "связь", label: "Связь" },
   ];
 
-  // Проекты
   const state = {
     apiKey: "",
+    authorKey: "",
     profile: { depth: "deep" },
     projects: [],
     currentProjectId: null,
     attachments: [],
     shownAvatarLabels: new Set(),
     sessionStart: Date.now(),
-    stabilityHistory: [],
     lastKeySource: null,
     editingProjectId: null,
     editingProjectColor: PROJECT_COLORS[0],
-    // текущая сессия
+    currentBlogPostId: null,
+    publishPayload: null,
     get project() {
       return this.projects.find(function (p) { return p.id === state.currentProjectId; });
     },
@@ -1690,6 +1384,24 @@
     } catch (e) { return false; }
   }
 
+  function createProjectObj(name, color) {
+    return {
+      id: "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
+      name: name || "Проект",
+      color: color || PROJECT_COLORS[0],
+      createdAt: new Date().toISOString(),
+      archived: false,
+      history: [],
+      passport: null,
+      cognitive: null,
+      artifacts: [],
+      sessionCount: 0,
+      lastMetrics: null,
+      stabilityHistory: [],
+      _important: {},
+    };
+  }
+
   async function loadProjects() {
     const list = await dbGetAll(STORE_PROJECTS);
     state.projects = list || [];
@@ -1699,7 +1411,6 @@
     } else if (state.projects.length) {
       state.currentProjectId = state.projects[0].id;
     } else {
-      // Миграция со старого формата
       try {
         const old = localStorage.getItem(LS_FALLBACK);
         if (old) {
@@ -1719,30 +1430,12 @@
           return;
         }
       } catch (e) {}
-      // Совсем пустая установка — создаём проект по умолчанию
       const fresh = createProjectObj("Мой проект", PROJECT_COLORS[0]);
       await dbPut(STORE_PROJECTS, fresh);
       state.projects.push(fresh);
       state.currentProjectId = fresh.id;
       await dbSetMeta("currentProjectId", fresh.id);
     }
-  }
-
-  function createProjectObj(name, color) {
-    return {
-      id: "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
-      name: name || "Проект",
-      color: color || PROJECT_COLORS[0],
-      createdAt: new Date().toISOString(),
-      archived: false,
-      history: [],
-      passport: null,
-      cognitive: null,
-      artifacts: [],
-      sessionCount: 0,
-      lastMetrics: null,
-      stabilityHistory: [],
-    };
   }
 
   async function persistCurrentProject() {
@@ -1757,7 +1450,7 @@
     el.textContent = text;
     el.classList.add("show");
     clearTimeout(el._t);
-    el._t = setTimeout(function () { el.classList.remove("show"); }, 1600);
+    el._t = setTimeout(function () { el.classList.remove("show"); }, 1800);
   }
 
   function applyProfile() {
@@ -1798,7 +1491,6 @@
     title.className = "decision-title";
     title.textContent = "Варианты";
     wrap.appendChild(title);
-
     choices.forEach(function (choice) {
       if (!choice || !choice.options) return;
       choice.options.forEach(function (opt, idx) {
@@ -1842,14 +1534,25 @@
     return row;
   }
 
+  function renderPublishButton(artifactStatus) {
+    if (!artifactStatus || artifactStatus.type !== "blog_post" || !artifactStatus.ready) return null;
+    const btn = document.createElement("button");
+    btn.className = "publish-btn";
+    btn.type = "button";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>'
+      + 'Опубликовать в блог';
+    btn.addEventListener("click", function () {
+      openPublishModal(artifactStatus);
+    });
+    return btn;
+  }
+
   function addRow(role, content, metrics, options) {
     options = options || {};
     const chat = document.getElementById("chat");
     if (!chat) return null;
-
     const row = document.createElement("div");
     row.className = "row " + role;
-
     if (role === "agent") {
       const wrap = document.createElement("div");
       wrap.className = "avatar-wrap";
@@ -1868,10 +1571,8 @@
       row.appendChild(wrap);
       row._avatar = avatar;
     }
-
     const bubble = document.createElement("div");
     bubble.className = "bubble";
-
     if (role === "agent") {
       bubble.innerHTML = renderMarkdown(content);
 
@@ -1906,7 +1607,6 @@
         persistCurrentProject();
       });
       actions.appendChild(impBtn);
-
       bubble.appendChild(actions);
 
       bubble.querySelectorAll("pre").forEach(function (pre) {
@@ -1928,31 +1628,33 @@
         const cards = renderDecisionCards(metrics.value_choices);
         if (cards) bubble.appendChild(cards);
       }
-
       if (metrics && metrics.artifacts && metrics.artifacts.length) {
         metrics.artifacts.forEach(function (art) {
           const r = renderArtifactRow(art);
           if (r) bubble.appendChild(r);
         });
       }
+      if (metrics && metrics.artifact_status) {
+        const pb = renderPublishButton(metrics.artifact_status);
+        if (pb) {
+          pb.addEventListener("click", function () {
+            state.publishPayload = {
+              title: (metrics.artifact_status.title || "").trim(),
+              body: content || "",
+              tags: metrics.artifact_status.suggested_tags || [],
+            };
+            openPublishModal(metrics.artifact_status, content);
+          });
+          bubble.appendChild(pb);
+        }
+      }
     } else {
       bubble.textContent = content;
     }
-
     row.appendChild(bubble);
     chat.appendChild(row);
     chat.scrollTop = chat.scrollHeight;
     return { row: row, bubble: bubble, avatar: row._avatar };
-  }
-
-  function describeMindScale(v) {
-    const map = {
-      micro: "1-2 параметра",
-      tactical: "3-5 параметров",
-      strategic: "долгосрочная задача",
-      systemic: "влияет на системы",
-    };
-    return map[v] || "—";
   }
 
   function fmtDuration(ms) {
@@ -2015,7 +1717,6 @@
     const m = metrics || {};
     const p = state.project;
     if (!p) return;
-
     p.lastMetrics = m;
 
     if (typeof m.stability_index === "number") {
@@ -2060,7 +1761,6 @@
     else if (si < 0.75) ring.classList.add("warning");
 
     document.getElementById("accStabilitySummary").textContent = si.toFixed(2);
-
     renderSparkline();
 
     const scaleLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
@@ -2194,11 +1894,7 @@
     const headers = { "Content-Type": "application/json" };
     if (state.apiKey) headers["X-Groq-Key"] = state.apiKey;
 
-    const carried = {
-      passport: p.passport || {},
-      profile: p.cognitive || {},
-      artifacts: p.artifacts || [],
-    };
+    const carried = { passport: p.passport || {}, profile: p.cognitive || {}, artifacts: p.artifacts || [] };
 
     try {
       const r = await fetch(API_BASE + "/chat", {
@@ -2209,13 +1905,10 @@
           carried_metrics: carried,
         }),
       });
-
       let data = null;
       try { data = await r.json(); } catch (e) {}
-
       const chat = document.getElementById("chat");
       if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
-
       if (!r.ok) {
         addRow("agent", "Ошибка: " + ((data && data.detail) || r.statusText));
       } else if (data) {
@@ -2257,7 +1950,6 @@
       return;
     }
     sec.classList.add("show");
-    document.getElementById("artifactsTitle").textContent = "Артефакты проекта";
     document.getElementById("artifactsSub").textContent = p.artifacts.length + " " + pluralize(p.artifacts.length, ["документ", "документа", "документов"]);
   }
 
@@ -2302,9 +1994,9 @@
     html += '<div class="sheet-sub">' + escHtml(a.type || "документ") + ' · ' + escHtml(a.version || "v1.0") + ' · ' + (stageLabels[a.stage] || a.stage || "") + '</div>';
     if (a.comment) html += '<div style="margin-bottom:12px;color:var(--muted);font-size:13px;">' + escHtml(a.comment) + '</div>';
     html += '<div class="bubble" style="padding:0;">' + renderMarkdown(a.content || "") + '</div>';
-    html += '<div class="row">'
-      + '<button class="action ghost" id="artifactCopyBtn">Копировать</button>'
-      + '<button class="action primary" id="artifactDownloadBtn">Скачать</button>'
+    html += '<div class="row" style="display:flex; gap:8px; margin-top:16px;">'
+      + '<button class="action ghost" id="artifactCopyBtn" style="flex:1; padding:12px; border-radius:11px; border:1px solid var(--border-soft); background:var(--surface-2); color:var(--text); font-family:inherit; font-size:14px; font-weight:500; cursor:pointer;">Копировать</button>'
+      + '<button class="action primary" id="artifactDownloadBtn" style="flex:1; padding:12px; border-radius:11px; border:none; background:var(--accent); color:#fff; font-family:inherit; font-size:14px; font-weight:500; cursor:pointer;">Скачать</button>'
       + '</div>';
     box.innerHTML = html;
     document.getElementById("artifactCopyBtn").addEventListener("click", function () {
@@ -2416,7 +2108,7 @@
     const p = state.project;
     const c = p && p.cognitive;
     let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта пользователя</div>';
-    html += '<div class="group-title" style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Ценностный компас</div>';
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Ценностный компас</div>';
     if (!c || !c.values || Object.keys(c.values).length === 0) {
       html += '<div class="empty-note">Пока нет данных.</div>';
     } else {
@@ -2435,6 +2127,499 @@
       html += '<div class="tag-list">' + c.distortions.map(function (pp) { return '<span class="tag warm">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
     }
     box.innerHTML = html;
+  }
+
+  // --- Блог ---
+  function switchBlogTab(tab) {
+    document.querySelectorAll(".blog-tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.tab === tab);
+    });
+    document.getElementById("blogListPane").style.display = tab === "list" ? "block" : "none";
+    document.getElementById("blogEditorPane").style.display = tab === "editor" ? "block" : "none";
+  }
+
+  async function loadBlogList() {
+    const box = document.getElementById("blogList");
+    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
+    try {
+      const r = await fetch(API_BASE + "/blog");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const data = await r.json();
+      const posts = data.posts || [];
+      document.getElementById("blogSub").textContent = posts.length ? (posts.length + " " + pluralize(posts.length, ["статья", "статьи", "статей"])) : "Пока нет статей";
+      if (!posts.length) {
+        box.innerHTML = '<div class="empty-note">Пока нет статей. Перейди на вкладку «Редактор» и опубликуй первую.</div>';
+        return;
+      }
+      box.innerHTML = "";
+      posts.forEach(function (p) {
+        const item = document.createElement("div");
+        item.className = "blog-post-item";
+        item.innerHTML = '<div class="blog-post-title">' + escHtml(p.title || "Без названия") + '</div>'
+          + '<div class="blog-post-meta">'
+          + '<span>' + escHtml(p.author || "Эльвира") + '</span>'
+          + '<span>' + fmtBlogDate(p.created_at) + '</span>'
+          + '</div>'
+          + (p.preview ? '<div class="blog-post-preview">' + escHtml(p.preview) + '…</div>' : '')
+          + (p.tags && p.tags.length ? '<div class="blog-post-tags">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>' : '');
+        item.addEventListener("click", function () { openBlogView(p.id); });
+        box.appendChild(item);
+      });
+    } catch (e) {
+      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
+    }
+  }
+
+  function fmtBlogDate(iso) {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+    } catch (e) { return iso; }
+  }
+
+  async function openBlogView(id) {
+    const box = document.getElementById("blogViewContent");
+    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
+    openSheet("blogViewSheet");
+    try {
+      const r = await fetch(API_BASE + "/blog/" + encodeURIComponent(id));
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const p = await r.json();
+      state.currentBlogPostId = p.id;
+      let html = '<div class="blog-view-title">' + escHtml(p.title || "Без названия") + '</div>';
+      html += '<div class="blog-view-meta"><span>' + escHtml(p.author || "Эльвира") + '</span><span>' + fmtBlogDate(p.created_at) + '</span>'
+        + (p.updated_at && p.updated_at !== p.created_at ? '<span>обновлено ' + fmtBlogDate(p.updated_at) + '</span>' : '') + '</div>';
+      if (p.tags && p.tags.length) {
+        html += '<div class="blog-post-tags" style="margin-bottom:16px;">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>';
+      }
+      html += '<div class="blog-view-body">' + renderMarkdown(p.body || "") + '</div>';
+      box.innerHTML = html;
+    } catch (e) {
+      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
+    }
+  }
+
+  async function publishFromEditor() {
+    const title = (document.getElementById("blogEditTitle").value || "").trim();
+    const body = (document.getElementById("blogEditBody").value || "").trim();
+    const tagsRaw = (document.getElementById("blogEditTags").value || "").trim();
+    const status = document.getElementById("blogEditorStatus");
+    if (!title || !body) {
+      status.textContent = "Нужны заголовок и текст";
+      return;
+    }
+    if (!state.authorKey) {
+      status.textContent = "Введи ключ автора в настройках";
+      return;
+    }
+    status.textContent = "Публикую…";
+    const tags = tagsRaw ? tagsRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    try {
+      const r = await fetch(API_BASE + "/blog/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+        body: JSON.stringify({ title: title, body: body, tags: tags, author: "Эльвира" }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+      status.textContent = "Опубликовано";
+      document.getElementById("blogEditTitle").value = "";
+      document.getElementById("blogEditBody").value = "";
+      document.getElementById("blogEditTags").value = "";
+      switchBlogTab("list");
+      loadBlogList();
+      toast("Статья опубликована");
+    } catch (e) {
+      status.textContent = "Ошибка: " + e.message;
+    }
+  }
+
+  function openPublishModal(artifactStatus, content) {
+    const payload = state.publishPayload || {};
+    document.getElementById("publishTitle").value = payload.title || artifactStatus.title || "";
+    document.getElementById("publishTags").value = (payload.tags || artifactStatus.suggested_tags || []).join(", ");
+    document.getElementById("publishStatus").textContent = "";
+    document.getElementById("publishModalBg").classList.add("open");
+  }
+
+  async function confirmPublishFromModal() {
+    const title = (document.getElementById("publishTitle").value || "").trim();
+    const tagsRaw = (document.getElementById("publishTags").value || "").trim();
+    const status = document.getElementById("publishStatus");
+    const payload = state.publishPayload || {};
+    const body = (payload.body || "").trim();
+    if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
+    if (!state.authorKey) { status.textContent = "Введи ключ автора в настройках"; return; }
+    status.textContent = "Публикую…";
+    const tags = tagsRaw ? tagsRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    try {
+      const r = await fetch(API_BASE + "/blog/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+        body: JSON.stringify({ title: title, body: body, tags: tags, author: "Эльвира" }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+      status.textContent = "Опубликовано";
+      setTimeout(function () {
+        document.getElementById("publishModalBg").classList.remove("open");
+        toast("Опубликовано в блог");
+      }, 700);
+    } catch (e) {
+      status.textContent = "Ошибка: " + e.message;
+    }
+  }
+
+  function openModal() {
+    document.getElementById("keyInput").value = state.apiKey || "";
+    document.getElementById("authorKeyInput").value = state.authorKey || "";
+    document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
+    document.getElementById("rememberAuthorKey").checked = !!localStorage.getItem(LS_AUTHOR);
+    applyProfile();
+    document.getElementById("modalBg").classList.add("open");
+  }
+  function closeModal() { document.getElementById("modalBg").classList.remove("open"); }
+
+  function openResetModal() {
+    const chip = document.getElementById("resetChip");
+    document.getElementById("resetReason").textContent = chip.dataset.reason || "Модель рекомендует сбросить проблемную ветку диалога.";
+    document.getElementById("resetModalBg").classList.add("open");
+  }
+  function closeResetModal() { document.getElementById("resetModalBg").classList.remove("open"); }
+
+  function renderProjectsBar() {
+    const bar = document.getElementById("projectsBar");
+    bar.innerHTML = "";
+    state.projects.forEach(function (p) {
+      if (p.archived) return;
+      const tab = document.createElement("button");
+      tab.className = "project-tab";
+      if (p.id === state.currentProjectId) tab.classList.add("active");
+      tab.style.background = p.color || PROJECT_COLORS[0];
+      tab.textContent = initials(p.name);
+      tab.title = p.name;
+      tab.addEventListener("click", function () { switchProject(p.id); });
+      let pressTimer = null;
+      tab.addEventListener("pointerdown", function () {
+        pressTimer = setTimeout(function () { pressTimer = null; openProjectModal(p.id); }, 550);
+      });
+      ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) {
+        tab.addEventListener(ev, function () {
+          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+        });
+      });
+      bar.appendChild(tab);
+    });
+    const add = document.createElement("button");
+    add.className = "project-add";
+    add.title = "Новый проект";
+    add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
+    add.addEventListener("click", function () { openProjectModal(null); });
+    bar.appendChild(add);
+  }
+
+  async function switchProject(id) {
+    if (id === state.currentProjectId) return;
+    state.currentProjectId = id;
+    await dbSetMeta("currentProjectId", id);
+    state.shownAvatarLabels = new Set();
+    document.getElementById("chat").innerHTML = "";
+    renderCurrentProject();
+    renderProjectsBar();
+  }
+
+  function renderCurrentProject() {
+    const p = state.project;
+    if (!p) return;
+    p.history = p.history || [];
+    p.history.forEach(function (m, idx) {
+      addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
+    });
+    if (p.lastMetrics) { updateChip(p.lastMetrics); updateConditionalUI(p.lastMetrics); }
+    renderSparkline();
+    updateArtifactsSection();
+  }
+
+  function openProjectModal(editId) {
+    state.editingProjectId = editId;
+    const p = editId ? state.projects.find(function (x) { return x.id === editId; }) : null;
+    document.getElementById("projectModalTitle").textContent = p ? "Редактировать проект" : "Новый проект";
+    document.getElementById("projectNameInput").value = p ? p.name : "";
+    state.editingProjectColor = (p && p.color) || PROJECT_COLORS[0];
+    renderColorPicker();
+    document.getElementById("projectDangerRow").style.display = p ? "flex" : "none";
+    document.getElementById("projectModalBg").classList.add("open");
+    setTimeout(function () { document.getElementById("projectNameInput").focus(); }, 100);
+  }
+  function closeProjectModal() {
+    document.getElementById("projectModalBg").classList.remove("open");
+    state.editingProjectId = null;
+  }
+  function renderColorPicker() {
+    const box = document.getElementById("projectColorPicker");
+    box.innerHTML = "";
+    PROJECT_COLORS.forEach(function (c) {
+      const sw = document.createElement("button");
+      sw.className = "color-swatch";
+      if (c === state.editingProjectColor) sw.classList.add("active");
+      sw.style.background = c;
+      sw.type = "button";
+      sw.addEventListener("click", function () { state.editingProjectColor = c; renderColorPicker(); });
+      box.appendChild(sw);
+    });
+  }
+
+  function setupSwipeToClose(sheetEl, handleEl) {
+    if (!sheetEl || !handleEl) return;
+    let startY = 0, currentY = 0, dragging = false;
+    function onStart(e) { dragging = true; startY = (e.touches ? e.touches[0].clientY : e.clientY); sheetEl.style.transition = "none"; }
+    function onMove(e) { if (!dragging) return; currentY = (e.touches ? e.touches[0].clientY : e.clientY); const dy = Math.max(0, currentY - startY); sheetEl.style.transform = "translateY(" + dy + "px)"; }
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      sheetEl.style.transition = "";
+      sheetEl.style.transform = "";
+      if (currentY - startY > 70) closeAllSheets();
+    }
+    handleEl.addEventListener("touchstart", onStart, { passive: true });
+    handleEl.addEventListener("touchmove", onMove, { passive: true });
+    handleEl.addEventListener("touchend", onEnd);
+    handleEl.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+  }
+
+  function setupViewport() {
+    if (window.visualViewport) {
+      const setVh = function () { document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px"); };
+      window.visualViewport.addEventListener("resize", setVh);
+      window.visualViewport.addEventListener("scroll", setVh);
+      setVh();
+    }
+  }
+
+  async function init() {
+    document.getElementById("profileAvatarSvg").innerHTML = AVATAR_ANALYST.replace(/^<svg[^>]*>/, "").replace(/<\/svg>$/, "");
+
+    applyProfile();
+    setupViewport();
+    await loadProjects();
+    renderProjectsBar();
+    renderCurrentProject();
+
+    setupSwipeToClose(document.getElementById("metricsSheet"), document.getElementById("sheetHandle"));
+    setupSwipeToClose(document.getElementById("artifactsSheet"), document.getElementById("artifactsHandle"));
+    setupSwipeToClose(document.getElementById("artifactViewSheet"), document.getElementById("artifactViewHandle"));
+    setupSwipeToClose(document.getElementById("passportSheet"), document.getElementById("passportHandle"));
+    setupSwipeToClose(document.getElementById("profileSheet"), document.getElementById("profileHandle"));
+    setupSwipeToClose(document.getElementById("blogSheet"), document.getElementById("blogHandle"));
+    setupSwipeToClose(document.getElementById("blogViewSheet"), document.getElementById("blogViewHandle"));
+
+    setTimeout(function () { document.getElementById("splash").classList.add("hide"); }, 400);
+
+    const sendBtn = document.getElementById("sendBtn");
+    const input = document.getElementById("input");
+    const fileInput = document.getElementById("fileInput");
+
+    sendBtn.addEventListener("click", send);
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    input.addEventListener("input", function () {
+      input.style.height = "auto";
+      input.style.height = Math.min(input.scrollHeight, 96) + "px";
+    });
+
+    document.getElementById("attachBtn").addEventListener("click", function () { fileInput.click(); });
+    fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
+
+    document.getElementById("stabilityChip").addEventListener("click", function () { openSheet("metricsSheet"); });
+    document.getElementById("passportBtn").addEventListener("click", function () { renderPassport(); openSheet("passportSheet"); });
+    document.getElementById("reportIconBtn").addEventListener("click", downloadReport);
+    document.getElementById("profileBtn").addEventListener("click", function () { renderProfile(); openSheet("profileSheet"); });
+    document.getElementById("artifactsSectionInner").addEventListener("click", function () { renderArtifactsList(); openSheet("artifactsSheet"); });
+
+    document.getElementById("blogBtn").addEventListener("click", function () {
+      switchBlogTab("list");
+      loadBlogList();
+      openSheet("blogSheet");
+    });
+
+    document.querySelectorAll(".blog-tab").forEach(function (t) {
+      t.addEventListener("click", function () { switchBlogTab(t.dataset.tab); });
+    });
+    document.getElementById("blogEditorPublish").addEventListener("click", publishFromEditor);
+    document.getElementById("blogEditorClear").addEventListener("click", function () {
+      document.getElementById("blogEditTitle").value = "";
+      document.getElementById("blogEditBody").value = "";
+      document.getElementById("blogEditTags").value = "";
+      document.getElementById("blogEditorStatus").textContent = "";
+    });
+
+    document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
+
+    document.querySelectorAll(".acc-head").forEach(function (h) {
+      h.addEventListener("click", function () { h.parentElement.classList.toggle("open"); });
+    });
+
+    // Risk
+    document.getElementById("riskClose").addEventListener("click", function () { document.getElementById("riskModalBg").classList.remove("open"); });
+    document.getElementById("riskModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+    document.getElementById("riskCancel").addEventListener("click", function () {
+      document.getElementById("riskModalBg").classList.remove("open");
+      toast("Действие отменено");
+    });
+    document.getElementById("riskApply").addEventListener("click", function () {
+      const alt = document.getElementById("riskModalBg").dataset.alt || "";
+      document.getElementById("riskModalBg").classList.remove("open");
+      document.getElementById("input").value = alt;
+      toast("Альтернатива вставлена");
+    });
+
+    // Reset
+    document.getElementById("resetChip").addEventListener("click", openResetModal);
+    document.getElementById("resetClose").addEventListener("click", closeResetModal);
+    document.getElementById("resetModalBg").addEventListener("click", function (e) { if (e.target === this) closeResetModal(); });
+    document.getElementById("resetCancel").addEventListener("click", closeResetModal);
+    document.getElementById("resetConfirm").addEventListener("click", function () {
+      const chip = document.getElementById("resetChip");
+      const point = chip.dataset.point || "";
+      const p = state.project;
+      if (!p) return;
+      const match = String(point).match(/#?(\d+)/);
+      if (match) {
+        const idx = parseInt(match[1], 10);
+        if (idx >= 0 && idx < p.history.length) p.history = p.history.slice(0, idx);
+      } else p.history = [];
+      document.getElementById("chat").innerHTML = "";
+      p.history.forEach(function (m, idx) {
+        addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
+      });
+      persistCurrentProject();
+      chip.classList.remove("show");
+      closeResetModal();
+      toast("Контекст сброшен");
+    });
+
+    // Publish
+    document.getElementById("publishModalClose").addEventListener("click", function () { document.getElementById("publishModalBg").classList.remove("open"); });
+    document.getElementById("publishModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+    document.getElementById("publishCancel").addEventListener("click", function () { document.getElementById("publishModalBg").classList.remove("open"); });
+    document.getElementById("publishConfirm").addEventListener("click", confirmPublishFromModal);
+
+    // Project
+    document.getElementById("projectModalClose").addEventListener("click", closeProjectModal);
+    document.getElementById("projectCancel").addEventListener("click", closeProjectModal);
+    document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
+    document.getElementById("projectSave").addEventListener("click", async function () {
+      const name = (document.getElementById("projectNameInput").value || "").trim() || "Проект";
+      if (state.editingProjectId) {
+        const p = state.projects.find(function (x) { return x.id === state.editingProjectId; });
+        if (p) { p.name = name; p.color = state.editingProjectColor; await dbPut(STORE_PROJECTS, p); }
+      } else {
+        const fresh = createProjectObj(name, state.editingProjectColor);
+        await dbPut(STORE_PROJECTS, fresh);
+        state.projects.push(fresh);
+        state.currentProjectId = fresh.id;
+        await dbSetMeta("currentProjectId", fresh.id);
+        state.shownAvatarLabels = new Set();
+        document.getElementById("chat").innerHTML = "";
+        renderCurrentProject();
+      }
+      renderProjectsBar();
+      closeProjectModal();
+    });
+    document.getElementById("projectDelete").addEventListener("click", async function () {
+      if (!state.editingProjectId) return;
+      const p = state.projects.find(function (x) { return x.id === state.editingProjectId; });
+      if (!p) return;
+      if (!confirm("Удалить проект «" + p.name + "» и все его данные?")) return;
+      await dbDel(STORE_PROJECTS, p.id);
+      state.projects = state.projects.filter(function (x) { return x.id !== p.id; });
+      if (!state.projects.length) {
+        const fresh = createProjectObj("Мой проект", PROJECT_COLORS[0]);
+        await dbPut(STORE_PROJECTS, fresh);
+        state.projects.push(fresh);
+        state.currentProjectId = fresh.id;
+        await dbSetMeta("currentProjectId", fresh.id);
+      } else if (state.currentProjectId === p.id) {
+        state.currentProjectId = state.projects[0].id;
+        await dbSetMeta("currentProjectId", state.currentProjectId);
+      }
+      document.getElementById("chat").innerHTML = "";
+      renderCurrentProject();
+      renderProjectsBar();
+      closeProjectModal();
+      toast("Проект удалён");
+    });
+
+    // Settings
+    document.getElementById("settingsBtn").addEventListener("click", openModal);
+    document.getElementById("modalClose").addEventListener("click", closeModal);
+    document.getElementById("modalBg").addEventListener("click", function (e) { if (e.target === this) closeModal(); });
+    document.querySelectorAll("#depthSeg button").forEach(function (el) {
+      el.addEventListener("click", function () {
+        state.profile.depth = el.dataset.depth;
+        applyProfile();
+      });
+    });
+
+    document.getElementById("saveSettings").addEventListener("click", function () {
+      const key = (document.getElementById("keyInput").value || "").trim();
+      const remember = document.getElementById("rememberKey").checked;
+      state.apiKey = key;
+      if (remember && key) localStorage.setItem(LS_KEY, key);
+      else localStorage.removeItem(LS_KEY);
+
+      const authorKey = (document.getElementById("authorKeyInput").value || "").trim();
+      const rememberAuthor = document.getElementById("rememberAuthorKey").checked;
+      state.authorKey = authorKey;
+      if (rememberAuthor && authorKey) localStorage.setItem(LS_AUTHOR, authorKey);
+      else localStorage.removeItem(LS_AUTHOR);
+
+      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+      closeModal();
+      toast("Настройки сохранены");
+    });
+
+    document.getElementById("exportData").addEventListener("click", function () {
+      const blob = new Blob([JSON.stringify({ projects: state.projects, profile: state.profile }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "monolog_export_" + Date.now() + ".json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    document.getElementById("importData").addEventListener("click", function () {
+      document.getElementById("importFile").click();
+    });
+    document.getElementById("importFile").addEventListener("change", function (e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function () {
+        try {
+          const data = JSON.parse(reader.result);
+          if (data.projects && Array.isArray(data.projects)) {
+            for (const p of data.projects) await dbPut(STORE_PROJECTS, p);
+          }
+          if (data.profile) {
+            state.profile = Object.assign(state.profile, data.profile);
+            localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+          }
+          location.reload();
+        } catch (err) { alert("Некорректный файл"); }
+      };
+      reader.readAsText(file);
+    });
+
+    try {
+      const prof = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
+      if (prof) state.profile = Object.assign(state.profile, prof);
+      state.apiKey = localStorage.getItem(LS_KEY) || "";
+      state.authorKey = localStorage.getItem(LS_AUTHOR) || "";
+    } catch (e) {}
   }
 
   function generateReport() {
@@ -2496,339 +2681,6 @@
     a.click();
     URL.revokeObjectURL(a.href);
     toast("Отчёт скачан");
-  }
-
-  function openModal() {
-    document.getElementById("keyInput").value = state.apiKey || "";
-    document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
-    applyProfile();
-    document.getElementById("modalBg").classList.add("open");
-  }
-  function closeModal() { document.getElementById("modalBg").classList.remove("open"); }
-
-  function openResetModal() {
-    const chip = document.getElementById("resetChip");
-    document.getElementById("resetReason").textContent = chip.dataset.reason || "Модель рекомендует сбросить проблемную ветку диалога.";
-    document.getElementById("resetModalBg").classList.add("open");
-  }
-  function closeResetModal() { document.getElementById("resetModalBg").classList.remove("open"); }
-
-  function renderProjectsBar() {
-    const bar = document.getElementById("projectsBar");
-    bar.innerHTML = "";
-    state.projects.forEach(function (p) {
-      if (p.archived) return;
-      const tab = document.createElement("button");
-      tab.className = "project-tab";
-      if (p.id === state.currentProjectId) tab.classList.add("active");
-      tab.style.background = p.color || PROJECT_COLORS[0];
-      tab.textContent = initials(p.name);
-      tab.title = p.name;
-      tab.addEventListener("click", function () {
-        switchProject(p.id);
-      });
-      let pressTimer = null;
-      tab.addEventListener("pointerdown", function () {
-        pressTimer = setTimeout(function () {
-          pressTimer = null;
-          openProjectModal(p.id);
-        }, 550);
-      });
-      ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) {
-        tab.addEventListener(ev, function () {
-          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-        });
-      });
-      bar.appendChild(tab);
-    });
-
-    const add = document.createElement("button");
-    add.className = "project-add";
-    add.title = "Новый проект";
-    add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
-    add.addEventListener("click", function () { openProjectModal(null); });
-    bar.appendChild(add);
-  }
-
-  async function switchProject(id) {
-    if (id === state.currentProjectId) return;
-    state.currentProjectId = id;
-    await dbSetMeta("currentProjectId", id);
-    state.shownAvatarLabels = new Set();
-    document.getElementById("chat").innerHTML = "";
-    renderCurrentProject();
-    renderProjectsBar();
-  }
-
-  function renderCurrentProject() {
-    const p = state.project;
-    if (!p) return;
-    p.history = p.history || [];
-    p.history.forEach(function (m, idx) {
-      addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
-    });
-    if (p.lastMetrics) { updateChip(p.lastMetrics); updateConditionalUI(p.lastMetrics); }
-    renderSparkline();
-    updateArtifactsSection();
-  }
-
-  function openProjectModal(editId) {
-    state.editingProjectId = editId;
-    const p = editId ? state.projects.find(function (x) { return x.id === editId; }) : null;
-    document.getElementById("projectModalTitle").textContent = p ? "Редактировать проект" : "Новый проект";
-    document.getElementById("projectNameInput").value = p ? p.name : "";
-    state.editingProjectColor = (p && p.color) || PROJECT_COLORS[0];
-    renderColorPicker();
-    document.getElementById("projectDangerRow").style.display = p ? "flex" : "none";
-    document.getElementById("projectModalBg").classList.add("open");
-    setTimeout(function () { document.getElementById("projectNameInput").focus(); }, 100);
-  }
-  function closeProjectModal() {
-    document.getElementById("projectModalBg").classList.remove("open");
-    state.editingProjectId = null;
-  }
-  function renderColorPicker() {
-    const box = document.getElementById("projectColorPicker");
-    box.innerHTML = "";
-    PROJECT_COLORS.forEach(function (c) {
-      const sw = document.createElement("button");
-      sw.className = "color-swatch";
-      if (c === state.editingProjectColor) sw.classList.add("active");
-      sw.style.background = c;
-      sw.type = "button";
-      sw.addEventListener("click", function () {
-        state.editingProjectColor = c;
-        renderColorPicker();
-      });
-      box.appendChild(sw);
-    });
-  }
-
-  function setupSwipeToClose(sheetEl, handleEl) {
-    if (!sheetEl || !handleEl) return;
-    let startY = 0, currentY = 0, dragging = false;
-    function onStart(e) { dragging = true; startY = (e.touches ? e.touches[0].clientY : e.clientY); sheetEl.style.transition = "none"; }
-    function onMove(e) { if (!dragging) return; currentY = (e.touches ? e.touches[0].clientY : e.clientY); const dy = Math.max(0, currentY - startY); sheetEl.style.transform = "translateY(" + dy + "px)"; }
-    function onEnd() {
-      if (!dragging) return;
-      dragging = false;
-      sheetEl.style.transition = "";
-      sheetEl.style.transform = "";
-      if (currentY - startY > 70) closeAllSheets();
-    }
-    handleEl.addEventListener("touchstart", onStart, { passive: true });
-    handleEl.addEventListener("touchmove", onMove, { passive: true });
-    handleEl.addEventListener("touchend", onEnd);
-    handleEl.addEventListener("mousedown", onStart);
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onEnd);
-  }
-
-  function setupViewport() {
-    if (window.visualViewport) {
-      const setVh = function () { document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px"); };
-      window.visualViewport.addEventListener("resize", setVh);
-      window.visualViewport.addEventListener("scroll", setVh);
-      setVh();
-    }
-  }
-
-  async function init() {
-    // Аватар профиля
-    document.getElementById("profileAvatarSvg").outerHTML = AVATAR_PROFILE.replace('<svg ', '<svg id="profileAvatarSvg" ');
-
-    applyProfile();
-    setupViewport();
-    await loadProjects();
-    renderProjectsBar();
-    renderCurrentProject();
-
-    setupSwipeToClose(document.getElementById("metricsSheet"), document.getElementById("sheetHandle"));
-    setupSwipeToClose(document.getElementById("artifactsSheet"), document.getElementById("artifactsHandle"));
-    setupSwipeToClose(document.getElementById("artifactViewSheet"), document.getElementById("artifactViewHandle"));
-    setupSwipeToClose(document.getElementById("passportSheet"), document.getElementById("passportHandle"));
-    setupSwipeToClose(document.getElementById("profileSheet"), document.getElementById("profileHandle"));
-
-    setTimeout(function () { document.getElementById("splash").classList.add("hide"); }, 400);
-
-    const sendBtn = document.getElementById("sendBtn");
-    const input = document.getElementById("input");
-    const fileInput = document.getElementById("fileInput");
-
-    sendBtn.addEventListener("click", send);
-    input.addEventListener("keydown", function (e) {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-    });
-    input.addEventListener("input", function () {
-      input.style.height = "auto";
-      input.style.height = Math.min(input.scrollHeight, 96) + "px";
-    });
-
-    document.getElementById("attachBtn").addEventListener("click", function () { fileInput.click(); });
-    fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
-
-    document.getElementById("stabilityChip").addEventListener("click", function () { openSheet("metricsSheet"); });
-    document.getElementById("passportBtn").addEventListener("click", function () { renderPassport(); openSheet("passportSheet"); });
-    document.getElementById("reportIconBtn").addEventListener("click", downloadReport);
-    document.getElementById("profileBtn").addEventListener("click", function () { renderProfile(); openSheet("profileSheet"); });
-    document.getElementById("artifactsSectionInner").addEventListener("click", function () { renderArtifactsList(); openSheet("artifactsSheet"); });
-    document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
-
-    document.querySelectorAll(".acc-head").forEach(function (h) {
-      h.addEventListener("click", function () {
-        h.parentElement.classList.toggle("open");
-      });
-    });
-
-    // Risk
-    document.getElementById("riskClose").addEventListener("click", function () { document.getElementById("riskModalBg").classList.remove("open"); });
-    document.getElementById("riskModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
-    document.getElementById("riskCancel").addEventListener("click", function () {
-      document.getElementById("riskModalBg").classList.remove("open");
-      toast("Действие отменено");
-    });
-    document.getElementById("riskApply").addEventListener("click", function () {
-      const alt = document.getElementById("riskModalBg").dataset.alt || "";
-      document.getElementById("riskModalBg").classList.remove("open");
-      const input = document.getElementById("input");
-      input.value = alt;
-      toast("Альтернатива вставлена");
-    });
-
-    // Reset
-    document.getElementById("resetChip").addEventListener("click", openResetModal);
-    document.getElementById("resetClose").addEventListener("click", closeResetModal);
-    document.getElementById("resetModalBg").addEventListener("click", function (e) { if (e.target === this) closeResetModal(); });
-    document.getElementById("resetCancel").addEventListener("click", closeResetModal);
-    document.getElementById("resetConfirm").addEventListener("click", function () {
-      const chip = document.getElementById("resetChip");
-      const point = chip.dataset.point || "";
-      const p = state.project;
-      if (!p) return;
-      const match = String(point).match(/#?(\d+)/);
-      if (match) {
-        const idx = parseInt(match[1], 10);
-        if (idx >= 0 && idx < p.history.length) p.history = p.history.slice(0, idx);
-      } else p.history = [];
-      document.getElementById("chat").innerHTML = "";
-      p.history.forEach(function (m, idx) {
-        addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
-      });
-      persistCurrentProject();
-      chip.classList.remove("show");
-      closeResetModal();
-      toast("Контекст сброшен");
-    });
-
-    // Project modal
-    document.getElementById("projectModalClose").addEventListener("click", closeProjectModal);
-    document.getElementById("projectCancel").addEventListener("click", closeProjectModal);
-    document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
-    document.getElementById("projectSave").addEventListener("click", async function () {
-      const name = (document.getElementById("projectNameInput").value || "").trim() || "Проект";
-      if (state.editingProjectId) {
-        const p = state.projects.find(function (x) { return x.id === state.editingProjectId; });
-        if (p) {
-          p.name = name;
-          p.color = state.editingProjectColor;
-          await dbPut(STORE_PROJECTS, p);
-        }
-      } else {
-        const fresh = createProjectObj(name, state.editingProjectColor);
-        await dbPut(STORE_PROJECTS, fresh);
-        state.projects.push(fresh);
-        state.currentProjectId = fresh.id;
-        await dbSetMeta("currentProjectId", fresh.id);
-        state.shownAvatarLabels = new Set();
-        document.getElementById("chat").innerHTML = "";
-        renderCurrentProject();
-      }
-      renderProjectsBar();
-      closeProjectModal();
-    });
-    document.getElementById("projectDelete").addEventListener("click", async function () {
-      if (!state.editingProjectId) return;
-      const p = state.projects.find(function (x) { return x.id === state.editingProjectId; });
-      if (!p) return;
-      if (!confirm("Удалить проект «" + p.name + "» и все его данные?")) return;
-      await dbDel(STORE_PROJECTS, p.id);
-      state.projects = state.projects.filter(function (x) { return x.id !== p.id; });
-      if (!state.projects.length) {
-        const fresh = createProjectObj("Мой проект", PROJECT_COLORS[0]);
-        await dbPut(STORE_PROJECTS, fresh);
-        state.projects.push(fresh);
-        state.currentProjectId = fresh.id;
-        await dbSetMeta("currentProjectId", fresh.id);
-      } else if (state.currentProjectId === p.id) {
-        state.currentProjectId = state.projects[0].id;
-        await dbSetMeta("currentProjectId", state.currentProjectId);
-      }
-      document.getElementById("chat").innerHTML = "";
-      renderCurrentProject();
-      renderProjectsBar();
-      closeProjectModal();
-      toast("Проект удалён");
-    });
-
-    // Settings
-    document.getElementById("settingsBtn").addEventListener("click", openModal);
-    document.getElementById("modalClose").addEventListener("click", closeModal);
-    document.getElementById("modalBg").addEventListener("click", function (e) { if (e.target === this) closeModal(); });
-    document.querySelectorAll("#depthSeg button").forEach(function (el) {
-      el.addEventListener("click", function () {
-        state.profile.depth = el.dataset.depth;
-        applyProfile();
-      });
-    });
-
-    document.getElementById("saveSettings").addEventListener("click", function () {
-      const key = (document.getElementById("keyInput").value || "").trim();
-      const remember = document.getElementById("rememberKey").checked;
-      state.apiKey = key;
-      if (remember && key) localStorage.setItem(LS_KEY, key);
-      else localStorage.removeItem(LS_KEY);
-      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
-      closeModal();
-    });
-
-    document.getElementById("exportData").addEventListener("click", function () {
-      const blob = new Blob([JSON.stringify({ projects: state.projects, profile: state.profile }, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "monolog_export_" + Date.now() + ".json";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
-    document.getElementById("importData").addEventListener("click", function () {
-      document.getElementById("importFile").click();
-    });
-    document.getElementById("importFile").addEventListener("change", function (e) {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = async function () {
-        try {
-          const data = JSON.parse(reader.result);
-          if (data.projects && Array.isArray(data.projects)) {
-            for (const p of data.projects) {
-              await dbPut(STORE_PROJECTS, p);
-            }
-          }
-          if (data.profile) {
-            state.profile = Object.assign(state.profile, data.profile);
-            localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
-          }
-          location.reload();
-        } catch (err) { alert("Некорректный файл"); }
-      };
-      reader.readAsText(file);
-    });
-
-    try {
-      const prof = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
-      if (prof) state.profile = Object.assign(state.profile, prof);
-      state.apiKey = localStorage.getItem(LS_KEY) || "";
-    } catch (e) {}
   }
 
   if (document.readyState === "loading") {
