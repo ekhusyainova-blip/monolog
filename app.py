@@ -84,6 +84,7 @@ BASE_METRICS = {
     "impact_map": None,
     "reset_proposal": None,
     "artifact_status": None,
+    "artifacts": [],
     "required_skills": [],
     "risk_intercept": None,
     "reasoning_trace": None,
@@ -159,12 +160,12 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     result = {**BASE_METRICS, **carried}
 
     for k, v in (incoming or {}).items():
-        if k in ("passport", "profile", "reminder"):
+        if k in ("passport", "profile", "reminder", "artifacts"):
             continue
         if v is not None:
             result[k] = v
 
-    # passport — мерж по полям
+    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -181,7 +182,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
-    # profile — мерж по полям
+    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
@@ -201,12 +202,22 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         merged_prof[list_key] = old
     result["profile"] = merged_prof
 
-    # reminder — новое значение перезаписывает
+    # reminder
     inc_rem = (incoming or {}).get("reminder")
-    if inc_rem is not None:
-        result["reminder"] = inc_rem
-    else:
-        result["reminder"] = carried.get("reminder")
+    result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
+
+    # artifacts — дедупликация по id
+    inc_art = (incoming or {}).get("artifacts") or []
+    car_art = list(carried.get("artifacts") or [])
+    seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
+    for a in inc_art:
+        if not isinstance(a, dict):
+            continue
+        aid = a.get("id")
+        if aid and aid not in seen_ids:
+            car_art.append(a)
+            seen_ids.add(aid)
+    result["artifacts"] = car_art
 
     return result
 
