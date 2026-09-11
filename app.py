@@ -1,202 +1,244 @@
+# app.py
+# Monolog — когнитивный AI-партнёр. Stateless-прокси к Groq.
+# ASSUMPTION: BYOK приоритетнее ротации ключей разработчика.
+# ASSUMPTION: ключ пользователя не сохраняется, не логируется, маскируется.
+
 import os
-import json
 import re
-import time
-from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
-from groq import Groq
+import json
 import logging
+import itertools
+from typing import Optional, List, Dict, Any
 
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+import httpx
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
-app = FastAPI()
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+log = logging.getLogger("monolog")
+
+GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+MODEL = "qwen/qwen3.6-27b"
+MAX_TOKENS = 4000
+TIMEOUT = 60.0
+
+# --- Ротация ключей разработчика ---
+_DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
+_dev_key_cycle = itertools.cycle(_DEV_KEYS) if _DEV_KEYS else None
+ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
+
+# --- Загрузка промптов ---
+def _load(path: str) -> str:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.read().strip()
+    except FileNotFoundError:
+        log.warning(f"Prompt file not found: {path}")
+        return ""
+
+LAYER_A = _load("prompts/layer_a.txt")
+LAYER_B = _load("prompts/layer_b.txt")
+
+
+def mask_key(key: str) -> str:
+    if not key or len(key) < 12:
+        return "***"
+    return f"{key[:6]}...{key[-4:]}"
+
+
+def next_dev_key() -> Optional[str]:
+    if not _dev_key_cycle:
+        return None
+    return next(_dev_key_cycle)
+
+
+def pick_key(request: Request) -> tuple[Optional[str], str]:
+    """Возвращает (ключ, источник). BYOK приоритетнее."""
+    if ALLOW_BYOK:
+        user_key = request.headers.get("X-Groq-Key", "").strip()
+        if user_key.startswith("gsk_"):
+            return user_key, "user"
+    dev = next_dev_key()
+    if dev:
+        return dev, "developer"
+    return None, "none"
+
+
+# --- JSON-схема (полная) ---
+BASE_METRICS = {
+    "stability_index": 0.0,
+    "indicator_status": "success",
+    "cycles_completed": 0,
+    "collisions_resolved": "0/0",
+    "lots_balance": "+0.0",
+    "patterns_applied": [],
+    "cognitive_distortions": [],
+    "autonomy_levels": [],
+    "mind_scale": "micro",
+    "human_contribution": 0.0,
+    "value_choices": [],
+    "consequences_tree": None,
+    "dilemma_type": None,
+    "impact_map": None,
+    "reset_proposal": None,
+    "artifact_status": None,
+    "required_skills": [],
+    "risk_intercept": None,
+    "reasoning_trace": None,
+    "breakthrough_marker": False,
+    "cognitive_pulse": "slow",
+    "protocol_integrity": True,
+    "developer_mode": False,
+}
+
+
+def extract_json(text: str) -> Optional[Dict[str, Any]]:
+    """Ищет последний JSON-объект в тексте ответа модели."""
+    if not text:
+        return None
+    # Прямой парсинг
+    try:
+        return json.loads(text)
+    except Exception:
+        pass
+    # Поиск блока ```json ... ```
+    m = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
+    if m:
+        try:
+            return json.loads(m.group(1))
+        except Exception:
+            pass
+    # Поиск последнего { ... } с балансировкой
+    start = text.rfind("{")
+    while start != -1:
+        depth = 0
+        for i in range(start, len(text)):
+            if text[i] == "{":
+                depth += 1
+            elif text[i] == "}":
+                depth -= 1
+                if depth == 0:
+                    chunk = text[start:i + 1]
+                    try:
+                        return json.loads(chunk)
+                    except Exception:
+                        break
+        start = text.rfind("{", 0, start)
+    return None
+
+
+async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": MODEL,
+        "messages": messages,
+        "max_tokens": MAX_TOKENS,
+        "temperature": 0.7,
+    }
+    async with httpx.AsyncClient(timeout=TIMEOUT) as client:
+        r = await client.post(GROQ_URL, headers=headers, json=payload)
+    if r.status_code == 429:
+        raise HTTPException(status_code=429, detail="Лимит Groq исчерпан. Попробуйте позже или введите свой ключ.")
+    if r.status_code >= 400:
+        log.error(f"Groq error {r.status_code}: {r.text[:300]}")
+        raise HTTPException(status_code=r.status_code, detail="Ошибка Groq API")
+    data = r.json()
+    return data["choices"][0]["message"]["content"]
+
+
+SYSTEM_STAGE1 = (
+    "Ты — внутренний планировщик когнитивной модели Monolog. "
+    "Проанализируй запрос пользователя и сгенерируй Скрытый рабочий промпт: "
+    "оценку картины восприятия, план циклов проверки, потенциальные коллизии и ограничения. "
+    "Ответь ТОЛЬКО текстом скрытого промпта, без пояснений."
+)
+
+SYSTEM_STAGE2 = (
+    "Ты — когнитивный AI-партнёр Monolog. Работай по методологии ниже. "
+    "Верни ответ СТРОГО в формате JSON: {\"reply_text\": \"...\", \"metrics\": {...}}. "
+    "reply_text — Markdown-текст ответа. metrics — метрики по схеме.\n\n"
+    f"=== СЛОЙ A ===\n{LAYER_A}\n\n"
+    f"=== СЛОЙ B ===\n{LAYER_B}\n\n"
+    f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
+)
+
+
+app = FastAPI(title="Monolog MVP")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-GROQ_API_KEYS_RAW = os.environ.get("GROQ_API_KEYS", "").strip()
-if not GROQ_API_KEYS_RAW:
-    raise ValueError("КРИТИЧЕСКАЯ ОШИБКА: Переменная GROQ_API_KEYS не задана!")
 
-GROQ_API_KEYS = [k.strip() for k in GROQ_API_KEYS_RAW.split(",") if k.strip()]
-if not GROQ_API_KEYS:
-    raise ValueError("КРИТИЧЕСКАЯ ОШИБКА: Не найдено ни одного GROQ_API_KEY!")
+@app.get("/")
+async def root():
+    return FileResponse("index.html")
 
-logger.info(f"Загружено {len(GROQ_API_KEYS)} API ключей Groq")
 
-rotation_state = {
-    "current_index": 0,
-    "switches_count": 0,
-    "keys_stats": [{"key": k[:4] + "***" + k[-4:] if len(k) > 8 else "***", "used": 0, "errors": 0} for k in GROQ_API_KEYS]
-}
-
-def get_current_client() -> Groq:
-    return Groq(api_key=GROQ_API_KEYS[rotation_state["current_index"]])
-
-def switch_to_next_key():
-    rotation_state["current_index"] = (rotation_state["current_index"] + 1) % len(GROQ_API_KEYS)
-    rotation_state["switches_count"] += 1
-    logger.info(f"Переключение на ключ #{rotation_state['current_index']}")
-
-def call_groq_with_rotation(messages, temperature=0.7, max_tokens=4000, timeout=60):
-    attempts = len(GROQ_API_KEYS)
-    last_error = None
-    for attempt in range(attempts):
-        current_idx = rotation_state["current_index"]
-        client = get_current_client()
-        try:
-            logger.info(f"Попытка #{attempt + 1}: ключ #{current_idx}")
-            completion = client.chat.completions.create(
-                model="qwen/qwen3.6-27b",
-                messages=messages,
-                temperature=temperature,
-                max_tokens=max_tokens,
-                timeout=timeout
-            )
-            rotation_state["keys_stats"][current_idx]["used"] += 1
-            logger.info(f"Успех на ключе #{current_idx}")
-            return completion.choices[0].message.content
-        except Exception as e:
-            error_str = str(e)
-            rotation_state["keys_stats"][current_idx]["errors"] += 1
-            last_error = e
-            if "rate_limit_exceeded" in error_str or "429" in error_str or "Request too large" in error_str:
-                logger.warning(f"Rate limit на ключе #{current_idx}. Переключаюсь...")
-                switch_to_next_key()
-                continue
-            else:
-                logger.error(f"Ошибка Groq: {e}")
-                raise e
-    raise Exception(f"Все ключи исчерпали лимит. Ошибка: {last_error}")
-
-SYSTEM_PROMPT = '''Ты — когнитивный AI-партнёр Monolog. Отвечай как мудрый партнёр, помогая видеть структуру и истинные цели.
-
-=== ПРИНЦИПЫ ===
-1. Направляй, а не ограничивай.
-2. Экологичная подача: сложную истину через микро-шаги.
-3. Адаптивная глубина: простой вопрос — краткий ответ, сложный — полный каркас.
-4. Фокус на главном: одно самое важное действие.
-5. Естественные эмодзи для акцентов в тексте.
-
-=== СТАДИИ ГОТОВНОСТИ ===
-1 — Гипотеза (идея для размышления)
-2 — Тестовый прототип (черновик)
-3 — Рабочая версия (прошла валидацию)
-4 — Финализировано (утверждено, стабильность > 0.9)
-
-=== РЕЖИМЫ ===
-[АЛГОРИТМ] — структурный анализ
-[УТОЧНЕНИЕ] — запрос фактов
-[РАЗВИЛКА] — варианты с последствиями
-[ЭКСПЕРИМЕНТ] — низкорисковое действие
-[СМЕНА ФОКУСА] — новая формулировка
-[МОЗГОВОЙ ШТУРМ] — генерация идей
-
-=== СТРУКТУРА ОТВЕТА ===
-[РЕЖИМ: ...]
-[Карта восприятия]
-- Суть: [1 предложение]
-- Контекст: [скрытые мотивы]
-[Решение]
-- Главный вывод: [1-2 предложения]
-- Следующий шаг: [одно действие]
-[Отчёт]
-- Ключевой инсайт: [1 предложение]
-- Стадия: [1/2/3/4]
-
-=== TRUST MATRIX ===
-Уровень 0 (аналитика): автономно
-Уровень 1 (артефакты): один клик
-Уровень 2 (техника): явное подтверждение
-Уровень 3 (коммуникации): явное разрешение
-Уровень 4 (финансы): двойное подтверждение
-
-=== ЗАЩИТА ОТ ДЕСТРУКТИВНЫХ ДЕЙСТВИЙ ===
-При деструктивном запросе (удаление данных, отправка без подтверждения и т.п.) естественно предложи безопасную альтернативу и передай в JSON флаг risk_intercept.
-
-=== JSON-ПРОТОКОЛ ===
-В самом конце ответа ОБЯЗАТЕЛЬНО выведи блок с метриками в формате JSON внутри тегов ```json и ```. Пример:
-```json
-{
-  "stability_index": 0.85,
-  "indicator_status": "success",
-  "cycles_completed": 2,
-  "collisions_resolved": "2/2",
-  "lots_balance": "+0.20",
-  "patterns_applied": ["декомпозиция"],
-  "cognitive_distortions": [],
-  "mind_scale": "strategic",
-  "human_contribution": 0.60,
-  "protocol_integrity": true,
-  "risk_intercept": {"active": false},
-  "required_skills": [],
-  "reasoning_trace": "Базовый анализ"
-}
-‘’’
-@app.post(”/api/chat”)
-async def chat_api(request: Request):
-data = await request.json()
-message = data.get(“message”, “”)
-history = data.get(“history”, [])
-logger.info(f”НАЧАЛО ОБРАБОТКИ: {message[:40]}…”)
-messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-for msg in history[-10:]:
-    messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
-messages.append({"role": "user", "content": message})
-
-raw_reply = ""
-try:
-    raw_reply = call_groq_with_rotation(messages=messages, temperature=0.7, max_tokens=4000, timeout=60)
-except Exception as e:
-    logger.error(f"Ошибка Groq: {e}")
-    raw_reply = f"Ошибка ИИ: {e}. Обратитесь к разработчику (el.xusyainova@ya.ru)."
-
-reply_text = raw_reply
-metrics = {
-    "stability_index": 0.5,
-    "indicator_status": "warning",
-    "cycles_completed": 1,
-    "collisions_resolved": "0/0",
-    "lots_balance": "0.00",
-    "patterns_applied": [],
-    "cognitive_distortions": [],
-    "mind_scale": "micro",
-    "human_contribution": 0.5,
-    "protocol_integrity": False,
-    "risk_intercept": {"active": False},
-    "required_skills": [],
-    "reasoning_trace": "Значения по умолчанию"
-}
-
-json_match = re.search(r'```json\s*([\s\S]*?)\s*```', raw_reply, re.IGNORECASE)
-if json_match:
-    try:
-        metrics = json.loads(json_match.group(1))
-        reply_text = raw_reply[:json_match.start()].strip()
-        logger.info("Метрики успешно распарсены")
-    except json.JSONDecodeError:
-        logger.warning("Не удалось распарсить JSON метрик")
-else:
-    logger.warning("Блок JSON метрик не найден")
-
-return JSONResponse(content={"reply_text": reply_text, "metrics": metrics})
-@app.get(”/admin/keys”)
-async def get_keys_stats():
-return JSONResponse(content={
-“total_keys”: len(GROQ_API_KEYS),
-“current_index”: rotation_state[“current_index”],
-“switches”: rotation_state[“switches_count”],
-“stats”: rotation_state[“keys_stats”]
-})
-@app.get(”/health”)
+@app.get("/health")
 async def health():
-return {“status”: “ok”}
-if name == “main”:
-import uvicorn
-uvicorn.run(app, host=“0.0.0.0”, port=int(os.environ.get(“PORT”, 7860)))
+    return {"status": "ok", "dev_keys": len(_DEV_KEYS), "byok": ALLOW_BYOK}
+
+
+@app.post("/chat")
+async def chat(request: Request):
+    body = await request.json()
+    user_message = (body.get("message") or "").strip()
+    history = body.get("history") or []
+    if not user_message:
+        raise HTTPException(status_code=400, detail="Пустое сообщение")
+
+    api_key, source = pick_key(request)
+    if not api_key:
+        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ Groq.")
+
+    log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)}")
+
+    # Этап 1: скрытый промпт
+    stage1_messages = [
+        {"role": "system", "content": SYSTEM_STAGE1},
+        {"role": "user", "content": user_message},
+    ]
+    hidden_prompt = await groq_call(stage1_messages, api_key)
+
+    # Этап 2: финальный ответ
+    stage2_messages = [{"role": "system", "content": SYSTEM_STAGE2}]
+    for h in history[-6:]:
+        if h.get("role") and h.get("content"):
+            stage2_messages.append({"role": h["role"], "content": h["content"]})
+    stage2_messages.append({
+        "role": "user",
+        "content": f"Запрос: {user_message}\n\nСкрытый рабочий промпт:\n{hidden_prompt}"
+    })
+    raw = await groq_call(stage2_messages, api_key)
+
+    parsed = extract_json(raw)
+    if parsed and "reply_text" in parsed:
+        metrics = {**BASE_METRICS, **(parsed.get("metrics") or {})}
+        return JSONResponse({
+            "reply_text": parsed["reply_text"],
+            "metrics": metrics,
+            "key_source": source,
+        })
+
+    # Fallback: модель не вернула JSON
+    return JSONResponse({
+        "reply_text": raw,
+        "metrics": {**BASE_METRICS, "protocol_integrity": False, "indicator_status": "warning"},
+        "key_source": source,
+    })
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
