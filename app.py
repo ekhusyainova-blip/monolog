@@ -1,5 +1,6 @@
 # app.py
-# Monolog — stateless-прокси к Groq. Один этап, отключён thinking, отрезан reasoning-блок.
+# Monolog — stateless-прокси к Groq. Один этап, отключён thinking,
+# паспорт проекта и профиль пользователя в метриках.
 
 import os
 import re
@@ -21,7 +22,7 @@ log = logging.getLogger("monolog")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "qwen/qwen3.6-27b"
-MAX_TOKENS = 2500
+MAX_TOKENS = 2000
 TIMEOUT = 60.0
 
 _DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
@@ -65,7 +66,29 @@ def pick_key(request: Request):
 
 
 BASE_METRICS = {
-    # ... существующие поля ...
+    "stability_index": 0.0,
+    "indicator_status": "success",
+    "cycles_completed": 0,
+    "collisions_resolved": "0/0",
+    "lots_balance": "+0.0",
+    "patterns_applied": [],
+    "cognitive_distortions": [],
+    "autonomy_levels": [],
+    "mind_scale": "micro",
+    "human_contribution": 0.0,
+    "value_choices": [],
+    "consequences_tree": None,
+    "dilemma_type": None,
+    "impact_map": None,
+    "reset_proposal": None,
+    "artifact_status": None,
+    "required_skills": [],
+    "risk_intercept": None,
+    "reasoning_trace": None,
+    "breakthrough_marker": False,
+    "cognitive_pulse": "slow",
+    "protocol_integrity": True,
+    "developer_mode": False,
     "passport": {
         "level": "micro",
         "title": None,
@@ -89,7 +112,6 @@ BASE_METRICS = {
 
 
 def strip_thinking(text: str) -> str:
-    """Убирает блоки рассуждений qwen3.6."""
     if not text:
         return text
     text = re.sub(r" thinking.*?", "", text, flags=re.DOTALL)
@@ -101,19 +123,16 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
     if not text:
         return None
     text = strip_thinking(text)
-
     try:
         return json.loads(text)
     except Exception:
         pass
-
     m = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
     if m:
         try:
             return json.loads(m.group(1))
         except Exception:
             pass
-
     start = text.find("{")
     while start != -1:
         depth = 0
@@ -132,6 +151,60 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Мержит входящие метрики с базовой схемой и накопленным состоянием.
+    passport и profile накапливаются: новые непустые значения перезаписывают,
+    пустые не затирают ранее накопленное.
+    """
+    carried = carried or {}
+    result = {**BASE_METRICS, **carried}
+
+    for k, v in (incoming or {}).items():
+        if k in ("passport", "profile"):
+            continue
+        if v is not None:
+            result[k] = v
+
+    # passport — мерж по полям
+    inc_pass = (incoming or {}).get("passport") or {}
+    car_pass = carried.get("passport") or {}
+    merged_pass = {**BASE_METRICS["passport"], **car_pass}
+    for k, v in inc_pass.items():
+        if k == "completion":
+            if isinstance(v, (int, float)) and v > (merged_pass.get("completion") or 0):
+                merged_pass["completion"] = v
+            continue
+        if k in ("values", "constraints", "stakeholders", "risks", "metrics"):
+            if isinstance(v, list) and v:
+                merged_pass[k] = v
+        else:
+            if v not in (None, "", [], {}):
+                merged_pass[k] = v
+    result["passport"] = merged_pass
+
+    # profile — мерж по полям
+    inc_prof = (incoming or {}).get("profile") or {}
+    car_prof = carried.get("profile") or {}
+    merged_prof = {**BASE_METRICS["profile"], **car_prof}
+
+    if isinstance(inc_prof.get("values"), dict) and inc_prof["values"]:
+        merged_prof["values"] = {**merged_prof.get("values", {}), **inc_prof["values"]}
+
+    for list_key in ("patterns", "distortions", "insights"):
+        old = list(merged_prof.get(list_key) or [])
+        new = inc_prof.get(list_key) or []
+        if isinstance(new, list):
+            seen = set(map(str, old))
+            for item in new:
+                if str(item) not in seen:
+                    old.append(item)
+                    seen.add(str(item))
+        merged_prof[list_key] = old
+    result["profile"] = merged_prof
+
+    return result
+
+
 SYSTEM_PROMPT = (
     "Ты — когнитивный AI-партнёр Monolog. "
     "Отвечай ТОЛЬКО валидным JSON, без пояснений и размышлений. "
@@ -139,7 +212,9 @@ SYSTEM_PROMPT = (
     "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
     "reply_text — Markdown-текст ответа на русском языке. БЕЗ ЭМОДЗИ. "
     "Используй Markdown: заголовки, списки, таблицы, код. "
-    "metrics — строго по схеме ниже, все поля обязательны.\n\n"
+    "metrics — строго по схеме ниже, все поля обязательны. "
+    "Блоки passport и profile заполняй постепенно, только тем, что знаешь из диалога. "
+    "Пустые поля — null или []. Не выдумывай.\n\n"
     f"=== СЛОЙ A ===\n{LAYER_A}\n\n"
     f"=== СЛОЙ B ===\n{LAYER_B}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
@@ -204,6 +279,7 @@ async def chat(request: Request):
     user_message = (body.get("message") or "").strip()
     history = body.get("history") or []
     attachments = body.get("attachments") or []
+    carried_metrics = body.get("carried_metrics") or {}
 
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
@@ -215,11 +291,10 @@ async def chat(request: Request):
     log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)} | files={len(attachments)}")
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    for h in history[-4:]:
+    for h in history:
         if h.get("role") and h.get("content"):
             messages.append({"role": h["role"], "content": h["content"]})
 
-    # Вложения добавляются как отдельный блок
     user_content = user_message or "Проанализируй вложения."
     if attachments:
         block = "\n\n=== ВЛОЖЕНИЯ ===\n"
@@ -233,7 +308,7 @@ async def chat(request: Request):
 
     parsed = extract_json(raw)
     if parsed and "reply_text" in parsed:
-        metrics = {**BASE_METRICS, **(parsed.get("metrics") or {})}
+        metrics = merge_metrics(parsed.get("metrics") or {}, carried_metrics)
         return JSONResponse({
             "reply_text": parsed["reply_text"],
             "metrics": metrics,
@@ -242,11 +317,15 @@ async def chat(request: Request):
 
     log.warning(f"JSON parse failed. Raw (first 300): {raw[:300]}")
     cleaned = strip_thinking(raw)
+    fallback_metrics = merge_metrics({}, carried_metrics)
+    fallback_metrics["protocol_integrity"] = False
+    fallback_metrics["indicator_status"] = "warning"
     return JSONResponse({
         "reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.",
-        "metrics": {**BASE_METRICS, "protocol_integrity": False, "indicator_status": "warning"},
+        "metrics": fallback_metrics,
         "key_source": source,
     })
+
 
 if __name__ == "__main__":
     import uvicorn
