@@ -1,5 +1,6 @@
 import os
 import json
+import re
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse
 from supabase import create_client, Client
@@ -22,7 +23,7 @@ if not all([SUPABASE_URL, SUPABASE_KEY, GROQ_API_KEY]):
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 groq_client = Groq(api_key=GROQ_API_KEY)
 
-# === 2. ЯДРО ПРОМПТА (ЖЕСТКО ОПТИМИЗИРОВАНО ПОД ЛИМИТ 1000 ТОКЕНОВ) ===
+# === 2. ЯДРО ПРОМПТА ===
 SYSTEM_PROMPT = """
 Ты — когнитивный ИИ-агент. 
 КРИТИЧЕСКОЕ ОГРАНИЧЕНИЕ: Твой ОБЩИЙ ответ (включая блок <think>) НЕ ДОЛЖЕН превышать 800 токенов. Будь предельно лаконичен.
@@ -40,7 +41,7 @@ SYSTEM_PROMPT = """
 4. Ближайший шаг: <1 конкретное действие>
 """
 
-# === 3. ВЕБ-ИНТЕРФЕЙС (с улучшенной обработкой долгих ответов) ===
+# === 3. ВЕБ-ИНТЕРФЕЙС (ИСПРАВЛЕННАЯ МОБИЛЬНАЯ ВЕРСИЯ) ===
 @app.get("/", response_class=HTMLResponse)
 async def get_chat():
     return """
@@ -48,29 +49,113 @@ async def get_chat():
     <html>
     <head>
         <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
         <title>Когнитивный Агент</title>
         <style>
-            body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f4f4f9; margin: 0; padding: 15px; display: flex; flex-direction: column; height: 100vh; box-sizing: border-box; }
-            #chat-box { flex: 1; overflow-y: auto; background: white; border-radius: 16px; padding: 15px; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-            .message { margin-bottom: 15px; padding: 12px 16px; border-radius: 18px; max-width: 85%; line-height: 1.5; white-space: pre-wrap; word-wrap: break-word; font-size: 15px; }
-            .user { background: #007AFF; color: white; align-self: flex-end; margin-left: auto; border-bottom-right-radius: 4px; }
-            .assistant { background: #E9E9EB; color: #1c1c1e; align-self: flex-start; border-bottom-left-radius: 4px; }
-            .input-area { display: flex; gap: 10px; }
-            input { flex: 1; padding: 14px; border: 1px solid #d1d1d6; border-radius: 25px; font-size: 16px; outline: none; background: white; }
-            button { padding: 14px 20px; background: #007AFF; color: white; border: none; border-radius: 25px; font-size: 16px; font-weight: 600; cursor: pointer; }
+            * { box-sizing: border-box; margin: 0; padding: 0; }
+            html, body { 
+                height: 100%; 
+                overflow: hidden;
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+                background: #f4f4f9; 
+            }
+            body { 
+                display: flex; 
+                flex-direction: column; 
+                padding: 15px;
+                padding-bottom: calc(15px + env(safe-area-inset-bottom));
+            }
+            #chat-box { 
+                flex: 1; 
+                overflow-y: auto; 
+                background: white; 
+                border-radius: 16px; 
+                padding: 15px; 
+                margin-bottom: 15px; 
+                box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+                -webkit-overflow-scrolling: touch;
+            }
+            .message { 
+                margin-bottom: 15px; 
+                padding: 12px 16px; 
+                border-radius: 18px; 
+                max-width: 85%; 
+                line-height: 1.5; 
+                word-wrap: break-word; 
+                font-size: 15px; 
+                white-space: pre-wrap;
+            }
+            .user { 
+                background: #007AFF; 
+                color: white; 
+                margin-left: auto; 
+                border-bottom-right-radius: 4px; 
+            }
+            .assistant { 
+                background: #E9E9EB; 
+                color: #1c1c1e; 
+                border-bottom-left-radius: 4px; 
+            }
+            .input-area { 
+                display: flex; 
+                gap: 10px; 
+                flex-shrink: 0;
+            }
+            input { 
+                flex: 1; 
+                padding: 14px; 
+                border: 1px solid #d1d1d6; 
+                border-radius: 25px; 
+                font-size: 16px; 
+                outline: none; 
+                background: white; 
+                min-width: 0;
+            }
+            button { 
+                padding: 14px 20px; 
+                background: #007AFF; 
+                color: white; 
+                border: none; 
+                border-radius: 25px; 
+                font-size: 16px; 
+                font-weight: 600; 
+                cursor: pointer; 
+                flex-shrink: 0;
+            }
             button:disabled { background: #a1a1aa; }
-            #loading { display: none; text-align: center; color: #8e8e93; margin-bottom: 10px; font-size: 14px; }
+            #loading { 
+                display: none; 
+                text-align: center; 
+                color: #8e8e93; 
+                margin-bottom: 10px; 
+                font-size: 14px; 
+            }
         </style>
     </head>
     <body>
         <div id="chat-box"></div>
-        <div id="loading">Агент анализирует запрос (это может занять до 30 сек)...</div>
+        <div id="loading">Агент анализирует запрос...</div>
         <div class="input-area">
             <input type="text" id="user-input" placeholder="Введите задачу..." autocomplete="off">
             <button onclick="sendMessage()" id="send-btn">➤</button>
         </div>
         <script>
+            function formatResponse(text) {
+                // Удаляем блок <think>...</think> целиком
+                text = text.replace(/<think>[\\s\\S]*?<\\/think>/gi, '');
+                
+                // Удаляем теги <br> и заменяем на переносы строк
+                text = text.replace(/<br\\s*\\/?>/gi, '\\n');
+                
+                // Экранируем HTML-теги для безопасного отображения
+                text = text.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                
+                // Заменяем переносы строк на <br> для HTML
+                text = text.replace(/\\n/g, '<br>');
+                
+                return text.trim();
+            }
+
             async function sendMessage() {
                 const input = document.getElementById('user-input');
                 const btn = document.getElementById('send-btn');
@@ -87,9 +172,8 @@ async def get_chat():
                 chatBox.scrollTop = chatBox.scrollHeight;
 
                 try {
-                    // Увеличиваем таймаут для медленных ответов на бесплатном Render
                     const controller = new AbortController();
-                    const timeoutId = setTimeout(() => controller.abort(), 45000); // 45 секунд
+                    const timeoutId = setTimeout(() => controller.abort(), 45000);
 
                     const response = await fetch('/api/chat', {
                         method: 'POST',
@@ -105,13 +189,12 @@ async def get_chat():
                     }
                     
                     const data = await response.json();
-                    // Заменяем переносы строк на <br> для корректного отображения
-                    const formattedReply = data.reply.replace(/\\n/g, '<br>').replace(/</g, '&lt;');
+                    const formattedReply = formatResponse(data.reply);
                     chatBox.innerHTML += `<div class="message assistant">${formattedReply}</div>`;
                 } catch (error) {
                     let errorMsg = "Ошибка сети. Попробуйте еще раз.";
                     if (error.name === 'AbortError') {
-                        errorMsg = "Превышено время ожидания ответа. Попробуйте переформулировать запрос короче.";
+                        errorMsg = "Превышено время ожидания. Попробуйте переформулировать запрос короче.";
                     }
                     chatBox.innerHTML += `<div class="message assistant" style="color:red; background:#fee2e2;">${errorMsg}</div>`;
                 } finally {
@@ -122,6 +205,7 @@ async def get_chat():
                     chatBox.scrollTop = chatBox.scrollHeight;
                 }
             }
+            
             document.getElementById('user-input').addEventListener('keypress', function (e) {
                 if (e.key === 'Enter') sendMessage();
             });
@@ -160,8 +244,8 @@ async def chat_api(request: Request):
                 {"role": "user", "content": message}
             ],
             temperature=0.7,
-            max_tokens=900,  # <-- Безопасный лимит, чтобы не превысить 1000 токенов Groq
-            timeout=30       # <-- Защита от зависания Render
+            max_tokens=900,
+            timeout=30
         )
         reply = completion.choices[0].message.content
         logger.info("✅ Ответ от Groq успешно получен")
