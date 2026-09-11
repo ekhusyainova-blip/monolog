@@ -95,9 +95,7 @@ def strip_thinking(text: str) -> str:
     """Убирает блоки рассуждений qwen3.6."""
     if not text:
         return text
-    #  thinking...
     text = re.sub(r" thinking.*?", "", text, flags=re.DOTALL)
-    # <reasoning>...</reasoning> (на всякий случай)
     text = re.sub(r"<reasoning>.*?</reasoning>", "", text, flags=re.DOTALL)
     return text.strip()
 
@@ -119,7 +117,6 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
         except Exception:
             pass
 
-    # Ищем сбалансированный { ... }
     start = text.find("{")
     while start != -1:
         depth = 0
@@ -234,7 +231,6 @@ async def chat(request: Request):
             "key_source": source,
         })
 
-    # Fallback: JSON не найден — отдаём очищенный текст
     log.warning(f"JSON parse failed. Raw (first 300): {raw[:300]}")
     cleaned = strip_thinking(raw)
     return JSONResponse({
