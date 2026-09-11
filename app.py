@@ -1,6 +1,7 @@
 # app.py
-# Monolog — stateless-прокси к Groq. Один этап, отключён thinking,
-# паспорт проекта и профиль пользователя в метриках.
+# Monolog — stateless-прокси к Groq.
+# Слой B НЕ отправляется в LLM. История НЕ отправляется.
+# Модель работает с текущим запросом + carried_metrics.
 
 import os
 import re
@@ -39,7 +40,8 @@ def _load(path: str) -> str:
         return ""
 
 LAYER_A = _load("prompts/layer_a.txt")
-LAYER_B = _load("prompts/layer_b.txt")
+# LAYER_B сознательно НЕ подгружается в промпт.
+# Файл prompts/layer_b.txt остаётся как документация методологии.
 
 
 def mask_key(key: str) -> str:
@@ -152,10 +154,6 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
 
 
 def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
-    """Мержит входящие метрики с базовой схемой и накопленным состоянием.
-    passport и profile накапливаются: новые непустые значения перезаписывают,
-    пустые не затирают ранее накопленное.
-    """
     carried = carried or {}
     result = {**BASE_METRICS, **carried}
 
@@ -165,7 +163,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         if v is not None:
             result[k] = v
 
-    # passport — мерж по полям
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -182,7 +179,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
-    # profile — мерж по полям
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
@@ -211,12 +207,10 @@ SYSTEM_PROMPT = (
     "Ничего до { и ничего после }. "
     "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
     "reply_text — Markdown-текст ответа на русском языке. БЕЗ ЭМОДЗИ. "
-    "Используй Markdown: заголовки, списки, таблицы, код. "
-    "metrics — строго по схеме ниже, все поля обязательны. "
-    "Блоки passport и profile заполняй постепенно, только тем, что знаешь из диалога. "
+    "metrics — строго по схеме ниже. "
+    "Блоки passport и profile заполняй постепенно, только тем, что знаешь. "
     "Пустые поля — null или []. Не выдумывай.\n\n"
-    f"=== СЛОЙ A ===\n{LAYER_A}\n\n"
-    f"=== СЛОЙ B ===\n{LAYER_B}\n\n"
+    f"=== ИНСТРУКЦИЯ ===\n{LAYER_A}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
 )
 
@@ -277,9 +271,9 @@ async def health():
 async def chat(request: Request):
     body = await request.json()
     user_message = (body.get("message") or "").strip()
-    history = body.get("history") or []
     attachments = body.get("attachments") or []
     carried_metrics = body.get("carried_metrics") or {}
+    # history сознательно НЕ читается.
 
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
@@ -291,9 +285,6 @@ async def chat(request: Request):
     log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)} | files={len(attachments)}")
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-    for h in history:
-        if h.get("role") and h.get("content"):
-            messages.append({"role": h["role"], "content": h["content"]})
 
     user_content = user_message or "Проанализируй вложения."
     if attachments:
