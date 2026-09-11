@@ -65,29 +65,26 @@ def pick_key(request: Request):
 
 
 BASE_METRICS = {
-    "stability_index": 0.0,
-    "indicator_status": "success",
-    "cycles_completed": 0,
-    "collisions_resolved": "0/0",
-    "lots_balance": "+0.0",
-    "patterns_applied": [],
-    "cognitive_distortions": [],
-    "autonomy_levels": [],
-    "mind_scale": "micro",
-    "human_contribution": 0.0,
-    "value_choices": [],
-    "consequences_tree": None,
-    "dilemma_type": None,
-    "impact_map": None,
-    "reset_proposal": None,
-    "artifact_status": None,
-    "required_skills": [],
-    "risk_intercept": None,
-    "reasoning_trace": None,
-    "breakthrough_marker": False,
-    "cognitive_pulse": "slow",
-    "protocol_integrity": True,
-    "developer_mode": False,
+    # ... существующие поля ...
+    "passport": {
+        "level": "micro",
+        "title": None,
+        "goal": None,
+        "result": None,
+        "mission": None,
+        "values": [],
+        "constraints": [],
+        "stakeholders": [],
+        "risks": [],
+        "metrics": [],
+        "completion": 0,
+    },
+    "profile": {
+        "values": {},
+        "patterns": [],
+        "distortions": [],
+        "insights": [],
+    },
 }
 
 
