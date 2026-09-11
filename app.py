@@ -119,3 +119,129 @@ SYSTEM_PROMPT = """Ты — когнитивный AI-партнёр Monolog. О
   "human_contribution": 0.60,
   "protocol_integrity": true
 }
+=== 4. API: ПОЛУЧЕНИЕ ИЛИ СОЗДАНИЕ ПРОЕКТА ===
+@app.get(”/api/project”)
+async def get_or_create_project(user_id: str = “anonymous_test”):
+# Ищем активный проект пользователя
+result = supabase.table(“projects”).select(”*”).eq(“user_id”, user_id).eq(“is_archived”, False).order(“created_at”, desc=True).limit(1).execute()
+if result.data:
+    return JSONResponse(content={"project": result.data[0]})
+
+# Если нет, создаём новый
+new_project = {
+    "user_id": user_id,
+    "name": "Новый проект",
+    "description": "Автоматически созданный проект"
+}
+insert_result = supabase.table("projects").insert(new_project).execute()
+return JSONResponse(content={"project": insert_result.data[0], "created": True})
+=== 5. API: ОБРАБОТКА СООБЩЕНИЯ ===
+@app.post(”/api/chat”)
+async def chat_api(request: Request):
+data = await request.json()
+message = data.get(“message”, “”)
+project_id = data.get(“project_id”, None)
+user_id = data.get(“user_id”, “anonymous_test”)
+logger.info(f"🚀 НАЧАЛО ОБРАБОТКИ: {message[:40]}...")
+
+# Если project_id не передан, получаем или создаём проект
+if not project_id:
+    proj_res = supabase.table("projects").select("id").eq("user_id", user_id).eq("is_archived", False).order("created_at", desc=True).limit(1).execute()
+    if proj_res.data:
+        project_id = proj_res.data[0]["id"]
+    else:
+        new_proj = supabase.table("projects").insert({"user_id": user_id, "name": "Новый проект"}).execute()
+        project_id = new_proj.data[0]["id"]
+
+# Шаг 1: Сохранение запроса пользователя
+try:
+    supabase.table("chats").insert({
+        "project_id": project_id,
+        "user_id": user_id,
+        "role": "user",
+        "content": message
+    }).execute()
+    logger.info("✅ Запрос пользователя сохранён в Supabase")
+except Exception as e:
+    logger.error(f"❌ Ошибка Supabase (user): {e}")
+
+# Шаг 2: Генерация ответа через Groq
+raw_reply = ""
+try:
+    logger.info("⏳ Запрос к модели qwen...")
+    raw_reply = call_groq_with_rotation(
+        messages=[
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": message}
+        ],
+        temperature=0.7,
+        max_tokens=4000,
+        timeout=60
+    )
+    logger.info("✅ Ответ от Groq получен")
+except Exception as e:
+    logger.error(f"❌ Ошибка Groq: {e}")
+    raw_reply = f"⚠️ Ошибка ИИ: {e}. Обратитесь к разработчику (el.xusyainova@ya.ru)."
+
+# Шаг 3: Парсинг текста и метрик
+reply_text = raw_reply
+metrics = {
+    "stability_index": 0.5,
+    "indicator_status": "warning",
+    "cycles_completed": 1,
+    "collisions_resolved": "0/0",
+    "lots_balance": "0.00",
+    "patterns_applied": [],
+    "cognitive_distortions": [],
+    "mind_scale": "micro",
+    "human_contribution": 0.5,
+    "protocol_integrity": False
+}
+
+# Ищем блок ```json ... ``` в конце ответа
+json_match = re.search(r'```json\s*([\s\S]*?)\s*```', raw_reply, re.IGNORECASE)
+if json_match:
+    try:
+        metrics = json.loads(json_match.group(1))
+        # Удаляем блок JSON из текста ответа, чтобы пользователь его не видел
+        reply_text = raw_reply[:json_match.start()].strip()
+        logger.info("✅ Метрики успешно распарсены из ответа модели")
+    except json.JSONDecodeError:
+        logger.warning("⚠️ Не удалось распарсить JSON метрик, используются значения по умолчанию")
+else:
+    # Если модель не вывела JSON, пытаемся найти <metrics>...</metrics> или просто оставляем дефолт
+    logger.warning("⚠️ Блок JSON метрик не найден в ответе модели")
+
+# Шаг 4: Сохранение ответа ассистента с метриками
+try:
+    supabase.table("chats").insert({
+        "project_id": project_id,
+        "user_id": user_id,
+        "role": "assistant",
+        "content": reply_text,
+        "metrics": metrics  # Сохраняем объект метрик в колонку JSONB
+    }).execute()
+    logger.info("✅ Ответ ассистента сохранён в Supabase")
+except Exception as e:
+    logger.error(f"❌ Ошибка Supabase (assistant): {e}")
+
+return JSONResponse(content={
+    "reply_text": reply_text,
+    "metrics": metrics,
+    "project_id": project_id
+})
+=== 6. АДМИН-ЭНДПОИНТ (статистика ключей) ===
+@app.get(”/admin/keys”)
+async def get_keys_stats():
+return JSONResponse(
+content={
+“всего_ключей”: len(GROQ_API_KEYS),
+“активный_ключ_индекс”: rotation_state[“current_index”],
+“всего_переключений”: rotation_state[“switches_count”],
+“статистика_по_ключам”: rotation_state[“keys_stats”]
+},
+headers={“Content-Type”: “application/json; charset=utf-8”}
+)
+if name == “main”:
+import uvicorn
+uvicorn.run(app, host=“0.0.0.0”, port=int(os.environ.get(“PORT”, 7860)))
