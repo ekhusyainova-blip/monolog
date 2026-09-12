@@ -701,6 +701,19 @@ async def chat(request: Request):
         "model_used": model,
     })
 
+# Страховка: если есть artifacts, но нет artifact_status
+if not metrics.get("artifact_status"):
+    arts = metrics.get("artifacts") or []
+    if arts and isinstance(arts, list):
+        first = arts[0]
+        if isinstance(first, dict):
+            metrics["artifact_status"] = {
+                "type": first.get("type", "document"),
+                "title": first.get("name", "Документ"),
+                "ready": True,
+                "suggested_tags": first.get("tags", []),
+                "format": first.get("format", "markdown"),
+            }
 
 @app.post("/export/docx")
 async def export_docx(request: Request):
