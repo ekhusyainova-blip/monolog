@@ -3264,6 +3264,14 @@
 
   function openEditor(context) {
     state.editorContext = context || {};
+    // Применяем edit, если пришёл
+    if (context.edit && context.edit.target && context.edit.new_text) {
+      // Показываем уведомление о применённой правке
+      setTimeout(function () {
+        const status = document.getElementById("editorStatus");
+        if (status) status.textContent = "Применена замена: " + context.edit.target;
+      }, 300);
+    }
     const name = context.name || "Документ";
     const body = context.body || "";
     const tags = context.tags || [];
