@@ -52,10 +52,8 @@
     --particle-color: rgba(168, 181, 255, 0.28);
   }
 
-  html[data-mode="strategist"] { --particle-direction: -1; }
-  html[data-mode="analyst"] { --particle-direction: 1; }
-  html[data-mode="strategist"] { --particle-color: rgba(74, 108, 247, 0.22); }
-  html[data-mode="analyst"] { --particle-color: rgba(224, 122, 95, 0.22); }
+  html[data-mode="strategist"] { --particle-direction: -1; --particle-color: rgba(74, 108, 247, 0.22); }
+  html[data-mode="analyst"] { --particle-direction: 1; --particle-color: rgba(224, 122, 95, 0.22); }
   html[data-theme="dark"][data-mode="strategist"] { --particle-color: rgba(168, 181, 255, 0.28); }
   html[data-theme="dark"][data-mode="analyst"] { --particle-color: rgba(240, 168, 150, 0.24); }
 
@@ -208,7 +206,6 @@
   }
   .icon-btn .badge.hidden { display: none; }
 
-  /* Меню — bottom sheet */
   .menu-sheet {
     position: fixed; left: 0; right: 0; bottom: 0; max-height: 88dvh;
     background: var(--surface); border-radius: 20px 20px 0 0;
@@ -227,139 +224,82 @@
     padding-bottom: 12px;
   }
   .menu-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .menu-section.hidden { display: none; }
   .menu-section-title {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    font-weight: 600;
-    margin-bottom: 8px;
+    font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+    font-weight: 600; margin-bottom: 8px;
   }
   .menu-item {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--surface-2);
-    border-radius: 12px;
-    cursor: pointer;
-    border: none;
-    width: 100%;
-    text-align: left;
-    font-family: inherit;
-    color: var(--text);
-    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 12px;
+    padding: 12px 14px; background: var(--surface-2);
+    border-radius: 12px; cursor: pointer; border: none;
+    width: 100%; text-align: left; font-family: inherit;
+    color: var(--text); margin-bottom: 6px;
     transition: transform 0.15s, border-color 0.15s;
     border: 1px solid var(--border-soft);
   }
   .menu-item:last-child { margin-bottom: 0; }
   .menu-item:hover { border-color: var(--border); }
   .menu-item:active { transform: scale(0.98); }
+  .menu-item.hidden { display: none; }
   .menu-item svg { width: 20px; height: 20px; color: var(--accent); flex-shrink: 0; }
   .menu-item .info { flex: 1; min-width: 0; }
   .menu-item .name { font-size: 14px; font-weight: 500; }
   .menu-item .desc {
-    font-size: 12px;
-    color: var(--muted);
-    margin-top: 2px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    font-size: 12px; color: var(--muted); margin-top: 2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   }
   .menu-item .arrow { color: var(--muted); flex-shrink: 0; }
   .menu-item .badge-mini {
-    font-size: 10.5px;
-    background: var(--accent-soft);
-    color: var(--accent);
-    padding: 2px 7px;
-    border-radius: 999px;
-    font-weight: 600;
-    flex-shrink: 0;
+    font-size: 10.5px; background: var(--accent-soft); color: var(--accent);
+    padding: 2px 7px; border-radius: 999px; font-weight: 600; flex-shrink: 0;
   }
   .menu-item .badge-mini.warning { background: var(--warning-soft); color: var(--warning); }
   .menu-item .badge-mini.critical { background: var(--critical-soft); color: var(--critical); }
-  .menu-item.hidden { display: none; }
 
   /* Метрики — карточки */
   .metric-card {
-    background: var(--surface-2);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    padding: 14px 16px;
-    margin-bottom: 10px;
-    cursor: pointer;
-    transition: border-color 0.15s;
+    background: var(--surface-2); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    cursor: pointer; transition: border-color 0.15s;
   }
   .metric-card:hover { border-color: var(--border); }
   .metric-card-head {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; margin-bottom: 8px;
   }
-  .metric-card-label {
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text);
-  }
+  .metric-card-label { font-size: 13px; font-weight: 500; color: var(--text); }
   .metric-card-value {
-    font-size: 16px;
-    font-weight: 600;
-    color: var(--accent);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
+    font-size: 16px; font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
   }
   .metric-card-value.warning { color: var(--warning); }
   .metric-card-value.critical { color: var(--critical); }
   .metric-card-value.success { color: var(--success); }
   .metric-card-bar {
-    height: 5px;
-    border-radius: 3px;
-    background: var(--border);
-    overflow: hidden;
-    margin-bottom: 8px;
+    height: 5px; border-radius: 3px; background: var(--border);
+    overflow: hidden; margin-bottom: 8px;
   }
   .metric-card-bar-fill {
-    height: 100%;
-    background: var(--accent);
-    transition: width 0.4s;
+    height: 100%; background: var(--accent); transition: width 0.4s;
   }
   .metric-card-bar-fill.warning { background: var(--warning); }
   .metric-card-bar-fill.critical { background: var(--critical); }
-  .metric-card-desc {
-    font-size: 12.5px;
-    color: var(--muted);
-    line-height: 1.5;
-  }
+  .metric-card-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
   .metric-card-expand {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s;
-    margin-top: 0;
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.3s; margin-top: 0;
   }
   .metric-card.open .metric-card-expand {
-    max-height: 400px;
-    margin-top: 10px;
-    padding-top: 10px;
+    max-height: 600px; margin-top: 10px; padding-top: 10px;
     border-top: 1px dashed var(--border);
   }
   .metric-card-expand p {
-    font-size: 12.5px;
-    line-height: 1.55;
-    color: var(--muted);
-    margin-bottom: 6px;
+    font-size: 12.5px; line-height: 1.55;
+    color: var(--muted); margin-bottom: 6px;
   }
-  .metric-card-expand p strong {
-    color: var(--text);
-    font-weight: 600;
-  }
-  .metric-card-hint {
-    font-size: 11px;
-    color: var(--accent);
-    font-weight: 500;
-    margin-top: 6px;
-  }
+  .metric-card-expand p strong { color: var(--text); font-weight: 600; }
 
   /* Чат */
   .chat {
@@ -368,21 +308,16 @@
     padding: 8px 0 16px; scroll-behavior: smooth;
   }
   .chat::-webkit-scrollbar { width: 0; }
-
   .row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .row.user { align-items: flex-end; }
-
   .row.user .bubble {
-    background: var(--accent-soft);
-    padding: 10px 14px;
+    background: var(--accent-soft); padding: 10px 14px;
     border-radius: 16px; border-top-right-radius: 4px;
-    max-width: 78%;
-    font-size: 14px; line-height: 1.5;
+    max-width: 78%; font-size: 14px; line-height: 1.5;
     word-wrap: break-word;
   }
   .row.agent .bubble {
-    background: transparent; padding: 0;
-    width: 100%;
+    background: transparent; padding: 0; width: 100%;
     font-size: 14px; line-height: 1.55;
     word-wrap: break-word; overflow-wrap: break-word;
     position: relative;
@@ -423,16 +358,13 @@
   }
   .bubble hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
   .bubble code {
-    background: var(--surface-2);
-    padding: 1px 5px; border-radius: 5px;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    font-size: 0.88em;
+    background: var(--surface-2); padding: 1px 5px; border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, monospace; font-size: 0.88em;
   }
   .bubble pre {
     background: #0A0B0D; color: #E8EAED;
-    padding: 12px; padding-top: 34px;
-    border-radius: 12px; overflow-x: auto;
-    margin: 10px 0; position: relative;
+    padding: 12px; padding-top: 34px; border-radius: 12px;
+    overflow-x: auto; margin: 10px 0; position: relative;
     font-size: 11.5px; line-height: 1.5;
   }
   html[data-theme="dark"] .bubble pre { background: #06070A; }
@@ -474,45 +406,27 @@
 
   /* Демо-диалог */
   .demo-block {
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 16px;
-    padding: 18px;
-    margin-top: 16px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 16px; padding: 18px; margin-top: 16px;
     box-shadow: var(--shadow);
   }
   .demo-title {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--text);
+    font-size: 13px; font-weight: 600; color: var(--text);
     margin-bottom: 12px;
   }
   .demo-suggestion {
-    display: block;
-    padding: 12px 14px;
-    background: var(--surface-2);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px;
-    margin-bottom: 8px;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 13.5px;
-    color: var(--text);
-    text-align: left;
-    width: 100%;
+    display: block; padding: 12px 14px;
+    background: var(--surface-2); border: 1px solid var(--border-soft);
+    border-radius: 12px; margin-bottom: 8px;
+    cursor: pointer; font-family: inherit; font-size: 13.5px;
+    color: var(--text); text-align: left; width: 100%;
     transition: transform 0.15s, border-color 0.15s, background 0.15s;
   }
   .demo-suggestion:last-child { margin-bottom: 0; }
-  .demo-suggestion:hover {
-    border-color: var(--accent);
-    background: var(--accent-soft);
-  }
+  .demo-suggestion:hover { border-color: var(--accent); background: var(--accent-soft); }
   .demo-suggestion:active { transform: scale(0.98); }
   .demo-suggestion .label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 500;
+    display: flex; align-items: center; gap: 8px; font-weight: 500;
   }
   .demo-suggestion .label svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
 
@@ -526,11 +440,9 @@
     font-weight: 600; margin-bottom: 2px;
   }
   .decision-card {
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px; padding: 12px 14px;
-    cursor: pointer; text-align: left;
-    font-family: inherit; color: var(--text);
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 12px 14px; cursor: pointer;
+    text-align: left; font-family: inherit; color: var(--text);
     width: 100%; box-shadow: var(--shadow);
     transition: transform 0.15s, border-color 0.15s, background 0.15s;
   }
@@ -557,8 +469,7 @@
   }
   .impulse-notice {
     display: inline-flex; align-items: center; gap: 6px;
-    padding: 5px 10px;
-    background: var(--warning-soft);
+    padding: 5px 10px; background: var(--warning-soft);
     border: 1px solid rgba(198, 139, 63, 0.28);
     border-radius: 8px;
     font-family: ui-monospace, SFMono-Regular, monospace;
@@ -581,16 +492,12 @@
     font-size: 11.5px; color: var(--text);
     line-height: 1.55; width: 100%;
   }
-  .impulse-notice.open + .impulse-detail {
-    max-height: 400px; margin-top: 0;
-  }
+  .impulse-notice.open + .impulse-detail { max-height: 400px; margin-top: 0; }
   .impulse-detail-inner {
-    padding: 10px 12px;
-    background: var(--surface-2);
+    padding: 10px 12px; background: var(--surface-2);
     border: 1px solid rgba(198, 139, 63, 0.2);
     border-top: none;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px; border-bottom-right-radius: 8px;
   }
   .impulse-row { display: block; margin: 3px 0; }
   .impulse-row strong {
@@ -672,14 +579,13 @@
   }
   .input-inner {
     display: flex; gap: 4px; align-items: flex-end;
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
+    background: transparent;
+    border: none;
     border-radius: 22px;
-    padding: 5px 5px 5px 8px;
-    box-shadow: var(--shadow);
-    transition: border-color 0.2s;
+    padding: 5px 0;
+    transition: none;
+    box-shadow: none;
   }
-  .input-inner:focus-within { border-color: var(--border); }
   .attach-btn {
     width: 32px; height: 32px; border-radius: 50%; border: none;
     background: transparent; color: var(--muted); cursor: pointer;
@@ -692,19 +598,22 @@
   .attach-btn svg { width: 17px; height: 17px; stroke-width: 1.8; }
   textarea {
     flex: 1; border: none; outline: none; resize: none;
-    background: transparent; padding: 7px 4px;
+    background: var(--surface-2); padding: 10px 14px;
     font-family: inherit; font-size: 14px; line-height: 1.4;
-    color: var(--text); max-height: 88px; min-height: 24px;
+    color: var(--text); max-height: 88px; min-height: 40px;
     overflow-y: hidden; word-wrap: break-word;
+    border-radius: 20px;
+    transition: background 0.2s;
   }
-  textarea::placeholder { color: var(--muted); }
+  textarea:focus { background: var(--surface); box-shadow: var(--shadow); }
+  textarea::placeholder { color: var(--muted); transition: opacity 0.3s; }
   textarea.grows { overflow-y: auto; }
   .send-btn {
     flex-shrink: 0; width: 32px; height: 32px;
     border-radius: 50%; border: none;
     background: var(--accent); color: var(--bg); cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    align-self: flex-end; margin-bottom: 1px;
+    align-self: flex-end; margin-bottom: 5px;
     transition: transform 0.15s, opacity 0.2s;
   }
   .send-btn:active { transform: scale(0.92); }
@@ -745,9 +654,8 @@
   .node-dot { fill: var(--muted); }
   .node-dot.active { fill: var(--accent); }
   .node-label {
-    font-size: 8px; fill: var(--muted);
-    font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-size: 8px; fill: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
   }
 
   /* Профиль */
@@ -813,17 +721,12 @@
   .skill-name { color: var(--text); }
   .skill-bar {
     flex: 1; height: 4px; border-radius: 2px;
-    background: var(--border); overflow: hidden;
-    max-width: 100px;
+    background: var(--border); overflow: hidden; max-width: 100px;
   }
-  .skill-fill {
-    height: 100%; background: var(--accent); border-radius: 2px;
-    transition: width 0.4s;
-  }
+  .skill-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
   .skill-percent {
     font-size: 11.5px; color: var(--muted);
-    font-variant-numeric: tabular-nums;
-    min-width: 32px; text-align: right;
+    font-variant-numeric: tabular-nums; min-width: 32px; text-align: right;
   }
 
   .somatic-item {
@@ -875,27 +778,22 @@
   .doc-editor-field input,
   .doc-editor-field textarea {
     width: 100%; padding: 11px 13px; border-radius: 10px;
-    border: 1px solid var(--border-soft);
-    font-family: inherit; font-size: 14px;
-    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border-soft); font-family: inherit;
+    font-size: 14px; background: var(--surface-2); color: var(--text);
     transition: border-color 0.2s, background 0.2s;
   }
   .doc-editor-field textarea {
-    min-height: 240px; resize: vertical; line-height: 1.6;
-    font-size: 13.5px;
+    min-height: 240px; resize: vertical; line-height: 1.6; font-size: 13.5px;
   }
   .doc-editor-field input:focus,
   .doc-editor-field textarea:focus {
     outline: none; border-color: var(--accent); background: var(--surface);
   }
-  .doc-editor-actions {
-    display: flex; gap: 8px; flex-wrap: wrap;
-  }
+  .doc-editor-actions { display: flex; gap: 8px; flex-wrap: wrap; }
   .doc-editor-actions button {
-    flex: 1; min-width: 110px;
-    padding: 12px; border-radius: 11px; border: none;
-    cursor: pointer; font-weight: 500; font-size: 13.5px;
-    font-family: inherit;
+    flex: 1; min-width: 110px; padding: 12px;
+    border-radius: 11px; border: none; cursor: pointer;
+    font-weight: 500; font-size: 13.5px; font-family: inherit;
     transition: transform 0.15s, background 0.15s;
     display: inline-flex; align-items: center; justify-content: center; gap: 6px;
   }
@@ -945,9 +843,7 @@
     line-height: 1.5; overflow: hidden;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
   }
-  .blog-post-tags {
-    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
-  }
+  .blog-post-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
   .blog-post-tag {
     font-size: 10.5px; color: var(--accent);
     background: var(--accent-soft);
@@ -965,7 +861,8 @@
   }
   .blog-view-body { font-size: 14px; line-height: 1.65; }
   .blog-view-body h1, .blog-view-body h2, .blog-view-body h3 {
-    margin: 20px 0 8px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3;
+    margin: 20px 0 8px; font-weight: 600;
+    letter-spacing: -0.02em; line-height: 1.3;
   }
   .blog-view-body h1:first-child,
   .blog-view-body h2:first-child,
@@ -991,6 +888,55 @@
     font-size: 12.5px; line-height: 1.55;
   }
   .blog-view-body pre code { background: none; padding: 0; color: inherit; }
+
+  /* Блокнот идей */
+  .idea-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 12px 14px; background: var(--surface-2);
+    border-radius: 12px; margin-bottom: 8px;
+    border: 1px solid var(--border-soft);
+  }
+  .idea-row:last-child { margin-bottom: 0; }
+  .idea-status {
+    width: 16px; height: 16px; border-radius: 50%;
+    flex-shrink: 0; margin-top: 2px;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .idea-status.new { border-color: var(--accent); }
+  .idea-status.in_progress { border-color: var(--warning); background: var(--warning-soft); }
+  .idea-status.done { border-color: var(--success); background: rgba(79, 138, 107, 0.15); }
+  .idea-status.archived { border-color: var(--muted); opacity: 0.5; }
+  .idea-text { flex: 1; font-size: 13.5px; line-height: 1.5; color: var(--text); }
+  .idea-text.done { text-decoration: line-through; color: var(--muted); }
+
+  /* Mood board */
+  .wish-card {
+    background: var(--surface-2); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+  }
+  .wish-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; letter-spacing: -0.01em; }
+  .wish-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
+  .wish-price {
+    font-size: 16px; font-weight: 700; color: var(--accent);
+    font-variant-numeric: tabular-nums; margin-bottom: 10px;
+  }
+  .wish-actions { display: flex; gap: 8px; }
+  .wish-actions a, .wish-actions button {
+    flex: 1; padding: 10px 14px; border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    background: var(--surface); color: var(--text);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; text-align: center; text-decoration: none;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    transition: transform 0.15s, border-color 0.15s;
+  }
+  .wish-actions .buy {
+    background: var(--accent); color: var(--bg); border: none;
+  }
+  .wish-actions a:hover, .wish-actions button:hover { border-color: var(--accent); }
+  .wish-actions .buy:hover { opacity: 0.9; }
+  .wish-actions svg { width: 14px; height: 14px; }
 
   /* Настройки */
   .settings-section { margin-bottom: 20px; }
@@ -1179,34 +1125,22 @@
     line-height: 1.6; margin-bottom: 8px;
   }
   .onboarding .features {
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 16px 0;
+    text-align: left; display: flex; flex-direction: column;
+    gap: 10px; margin: 16px 0;
   }
   .onboarding .feature {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-    font-size: 13.5px;
-    color: var(--text);
-    line-height: 1.5;
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13.5px; color: var(--text); line-height: 1.5;
   }
   .onboarding .feature svg {
-    width: 18px; height: 18px;
-    color: var(--accent);
-    flex-shrink: 0;
-    margin-top: 1px;
-  }
-  .onboarding .row {
-    display: flex; gap: 8px; margin-top: 12px;
+    width: 18px; height: 18px; color: var(--accent);
+    flex-shrink: 0; margin-top: 1px;
   }
   .onboarding button {
     padding: 15px; border-radius: 14px; border: none;
     cursor: pointer; font-weight: 500; font-size: 15px;
     font-family: inherit; transition: transform 0.15s;
-    flex: 1;
+    width: 100%;
   }
   .onboarding button:active { transform: scale(0.97); }
   .onboarding .primary { background: var(--accent); color: var(--bg); }
@@ -1245,7 +1179,6 @@
 <div class="app">
   <header>
     <button class="orb analyst" id="orbBtn" title="Профиль (долгий тап — сменить режим)" aria-label="Профиль" type="button"></button>
-
     <div style="display: flex; gap: 6px;">
       <button class="icon-btn" id="menuBtn" aria-label="Меню" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -1285,7 +1218,6 @@
 
 <div class="sheet-bg" id="sheetBg"></div>
 
-<!-- Меню -->
 <div class="menu-sheet" id="menuSheet">
   <div class="sheet-handle" id="menuHandle"></div>
   <h3>Меню</h3>
@@ -1293,75 +1225,74 @@
 
   <div class="menu-section">
     <div class="menu-section-title">Работа</div>
-
     <button class="menu-item" id="menuProjects" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-      <div class="info">
-        <div class="name">Проекты</div>
-        <div class="desc" id="menuProjectsDesc">—</div>
-      </div>
+      <div class="info"><div class="name">Проекты</div><div class="desc" id="menuProjectsDesc">—</div></div>
       <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
-
     <button class="menu-item" id="menuArtifacts" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
-      <div class="info">
-        <div class="name">Артефакты</div>
-        <div class="desc" id="menuArtifactsDesc">Документы и планы проекта</div>
-      </div>
+      <div class="info"><div class="name">Артефакты</div><div class="desc" id="menuArtifactsDesc">Документы и планы</div></div>
       <span class="badge-mini hidden" id="menuArtifactsBadge">0</span>
     </button>
-
     <button class="menu-item" id="menuPassport" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
-      <div class="info">
-        <div class="name">Паспорт проекта</div>
-        <div class="desc" id="menuPassportDesc">Цель, миссия, метрики</div>
-      </div>
+      <div class="info"><div class="name">Паспорт проекта</div><div class="desc" id="menuPassportDesc">Цель, миссия, метрики</div></div>
       <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <div class="menu-section hidden" id="menuIdeasSection">
+    <div class="menu-section-title">Идеи</div>
+    <button class="menu-item" id="menuIdeas" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21h6M12 3v12M9 6h6M8 12h8"/></svg>
+      <div class="info"><div class="name">Блокнот идей</div><div class="desc" id="menuIdeasDesc">—</div></div>
+      <span class="badge-mini" id="menuIdeasBadge">0</span>
+    </button>
+  </div>
+
+  <div class="menu-section hidden" id="menuDimensionsSection">
+    <div class="menu-section-title">Мерности</div>
+    <button class="menu-item" id="menuDimensions" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3v18"/></svg>
+      <div class="info"><div class="name">Активные мерности</div><div class="desc" id="menuDimensionsDesc">—</div></div>
+      <span class="badge-mini" id="menuDimensionsBadge">0</span>
+    </button>
+  </div>
+
+  <div class="menu-section hidden" id="menuMoodBoardSection">
+    <div class="menu-section-title">Желания</div>
+    <button class="menu-item" id="menuMoodBoard" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+      <div class="info"><div class="name">Mood board</div><div class="desc" id="menuMoodBoardDesc">—</div></div>
+      <span class="badge-mini" id="menuMoodBoardBadge">0</span>
     </button>
   </div>
 
   <div class="menu-section">
     <div class="menu-section-title">Развитие</div>
-
     <button class="menu-item" id="menuProfile" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-      <div class="info">
-        <div class="name">Мой профиль</div>
-        <div class="desc">Навыки, компас, состояние</div>
-      </div>
+      <div class="info"><div class="name">Мой профиль</div><div class="desc">Навыки, компас, состояние</div></div>
       <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
-
     <button class="menu-item" id="menuMetrics" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
-      <div class="info">
-        <div class="name">Метрики сессии</div>
-        <div class="desc" id="menuMetricsDesc">Стабильность решения, вклад</div>
-      </div>
+      <div class="info"><div class="name">Метрики сессии</div><div class="desc" id="menuMetricsDesc">Стабильность, вклад</div></div>
       <span class="badge-mini" id="menuMetricsBadge">—</span>
     </button>
   </div>
 
   <div class="menu-section">
     <div class="menu-section-title">Публикации</div>
-
     <button class="menu-item" id="menuBlog" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-      <div class="info">
-        <div class="name">Блог автора</div>
-        <div class="desc">Статьи, лонгриды</div>
-      </div>
+      <div class="info"><div class="name">Блог автора</div><div class="desc">Статьи, лонгриды</div></div>
       <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
-
     <button class="menu-item hidden" id="menuReport" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      <div class="info">
-        <div class="name">Скачать отчёт</div>
-        <div class="desc">Итоги сессии</div>
-      </div>
+      <div class="info"><div class="name">Скачать отчёт</div><div class="desc">Итоги сессии</div></div>
       <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
@@ -1369,20 +1300,17 @@
   <div class="menu-section hidden" id="menuResetSection">
     <button class="menu-item" id="menuReset" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
-      <div class="info">
-        <div class="name">Сбросить контекст</div>
-        <div class="desc" id="menuResetDesc">Рекомендовано моделью</div>
-      </div>
-      <span class="badge-mini warning" id="menuResetBadge">↺</span>
+      <div class="info"><div class="name">Сбросить контекст</div><div class="desc" id="menuResetDesc">Рекомендовано моделью</div></div>
+      <span class="badge-mini warning">↺</span>
     </button>
   </div>
 </div>
 
-<!-- Метрики (sheet) -->
+<!-- Метрики -->
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="metricsHandle"></div>
   <h3>Метрики сессии</h3>
-  <div class="sheet-sub">Нажмите на карточку, чтобы узнать подробнее</div>
+  <div class="sheet-sub">Нажмите на карточку для подробностей</div>
 
   <div class="metric-card" data-metric="stability">
     <div class="metric-card-head">
@@ -1392,7 +1320,7 @@
     <div class="metric-card-bar"><div class="metric-card-bar-fill" id="mcStabilityBar" style="width:0%"></div></div>
     <div class="metric-card-desc" id="mcStabilityDesc">—</div>
     <div class="metric-card-expand">
-      <p><strong>Что это:</strong> насколько решение устойчиво к изменениям и полна картина.</p>
+      <p><strong>Что это:</strong> устойчивость решения и полнота картины.</p>
       <p><strong>Что значит:</strong> <span id="mcStabilityMeaning">—</span></p>
       <p><strong>Что делать:</strong> <span id="mcStabilityAction">—</span></p>
     </div>
@@ -1405,7 +1333,7 @@
     </div>
     <div class="metric-card-desc" id="mcMindDesc">—</div>
     <div class="metric-card-expand">
-      <p><strong>Что это:</strong> уровень задачи, под который адаптируется глубина анализа.</p>
+      <p><strong>Что это:</strong> уровень задачи, под который адаптируется глубина.</p>
       <p><strong>Что значит:</strong> <span id="mcMindMeaning">—</span></p>
       <p><strong>Что делать:</strong> <span id="mcMindAction">—</span></p>
     </div>
@@ -1418,7 +1346,7 @@
     </div>
     <div class="metric-card-desc" id="mcLotsDesc">—</div>
     <div class="metric-card-expand">
-      <p><strong>Что это:</strong> накопленный вклад — инсайты и преодолённые препятствия.</p>
+      <p><strong>Что это:</strong> накопленный вклад — инсайты и препятствия.</p>
       <p><strong>Что значит:</strong> <span id="mcLotsMeaning">—</span></p>
       <p><strong>Что делать:</strong> <span id="mcLotsAction">—</span></p>
       <div style="margin-top:10px;font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;">Последние начисления</div>
@@ -1460,7 +1388,7 @@
     </div>
     <div class="metric-card-desc" id="mcSocialDesc">—</div>
     <div class="metric-card-expand">
-      <p><strong>Что это:</strong> учитывается ли реакция окружающих при подготовке ответа.</p>
+      <p><strong>Что это:</strong> учитывается ли реакция окружающих.</p>
       <p><strong>Что значит:</strong> <span id="mcSocialMeaning">—</span></p>
       <p><strong>Что делать:</strong> <span id="mcSocialAction">—</span></p>
     </div>
@@ -1482,21 +1410,17 @@
     </div>
     <div class="metric-card-desc" id="mcSessionDesc">—</div>
     <div class="metric-card-expand">
-      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
-        <span style="color:var(--muted);">Запросов</span>
-        <span id="mcSessionCount" style="font-weight:500;">0</span>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
+        <span style="color:var(--muted);">Запросов</span><span id="mcSessionCount" style="font-weight:500;">0</span>
       </div>
-      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
-        <span style="color:var(--muted);">Длительность</span>
-        <span id="mcSessionTime" style="font-weight:500;">—</span>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
+        <span style="color:var(--muted);">Длительность</span><span id="mcSessionTime" style="font-weight:500;">—</span>
       </div>
-      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
-        <span style="color:var(--muted);">Ключ</span>
-        <span id="mcKeySource" style="font-weight:500;">—</span>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
+        <span style="color:var(--muted);">Ключ</span><span id="mcKeySource" style="font-weight:500;">—</span>
       </div>
-      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
-        <span style="color:var(--muted);">Провайдер</span>
-        <span id="mcProvider" style="font-weight:500;">—</span>
+      <div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+        <span style="color:var(--muted);">Провайдер</span><span id="mcProvider" style="font-weight:500;">—</span>
       </div>
     </div>
   </div>
@@ -1534,12 +1458,35 @@
   </button>
 </div>
 
+<!-- Блокнот идей -->
+<div class="sheet" id="ideasSheet">
+  <div class="sheet-handle" id="ideasHandle"></div>
+  <h3>Блокнот идей</h3>
+  <div class="sheet-sub">Все идеи сохранены — ничего не потеряется</div>
+  <div id="ideasList"></div>
+</div>
+
+<!-- Мерности -->
+<div class="sheet" id="dimensionsSheet">
+  <div class="sheet-handle" id="dimensionsHandle"></div>
+  <h3>Мерности</h3>
+  <div class="sheet-sub">Активные плоскости работы</div>
+  <div id="dimensionsList"></div>
+</div>
+
+<!-- Mood board -->
+<div class="sheet" id="moodBoardSheet">
+  <div class="sheet-handle" id="moodBoardHandle"></div>
+  <h3>Mood board</h3>
+  <div class="sheet-sub">Желания и предложения</div>
+  <div id="moodBoardList"></div>
+</div>
+
 <!-- Редактор -->
 <div class="sheet" id="editorSheet">
   <div class="sheet-handle" id="editorHandle"></div>
   <h3 id="editorTitle">Редактор</h3>
   <div class="sheet-sub" id="editorSub">Правьте текст, затем сохраните или опубликуйте</div>
-
   <div class="doc-editor">
     <div class="doc-editor-field">
       <label for="editorName">Название</label>
@@ -1593,7 +1540,7 @@
       Открыть пустой редактор
     </button>
     <div class="settings-hint" style="margin-top:14px;">
-      Чтобы ИИ написал статью — попроси его в чате: <strong>«Напиши статью про …»</strong>. Затем нажми <strong>«Открыть в редакторе»</strong> под ответом.
+      Чтобы ИИ написал статью — попроси в чате: <strong>«Напиши статью про …»</strong>.
     </div>
   </div>
 </div>
@@ -1656,7 +1603,7 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <h2>Сбросить контекст?</h2>
-    <div class="sub" id="resetReason">Модель рекомендует сбросить проблемную ветку диалога.</div>
+    <div class="sub" id="resetReason">Модель рекомендует сбросить проблемную ветку.</div>
     <div class="row">
       <button class="action ghost" id="resetCancel" type="button">Отмена</button>
       <button class="action danger" id="resetConfirm" type="button">Сбросить</button>
@@ -1733,7 +1680,7 @@
     <div class="settings-section">
       <div class="settings-section-title">Данные</div>
       <div class="settings-hint">
-        Экспорт — сохранить резервную копию всех проектов. Импорт — восстановить из файла.
+        Экспорт — сохранить резервную копию. Импорт — восстановить из файла.
       </div>
       <div class="row">
         <button class="action ghost" id="exportData" type="button">Экспорт</button>
@@ -1757,7 +1704,6 @@
     <div class="onboarding-orb"></div>
     <h1>Monolog</h1>
     <div class="desc">Когнитивный партнёр. Помогает видеть структуру и принимать устойчивые решения.</div>
-
     <div class="features">
       <div class="feature">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
@@ -1765,14 +1711,13 @@
       </div>
       <div class="feature">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
-        <span>Метрики устойчивости решения в реальном времени</span>
+        <span>Метрики устойчивости решения</span>
       </div>
       <div class="feature">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
         <span>Документы и статьи сохраняются в проекте</span>
       </div>
     </div>
-
     <button class="primary" id="obStart" type="button">Начать работу</button>
   </div>
 </div>
@@ -1789,7 +1734,6 @@
   const LS_AUTHOR = "monolog_author_key";
   const LS_PROVIDER = "monolog_provider";
   const LS_ONBOARDED = "monolog_onboarded";
-  const LS_DEMO_SHOWN = "monolog_demo_shown";
   const LS_FALLBACK = "monolog_state_fallback";
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const MAX_TEXT_CHARS = 3000;
@@ -1834,6 +1778,14 @@
     { icon: "◆", text: "Помоги решить: стоит ли менять подход к проекту" },
   ];
 
+  const PLACEHOLDERS = [
+    "Напишите запрос…",
+    "Уточните или задайте следующий вопрос…",
+    "Опишите задачу — помогу структурировать",
+    "Что сейчас важнее всего?",
+    "Расскажите, над чем работаете",
+  ];
+
   let _providersCache = PROVIDERS_FALLBACK;
 
   const state = {
@@ -1851,6 +1803,7 @@
     editingProjectId: null,
     editingProjectColor: PROJECT_COLORS[0],
     editorContext: null,
+    placeholderIndex: 0,
     get project() {
       return this.projects.find(function (p) { return p.id === state.currentProjectId; });
     },
@@ -1944,6 +1897,9 @@
       lotsHistory: [],
       _important: {},
       skills: {},
+      ideas: [],
+      dimensions: [],
+      moodBoard: [],
     };
   }
 
@@ -2003,12 +1959,8 @@
     state.mode = state.mode === "analyst" ? "strategist" : "analyst";
     const orb = document.getElementById("orbBtn");
     orb.classList.add("switching");
-    setTimeout(function () {
-      orb.className = "orb " + state.mode;
-    }, 200);
-    setTimeout(function () {
-      orb.classList.remove("switching");
-    }, 700);
+    setTimeout(function () { orb.className = "orb " + state.mode; }, 200);
+    setTimeout(function () { orb.classList.remove("switching"); }, 700);
     document.documentElement.setAttribute("data-mode", state.mode);
     toast(state.mode === "analyst" ? "Режим Аналитика" : "Режим Стратега");
     try { localStorage.setItem("monolog_mode", state.mode); } catch (e) {}
@@ -2176,6 +2128,18 @@
     options = options || {};
     const chat = document.getElementById("chat");
     if (!chat) return null;
+
+    // Страховка: если контент — сырой JSON
+    if (role === "agent" && typeof content === "string" && content.trim().startsWith("{") && content.includes("reply_text")) {
+      try {
+        const parsed = JSON.parse(content);
+        if (parsed.reply_text) {
+          content = parsed.reply_text;
+          if (parsed.metrics && !metrics) metrics = parsed.metrics;
+        }
+      } catch (e) {}
+    }
+
     const row = document.createElement("div");
     row.className = "row " + role;
     const bubble = document.createElement("div");
@@ -2183,6 +2147,7 @@
 
     if (role === "agent") {
       bubble.innerHTML = renderMarkdown(content);
+
       if (metrics && metrics.value_choices && metrics.value_choices.length) {
         const cards = renderDecisionCards(metrics.value_choices);
         if (cards) bubble.appendChild(cards);
@@ -2193,14 +2158,26 @@
           if (r) bubble.appendChild(r);
         });
       }
+
+      // Кнопка: artifact_status ИЛИ первый артефакт
+      let openBtn = null;
       if (metrics && metrics.artifact_status && metrics.artifact_status.ready) {
-        const openBtn = renderOpenEditorButton(metrics.artifact_status, content);
-        if (openBtn) bubble.appendChild(openBtn);
+        openBtn = renderOpenEditorButton(metrics.artifact_status, content);
+      } else if (metrics && metrics.artifacts && metrics.artifacts.length) {
+        const firstArt = metrics.artifacts[0];
+        openBtn = renderOpenEditorButton({
+          type: firstArt.type === "blog_post" ? "blog_post" : "document",
+          title: firstArt.name || "Документ",
+          ready: true,
+        }, content);
       }
+      if (openBtn) bubble.appendChild(openBtn);
+
       if (metrics && metrics.dominant_trait && metrics.dominant_trait.detected) {
         const notice = renderImpulseNotice(metrics.dominant_trait);
         if (notice) bubble.appendChild(notice);
       }
+
       const actions = document.createElement("div");
       actions.className = "msg-actions";
       const copyBtn = document.createElement("button");
@@ -2248,6 +2225,7 @@
     } else {
       bubble.textContent = content;
     }
+
     row.appendChild(bubble);
     chat.appendChild(row);
     chat.scrollTop = chat.scrollHeight;
@@ -2265,45 +2243,71 @@
     const p = state.project;
     if (!p) return;
 
-    // Проекты
     const projectsDesc = document.getElementById("menuProjectsDesc");
     if (projectsDesc) {
       const activeCount = state.projects.filter(function (x) { return !x.archived; }).length;
       projectsDesc.textContent = activeCount + " " + pluralize(activeCount, ["проект", "проекта", "проектов"]);
     }
 
-    // Артефакты
     const artsCount = (p.artifacts || []).length;
     const artsBadge = document.getElementById("menuArtifactsBadge");
     const artsDesc = document.getElementById("menuArtifactsDesc");
     if (artsBadge) {
-      if (artsCount > 0) {
-        artsBadge.classList.remove("hidden");
-        artsBadge.textContent = artsCount;
-      } else {
-        artsBadge.classList.add("hidden");
-      }
+      if (artsCount > 0) { artsBadge.classList.remove("hidden"); artsBadge.textContent = artsCount; }
+      else artsBadge.classList.add("hidden");
     }
     if (artsDesc) {
-      artsDesc.textContent = artsCount ? (artsCount + " " + pluralize(artsCount, ["документ", "документа", "документов"])) : "Документы и планы проекта";
+      artsDesc.textContent = artsCount ? (artsCount + " " + pluralize(artsCount, ["документ", "документа", "документов"])) : "Документы и планы";
     }
 
-    // Паспорт
     const passportDesc = document.getElementById("menuPassportDesc");
     const menuPassport = document.getElementById("menuPassport");
-    if (p.passport && p.passport.goal) {
-      passportDesc.textContent = p.passport.goal.slice(0, 60);
-    } else {
-      passportDesc.textContent = "Цель, миссия, метрики";
-    }
+    if (p.passport && p.passport.goal) passportDesc.textContent = p.passport.goal.slice(0, 60);
+    else passportDesc.textContent = "Цель, миссия, метрики";
     const scale = p.lastMetrics && p.lastMetrics.mind_scale;
-    if (scale === "strategic" || scale === "systemic") {
-      menuPassport.classList.remove("hidden");
+    if (scale === "strategic" || scale === "systemic") menuPassport.classList.remove("hidden");
+    else menuPassport.classList.add("hidden");
+
+    // Идеи
+    const ideasCount = (p.ideas || []).length;
+    const ideasSection = document.getElementById("menuIdeasSection");
+    const ideasBadge = document.getElementById("menuIdeasBadge");
+    const ideasDesc = document.getElementById("menuIdeasDesc");
+    if (ideasCount > 0) {
+      ideasSection.classList.remove("hidden");
+      ideasBadge.textContent = ideasCount;
+      const newCount = (p.ideas || []).filter(function (i) { return i.status === "new"; }).length;
+      ideasDesc.textContent = newCount > 0 ? (newCount + " новых") : "Все обработаны";
     } else {
-      menuPassport.classList.add("hidden");
+      ideasSection.classList.add("hidden");
     }
 
-    // Метрики
+    // Мерности
+    const dimCount = (p.dimensions || []).length;
+    const dimSection = document.getElementById("menuDimensionsSection");
+    const dimBadge = document.getElementById("menuDimensionsBadge");
+    const dimDesc = document.getElementById("menuDimensionsDesc");
+    if (dimCount >= 2) {
+      dimSection.classList.remove("hidden");
+      dimBadge.textContent = dimCount;
+      dimDesc.textContent = (p.dimensions || []).join(", ");
+    } else {
+      dimSection.classList.add("hidden");
+    }
+
+    // Mood board
+    const mbCount = (p.moodBoard || []).length;
+    const mbSection = document.getElementById("menuMoodBoardSection");
+    const mbBadge = document.getElementById("menuMoodBoardBadge");
+    const mbDesc = document.getElementById("menuMoodBoardDesc");
+    if (mbCount > 0) {
+      mbSection.classList.remove("hidden");
+      mbBadge.textContent = mbCount;
+      mbDesc.textContent = mbCount + " " + pluralize(mbCount, ["желание", "желания", "желаний"]);
+    } else {
+      mbSection.classList.add("hidden");
+    }
+
     const metricsBadge = document.getElementById("menuMetricsBadge");
     const metricsDesc = document.getElementById("menuMetricsDesc");
     const m = p.lastMetrics || {};
@@ -2315,24 +2319,18 @@
       else if (si < 0.75) metricsBadge.classList.add("warning");
     }
     if (metricsDesc && si != null) {
-      const d = describeStability(si);
-      metricsDesc.textContent = d.meaning.slice(0, 60);
+      metricsDesc.textContent = describeStability(si).meaning.slice(0, 60);
     }
 
-    // Отчёт
     const menuReport = document.getElementById("menuReport");
-    if (p.sessionCount >= 10) {
-      menuReport.classList.remove("hidden");
-    } else {
-      menuReport.classList.add("hidden");
-    }
+    if (p.sessionCount >= 10) menuReport.classList.remove("hidden");
+    else menuReport.classList.add("hidden");
 
-    // Сброс
-    const menuResetSection = document.getElementById("menuResetSection");
-    const resetSection = document.getElementById("menuResetSection");
     const rp = m.reset_proposal;
+    const resetSection = document.getElementById("menuResetSection");
     if (rp && rp.recommended) {
       resetSection.classList.remove("hidden");
+      document.getElementById("menuResetDesc").textContent = rp.reason || "Рекомендовано моделью";
     } else {
       resetSection.classList.add("hidden");
     }
@@ -2360,12 +2358,21 @@
         const incoming = m.profile[k] || [];
         const seen = new Set(old.map(String));
         incoming.forEach(function (it) {
-          if (!seen.has(String(it))) { old.push(it); seen.add(String(it)); }
+          if (!seen.has(String(it))) { old.push(String(it)); seen.add(String(it)); }
         });
         p.cognitive[k] = old;
       });
       if (m.profile.somatic && typeof m.profile.somatic === "object") {
         p.cognitive.somatic = Object.assign(p.cognitive.somatic || {}, m.profile.somatic);
+      }
+      if (m.profile.skills) {
+        p.skills = p.skills || {};
+        if (Array.isArray(m.profile.skills)) {
+          m.profile.skills.forEach(function (s) {
+            const name = typeof s === "string" ? s : (s.skill || s.name || "");
+            if (name) p.skills[name] = (p.skills[name] || 0) + 1;
+          });
+        }
       }
     }
     if (m.required_skills && m.required_skills.length) {
@@ -2383,9 +2390,54 @@
         if (a && a.id && !seen.has(a.id)) { p.artifacts.push(a); seen.add(a.id); }
       });
     }
+
+    // Ideas
+    if (m.ideas && Array.isArray(m.ideas)) {
+      p.ideas = p.ideas || [];
+      const seen = new Set(p.ideas.map(function (i) { return i.id; }));
+      m.ideas.forEach(function (it) {
+        if (it && it.id && !seen.has(it.id)) {
+          p.ideas.push({ id: it.id, text: it.text || "", status: it.status || "new" });
+          seen.add(it.id);
+        }
+      });
+    }
+
+    // Dimensions
+    if (m.dimension && m.dimension.active) {
+      p.dimensions = p.dimensions || [];
+      if (p.dimensions.indexOf(m.dimension.active) === -1) {
+        p.dimensions.push(m.dimension.active);
+      }
+      if (Array.isArray(m.dimension.related)) {
+        m.dimension.related.forEach(function (d) {
+          if (p.dimensions.indexOf(d) === -1) p.dimensions.push(d);
+        });
+      }
+    }
+
+    // Mood board
+    if (m.mood_board && m.mood_board.active && Array.isArray(m.mood_board.options)) {
+      p.moodBoard = p.moodBoard || [];
+      m.mood_board.options.forEach(function (opt) {
+        if (opt && opt.name) {
+          const id = "wish_" + (opt.name || "").replace(/[^\w]/g, "_").slice(0, 40);
+          if (!p.moodBoard.find(function (w) { return w.id === id; })) {
+            p.moodBoard.push({
+              id: id,
+              wish: m.mood_board.wish || "",
+              name: opt.name,
+              price: opt.price || "",
+              url: opt.url || "",
+              store: opt.store || "",
+            });
+          }
+        }
+      });
+    }
+
     persistCurrentProject();
 
-    // Обновление карточек метрик
     const si = typeof m.stability_index === "number" ? m.stability_index : 0;
     const d = describeStability(si);
     document.getElementById("mcStabilityValue").textContent = si.toFixed(2);
@@ -2433,7 +2485,7 @@
     if (hc != null) {
       if (hc >= 0.7) { humanMeaning = "Ваш вклад высокий (" + Math.round(hc * 100) + "%)."; humanAction = "Это ваше решение."; }
       else if (hc >= 0.4) { humanMeaning = "Баланс между вами и алгоритмом."; humanAction = "Работаете вместе."; }
-      else { humanMeaning = "Алгоритм внёс больше (" + Math.round((1 - hc) * 100) + "%)."; humanAction = "Уточните — может, чего-то не хватает."; }
+      else { humanMeaning = "Алгоритм внёс больше."; humanAction = "Уточните — может, чего-то не хватает."; }
     }
     document.getElementById("mcHumanDesc").textContent = humanMeaning;
     document.getElementById("mcHumanMeaning").textContent = humanMeaning;
@@ -2458,7 +2510,6 @@
     document.getElementById("mcSocialMeaning").textContent = sa.active ? "Учитывается реакция окружающих." : "Ответ личный, без учёта окружающих.";
     document.getElementById("mcSocialAction").textContent = sa.active ? "Перечитайте перед отправкой." : "Ничего не нужно.";
 
-    // Лоты история
     const lotsHist = document.getElementById("mcLotsHistory");
     lotsHist.innerHTML = "";
     const hist = (p.lotsHistory || []).slice(-5).reverse();
@@ -2476,7 +2527,6 @@
       });
     }
 
-    // Сессия
     document.getElementById("mcSessionCount").textContent = p.sessionCount || 0;
     document.getElementById("mcSessionTime").textContent = fmtDuration(Date.now() - state.sessionStart);
     document.getElementById("mcKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
@@ -2484,32 +2534,16 @@
     document.getElementById("mcSessionValue").textContent = (p.sessionCount || 0) + " запросов";
     document.getElementById("mcSessionDesc").textContent = "Активная сессия";
 
-    // Спакрлайн
     renderSparkline();
-
-    // Узел связи
     renderNodeConnection();
-
-    // Меню
     updateMenu();
 
-    // Сброс
-    const rp = m.reset_proposal;
-    if (rp && rp.recommended) {
-      document.getElementById("menuResetSection").classList.remove("hidden");
-      document.getElementById("menuResetDesc").textContent = rp.reason || "Рекомендовано моделью";
-    } else {
-      document.getElementById("menuResetSection").classList.add("hidden");
-    }
-
-    // Риск
-    const ri = m.risk_intercept;
-    if (ri && ri.active) showRiskModal(ri);
-
-    // Орб
     const orb = document.getElementById("orbBtn");
     orb.classList.remove("fast-pulse");
     if (m.cognitive_pulse === "fast") orb.classList.add("fast-pulse");
+
+    const ri = m.risk_intercept;
+    if (ri && ri.active) showRiskModal(ri);
   }
 
   function renderSparkline() {
@@ -2519,7 +2553,6 @@
     const hist = (p && p.stabilityHistory ? p.stabilityHistory : []).slice(-10);
     for (let i = 0; i < 10; i++) {
       const bar = document.createElement("div");
-      bar.className = "spark-bar";
       bar.style.cssText = "width:10px;background:var(--accent);border-radius:3px;min-height:4px;opacity:0.75;transition:height 0.3s;";
       const v = hist[i];
       if (v == null) {
@@ -2541,40 +2574,26 @@
     const p = state.project;
     const m = (p && p.lastMetrics) || {};
     const si = typeof m.stability_index === "number" ? m.stability_index : 0;
-
-    const size = 220;
-    const cx = size / 2;
-    const cy = size / 2;
-
+    const size = 220, cx = size / 2, cy = size / 2;
     const points = [
       { x: cx, y: 30, label: "Цель", active: !!p.passport && !!p.passport.goal },
       { x: size - 30, y: cy, label: "Метрики", active: si > 0.7 },
       { x: cx, y: size - 30, label: "Действия", active: p.sessionCount > 0 },
       { x: 30, y: cy, label: "Знания", active: p.skills && Object.keys(p.skills).length > 0 },
     ];
-
     let svg = '<svg class="node-svg" viewBox="0 0 ' + size + ' ' + size + '">';
-
-    // Кольца
     [30, 55, 80].forEach(function (r) {
       svg += '<circle class="node-ring" cx="' + cx + '" cy="' + cy + '" r="' + r + '"/>';
     });
-
-    // Лучи
     points.forEach(function (pt) {
       svg += '<line class="node-spoke' + (pt.active ? " active" : "") + '" x1="' + cx + '" y1="' + cy + '" x2="' + pt.x + '" y2="' + pt.y + '"/>';
     });
-
-    // Центр
     svg += '<circle class="node-core-glow" cx="' + cx + '" cy="' + cy + '" r="' + (10 + si * 12) + '"/>';
     svg += '<circle class="node-core" cx="' + cx + '" cy="' + cy + '" r="6"/>';
-
-    // Точки
     points.forEach(function (pt) {
       svg += '<circle class="node-dot' + (pt.active ? " active" : "") + '" cx="' + pt.x + '" cy="' + pt.y + '" r="4"/>';
       svg += '<text class="node-label" x="' + pt.x + '" y="' + (pt.y + (pt.y < cy ? -8 : 14)) + '" text-anchor="middle">' + pt.label + '</text>';
     });
-
     svg += '</svg>';
     wrap.innerHTML = svg;
   }
@@ -2665,19 +2684,21 @@
       ta.style.height = "auto";
       const sh = ta.scrollHeight;
       const maxH = 88;
-      if (sh > maxH) {
-        ta.style.height = maxH + "px";
-        ta.classList.add("grows");
-      } else {
-        ta.style.height = sh + "px";
-        ta.classList.remove("grows");
-      }
+      if (sh > maxH) { ta.style.height = maxH + "px"; ta.classList.add("grows"); }
+      else { ta.style.height = sh + "px"; ta.classList.remove("grows"); }
     }
     ta.addEventListener("input", resize);
     resize();
+
+    // Динамический плейсхолдер
+    function rotatePlaceholder() {
+      state.placeholderIndex = (state.placeholderIndex + 1) % PLACEHOLDERS.length;
+      if (!ta.value) ta.placeholder = PLACEHOLDERS[state.placeholderIndex];
+    }
+    setInterval(rotatePlaceholder, 8000);
   }
 
-async function fetchWithRetry(url, options, retries = 2) {
+  async function fetchWithRetry(url, options, retries = 2) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(function () { controller.abort(); }, 120000);
@@ -2693,6 +2714,7 @@ async function fetchWithRetry(url, options, retries = 2) {
       throw e;
     }
   }
+
   async function send() {
     const input = document.getElementById("input");
     const btn = document.getElementById("sendBtn");
@@ -2701,7 +2723,6 @@ async function fetchWithRetry(url, options, retries = 2) {
     if (!p) return;
     if (!text && state.attachments.length === 0) return;
 
-    // Удаляем демо-блок при первом сообщении
     const demoBlock = document.querySelector(".demo-block");
     if (demoBlock) demoBlock.remove();
 
@@ -2724,7 +2745,6 @@ async function fetchWithRetry(url, options, retries = 2) {
       + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
 
     const headers = { "Content-Type": "application/json" };
-
     const carried = { passport: p.passport || {}, profile: p.cognitive || {}, artifacts: p.artifacts || [] };
 
     try {
@@ -2744,7 +2764,17 @@ async function fetchWithRetry(url, options, retries = 2) {
       if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
       orb.classList.remove("thinking");
       if (!r.ok) {
-        addRow("agent", "Ошибка: " + ((data && data.detail) || r.statusText));
+        const errText = (data && data.detail) || r.statusText;
+        const errRow = addRow("agent", "⚠ " + errText);
+        if (r.status === 429) {
+          const btn = document.createElement("button");
+          btn.className = "open-editor-btn";
+          btn.type = "button";
+          btn.style.marginTop = "10px";
+          btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Ввести свой ключ';
+          btn.addEventListener("click", function () { document.getElementById("settingsBtn").click(); });
+          errRow.bubble.appendChild(btn);
+        }
       } else if (data) {
         state.lastKeySource = data.key_source || null;
         state.lastProvider = data.provider_used || state.provider;
@@ -2760,26 +2790,12 @@ async function fetchWithRetry(url, options, retries = 2) {
       }
     } catch (e) {
       const chat = document.getElementById("chat");
-      // Если контент выглядит как JSON — попытаться распарсить
-if (typeof content === "string" && content.trim().startsWith("{") && content.includes("reply_text")) {
-  try {
-    const parsed = JSON.parse(content);
-    if (parsed.reply_text) {
-      content = parsed.reply_text;
-      metrics = Object.assign({}, metrics, parsed.metrics || {});
-    }
-  } catch (e) {}
-}
       if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
       orb.classList.remove("thinking");
       let msg = "Не удалось связаться с сервером. ";
-      if (e && e.name === "AbortError") {
-        msg += "Превышено время ожидания. Попробуйте ещё раз.";
-      } else if (e && e.name === "TypeError") {
-        msg += "Проверьте соединение и попробуйте снова.";
-      } else {
-        msg += (e && e.message ? e.message : "Неизвестная ошибка") + ". Попробуйте ещё раз.";
-      }
+      if (e && e.name === "AbortError") msg += "Превышено время ожидания. Попробуйте ещё раз.";
+      else if (e && e.name === "TypeError") msg += "Проверьте соединение и попробуйте снова.";
+      else msg += (e && e.message ? e.message : "Неизвестная ошибка") + ". Попробуйте ещё раз.";
       addRow("agent", msg);
     } finally {
       btn.disabled = false;
@@ -2796,13 +2812,12 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     document.querySelectorAll(".sheet, .menu-sheet").forEach(function (s) { s.classList.remove("open"); });
   }
 
-  // Проекты в sheet
   function renderProjectsList() {
     const box = document.getElementById("projectsList");
     box.innerHTML = "";
     const active = state.projects.filter(function (p) { return !p.archived; });
     if (!active.length) {
-      box.innerHTML = '<div class="empty-note">Пока нет проектов. Создайте первый.</div>';
+      box.innerHTML = '<div class="empty-note">Пока нет проектов.</div>';
       return;
     }
     active.forEach(function (p) {
@@ -2815,8 +2830,7 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
         + '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + escHtml(p.color || "#888") + ';"></span>'
         + escHtml(p.name)
         + (isActive ? '<span style="font-size:10px;color:var(--accent);font-weight:600;">· текущий</span>' : '')
-        + '</span>'
-        + '</div>'
+        + '</span></div>'
         + '<div class="artifact-item-meta"><span>' + count + ' сообщений</span>'
         + (p.passport && p.passport.goal ? '<span>' + escHtml(p.passport.goal.slice(0, 40)) + '</span>' : '')
         + '</div>';
@@ -2838,6 +2852,71 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
         });
       });
       box.appendChild(item);
+    });
+  }
+
+  function renderIdeasList() {
+    const box = document.getElementById("ideasList");
+    const p = state.project;
+    box.innerHTML = "";
+    if (!p || !p.ideas || !p.ideas.length) {
+      box.innerHTML = '<div class="empty-note">Пока нет идей. Когда накопится поток — они появятся здесь.</div>';
+      return;
+    }
+    p.ideas.forEach(function (idea) {
+      const row = document.createElement("div");
+      row.className = "idea-row";
+      const isDone = idea.status === "done";
+      row.innerHTML = '<div class="idea-status ' + (idea.status || "new") + '"></div>'
+        + '<div class="idea-text' + (isDone ? " done" : "") + '">' + escHtml(idea.text) + '</div>';
+      row.style.cursor = "pointer";
+      row.addEventListener("click", function () {
+        const next = { new: "in_progress", in_progress: "done", done: "new", archived: "new" };
+        idea.status = next[idea.status] || "new";
+        persistCurrentProject();
+        renderIdeasList();
+        updateMenu();
+      });
+      box.appendChild(row);
+    });
+  }
+
+  function renderDimensionsList() {
+    const box = document.getElementById("dimensionsList");
+    const p = state.project;
+    box.innerHTML = "";
+    if (!p || !p.dimensions || !p.dimensions.length) {
+      box.innerHTML = '<div class="empty-note">Пока одна мерность. Разделение появится, когда будет больше.</div>';
+      return;
+    }
+    p.dimensions.forEach(function (d) {
+      const row = document.createElement("div");
+      row.className = "artifact-item";
+      row.innerHTML = '<div class="artifact-item-name">' + escHtml(d) + '</div>';
+      box.appendChild(row);
+    });
+  }
+
+  function renderMoodBoardList() {
+    const box = document.getElementById("moodBoardList");
+    const p = state.project;
+    box.innerHTML = "";
+    if (!p || !p.moodBoard || !p.moodBoard.length) {
+      box.innerHTML = '<div class="empty-note">Пока нет желаний. Когда попросите подобрать — предложения появятся здесь.</div>';
+      return;
+    }
+    p.moodBoard.forEach(function (w) {
+      const card = document.createElement("div");
+      card.className = "wish-card";
+      card.innerHTML = '<div class="wish-name">' + escHtml(w.name || "Предложение") + '</div>'
+        + (w.wish ? '<div class="wish-desc">По запросу: ' + escHtml(w.wish) + '</div>' : '')
+        + (w.price ? '<div class="wish-price">' + escHtml(w.price) + '</div>' : '')
+        + '<div class="wish-actions">'
+        + (w.url ? '<a href="' + escHtml(w.url) + '" target="_blank" rel="noopener" class="buy">'
+          + '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+          + 'Купить' + (w.store ? ' в ' + escHtml(w.store) : '') + '</a>' : '<button disabled>Нет ссылки</button>')
+        + '</div>';
+      box.appendChild(card);
     });
   }
 
@@ -2864,9 +2943,7 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       const chat = document.getElementById("chat");
       if (chat) chat.scrollTop = chat.scrollHeight;
     }
-    if (p.lastMetrics) {
-      updateMetrics(p.lastMetrics);
-    }
+    if (p.lastMetrics) updateMetrics(p.lastMetrics);
   }
 
   function openProjectMenu(id) {
@@ -2890,9 +2967,7 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     document.getElementById("projectModalBg").classList.add("open");
     setTimeout(function () { document.getElementById("projectNameInput").focus(); }, 100);
   }
-  function closeProjectModal() {
-    document.getElementById("projectModalBg").classList.remove("open");
-  }
+  function closeProjectModal() { document.getElementById("projectModalBg").classList.remove("open"); }
   function renderColorPicker() {
     const box = document.getElementById("projectColorPicker");
     box.innerHTML = "";
@@ -2992,7 +3067,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     }
   }
 
-  // Профиль
   function renderSomatic(somatic) {
     if (!somatic || typeof somatic !== "object") return "";
     const energy = typeof somatic.energy === "number" ? somatic.energy : null;
@@ -3170,7 +3244,7 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     const p = state.project;
     box.innerHTML = "";
     if (!p || !p.artifacts || !p.artifacts.length) {
-      box.innerHTML = '<div class="empty-note">Пока нет артефактов. Они появятся автоматически, когда в диалоге создаётся документ, план или отчёт.</div>';
+      box.innerHTML = '<div class="empty-note">Пока нет артефактов. Они появятся автоматически.</div>';
       return;
     }
     p.artifacts.forEach(function (a) {
@@ -3339,7 +3413,7 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       const posts = data.posts || [];
       document.getElementById("blogSub").textContent = posts.length ? (posts.length + " " + pluralize(posts.length, ["статья", "статьи", "статей"])) : "Пока нет статей";
       if (!posts.length) {
-        box.innerHTML = '<div class="empty-note">Пока нет статей. Открой вкладку «Новая статья».</div>';
+        box.innerHTML = '<div class="empty-note">Пока нет статей.</div>';
         return;
       }
       box.innerHTML = "";
@@ -3414,13 +3488,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     lines.push("- Масштаб: " + (m.mind_scale || "—"));
     lines.push("- Баланс: " + (m.lots_balance || "—"));
     lines.push("");
-    if (c.somatic) {
-      lines.push("## Состояние");
-      lines.push("");
-      if (c.somatic.mood) lines.push("- Настроение: " + c.somatic.mood);
-      if (c.somatic.note) lines.push("- Наблюдение: " + c.somatic.note);
-      lines.push("");
-    }
     if (p.artifacts && p.artifacts.length) {
       lines.push("## Артефакты (" + p.artifacts.length + ")");
       lines.push("");
@@ -3486,7 +3553,8 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     updateMenu();
 
     ["menuSheet", "metricsSheet", "profileSheet", "passportSheet", "artifactsSheet",
-     "projectsSheet", "editorSheet", "blogSheet", "blogViewSheet", "projectMenuSheet"
+     "projectsSheet", "ideasSheet", "dimensionsSheet", "moodBoardSheet",
+     "editorSheet", "blogSheet", "blogViewSheet", "projectMenuSheet"
     ].forEach(function (id) {
       const sheet = document.getElementById(id);
       const handle = sheet ? sheet.querySelector(".sheet-handle") : null;
@@ -3512,7 +3580,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     document.getElementById("attachBtn").addEventListener("click", function () { fileInput.click(); });
     fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
 
-    // Сфера
     const orbBtn = document.getElementById("orbBtn");
     let orbPressTimer = null;
     let orbMoved = false;
@@ -3537,7 +3604,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       });
     });
 
-    // Меню
     document.getElementById("menuBtn").addEventListener("click", function () {
       updateMenu();
       openSheet("menuSheet");
@@ -3558,6 +3624,18 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     document.getElementById("menuPassport").addEventListener("click", function () {
       closeAllSheets();
       setTimeout(function () { renderPassport(); openSheet("passportSheet"); }, 200);
+    });
+    document.getElementById("menuIdeas").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { renderIdeasList(); openSheet("ideasSheet"); }, 200);
+    });
+    document.getElementById("menuDimensions").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { renderDimensionsList(); openSheet("dimensionsSheet"); }, 200);
+    });
+    document.getElementById("menuMoodBoard").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { renderMoodBoardList(); openSheet("moodBoardSheet"); }, 200);
     });
     document.getElementById("menuProfile").addEventListener("click", function () {
       closeAllSheets();
@@ -3584,14 +3662,12 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       setTimeout(function () { document.getElementById("resetModalBg").classList.add("open"); }, 200);
     });
 
-    // Метрики — раскрытие карточек
     document.querySelectorAll(".metric-card").forEach(function (card) {
       card.addEventListener("click", function () { card.classList.toggle("open"); });
     });
 
     document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
 
-    // Меню проекта
     document.getElementById("pmOpen").addEventListener("click", function () {
       if (state.editingProjectId) switchProject(state.editingProjectId);
       closeAllSheets();
@@ -3626,7 +3702,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       toast("Проект удалён");
     });
 
-    // Риск
     document.getElementById("riskClose").addEventListener("click", function () { document.getElementById("riskModalBg").classList.remove("open"); });
     document.getElementById("riskModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
     document.getElementById("riskCancel").addEventListener("click", function () {
@@ -3640,7 +3715,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       toast("Альтернатива вставлена");
     });
 
-    // Сброс
     document.getElementById("resetClose").addEventListener("click", function () { document.getElementById("resetModalBg").classList.remove("open"); });
     document.getElementById("resetModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
     document.getElementById("resetCancel").addEventListener("click", function () { document.getElementById("resetModalBg").classList.remove("open"); });
@@ -3663,7 +3737,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       toast("Контекст сброшен");
     });
 
-    // Проект
     document.getElementById("projectModalClose").addEventListener("click", closeProjectModal);
     document.getElementById("projectCancel").addEventListener("click", closeProjectModal);
     document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
@@ -3719,16 +3792,14 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       toast("Проект удалён");
     });
 
-    // Блог
-    document.querySelectorAll(".blog-tab").forEach(function (t) {
-      t.addEventListener("click", function () { switchBlogTab(t.dataset.tab); });
+23    document.querySelectorAll(".blog-trab").forEach(function (t) {
+     6 t.addEventListener("click", function ().on { switchBlogTab(t.dataset.tab);render });
     });
-    document.getElementById("blogNewBtn").addEventListener("click", function () {
+    document.getElementById("blogNew.comBtn").addEventListener("click", function () {
       closeAllSheets();
       setTimeout(function () { openEditor({ type: "blog_post", name: "", body: "", tags: [] }); }, 200);
     });
 
-    // Редактор
     document.getElementById("editorCopyBtn").addEventListener("click", function () {
       const body = document.getElementById("editorBody").value || "";
       if (navigator.clipboard) navigator.clipboard.writeText(body);
@@ -3738,7 +3809,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
     document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToProject);
     document.getElementById("editorPublishBtn").addEventListener("click", publishEditorToBlog);
 
-    // Настройки
     document.getElementById("settingsBtn").addEventListener("click", function () {
       document.getElementById("keyInput").value = state.apiKey || "";
       document.getElementById("authorKeyInput").value = state.authorKey || "";
@@ -3776,7 +3846,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       toast("Настройки сохранены");
     });
 
-    // Экспорт / импорт
     document.getElementById("exportData").addEventListener("click", function () {
       const blob = new Blob([JSON.stringify({ projects: state.projects, profile: state.profile }, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
@@ -3808,7 +3877,6 @@ if (typeof content === "string" && content.trim().startsWith("{") && content.inc
       reader.readAsText(file);
     });
 
-    // Онбординг
     document.getElementById("obStart").addEventListener("click", function () {
       localStorage.setItem(LS_ONBOARDED, "true");
       document.getElementById("onboarding").classList.remove("open");
