@@ -134,14 +134,16 @@ def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]
     return models.get("light") or models.get("medium")
 
 
-def pick_provider_and_model(request: Request, user_message: str, carried_metrics: Optional[Dict[str, Any]] = None):
-    """Возвращает (provider, base_url, model, api_key, source)."""
-    provider = request.headers.get("X-Provider", "groq").strip().lower()
+def pick_provider_and_model(body: Dict[str, Any], user_message: str, carried_metrics: Optional[Dict[str, Any]] = None):
+    """Возвращает (provider, base_url, model, api_key, source).
+    Ключ и провайдер читаются из тела запроса (body), не из заголовков.
+    """
+    provider = (body.get("provider") or "groq").strip().lower()
     if provider not in PROVIDERS:
         provider = "groq"
 
-    user_key = request.headers.get("X-Api-Key", "").strip()
-    if user_key:
+    user_key = (body.get("api_key") or "").strip()
+    if user_key and (user_key.startswith("gsk_") or user_key.startswith("sk-or-") or user_key.startswith("csk_") or len(user_key) > 20):
         cfg = PROVIDERS[provider]
         model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
         return provider, cfg["base_url"], model, user_key, "user"
