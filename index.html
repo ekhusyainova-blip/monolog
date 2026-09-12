@@ -314,6 +314,27 @@
   .lots-chip:active { transform: scale(0.96); }
   .lots-chip.positive { color: var(--success); }
   .lots-chip.negative { color: var(--critical); }
+  .social-indicator {
+    width: 34px; height: 34px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, color 0.3s, border-color 0.3s;
+    box-shadow: var(--shadow); flex-shrink: 0;
+    position: relative;
+    padding: 0;
+  }
+  .social-indicator:active { transform: scale(0.94); }
+  .social-indicator svg { width: 16px; height: 16px; stroke-width: 1.8; }
+  .social-indicator.low { color: var(--warning); border-color: rgba(198, 139, 63, 0.3); }
+  .social-indicator.medium { color: var(--warning); border-color: rgba(198, 139, 63, 0.55); background: var(--warning-soft); }
+  .social-indicator.high { color: var(--critical); border-color: rgba(184, 84, 80, 0.5); background: var(--critical-soft); }
+  .social-indicator.active::after {
+    content: ""; position: absolute; top: -2px; right: -2px;
+    width: 8px; height: 8px; border-radius: 50%;
+    border: 1.5px solid var(--surface);
+    background: currentColor;
+  }
   .lots-chip .lots-delta {
     position: absolute;
     top: -20px;
