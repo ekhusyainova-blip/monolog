@@ -2724,18 +2724,18 @@ async function fetchWithRetry(url, options, retries = 2) {
       + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
 
     const headers = { "Content-Type": "application/json" };
-    if (state.apiKey) headers["X-Api-Key"] = state.apiKey;
-    if (state.provider) headers["X-Provider"] = state.provider;
 
     const carried = { passport: p.passport || {}, profile: p.cognitive || {}, artifacts: p.artifacts || [] };
 
     try {
-      const r = await fetch(API_BASE + "/chat", {
+      const r = await fetchWithRetry(API_BASE + "/chat", {
         method: "POST", headers: headers,
         body: JSON.stringify({
           message: text || "Проанализируй вложения.",
           attachments: attachmentsPayload,
           carried_metrics: carried,
+          api_key: state.apiKey || null,
+          provider: state.provider || "groq",
         }),
       });
       let data = null;
@@ -2762,7 +2762,15 @@ async function fetchWithRetry(url, options, retries = 2) {
       const chat = document.getElementById("chat");
       if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
       orb.classList.remove("thinking");
-      addRow("agent", "Сбой сети: " + (e && e.message ? e.message : "unknown"));
+      let msg = "Не удалось связаться с сервером. ";
+      if (e && e.name === "AbortError") {
+        msg += "Превышено время ожидания. Попробуйте ещё раз.";
+      } else if (e && e.name === "TypeError") {
+        msg += "Проверьте соединение и попробуйте снова.";
+      } else {
+        msg += (e && e.message ? e.message : "Неизвестная ошибка") + ". Попробуйте ещё раз.";
+      }
+      addRow("agent", msg);
     } finally {
       btn.disabled = false;
       input.focus();
