@@ -121,6 +121,11 @@ BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
     "cycles_completed": 0,
+    "social_adaptation": {
+        "active": False,
+        "reason": None,
+        "level": "inactive",
+    },
     "collisions_resolved": "0/0",
     "lots_balance": "+0.0",
     "patterns_applied": [],
@@ -271,10 +276,21 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     result = {**BASE_METRICS, **carried}
 
     for k, v in (incoming or {}).items():
-        if k in ("passport", "profile", "reminder", "artifacts"):
+        if k in ("passport", "profile", "inder", "artifacts", "social_adaptation"):
             continue
         if v is not None:
             result[k] = v
+
+    # social_adaptation — простое перезаписывание (не накапливается)
+    inc_sa = (incoming or {}).get("social_adaptation")
+    if isinstance(inc_sa, dict):
+        result["social_adaptation"] = {
+            "active": bool(inc_sa.get("active")),
+            "reason": inc_sa.get("reason"),
+            "level": inc_sa.get("level", "inactive"),
+        }
+    else:
+        result["social_adaptation"] = carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
 
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
