@@ -3306,8 +3306,7 @@
     document.getElementById("editorSub").textContent = isBlog
       ? "Правьте текст, затем опубликуйте в блог"
       : "Правьте текст, затем сохраните или скачайте";
-    document.getElementById("editorTagsField").style.display = isBlog ? "block" : "none";
-    document.getElementById("editorPublishRow").style.display = "flex";
+    document.getElementById("editorPublishBtn").style.display = isBlog ? "inline-flex" : "none";
     openSheet("editorSheet");
   }
 
