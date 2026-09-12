@@ -1,6 +1,7 @@
 # app.py
 # Monolog — stateless-прокси к Groq + блог + Word-экспорт.
-# Сжатая схема metrics. Слой B НЕ отправляется. История НЕ отправляется.
+# Ротация моделей: gpt-oss-20b / gpt-oss-120b / qwen3.6-27b.
+# Слой B НЕ отправляется. История НЕ отправляется.
 
 import os
 import re
@@ -24,9 +25,13 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(me
 log = logging.getLogger("monolog")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-MODEL = "qwen/qwen3.6-27b"
 MAX_TOKENS = 2500
 TIMEOUT = 90.0
+
+# --- Актуальные модели Groq (после 16.08.2026) ---
+MODEL_LIGHT = "openai/gpt-oss-20b"
+MODEL_MEDIUM = "openai/gpt-oss-120b"
+MODEL_HEAVY = "qwen/qwen3.6-27b"
 
 _DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
 _dev_key_cycle = itertools.cycle(_DEV_KEYS) if _DEV_KEYS else None
@@ -82,7 +87,36 @@ def check_author(request: Request):
         raise HTTPException(status_code=403, detail="Неверный ключ автора")
 
 
-# --- Сжатая схема metrics ---
+def pick_model(user_message: str, carried_metrics: Optional[Dict[str, Any]] = None) -> str:
+    """Ротация по эвристике.
+    Сложные задачи → qwen3.6-27b.
+    Средние → gpt-oss-120b.
+    Простые → gpt-oss-20b.
+    """
+    text = (user_message or "").lower()
+
+    # Тяжёлые — статьи, анализ, планы, стратегии
+    heavy_keywords = [
+        "статья", "лонгрид", "пост", "напиши",
+        "проанализируй", "анализ", "план", "стратег",
+        "архитектур", "спроектируй", "разработай",
+        "документ", "тз", "отчёт", "отчет",
+    ]
+    if any(kw in text for kw in heavy_keywords):
+        return MODEL_HEAVY
+
+    # Средние — длинные запросы или стратегический проект
+    if len(user_message or "") > 200:
+        return MODEL_MEDIUM
+    if carried_metrics:
+        passport = carried_metrics.get("passport") or {}
+        if passport.get("level") in ("strategic", "systemic"):
+            return MODEL_MEDIUM
+
+    # Простые — приветствия, короткие вопросы
+    return MODEL_LIGHT
+
+
 BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
@@ -120,7 +154,6 @@ BASE_METRICS = {
 }
 
 
-# Схема для LLM — только обязательные поля (компактная)
 COMPACT_SCHEMA = {
     "stability_index": "float 0-1",
     "indicator_status": "success | warning | critical",
@@ -201,14 +234,9 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
 
 
 def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Сжимает carried_metrics перед отправкой в LLM.
-    Принцип B.9 — оставляем только 2-3 ключевых измерения.
-    """
     if not carried:
         return {}
     out = {}
-
-    # passport — только level, title, goal
     p = carried.get("passport") or {}
     if p:
         out["passport"] = {
@@ -216,16 +244,12 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
             "title": p.get("title"),
             "goal": p.get("goal"),
         }
-
-    # profile — только values и patterns
     pr = carried.get("profile") or {}
     if pr:
         out["profile"] = {
             "values": pr.get("values") or {},
             "patterns": (pr.get("patterns") or [])[:5],
         }
-
-    # artifacts — только метаданные, без content
     arts = carried.get("artifacts") or []
     if arts:
         out["artifacts"] = [
@@ -239,7 +263,6 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
             for a in arts[-5:]
             if isinstance(a, dict)
         ]
-
     return out
 
 
@@ -253,7 +276,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         if v is not None:
             result[k] = v
 
-    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -270,7 +292,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
-    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
@@ -288,11 +309,9 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         merged_prof[list_key] = old
     result["profile"] = merged_prof
 
-    # reminder
     inc_rem = (incoming or {}).get("reminder")
     result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
 
-    # artifacts
     inc_art = (incoming or {}).get("artifacts") or []
     car_art = list(carried.get("artifacts") or [])
     seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
@@ -313,31 +332,43 @@ SYSTEM_PROMPT = (
     "Отвечай ТОЛЬКО валидным JSON, без пояснений и размышлений. "
     "Ничего до { и ничего после }. "
     "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
-    "reply_text — Markdown-текст ответа на русском языке. БЕЗ ЭМОДЗИ. "
+    "reply_text — Markdown-текст ответа на русском языке. "
     "metrics — строго по схеме ниже. Все поля обязательны. "
     "НЕ дублируй содержимое в artifacts.content — только метаданные.\n\n"
-    f"=== ИНСТРУКЦИЯ ===\n{LAYER_A}\n\n"
+    f"=== СЛОЙ A (ИНСТРУКЦИЯ) ===\n{LAYER_A}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(COMPACT_SCHEMA, ensure_ascii=False)}"
 )
 
 
-async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
+async def groq_call(messages: List[Dict[str, str]], api_key: str, model: str) -> str:
     headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
     payload = {
-        "model": MODEL, "messages": messages, "max_tokens": MAX_TOKENS,
-        "temperature": 0.6, "reasoning_effort": "none",
+        "model": model,
+        "messages": messages,
+        "max_tokens": MAX_TOKENS,
+        "temperature": 0.6,
     }
+    # reasoning_effort только для моделей, которые его поддерживают
+    if model.startswith("qwen"):
+        payload["reasoning_effort"] = "none"
+
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         r = await client.post(GROQ_URL, headers=headers, json=payload)
 
     remaining = r.headers.get("x-ratelimit-remaining-tokens", "?")
-    log.info(f"Groq response: {r.status_code} | remaining tokens: {remaining}")
+    log.info(f"Groq [{model}] | status={r.status_code} | remaining={remaining}")
 
     if r.status_code == 429:
         retry_after = r.headers.get("retry-after", "неизвестно")
-        raise HTTPException(status_code=429, detail=f"Лимит Groq исчерпан. Повторите через {retry_after} сек. Или введите свой ключ.")
+        raise HTTPException(
+            status_code=429,
+            detail=f"Лимит Groq исчерпан. Повторите через {retry_after} сек. Или введите свой ключ."
+        )
     if r.status_code >= 400:
         log.error(f"Groq error {r.status_code}: {r.text[:300]}")
+        # Если модель недоступна — попробуем fallback
+        if r.status_code in (400, 404) and "model" in r.text.lower():
+            raise HTTPException(status_code=502, detail=f"Модель {model} недоступна")
         raise HTTPException(status_code=r.status_code, detail="Ошибка Groq API")
 
     data = r.json()
@@ -431,6 +462,11 @@ async def health():
         "byok": ALLOW_BYOK,
         "blog_ready": bool(GITHUB_TOKEN),
         "author_secret_set": bool(AUTHOR_SECRET),
+        "models": {
+            "light": MODEL_LIGHT,
+            "medium": MODEL_MEDIUM,
+            "heavy": MODEL_HEAVY,
+        },
     }
 
 
@@ -448,9 +484,9 @@ async def chat(request: Request):
     if not api_key:
         raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ Groq.")
 
-    log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)} | files={len(attachments)}")
+    model = pick_model(user_message, carried_metrics)
+    log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | model={model} | len={len(user_message)} | files={len(attachments)}")
 
-    # Сжимаем carried_metrics перед отправкой
     compacted = compact_carried(carried_metrics)
 
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
@@ -467,25 +503,33 @@ async def chat(request: Request):
 
     messages.append({"role": "user", "content": user_content})
 
-    raw = await groq_call(messages, api_key)
+    raw = await groq_call(messages, api_key, model)
     parsed = extract_json(raw)
 
     if parsed and "reply_text" in parsed:
         metrics = merge_metrics(parsed.get("metrics") or {}, carried_metrics)
-        return JSONResponse({"reply_text": parsed["reply_text"], "metrics": metrics, "key_source": source})
+        return JSONResponse({
+            "reply_text": parsed["reply_text"],
+            "metrics": metrics,
+            "key_source": source,
+            "model_used": model,
+        })
 
     log.warning(f"JSON parse failed. Raw (first 300): {raw[:300]}")
     cleaned = strip_thinking(raw)
     fallback_metrics = merge_metrics({}, carried_metrics)
     fallback_metrics["protocol_integrity"] = False
     fallback_metrics["indicator_status"] = "warning"
-    return JSONResponse({"reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.", "metrics": fallback_metrics, "key_source": source})
+    return JSONResponse({
+        "reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.",
+        "metrics": fallback_metrics,
+        "key_source": source,
+        "model_used": model,
+    })
 
 
-# --- Word export ---
 @app.post("/export/docx")
 async def export_docx(request: Request):
-    """Генерирует .docx из Markdown-текста."""
     try:
         from docx import Document
         from docx.shared import Pt
@@ -503,7 +547,6 @@ async def export_docx(request: Request):
     if title:
         doc.add_heading(title, level=0)
 
-    # Простой парсер Markdown → docx
     lines = text.split("\n")
     for line in lines:
         s = line.rstrip()
@@ -538,7 +581,6 @@ async def export_docx(request: Request):
     )
 
 
-# --- Blog endpoints ---
 @app.get("/blog")
 async def blog_list():
     posts, _ = await github_get_file()
