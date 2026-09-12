@@ -25,12 +25,10 @@
     --critical-soft: rgba(184, 84, 80, 0.12);
     --success: #4F8A6B;
     --shadow: 0 1px 2px rgba(10, 11, 13, 0.03);
-    --shadow-hover: 0 2px 12px rgba(10, 11, 13, 0.05);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
   }
 
-  /* Тёмная тема — глубокий режим */
   html[data-theme="dark"] {
     --bg: #0F1115;
     --surface: #161A20;
@@ -47,7 +45,6 @@
     --critical-soft: rgba(224, 123, 123, 0.15);
     --success: #6BB88E;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.4);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -85,7 +82,6 @@
   }
   @media (prefers-reduced-motion: reduce) { .bg-blob { animation: none; } }
 
-  /* Splash со стеклянной сферой */
   .splash {
     position: fixed; inset: 0; z-index: 999;
     background: var(--bg);
@@ -96,9 +92,7 @@
   }
   .splash.hide { opacity: 0; pointer-events: none; }
   .splash-orb {
-    width: 120px;
-    height: 120px;
-    border-radius: 50%;
+    width: 120px; height: 120px; border-radius: 50%;
     position: relative;
     background:
       radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.95) 0%, transparent 30%),
@@ -112,9 +106,7 @@
   }
   .splash-orb::after {
     content: "";
-    position: absolute;
-    inset: 15%;
-    border-radius: 50%;
+    position: absolute; inset: 15%; border-radius: 50%;
     background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.6) 0%, transparent 50%);
     opacity: 0.7;
     animation: orbShine 4s ease-in-out infinite;
@@ -165,22 +157,13 @@
   .header-middle::-webkit-scrollbar { display: none; }
   .header-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
-  /* Сфера — единственный аватар */
   .orb {
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    flex-shrink: 0;
-    cursor: pointer;
-    position: relative;
+    width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
+    cursor: pointer; position: relative;
     transition: transform 0.2s, box-shadow 0.4s;
-    padding: 0;
-    border: none;
-    overflow: hidden;
+    padding: 0; border: none; overflow: hidden;
   }
   .orb:active { transform: scale(0.94); }
-
-  /* Аналитик — белая */
   .orb.analyst {
     background:
       radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 1) 0%, transparent 35%),
@@ -191,8 +174,6 @@
       inset 4px 4px 12px rgba(255, 255, 255, 0.9),
       0 2px 12px rgba(200, 160, 180, 0.2);
   }
-
-  /* Стратег — чёрная */
   .orb.strategist {
     background:
       radial-gradient(circle at 30% 25%, rgba(180, 190, 255, 0.4) 0%, transparent 35%),
@@ -205,9 +186,7 @@
   }
   .orb.strategist::after {
     content: "";
-    position: absolute;
-    inset: 18%;
-    border-radius: 50%;
+    position: absolute; inset: 18%; border-radius: 50%;
     background: radial-gradient(circle at 35% 30%, rgba(140, 160, 255, 0.35) 0%, transparent 55%);
     opacity: 0.8;
   }
@@ -223,14 +202,9 @@
     100% { transform: scale(1); opacity: 1; }
   }
 
-  /* Индикатор шума рядом со сферой */
   .noise-indicator {
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
+    position: absolute; bottom: -2px; right: -2px;
+    width: 10px; height: 10px; border-radius: 50%;
     border: 1.5px solid var(--bg);
     background: var(--muted);
     transition: background 0.3s;
@@ -281,9 +255,7 @@
   .project-tab.active {
     box-shadow: 0 0 0 2px var(--text), 0 1px 4px rgba(0, 0, 0, 0.08);
   }
-  .project-tab.long-press {
-    animation: tabPress 0.4s ease;
-  }
+  .project-tab.long-press { animation: tabPress 0.4s ease; }
   @keyframes tabPress {
     0%, 100% { transform: scale(1); }
     50% { transform: scale(0.9); }
@@ -314,6 +286,16 @@
   .lots-chip:active { transform: scale(0.96); }
   .lots-chip.positive { color: var(--success); }
   .lots-chip.negative { color: var(--critical); }
+  .lots-chip .lots-delta {
+    position: absolute; top: -20px; right: 0;
+    font-size: 11px; font-weight: 600;
+    color: var(--success);
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .lots-chip .lots-delta.show { opacity: 1; transform: translateY(-6px); }
+  .lots-chip .lots-delta.negative { color: var(--critical); }
+
   .social-indicator {
     width: 34px; height: 34px; border-radius: 12px;
     background: var(--surface); border: 1px solid var(--border-soft);
@@ -335,22 +317,6 @@
     border: 1.5px solid var(--surface);
     background: currentColor;
   }
-  .lots-chip .lots-delta {
-    position: absolute;
-    top: -20px;
-    right: 0;
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--success);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s, transform 0.3s;
-  }
-  .lots-chip .lots-delta.show {
-    opacity: 1;
-    transform: translateY(-6px);
-  }
-  .lots-chip .lots-delta.negative { color: var(--critical); }
 
   .reset-chip {
     display: none; align-items: center; gap: 6px;
@@ -868,10 +834,7 @@
     display: flex; gap: 10px; flex-wrap: wrap;
   }
 
-  /* Редактор документа / статьи */
-  .doc-editor {
-    display: flex; flex-direction: column; gap: 12px;
-  }
+  .doc-editor { display: flex; flex-direction: column; gap: 12px; }
   .doc-editor-field label {
     display: block; font-size: 12px; color: var(--muted);
     margin-bottom: 5px; font-weight: 500;
@@ -918,7 +881,6 @@
     min-height: 16px;
   }
 
-  /* Блог */
   .blog-tabs {
     display: flex; gap: 4px; margin-bottom: 14px;
     background: var(--surface-2); border-radius: 10px; padding: 3px;
@@ -1004,7 +966,6 @@
   }
   .blog-view-body pre code { background: none; padding: 0; color: inherit; }
 
-  /* Модалки */
   .modal-bg {
     position: fixed; inset: 0; background: rgba(10, 11, 13, 0.4);
     display: none; align-items: flex-end; justify-content: center; z-index: 60;
@@ -1109,7 +1070,6 @@
   .color-swatch:active { transform: scale(0.92); }
   .color-swatch.active { border-color: var(--text); }
 
-  /* Онбординг */
   .onboarding {
     position: fixed; inset: 0; z-index: 200;
     background: var(--bg);
@@ -1171,7 +1131,6 @@
   .onboarding .primary { background: var(--accent); color: var(--bg); }
   .onboarding .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
 
-  /* Проект sheet */
   .project-menu-item {
     display: flex; align-items: center; gap: 12px;
     padding: 14px 14px; border-bottom: 1px solid var(--border-soft);
@@ -1209,7 +1168,6 @@
 </head>
 <body>
 
-<!-- Splash -->
 <div class="splash" id="splash">
   <div class="splash-orb"></div>
   <div class="splash-text">AI Monolog</div>
@@ -1320,7 +1278,6 @@
 
 <div class="sheet-bg" id="sheetBg"></div>
 
-<!-- Метрики -->
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="sheetHandle"></div>
   <h3>Метрики сессии</h3>
@@ -1384,19 +1341,16 @@
   </div>
 </div>
 
-<!-- Профиль -->
 <div class="sheet" id="profileSheet">
   <div class="sheet-handle" id="profileHandle"></div>
   <div id="profileContent"></div>
 </div>
 
-<!-- Паспорт -->
 <div class="sheet" id="passportSheet">
   <div class="sheet-handle" id="passportHandle"></div>
   <div id="passportContent"></div>
 </div>
 
-<!-- Артефакты -->
 <div class="sheet" id="artifactsSheet">
   <div class="sheet-handle" id="artifactsHandle"></div>
   <h3>Артефакты проекта</h3>
@@ -1404,7 +1358,6 @@
   <div id="artifactsList"></div>
 </div>
 
-<!-- Редактор документа / статьи -->
 <div class="sheet" id="editorSheet">
   <div class="sheet-handle" id="editorHandle"></div>
   <h3 id="editorTitle">Редактор</h3>
@@ -1447,7 +1400,6 @@
   </div>
 </div>
 
-<!-- Блог — список -->
 <div class="sheet" id="blogSheet">
   <div class="sheet-handle" id="blogHandle"></div>
   <h3>Блог автора</h3>
@@ -1473,13 +1425,11 @@
   </div>
 </div>
 
-<!-- Блог — просмотр статьи -->
 <div class="sheet" id="blogViewSheet">
   <div class="sheet-handle" id="blogViewHandle"></div>
   <div id="blogViewContent"></div>
 </div>
 
-<!-- Выбор действия с проектом -->
 <div class="sheet" id="projectMenuSheet">
   <div class="sheet-handle" id="projectMenuHandle"></div>
   <h3 id="projectMenuTitle">Проект</h3>
@@ -1500,7 +1450,6 @@
   </div>
 </div>
 
-<!-- Модалка лотов -->
 <div class="modal-bg" id="lotsModalBg">
   <div class="modal">
     <button class="modal-close" id="lotsClose" aria-label="Закрыть">
@@ -1535,7 +1484,6 @@
   </div>
 </div>
 
-<!-- Модалка рисков -->
 <div class="modal-bg" id="riskModalBg">
   <div class="modal">
     <button class="modal-close" id="riskClose" aria-label="Закрыть">
@@ -1561,7 +1509,6 @@
   </div>
 </div>
 
-<!-- Модалка сброса -->
 <div class="modal-bg" id="resetModalBg">
   <div class="modal">
     <button class="modal-close" id="resetClose" aria-label="Закрыть">
@@ -1578,7 +1525,6 @@
   </div>
 </div>
 
-<!-- Модалка проекта -->
 <div class="modal-bg" id="projectModalBg">
   <div class="modal">
     <button class="modal-close" id="projectModalClose" aria-label="Закрыть">
@@ -1601,7 +1547,6 @@
   </div>
 </div>
 
-<!-- Настройки -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <button class="modal-close" id="modalClose" aria-label="Закрыть">
@@ -1638,7 +1583,6 @@
   </div>
 </div>
 
-<!-- Онбординг -->
 <div class="onboarding" id="onboarding">
   <div class="onboarding-inner">
     <div class="onboarding-orb"></div>
@@ -1674,7 +1618,6 @@
   const LS_AUTHOR = "monolog_author_key";
   const LS_ONBOARDED = "monolog_onboarded";
   const LS_FALLBACK = "monolog_state_fallback";
-  const LS_LEGACY = "monolog_state_fallback";
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const MAX_TEXT_CHARS = 3000;
   const MAX_FILES = 3;
@@ -1685,14 +1628,8 @@
   const STORE_META = "meta";
 
   const PROJECT_COLORS = [
-    "#5A7BD6", // спокойный синий
-    "#C77B4E", // терракота
-    "#6B9A7B", // шалфей
-    "#A68B5B", // тёплый песок
-    "#8B7BC7", // лаванда
-    "#B85C5C", // коралл
-    "#4A5568", // графит
-    "#5D7A8C", // серо-голубой
+    "#5A7BD6", "#C77B4E", "#6B9A7B", "#A68B5B",
+    "#8B7BC7", "#B85C5C", "#4A5568", "#5D7A8C",
   ];
 
   const THINKING_PHRASES = [
@@ -1719,16 +1656,15 @@
     attachments: [],
     sessionStart: Date.now(),
     lastKeySource: null,
-    mode: "analyst", // analyst | strategist
+    mode: "analyst",
     editingProjectId: null,
     editingProjectColor: PROJECT_COLORS[0],
-    editorContext: null, // { type: 'artifact' | 'blog_post', projectId, artifactId?, blogPostId?, name, body, tags }
+    editorContext: null,
     get project() {
       return this.projects.find(function (p) { return p.id === state.currentProjectId; });
     },
   };
 
-  // --- IndexedDB ---
   let _db = null, _dbFailed = false;
   function openDB() {
     return new Promise(function (resolve, reject) {
@@ -1816,6 +1752,7 @@
       stabilityHistory: [],
       lotsHistory: [],
       _important: {},
+      skills: {},
     };
   }
 
@@ -1828,7 +1765,6 @@
     } else if (state.projects.length) {
       state.currentProjectId = state.projects[0].id;
     } else {
-      // Миграция со старого формата
       try {
         const old = localStorage.getItem(LS_FALLBACK);
         if (old) {
@@ -1872,10 +1808,10 @@
   }
 
   function applyThemeFromMode() {
-    // Глубокий режим = тёмная тема, тихий = светлая
     const theme = state.profile.depth === "deep" ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", theme);
-    document.querySelector('meta[name="theme-color"]').setAttribute("content", theme === "dark" ? "#0F1115" : "#F7F8FA");
+    const meta = document.querySelector('meta[name="theme-color"]');
+    if (meta) meta.setAttribute("content", theme === "dark" ? "#0F1115" : "#F7F8FA");
   }
 
   function applyProfile() {
@@ -1901,9 +1837,7 @@
       orb.classList.remove("switching");
     }, 700);
     toast(state.mode === "analyst" ? "Режим Аналитика" : "Режим Стратега");
-    try {
-      localStorage.setItem("monolog_mode", state.mode);
-    } catch (e) {}
+    try { localStorage.setItem("monolog_mode", state.mode); } catch (e) {}
   }
 
   function renderMarkdown(text) {
@@ -1924,7 +1858,6 @@
     return parts.map(function (s) { return (s[0] || "").toUpperCase(); }).join("") || "?";
   }
 
-  // --- Рендер сообщений ---
   function renderDecisionCards(choices) {
     if (!choices || !choices.length) return null;
     const wrap = document.createElement("div");
@@ -2010,25 +1943,21 @@
     if (role === "agent") {
       bubble.innerHTML = renderMarkdown(content);
 
-      // Карточки решений
       if (metrics && metrics.value_choices && metrics.value_choices.length) {
         const cards = renderDecisionCards(metrics.value_choices);
         if (cards) bubble.appendChild(cards);
       }
-      // Артефакты-строки
       if (metrics && metrics.artifacts && metrics.artifacts.length) {
         metrics.artifacts.forEach(function (art) {
           const r = renderArtifactRow(art);
           if (r) bubble.appendChild(r);
         });
       }
-      // Кнопка «Открыть в редакторе» / «Открыть документ»
       if (metrics && metrics.artifact_status && metrics.artifact_status.ready) {
         const openBtn = renderOpenEditorButton(metrics.artifact_status, content);
         if (openBtn) bubble.appendChild(openBtn);
       }
 
-      // Действия
       const actions = document.createElement("div");
       actions.className = "msg-actions";
 
@@ -2087,7 +2016,6 @@
     return { row: row, bubble: bubble };
   }
 
-  // --- Обновление метрик ---
   function updateChip(metrics) {
     const chip = document.getElementById("stabilityChip");
     const val = document.getElementById("chipValue");
@@ -2114,7 +2042,6 @@
       else if (n < 0) chip.classList.add("negative");
     }
 
-    // Анимация начисления
     const p = state.project;
     if (p) {
       p.lotsHistory = p.lotsHistory || [];
@@ -2138,6 +2065,22 @@
     if (!ind) return;
     const pulse = (metrics && metrics.cognitive_pulse) || "stable";
     ind.className = "noise-indicator " + pulse;
+  }
+
+  function updateSocialIndicator(metrics) {
+    const ind = document.getElementById("socialIndicator");
+    if (!ind) return;
+    const sa = metrics && metrics.social_adaptation;
+    if (!sa || !sa.active) {
+      ind.className = "social-indicator";
+      ind.title = "Социальная адаптация: не активна";
+      return;
+    }
+    const level = sa.level || "low";
+    ind.className = "social-indicator active " + level;
+    const labels = { low: "низкая", medium: "средняя", high: "высокая" };
+    const reason = sa.reason ? " — " + sa.reason : "";
+    ind.title = "Социальная адаптация: " + (labels[level] || level) + reason;
   }
 
   function updateConditionalUI(metrics) {
@@ -2253,6 +2196,7 @@
     updateChip(m);
     updateLotsChip(m);
     updateNoise(m);
+    updateSocialIndicator(m);
     updateConditionalUI(m);
   }
 
@@ -2283,7 +2227,6 @@
     return s + " с";
   }
 
-  // --- Files ---
   function fileIcon(type) {
     if (type && type.startsWith("image/")) {
       return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
@@ -2349,7 +2292,6 @@
     renderAttachPreview();
   }
 
-  // --- Textarea auto-grow ---
   function setupTextarea() {
     const ta = document.getElementById("input");
     function resize() {
@@ -2368,7 +2310,6 @@
     resize();
   }
 
-  // --- Send ---
   async function send() {
     const input = document.getElementById("input");
     const btn = document.getElementById("sendBtn");
@@ -2439,7 +2380,6 @@
     }
   }
 
-  // --- Sheets ---
   function openSheet(id) {
     document.getElementById("sheetBg").classList.add("open");
     document.getElementById(id).classList.add("open");
@@ -2490,7 +2430,6 @@
     });
   }
 
-  // --- Редактор ---
   function openEditor(context) {
     state.editorContext = context || {};
     const name = context.name || "Документ";
@@ -2534,7 +2473,6 @@
     const safeName = name.replace(/[^\w\-а-яА-Я]+/gi, "_") || "document";
 
     if (ctx.type === "document" || ctx.type === "blog_post") {
-      // Word-экспорт через API
       fetch(API_BASE + "/export/docx", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -2550,7 +2488,6 @@
         URL.revokeObjectURL(a.href);
         toast("Word скачан");
       }).catch(function (e) {
-        // Fallback: md
         const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
@@ -2640,7 +2577,6 @@
     }
   }
 
-  // --- Блог ---
   function switchBlogTab(tab) {
     document.querySelectorAll(".blog-tab").forEach(function (t) {
       t.classList.toggle("active", t.dataset.tab === tab);
@@ -2710,7 +2646,6 @@
     }
   }
 
-  // --- Профиль ---
   function renderProfile() {
     const box = document.getElementById("profileContent");
     const p = state.project;
@@ -2718,7 +2653,6 @@
 
     let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта пользователя</div>';
 
-    // Навыки
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Развивающиеся навыки</div>';
     const skills = p && p.skills ? Object.entries(p.skills).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8) : [];
     if (!skills.length) {
@@ -2737,7 +2671,6 @@
       html += '</div>';
     }
 
-    // Компас
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Ценностный компас</div>';
     if (!c || !c.values || Object.keys(c.values).length === 0) {
       html += '<div class="empty-note">Пока нет данных.</div>';
@@ -2745,7 +2678,6 @@
       html += '<div class="compass-wrap">' + renderCompass(c.values) + '</div>';
     }
 
-    // Паттерны
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Паттерны мышления</div>';
     if (!c || !c.patterns || c.patterns.length === 0) {
       html += '<div class="empty-note">Пока не выявлены.</div>';
@@ -2753,7 +2685,6 @@
       html += '<div class="tag-list">' + c.patterns.map(function (pp) { return '<span class="tag">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
     }
 
-    // Искажения
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Когнитивные искажения</div>';
     if (!c || !c.distortions || c.distortions.length === 0) {
       html += '<div class="empty-note">Не обнаружены.</div>';
@@ -2761,7 +2692,6 @@
       html += '<div class="tag-list">' + c.distortions.map(function (pp) { return '<span class="tag warm">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
     }
 
-    // Наблюдения
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Наблюдения</div>';
     if (!c || !c.insights || c.insights.length === 0) {
       html += '<div class="empty-note">Пока нет.</div>';
@@ -2821,7 +2751,6 @@
     return svg;
   }
 
-  // --- Паспорт ---
   function renderPassport() {
     const box = document.getElementById("passportContent");
     const p = state.project;
@@ -2862,7 +2791,6 @@
     box.innerHTML = html;
   }
 
-  // --- Лоты модалка ---
   function openLotsModal() {
     const p = state.project;
     const m = (p && p.lastMetrics) || {};
@@ -2883,7 +2811,6 @@
     document.getElementById("lotsPulse").textContent = m.cognitive_pulse || "—";
     document.getElementById("lotsCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
 
-    // История начислений
     const hist = document.getElementById("lotsHistory");
     hist.innerHTML = "";
     const list = (p && p.lotsHistory) || [];
@@ -2906,7 +2833,6 @@
     document.getElementById("lotsModalBg").classList.add("open");
   }
 
-  // --- Проекты ---
   function renderProjectsBar() {
     const bar = document.getElementById("projectsBar");
     bar.innerHTML = "";
@@ -2939,7 +2865,6 @@
         tab.addEventListener(ev, function () {
           if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
           if (!moved && ev === "pointerup") {
-            // Обычный тап — переключение
             if (p.id !== state.currentProjectId) switchProject(p.id);
           }
         });
@@ -2971,7 +2896,13 @@
     p.history.forEach(function (m, idx) {
       addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
     });
-    if (p.lastMetrics) { updateChip(p.lastMetrics); updateLotsChip(p.lastMetrics); updateNoise(p.lastMetrics); updateConditionalUI(p.lastMetrics); }
+    if (p.lastMetrics) {
+      updateChip(p.lastMetrics);
+      updateLotsChip(p.lastMetrics);
+      updateNoise(p.lastMetrics);
+      updateSocialIndicator(p.lastMetrics);
+      updateConditionalUI(p.lastMetrics);
+    }
     renderSparkline();
     updateArtifactsSection();
   }
@@ -2982,7 +2913,6 @@
     if (!p) return;
     document.getElementById("projectMenuTitle").textContent = p.name || "Проект";
     document.getElementById("projectMenuSub").textContent = "Выберите действие";
-    document.getElementById("pmOpen").style.display = "none";
     openSheet("projectMenuSheet");
   }
 
@@ -3014,7 +2944,6 @@
     });
   }
 
-  // --- Swipe close ---
   function setupSwipeToClose(sheetEl, handleEl) {
     if (!sheetEl || !handleEl) return;
     let startY = 0, currentY = 0, dragging = false;
@@ -3044,7 +2973,6 @@
     }
   }
 
-  // --- Онбординг ---
   function maybeShowOnboarding() {
     let onboarded = false;
     try { onboarded = localStorage.getItem(LS_ONBOARDED) === "true"; } catch (e) {}
@@ -3053,20 +2981,17 @@
     }
   }
 
-  // --- Init ---
   async function init() {
     applyProfile();
     setupViewport();
     setupTextarea();
 
-    // Загрузка режима из localStorage
     try {
       const m = localStorage.getItem("monolog_mode");
       if (m === "analyst" || m === "strategist") state.mode = m;
     } catch (e) {}
     renderOrb();
 
-    // Загрузка профиля
     try {
       const prof = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
       if (prof) state.profile = Object.assign(state.profile, prof);
@@ -3079,7 +3004,6 @@
     renderProjectsBar();
     renderCurrentProject();
 
-    // Swipe-close
     ["metricsSheet", "profileSheet", "passportSheet", "artifactsSheet", "editorSheet", "blogSheet", "blogViewSheet", "projectMenuSheet"].forEach(function (id) {
       const sheet = document.getElementById(id);
       const handle = sheet ? sheet.querySelector(".sheet-handle") : null;
@@ -3088,7 +3012,6 @@
 
     setTimeout(function () { document.getElementById("splash").classList.add("hide"); }, 900);
 
-    // Онбординг
     maybeShowOnboarding();
 
     const sendBtn = document.getElementById("sendBtn");
@@ -3103,7 +3026,6 @@
     document.getElementById("attachBtn").addEventListener("click", function () { fileInput.click(); });
     fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
 
-    // Сфера
     const orbBtn = document.getElementById("orbBtn");
     let orbPressTimer = null;
     let orbMoved = false;
@@ -3128,18 +3050,26 @@
       });
     });
 
-    // Метрики
     document.getElementById("stabilityChip").addEventListener("click", function () { openSheet("metricsSheet"); });
     document.getElementById("passportBtn").addEventListener("click", function () { renderPassport(); openSheet("passportSheet"); });
     document.getElementById("reportIconBtn").addEventListener("click", downloadReport);
     document.getElementById("artifactsSectionInner").addEventListener("click", function () { renderArtifactsList(); openSheet("artifactsSheet"); });
 
-    // Лоты
     document.getElementById("lotsChip").addEventListener("click", openLotsModal);
     document.getElementById("lotsClose").addEventListener("click", function () { document.getElementById("lotsModalBg").classList.remove("open"); });
     document.getElementById("lotsModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
 
-    // Блог
+    document.getElementById("socialIndicator").addEventListener("click", function () {
+      const m = (state.project && state.project.lastMetrics) || {};
+      const sa = m.social_adaptation || {};
+      if (!sa.active) {
+        toast("Социальная адаптация: не активна");
+      } else {
+        const labels = { low: "низкая", medium: "средняя", high: "высокая" };
+        toast("Социальная адаптация: " + (labels[sa.level] || sa.level) + (sa.reason ? " — " + sa.reason : ""));
+      }
+    });
+
     document.getElementById("blogBtn").addEventListener("click", function () {
       switchBlogTab("list");
       loadBlogList();
@@ -3153,7 +3083,6 @@
       openEditor({ type: "blog_post", name: "", body: "", tags: [] });
     });
 
-    // Редактор
     document.getElementById("editorCopyBtn").addEventListener("click", function () {
       const body = document.getElementById("editorBody").value || "";
       if (navigator.clipboard) navigator.clipboard.writeText(body);
@@ -3169,8 +3098,6 @@
       h.addEventListener("click", function () { h.parentElement.classList.toggle("open"); });
     });
 
-    // Меню проекта
-    document.getElementById("projectMenuHandle").addEventListener("click", function () {});
     document.getElementById("pmOpen").addEventListener("click", function () {
       if (state.editingProjectId) switchProject(state.editingProjectId);
       closeAllSheets();
@@ -3205,7 +3132,6 @@
       toast("Проект удалён");
     });
 
-    // Модалка рисков
     document.getElementById("riskClose").addEventListener("click", function () { document.getElementById("riskModalBg").classList.remove("open"); });
     document.getElementById("riskModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
     document.getElementById("riskCancel").addEventListener("click", function () {
@@ -3219,7 +3145,6 @@
       toast("Альтернатива вставлена");
     });
 
-    // Сброс
     document.getElementById("resetChip").addEventListener("click", function () {
       const chip = document.getElementById("resetChip");
       document.getElementById("resetReason").textContent = chip.dataset.reason || "Модель рекомендует сбросить проблемную ветку диалога.";
@@ -3248,7 +3173,6 @@
       toast("Контекст сброшен");
     });
 
-    // Модалка проекта
     document.getElementById("projectModalClose").addEventListener("click", closeProjectModal);
     document.getElementById("projectCancel").addEventListener("click", closeProjectModal);
     document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
@@ -3294,7 +3218,6 @@
       toast("Проект удалён");
     });
 
-    // Настройки
     document.getElementById("settingsBtn").addEventListener("click", function () {
       document.getElementById("keyInput").value = state.apiKey || "";
       document.getElementById("authorKeyInput").value = state.authorKey || "";
@@ -3329,7 +3252,6 @@
       toast("Настройки сохранены");
     });
 
-    // Экспорт / Импорт
     document.getElementById("exportData").addEventListener("click", function () {
       const blob = new Blob([JSON.stringify({ projects: state.projects, profile: state.profile }, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
@@ -3361,7 +3283,6 @@
       reader.readAsText(file);
     });
 
-    // Онбординг
     document.getElementById("obStart").addEventListener("click", function () {
       const name = (document.getElementById("obName").value || "").trim();
       const key = (document.getElementById("obKey").value || "").trim();
