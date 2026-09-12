@@ -858,6 +858,136 @@ async def blog_update(post_id: str, request: Request):
 
 
 @app.delete("/blog/{post_id}")
+CODE_BRANCH = "dev"
+
+
+@app.get("/code/read")
+async def code_read(request: Request, path: str):
+    """Читает файл из репозитория (ветка dev или main)."""
+    check_author(request)
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        # Сначала пробуем dev
+        r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
+        if r.status_code == 404:
+            # Потом main
+            r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
+
+    if r.status_code == 404:
+        return JSONResponse({"exists": False, "path": path, "content": None, "sha": None})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
+
+    data = r.json()
+    try:
+        content = base64.b64decode(data.get("content", "")).decode("utf-8")
+    except Exception:
+        content = ""
+
+    return JSONResponse({
+        "exists": True,
+        "path": path,
+        "content": content,
+        "sha": data.get("sha"),
+        "branch": CODE_BRANCH if r.url.params.get("ref") == CODE_BRANCH else GITHUB_BRANCH,
+    })
+
+
+@app.post("/code/save")
+async def code_save(request: Request):
+    """Сохраняет файл в ветку dev."""
+    check_author(request)
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+
+    body = await request.json()
+    path = (body.get("path") or "").strip()
+    content = body.get("content") or ""
+    message = (body.get("message") or f"Update {path}").strip()
+
+    if not path:
+        raise HTTPException(status_code=400, detail="Не указан путь")
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
+
+    # Проверяем, существует ли файл в dev
+    sha = None
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
+        if r.status_code == 200:
+            sha = r.json().get("sha")
+
+    # Формируем коммит
+    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+    payload = {
+        "message": message,
+        "content": content_b64,
+        "branch": CODE_BRANCH,
+    }
+    if sha:
+        payload["sha"] = sha
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.put(url, headers=headers, json=payload)
+
+    if r.status_code >= 400:
+        log.error(f"GitHub code save error {r.status_code}: {r.text[:200]}")
+        raise HTTPException(status_code=502, detail="Не удалось сохранить код в GitHub")
+
+    data = r.json()
+    return JSONResponse({
+        "ok": True,
+        "path": path,
+        "branch": CODE_BRANCH,
+        "commit_sha": data.get("commit", {}).get("sha"),
+        "html_url": data.get("commit", {}).get("html_url"),
+    })
+
+
+@app.get("/code/list")
+async def code_list(request: Request, path: str = ""):
+    """Возвращает список файлов в папке."""
+    check_author(request)
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
+        if r.status_code == 404:
+            r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
+
+    if r.status_code == 404:
+        return JSONResponse({"items": []})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail="Не удалось прочитать папку")
+
+    data = r.json()
+    items = []
+    if isinstance(data, list):
+        for item in data:
+            items.append({
+                "name": item.get("name"),
+                "path": item.get("path"),
+                "type": item.get("type"),  # file | dir
+                "size": item.get("size"),
+            })
+    return JSONResponse({"items": items, "path": path})
 async def blog_delete(post_id: str, request: Request):
     check_author(request)
     posts, _ = await github_get_file()
