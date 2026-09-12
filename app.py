@@ -1,6 +1,6 @@
 # app.py
-# Monolog — stateless-прокси к Groq + блог автора через GitHub API.
-# Слой B НЕ отправляется в LLM. История НЕ отправляется.
+# Monolog — stateless-прокси к Groq + блог + Word-экспорт.
+# Сжатая схема metrics. Слой B НЕ отправляется. История НЕ отправляется.
 
 import os
 import re
@@ -9,11 +9,12 @@ import time
 import base64
 import logging
 import itertools
+from io import BytesIO
 from typing import Optional, List, Dict, Any
 
 import httpx
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -24,7 +25,7 @@ log = logging.getLogger("monolog")
 
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "qwen/qwen3.6-27b"
-MAX_TOKENS = 2000
+MAX_TOKENS = 2500
 TIMEOUT = 60.0
 
 _DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
@@ -81,6 +82,7 @@ def check_author(request: Request):
         raise HTTPException(status_code=403, detail="Неверный ключ автора")
 
 
+# --- Сжатая схема metrics ---
 BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
@@ -102,7 +104,7 @@ BASE_METRICS = {
     "risk_intercept": None,
     "reasoning_trace": None,
     "breakthrough_marker": False,
-    "cognitive_pulse": "slow",
+    "cognitive_pulse": "stable",
     "protocol_integrity": True,
     "developer_mode": False,
     "reminder": None,
@@ -115,6 +117,46 @@ BASE_METRICS = {
     "profile": {
         "values": {}, "patterns": [], "distortions": [], "insights": [],
     },
+}
+
+
+# Схема для LLM — только обязательные поля (компактная)
+COMPACT_SCHEMA = {
+    "stability_index": "float 0-1",
+    "indicator_status": "success | warning | critical",
+    "cycles_completed": "int",
+    "collisions_resolved": "N/N",
+    "lots_balance": "+X.X",
+    "mind_scale": "micro | tactical | strategic | systemic",
+    "human_contribution": "float 0-1",
+    "cognitive_pulse": "slow | stable | fast",
+    "reasoning_trace": "string | null",
+    "breakthrough_marker": "bool",
+    "reset_proposal": "{recommended, reset_point, reason} | null",
+    "reminder": "{set, at, text} | null",
+    "artifact_status": "{type, title, ready, suggested_tags, format} | null",
+    "value_choices": "[{question, options: [{label, consequences}]}]",
+    "risk_intercept": "{active, requested_action, risk_level, safe_alternative} | null",
+    "passport": {
+        "level": "micro | tactical | strategic | systemic",
+        "title": "string | null",
+        "goal": "string | null",
+        "result": "string | null",
+        "mission": "string | null",
+        "values": "[string]",
+        "constraints": "[string]",
+        "stakeholders": "[string]",
+        "risks": "[string]",
+        "metrics": "[string]",
+        "completion": "int 0-100",
+    },
+    "profile": {
+        "values": "{развитие: 0-1, стабильность: 0-1, свобода: 0-1, контроль: 0-1, связь: 0-1}",
+        "patterns": "[string]",
+        "distortions": "[string]",
+        "insights": "[string]",
+    },
+    "artifacts": "[{id, name, type, format, stage, version, comment}] (без content!)",
 }
 
 
@@ -158,6 +200,49 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
+def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Сжимает carried_metrics перед отправкой в LLM.
+    Принцип B.9 — оставляем только 2-3 ключевых измерения.
+    """
+    if not carried:
+        return {}
+    out = {}
+
+    # passport — только level, title, goal
+    p = carried.get("passport") or {}
+    if p:
+        out["passport"] = {
+            "level": p.get("level"),
+            "title": p.get("title"),
+            "goal": p.get("goal"),
+        }
+
+    # profile — только values и patterns
+    pr = carried.get("profile") or {}
+    if pr:
+        out["profile"] = {
+            "values": pr.get("values") or {},
+            "patterns": (pr.get("patterns") or [])[:5],
+        }
+
+    # artifacts — только метаданные, без content
+    arts = carried.get("artifacts") or []
+    if arts:
+        out["artifacts"] = [
+            {
+                "id": a.get("id"),
+                "name": a.get("name"),
+                "type": a.get("type"),
+                "version": a.get("version"),
+                "stage": a.get("stage"),
+            }
+            for a in arts[-5:]
+            if isinstance(a, dict)
+        ]
+
+    return out
+
+
 def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     carried = carried or {}
     result = {**BASE_METRICS, **carried}
@@ -168,6 +253,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         if v is not None:
             result[k] = v
 
+    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -184,6 +270,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
+    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
@@ -201,9 +288,11 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         merged_prof[list_key] = old
     result["profile"] = merged_prof
 
+    # reminder
     inc_rem = (incoming or {}).get("reminder")
     result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
 
+    # artifacts
     inc_art = (incoming or {}).get("artifacts") or []
     car_art = list(carried.get("artifacts") or [])
     seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
@@ -225,12 +314,10 @@ SYSTEM_PROMPT = (
     "Ничего до { и ничего после }. "
     "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
     "reply_text — Markdown-текст ответа на русском языке. БЕЗ ЭМОДЗИ. "
-    "Используй Markdown: заголовки, списки, таблицы, код. "
-    "metrics — строго по схеме ниже. "
-    "Блоки passport, profile, reminder, artifacts заполняй постепенно. "
-    "Пустые поля — null или []. Не выдумывай.\n\n"
+    "metrics — строго по схеме ниже. Все поля обязательны. "
+    "НЕ дублируй содержимое в artifacts.content — только метаданные.\n\n"
     f"=== ИНСТРУКЦИЯ ===\n{LAYER_A}\n\n"
-    f"=== СХЕМА METRICS ===\n{json.dumps(BASE_METRICS, ensure_ascii=False)}"
+    f"=== СХЕМА METRICS ===\n{json.dumps(COMPACT_SCHEMA, ensure_ascii=False)}"
 )
 
 
@@ -260,13 +347,11 @@ async def groq_call(messages: List[Dict[str, str]], api_key: str) -> str:
 
 # --- GitHub API ---
 GITHUB_API = "https://api.github.com"
-
-_blog_cache = {"posts": None, "etag": None, "fetched_at": 0}
+_blog_cache = {"posts": None, "sha": None, "fetched_at": 0}
 BLOG_CACHE_TTL = 300
 
 
 async def github_get_file():
-    """Возвращает (posts_list, sha). Из кэша, если свежий."""
     now = time.time()
     if _blog_cache["posts"] is not None and (now - _blog_cache["fetched_at"]) < BLOG_CACHE_TTL:
         return _blog_cache["posts"], _blog_cache.get("sha")
@@ -300,12 +385,10 @@ async def github_get_file():
 
 
 async def github_put_file(posts: list, message: str):
-    """Обновляет blog/posts.json в GitHub."""
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
 
     _, sha = await github_get_file()
-
     content = json.dumps(posts, ensure_ascii=False, indent=2)
     content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
 
@@ -325,7 +408,6 @@ async def github_put_file(posts: list, message: str):
         log.error(f"GitHub put error {r.status_code}: {r.text[:200]}")
         raise HTTPException(status_code=502, detail="Не удалось сохранить блог в GitHub")
 
-    # Инвалидируем кэш
     _blog_cache["posts"] = posts
     _blog_cache["sha"] = r.json().get("content", {}).get("sha")
     _blog_cache["fetched_at"] = time.time()
@@ -333,10 +415,7 @@ async def github_put_file(posts: list, message: str):
 
 
 app = FastAPI(title="Monolog MVP")
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
-)
+app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
 @app.get("/")
@@ -371,13 +450,21 @@ async def chat(request: Request):
 
     log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | len={len(user_message)} | files={len(attachments)}")
 
+    # Сжимаем carried_metrics перед отправкой
+    compacted = compact_carried(carried_metrics)
+
     messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
     user_content = user_message or "Проанализируй вложения."
     if attachments:
         block = "\n\n=== ВЛОЖЕНИЯ ===\n"
         for a in attachments[:3]:
             block += f"\n[Файл: {a.get('name', 'без имени')}]\n{a.get('text', '')}\n"
         user_content = user_content + block
+
+    if compacted:
+        user_content += "\n\n=== СЖАТЫЙ КОНТЕКСТ ПРОЕКТА ===\n" + json.dumps(compacted, ensure_ascii=False)
+
     messages.append({"role": "user", "content": user_content})
 
     raw = await groq_call(messages, api_key)
@@ -395,12 +482,66 @@ async def chat(request: Request):
     return JSONResponse({"reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.", "metrics": fallback_metrics, "key_source": source})
 
 
-# --- Blog endpoints ---
+# --- Word export ---
+@app.post("/export/docx")
+async def export_docx(request: Request):
+    """Генерирует .docx из Markdown-текста."""
+    try:
+        from docx import Document
+        from docx.shared import Pt
+    except ImportError:
+        raise HTTPException(status_code=503, detail="python-docx не установлен")
 
+    body = await request.json()
+    title = (body.get("title") or "Документ").strip()
+    text = (body.get("body") or "").strip()
+
+    if not text:
+        raise HTTPException(status_code=400, detail="Пустой текст")
+
+    doc = Document()
+    if title:
+        doc.add_heading(title, level=0)
+
+    # Простой парсер Markdown → docx
+    lines = text.split("\n")
+    for line in lines:
+        s = line.rstrip()
+        if not s:
+            continue
+        if s.startswith("# "):
+            doc.add_heading(s[2:].strip(), level=1)
+        elif s.startswith("## "):
+            doc.add_heading(s[3:].strip(), level=2)
+        elif s.startswith("### "):
+            doc.add_heading(s[4:].strip(), level=3)
+        elif s.startswith("- ") or s.startswith("* "):
+            doc.add_paragraph(s[2:].strip(), style="List Bullet")
+        elif re.match(r"^\d+\.\s", s):
+            doc.add_paragraph(re.sub(r"^\d+\.\s", "", s), style="List Number")
+        else:
+            p = doc.add_paragraph(s)
+            for run in p.runs:
+                run.font.size = Pt(11)
+
+    buf = BytesIO()
+    doc.save(buf)
+    buf.seek(0)
+
+    safe_title = re.sub(r"[^\w\-]+", "_", title or "document")[:60]
+    filename = f"{safe_title}.docx"
+
+    return StreamingResponse(
+        buf,
+        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+# --- Blog endpoints ---
 @app.get("/blog")
 async def blog_list():
     posts, _ = await github_get_file()
-    # Возвращаем без тяжёлого body, только мета
     metas = []
     for p in posts:
         metas.append({
