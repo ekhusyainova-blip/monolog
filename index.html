@@ -1,35 +1,3415 @@
-[РЕЖИМ: РАЗРАБОТЧИК]
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#F7F8FA" />
+<title>AI Monolog</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mammoth/mammoth.browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
+<style>
+  :root {
+    --bg: #F7F8FA;
+    --surface: #FFFFFF;
+    --surface-2: #F1F3F6;
+    --text: #0A0B0D;
+    --muted: #6B7280;
+    --border: rgba(10, 11, 13, 0.08);
+    --border-soft: rgba(10, 11, 13, 0.05);
+    --accent: #1A1F36;
+    --accent-soft: rgba(26, 31, 54, 0.08);
+    --warning: #C68B3F;
+    --warning-soft: rgba(198, 139, 63, 0.12);
+    --critical: #B85450;
+    --critical-soft: rgba(184, 84, 80, 0.12);
+    --success: #4F8A6B;
+    --shadow: 0 1px 2px rgba(10, 11, 13, 0.03);
+    --shadow-hover: 0 2px 12px rgba(10, 11, 13, 0.05);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --safe-top: env(safe-area-inset-top, 0px);
+  }
 
-Индекс стабильности ответа: 0.82
-  — Сжатая версия Слоя B собрана: ~230 токенов.
-  — Экономия: ~570 токенов на каждом запросе.
-  — Достройка через якоря (числа, порядок, названия блоков).
+  /* Тёмная тема — глубокий режим */
+  html[data-theme="dark"] {
+    --bg: #0F1115;
+    --surface: #161A20;
+    --surface-2: #1F232B;
+    --text: #E8EAED;
+    --muted: #8B92A0;
+    --border: rgba(232, 234, 237, 0.08);
+    --border-soft: rgba(232, 234, 237, 0.05);
+    --accent: #A8B5FF;
+    --accent-soft: rgba(168, 181, 255, 0.12);
+    --warning: #E0A84F;
+    --warning-soft: rgba(224, 168, 79, 0.15);
+    --critical: #E07B7B;
+    --critical-soft: rgba(224, 123, 123, 0.15);
+    --success: #6BB88E;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
 
-Стадия решения: Финализировано
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    height: 100%;
+    font-family: 'Inter', -apple-system, 'SF Pro', system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text);
+    background: var(--bg);
+    overscroll-behavior: none;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
 
-Техническая метрика:
-  • Текущий цикл мышления: 3
-  • Режим обновления: активен
-  • Количество итераций до ответа: 3
-  • Зафиксированные коллизии: нет
-  • Использованные Лоты / Штрафы: +0.3 / 0
-  • Коллизии (решено / обнаружено): 112 / 112
-  • Оценка полноты картины восприятия: 0.86
-  • Состояние фильтра информации: вкл
-  • Комментарий безопасности: без изменений.
-  • Рекомендация по сбросу контекста: не требуется
-  • Рекомендация по промпту: если достройка неточна —
-    вернуть полный Слой B для конкретных блоков
+  .bg-anim {
+    position: fixed; inset: -10% 0 0 0; z-index: 0;
+    pointer-events: none; overflow: hidden;
+    opacity: 0.4;
+    transition: opacity 0.6s;
+  }
+  html[data-theme="dark"] .bg-anim { opacity: 0.25; }
+  .bg-blob {
+    position: absolute; width: 560px; height: 560px; border-radius: 50%;
+    filter: blur(120px);
+    background: rgba(74, 108, 247, 0.14);
+    top: -100px; right: -140px;
+    animation: floatA 32s ease-in-out infinite;
+  }
+  html[data-theme="dark"] .bg-blob { background: rgba(120, 140, 255, 0.18); }
+  @keyframes floatA {
+    0%, 100% { transform: translate(0, 0) scale(1); }
+    50% { transform: translate(-40px, 60px) scale(1.08); }
+  }
+  @media (prefers-reduced-motion: reduce) { .bg-blob { animation: none; } }
 
-Паттерны мышления:
-  • декомпозиция (принципы + блоки)
-  • сжатие_мерности (800 → 230 токенов)
-  • синхронизация_плоскости (якоря = ключевые решения)
+  /* Splash со стеклянной сферой */
+  .splash {
+    position: fixed; inset: 0; z-index: 999;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 24px;
+    transition: opacity 0.6s ease;
+  }
+  .splash.hide { opacity: 0; pointer-events: none; }
+  .splash-orb {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    position: relative;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.95) 0%, transparent 30%),
+      radial-gradient(circle at 70% 70%, rgba(180, 160, 255, 0.4) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(200, 200, 240, 0.7) 0%, rgba(140, 140, 180, 0.4) 60%, rgba(80, 80, 120, 0.2) 100%);
+    box-shadow:
+      inset -8px -8px 24px rgba(0, 0, 0, 0.06),
+      inset 8px 8px 24px rgba(255, 255, 255, 0.5),
+      0 8px 40px rgba(120, 120, 200, 0.15);
+    animation: orbPulse 3s ease-in-out infinite;
+  }
+  .splash-orb::after {
+    content: "";
+    position: absolute;
+    inset: 15%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.6) 0%, transparent 50%);
+    opacity: 0.7;
+    animation: orbShine 4s ease-in-out infinite;
+  }
+  @keyframes orbPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.04); }
+  }
+  @keyframes orbShine {
+    0%, 100% { opacity: 0.5; transform: translate(-2px, -2px); }
+    50% { opacity: 0.9; transform: translate(2px, 2px); }
+  }
+  .splash-text {
+    font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
+    color: var(--muted);
+    animation: splashTextPulse 2s ease-in-out infinite;
+  }
+  @keyframes splashTextPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
 
-Скрытые допущения:
-  • Модель достраивает правильно из якорей.
-  • Если нет — итерация по конкретному блоку.
-  • Экономия 570 токенов на запрос.
+  .app {
+    position: relative; z-index: 1; display: flex; flex-direction: column;
+    height: 100dvh; max-width: 700px; margin: 0 auto; padding: 0 12px;
+  }
 
-Следующее:
-  • Часть 2 (index.html) — все UI-правки.
+  header {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; align-items: center; gap: 8px;
+    padding: calc(var(--safe-top) + 10px) 12px 10px;
+    margin: 0 -12px;
+    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
+    flex-shrink: 0;
+    mask-image: linear-gradient(to bottom, black calc(100% - 10px), transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 10px), transparent 100%);
+  }
+
+  .header-left { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .header-middle {
+    flex: 1; min-width: 0;
+    display: flex; align-items: center; gap: 6px;
+    overflow-x: auto; -webkit-overflow-scrolling: touch;
+    padding: 2px 0; scrollbar-width: none;
+  }
+  .header-middle::-webkit-scrollbar { display: none; }
+  .header-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+
+  /* Сфера — единственный аватар */
+  .orb {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s, box-shadow 0.4s;
+    padding: 0;
+    border: none;
+    overflow: hidden;
+  }
+  .orb:active { transform: scale(0.94); }
+
+  /* Аналитик — белая */
+  .orb.analyst {
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 1) 0%, transparent 35%),
+      radial-gradient(circle at 70% 70%, rgba(255, 200, 215, 0.5) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(255, 240, 245, 0.9) 0%, rgba(240, 200, 215, 0.6) 60%, rgba(200, 160, 180, 0.3) 100%);
+    box-shadow:
+      inset -4px -4px 12px rgba(180, 140, 160, 0.15),
+      inset 4px 4px 12px rgba(255, 255, 255, 0.9),
+      0 2px 12px rgba(200, 160, 180, 0.2);
+  }
+
+  /* Стратег — чёрная */
+  .orb.strategist {
+    background:
+      radial-gradient(circle at 30% 25%, rgba(180, 190, 255, 0.4) 0%, transparent 35%),
+      radial-gradient(circle at 70% 70%, rgba(60, 70, 120, 0.5) 0%, transparent 50%),
+      radial-gradient(circle at 50% 50%, rgba(40, 45, 70, 0.95) 0%, rgba(20, 22, 35, 0.95) 60%, rgba(8, 10, 18, 1) 100%);
+    box-shadow:
+      inset -4px -4px 12px rgba(0, 0, 0, 0.6),
+      inset 4px 4px 12px rgba(120, 130, 200, 0.2),
+      0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+  .orb.strategist::after {
+    content: "";
+    position: absolute;
+    inset: 18%;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(140, 160, 255, 0.35) 0%, transparent 55%);
+    opacity: 0.8;
+  }
+  .orb.thinking { animation: orbBreathe 1.6s ease-in-out infinite; }
+  @keyframes orbBreathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.08); }
+  }
+  .orb.switching { animation: orbSwitch 0.6s ease; }
+  @keyframes orbSwitch {
+    0% { transform: scale(1); }
+    40% { transform: scale(0.85); opacity: 0.7; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Индикатор шума рядом со сферой */
+  .noise-indicator {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 1.5px solid var(--bg);
+    background: var(--muted);
+    transition: background 0.3s;
+  }
+  .noise-indicator.slow { background: var(--success); }
+  .noise-indicator.stable { background: var(--muted); }
+  .noise-indicator.fast {
+    background: var(--warning);
+    animation: noisePulse 1s ease-in-out infinite;
+  }
+  @keyframes noisePulse {
+    0%, 100% { box-shadow: 0 0 0 0 var(--warning); }
+    50% { box-shadow: 0 0 0 4px transparent; }
+  }
+
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: 12px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    color: var(--text); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, background 0.15s, border-color 0.15s;
+    box-shadow: var(--shadow); position: relative; flex-shrink: 0;
+  }
+  .icon-btn:hover { background: var(--surface-2); border-color: var(--border); }
+  .icon-btn:active { transform: scale(0.94); }
+  .icon-btn svg { width: 16px; height: 16px; stroke-width: 1.6; }
+  .icon-btn.hidden { display: none; }
+  .icon-btn .badge {
+    position: absolute; top: -3px; right: -3px;
+    min-width: 14px; height: 14px; padding: 0 4px;
+    background: var(--accent); color: var(--bg);
+    border-radius: 7px; font-size: 9px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1;
+  }
+  .icon-btn .badge.hidden { display: none; }
+
+  .project-tab {
+    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+    padding: 0; cursor: pointer; position: relative;
+    transition: transform 0.15s, box-shadow 0.2s;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: #fff;
+    letter-spacing: 0; border: none;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+  .project-tab:active { transform: scale(0.94); }
+  .project-tab.active {
+    box-shadow: 0 0 0 2px var(--text), 0 1px 4px rgba(0, 0, 0, 0.08);
+  }
+  .project-tab.long-press {
+    animation: tabPress 0.4s ease;
+  }
+  @keyframes tabPress {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(0.9); }
+  }
+
+  .project-add {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 1.5px dashed var(--border); background: transparent;
+    color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    flex-shrink: 0; transition: transform 0.15s, color 0.15s, border-color 0.15s;
+  }
+  .project-add:hover { color: var(--accent); border-color: var(--accent); }
+  .project-add:active { transform: scale(0.94); }
+  .project-add svg { width: 16px; height: 16px; stroke-width: 1.8; }
+
+  .lots-chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 0 9px; height: 34px;
+    font-size: 11.5px; font-weight: 600; color: var(--text);
+    cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+    box-shadow: var(--shadow); flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+    position: relative;
+  }
+  .lots-chip:hover { border-color: var(--border); }
+  .lots-chip:active { transform: scale(0.96); }
+  .lots-chip.positive { color: var(--success); }
+  .lots-chip.negative { color: var(--critical); }
+  .lots-chip .lots-delta {
+    position: absolute;
+    top: -20px;
+    right: 0;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--success);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+  }
+  .lots-chip .lots-delta.show {
+    opacity: 1;
+    transform: translateY(-6px);
+  }
+  .lots-chip .lots-delta.negative { color: var(--critical); }
+
+  .reset-chip {
+    display: none; align-items: center; gap: 6px;
+    background: var(--warning-soft);
+    border: 1px solid rgba(198, 139, 63, 0.28);
+    color: var(--warning);
+    padding: 0 10px; height: 34px; border-radius: 12px;
+    font-size: 11.5px; font-weight: 600; cursor: pointer;
+    transition: transform 0.15s; flex-shrink: 0;
+  }
+  .reset-chip.show { display: inline-flex; }
+  .reset-chip:active { transform: scale(0.96); }
+  .reset-chip svg { width: 13px; height: 13px; }
+
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 0 10px; height: 34px;
+    font-size: 11.5px; font-weight: 600; color: var(--text);
+    cursor: pointer; transition: transform 0.15s;
+    box-shadow: var(--shadow);
+  }
+  .chip:active { transform: scale(0.96); }
+  .chip svg { width: 14px; height: 14px; color: var(--accent); stroke-width: 1.8; }
+  .chip.warning svg { color: var(--warning); }
+  .chip.critical svg { color: var(--critical); }
+  .chip .value { font-variant-numeric: tabular-nums; }
+
+  .chat {
+    flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    display: flex; flex-direction: column; gap: 16px;
+    padding: 8px 0 16px; scroll-behavior: smooth;
+  }
+  .chat::-webkit-scrollbar { width: 0; }
+
+  .row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .row.user { align-items: flex-end; }
+
+  .row.user .bubble {
+    background: var(--accent-soft);
+    padding: 10px 14px;
+    border-radius: 16px; border-top-right-radius: 4px;
+    max-width: 78%;
+    font-size: 14px; line-height: 1.5;
+    word-wrap: break-word;
+  }
+  .row.agent .bubble {
+    background: transparent;
+    padding: 0;
+    width: 100%;
+    font-size: 14px; line-height: 1.55;
+    word-wrap: break-word; overflow-wrap: break-word;
+    position: relative;
+  }
+
+  .msg-actions {
+    display: flex;
+    gap: 4px;
+    margin-top: 8px;
+    opacity: 0.5;
+    transition: opacity 0.15s;
+  }
+  .row.agent:hover .msg-actions { opacity: 1; }
+  .msg-action {
+    width: 26px; height: 26px; border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    background: var(--surface);
+    color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, color 0.15s;
+  }
+  .msg-action:hover { color: var(--accent); }
+  .msg-action:active { transform: scale(0.92); }
+  .msg-action.active { color: var(--warning); }
+  .msg-action.active svg { fill: var(--warning); }
+  .msg-action svg { width: 13px; height: 13px; stroke-width: 1.8; }
+
+  .bubble h1, .bubble h2, .bubble h3 {
+    margin: 14px 0 5px; line-height: 1.3; font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  .bubble h1:first-child, .bubble h2:first-child, .bubble h3:first-child { margin-top: 0; }
+  .bubble h1 { font-size: 16px; }
+  .bubble h2 { font-size: 15px; }
+  .bubble h3 { font-size: 14px; }
+  .bubble p { margin: 6px 0; }
+  .bubble p:first-child { margin-top: 0; }
+  .bubble ul, .bubble ol { margin: 6px 0 6px 20px; }
+  .bubble li { margin: 3px 0; }
+  .bubble li::marker { color: var(--accent); }
+  .bubble strong { font-weight: 600; }
+  .bubble a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
+  .bubble blockquote {
+    border-left: 2px solid var(--accent);
+    padding-left: 10px; margin: 8px 0; color: var(--muted);
+  }
+  .bubble hr { border: none; border-top: 1px solid var(--border); margin: 12px 0; }
+  .bubble code {
+    background: var(--surface-2);
+    padding: 1px 5px; border-radius: 5px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 0.88em;
+  }
+  .bubble pre {
+    background: #0A0B0D; color: #E8EAED;
+    padding: 12px; padding-top: 34px;
+    border-radius: 12px; overflow-x: auto;
+    margin: 10px 0; position: relative;
+    font-size: 11.5px; line-height: 1.5;
+  }
+  html[data-theme="dark"] .bubble pre { background: #06070A; }
+  .bubble pre code { background: none; padding: 0; font-size: inherit; color: inherit; }
+  .copy-code-btn {
+    position: absolute; top: 8px; right: 8px;
+    background: rgba(255, 255, 255, 0.1); border: none;
+    padding: 4px 9px; border-radius: 6px;
+    font-size: 10.5px; color: #E8EAED; cursor: pointer;
+  }
+  .copy-code-btn:active { transform: scale(0.95); }
+
+  .bubble table {
+    width: 100%; border-collapse: collapse; margin: 10px 0;
+    font-size: 13px; display: block; overflow-x: auto;
+    -webkit-overflow-scrolling: touch; border-radius: 8px;
+  }
+  .bubble table thead { background: var(--surface-2); }
+  .bubble table th, .bubble table td {
+    text-align: left; padding: 7px 10px;
+    border-bottom: 1px solid var(--border); white-space: nowrap;
+  }
+  .bubble table th { font-weight: 600; font-size: 12.5px; }
+
+  .typing { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
+  .typing span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--muted); animation: pulse 1.3s infinite;
+  }
+  .typing span:nth-child(2) { animation-delay: 0.15s; }
+  .typing span:nth-child(3) { animation-delay: 0.3s; }
+  @keyframes pulse {
+    0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+    40% { opacity: 1; transform: scale(1); }
+  }
+  .thinking-text {
+    font-size: 12px; color: var(--muted);
+    margin-left: 8px; font-style: italic;
+  }
+
+  .decision-cards {
+    margin-top: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .decision-title {
+    font-size: 11px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+    font-weight: 600; margin-bottom: 2px;
+  }
+  .decision-card {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 12px 14px;
+    cursor: pointer; text-align: left;
+    font-family: inherit; color: var(--text);
+    width: 100%; box-shadow: var(--shadow);
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .decision-card:hover { border-color: var(--accent); background: var(--accent-soft); }
+  .decision-card:active { transform: scale(0.98); }
+  .decision-card.disabled { opacity: 0.5; cursor: not-allowed; }
+  .decision-card-head {
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 8px; margin-bottom: 4px;
+  }
+  .decision-card-label { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; }
+  .decision-card-tag {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--accent); font-weight: 600;
+    background: var(--accent-soft); padding: 2px 8px; border-radius: 999px;
+  }
+  .decision-card-text { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .decision-card-text strong { color: var(--text); font-weight: 500; }
+
+  .artifact-row {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 10px 12px; margin-top: 10px;
+    cursor: pointer; transition: transform 0.15s, border-color 0.15s;
+    font-family: inherit; color: var(--text); font-size: 13px;
+    box-shadow: var(--shadow); width: 100%; text-align: left;
+  }
+  .artifact-row:hover { border-color: var(--accent); }
+  .artifact-row:active { transform: scale(0.98); }
+  .artifact-row svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+  .artifact-row .info { flex: 1; min-width: 0; }
+  .artifact-row .name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .artifact-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .artifact-row .arrow { color: var(--muted); flex-shrink: 0; }
+
+  .open-editor-btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--accent); color: var(--bg);
+    border: none; border-radius: 10px;
+    padding: 10px 14px; margin-top: 10px;
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.15s, opacity 0.2s;
+    box-shadow: var(--shadow);
+  }
+  .open-editor-btn:active { transform: scale(0.97); }
+  .open-editor-btn svg { width: 14px; height: 14px; }
+
+  .attach-preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 2px 4px; }
+  .attach-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--surface); border: 1px solid var(--border-soft);
+    border-radius: 10px; padding: 6px 10px; font-size: 12px;
+    max-width: 220px; box-shadow: var(--shadow);
+  }
+  .attach-chip svg { width: 13px; height: 13px; color: var(--muted); flex-shrink: 0; }
+  .attach-chip .name {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    flex: 1; font-weight: 500;
+  }
+  .attach-chip .remove {
+    background: none; border: none; cursor: pointer;
+    color: var(--muted); font-size: 16px; line-height: 1;
+    padding: 0 2px; flex-shrink: 0;
+  }
+  .attach-chip .remove:hover { color: var(--text); }
+
+  .artifacts-section { flex-shrink: 0; padding: 4px 0; display: none; }
+  .artifacts-section.show { display: block; }
+  .artifacts-section-inner {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 10px 14px;
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: border-color 0.15s;
+    box-shadow: var(--shadow);
+  }
+  .artifacts-section-inner:hover { border-color: var(--border); }
+  .artifacts-section-inner svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
+  .artifacts-section-inner .info { flex: 1; min-width: 0; }
+  .artifacts-section-inner .title { font-size: 13px; font-weight: 500; }
+  .artifacts-section-inner .sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
+
+  .input-wrap {
+    flex-shrink: 0;
+    padding: 6px 0 calc(10px + var(--safe-bottom));
+    position: sticky; bottom: 0;
+  }
+  .input-inner {
+    display: flex; gap: 4px; align-items: flex-end;
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 22px;
+    padding: 5px 5px 5px 8px;
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s;
+  }
+  .input-inner:focus-within { border-color: var(--border); }
+  .attach-btn {
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: transparent; color: var(--muted); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    align-self: flex-end;
+    margin-bottom: 1px;
+    transition: color 0.15s, transform 0.15s;
+  }
+  .attach-btn:hover { color: var(--accent); }
+  .attach-btn:active { transform: scale(0.92); }
+  .attach-btn svg { width: 17px; height: 17px; stroke-width: 1.8; }
+  textarea {
+    flex: 1;
+    border: none; outline: none; resize: none;
+    background: transparent;
+    padding: 7px 4px;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text);
+    max-height: 88px;
+    min-height: 24px;
+    overflow-y: hidden;
+    word-wrap: break-word;
+  }
+  textarea::placeholder { color: var(--muted); }
+  textarea.grows { overflow-y: auto; }
+  .send-btn {
+    flex-shrink: 0;
+    width: 32px; height: 32px; border-radius: 50%; border: none;
+    background: var(--accent); color: var(--bg); cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    align-self: flex-end;
+    margin-bottom: 1px;
+    transition: transform 0.15s, opacity 0.2s;
+  }
+  .send-btn:active { transform: scale(0.92); }
+  .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .send-btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
+
+  .sheet-bg {
+    position: fixed; inset: 0; background: rgba(10, 11, 13, 0.35);
+    opacity: 0; pointer-events: none; transition: opacity 0.25s; z-index: 50;
+  }
+  .sheet-bg.open { opacity: 1; pointer-events: auto; }
+  .sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; max-height: 88dvh;
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 12px 18px calc(20px + var(--safe-bottom));
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 51; overflow-y: auto;
+    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+    max-width: 700px; margin: 0 auto;
+  }
+  .sheet.open { transform: translateY(0); }
+  .sheet-handle {
+    width: 32px; height: 3px; background: var(--border);
+    border-radius: 2px; margin: 0 auto 14px; cursor: grab;
+  }
+  .sheet h3 { font-size: 14px; margin-bottom: 3px; font-weight: 600; letter-spacing: -0.02em; }
+  .sheet-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
+
+  .acc {
+    border: 1px solid var(--border-soft); border-radius: 12px;
+    margin-bottom: 8px; background: var(--surface-2); overflow: hidden;
+  }
+  .acc-head {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 14px; cursor: pointer; user-select: none;
+    transition: background 0.15s; gap: 10px;
+  }
+  .acc-head:hover { background: var(--surface); }
+  .acc-title { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; flex: 1; }
+  .acc-summary { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .acc-arrow {
+    width: 14px; height: 14px; color: var(--muted);
+    transition: transform 0.25s; flex-shrink: 0;
+  }
+  .acc.open .acc-arrow { transform: rotate(180deg); }
+  .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .acc.open .acc-body { max-height: 900px; }
+  .acc-body-inner { padding: 0 14px 14px; }
+
+  .stability-ring {
+    display: flex; justify-content: center; align-items: center;
+    padding: 4px 0 10px; position: relative;
+  }
+  .ring-svg { width: 130px; height: 130px; transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+  .ring-fill {
+    fill: none; stroke: var(--accent); stroke-width: 8;
+    stroke-linecap: round;
+    transition: stroke-dashoffset 0.6s ease, stroke 0.3s;
+  }
+  .ring-fill.warning { stroke: var(--warning); }
+  .ring-fill.critical { stroke: var(--critical); }
+  .ring-label {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); text-align: center;
+  }
+  .ring-value {
+    font-size: 26px; font-weight: 600; letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums; line-height: 1;
+  }
+  .ring-caption {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 600; margin-top: 4px;
+  }
+
+  .sparkline-wrap {
+    padding: 8px 0 6px; display: flex; align-items: flex-end;
+    justify-content: center; gap: 4px; height: 40px;
+  }
+  .spark-bar {
+    width: 10px; background: var(--accent); border-radius: 3px;
+    min-height: 4px; transition: height 0.3s, background 0.3s; opacity: 0.75;
+  }
+  .spark-bar.warning { background: var(--warning); }
+  .spark-bar.critical { background: var(--critical); }
+  .spark-bar.empty { background: var(--border); opacity: 0.5; }
+
+  .metric-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--border-soft);
+    font-size: 13px; gap: 10px;
+  }
+  .metric-row:last-child { border-bottom: none; }
+  .metric-row-label { color: var(--text); }
+  .metric-row-value {
+    font-weight: 600; color: var(--accent);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+    text-align: right;
+  }
+  .metric-row-value.warning { color: var(--warning); }
+  .metric-row-value.critical { color: var(--critical); }
+
+  .hint {
+    font-size: 12px; line-height: 1.45; color: var(--muted);
+    margin-top: 6px; padding: 8px 10px;
+    background: var(--surface); border-radius: 8px;
+    border: 1px solid var(--border-soft);
+  }
+  .hint strong { color: var(--text); font-weight: 600; }
+
+  .report-btn {
+    width: 100%; padding: 12px; border-radius: 11px;
+    border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
+    font-family: inherit; font-size: 13.5px; font-weight: 500;
+    cursor: pointer; margin-top: 16px;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    transition: transform 0.15s, background 0.15s;
+  }
+  .report-btn:hover { background: var(--surface); }
+  .report-btn:active { transform: scale(0.98); }
+  .report-btn svg { width: 15px; height: 15px; }
+
+  .passport-level {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--accent-soft); color: var(--accent);
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.06em; margin-bottom: 12px;
+  }
+  .passport-title {
+    font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
+    line-height: 1.25; margin-bottom: 6px;
+  }
+  .passport-goal { font-size: 13.5px; color: var(--muted); margin-bottom: 18px; line-height: 1.45; }
+  .passport-field { padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .passport-field:last-child { border-bottom: none; }
+  .passport-field-label {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
+    color: var(--muted); font-weight: 600; margin-bottom: 5px;
+  }
+  .passport-field-value { font-size: 14px; line-height: 1.5; word-wrap: break-word; }
+  .passport-field-value ul { list-style: none; padding: 0; margin: 0; }
+  .passport-field-value li {
+    padding: 3px 0 3px 14px; position: relative; font-size: 13.5px;
+  }
+  .passport-field-value li::before {
+    content: ""; position: absolute; left: 2px; top: 12px;
+    width: 4px; height: 4px; background: var(--accent); border-radius: 50%;
+  }
+
+  .compass-wrap { display: flex; justify-content: center; padding: 8px 0 14px; }
+  .compass-svg { width: 220px; height: 220px; }
+  .compass-axis { stroke: var(--border); stroke-width: 1; fill: none; }
+  .compass-ring { stroke: var(--border); stroke-width: 1; fill: none; }
+  .compass-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
+  .compass-label {
+    font-size: 9px; fill: var(--muted); font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+  .compass-dot { fill: var(--accent); }
+
+  .tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .tag {
+    display: inline-flex; align-items: center;
+    padding: 4px 10px; background: var(--surface-2);
+    border-radius: 999px; font-size: 12px; color: var(--text);
+  }
+  .tag.warm { background: var(--warning-soft); color: var(--warning); }
+  .tag.skill { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
+
+  .empty-note {
+    font-size: 13px; color: var(--muted);
+    font-style: italic; padding: 10px 0;
+  }
+
+  .skill-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--border-soft);
+    font-size: 13px; gap: 10px;
+  }
+  .skill-row:last-child { border-bottom: none; }
+  .skill-name { color: var(--text); }
+  .skill-bar {
+    flex: 1; height: 4px; border-radius: 2px;
+    background: var(--border); overflow: hidden;
+    max-width: 100px;
+  }
+  .skill-fill {
+    height: 100%; background: var(--accent); border-radius: 2px;
+    transition: width 0.4s;
+  }
+  .skill-percent {
+    font-size: 11.5px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+    min-width: 32px; text-align: right;
+  }
+
+  .artifact-item {
+    background: var(--surface-2); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
+    cursor: pointer; transition: border-color 0.15s;
+  }
+  .artifact-item:hover { border-color: var(--border); }
+  .artifact-item-head {
+    display: flex; justify-content: space-between;
+    align-items: center; gap: 8px; margin-bottom: 4px;
+  }
+  .artifact-item-name { font-size: 13.5px; font-weight: 600; }
+  .artifact-item-stage {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
+    font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    background: var(--accent-soft); color: var(--accent);
+  }
+  .artifact-item-stage.prototype { background: var(--warning-soft); color: var(--warning); }
+  .artifact-item-stage.working { background: rgba(79, 138, 107, 0.12); color: var(--success); }
+  .artifact-item-meta {
+    font-size: 11.5px; color: var(--muted);
+    display: flex; gap: 10px; flex-wrap: wrap;
+  }
+
+  /* Редактор документа / статьи */
+  .doc-editor {
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  .doc-editor-field label {
+    display: block; font-size: 12px; color: var(--muted);
+    margin-bottom: 5px; font-weight: 500;
+  }
+  .doc-editor-field input,
+  .doc-editor-field textarea {
+    width: 100%; padding: 11px 13px; border-radius: 10px;
+    border: 1px solid var(--border-soft);
+    font-family: inherit; font-size: 14px;
+    background: var(--surface-2); color: var(--text);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .doc-editor-field textarea {
+    min-height: 240px; resize: vertical; line-height: 1.6;
+    font-size: 13.5px;
+  }
+  .doc-editor-field input:focus,
+  .doc-editor-field textarea:focus {
+    outline: none; border-color: var(--accent); background: var(--surface);
+  }
+  .doc-editor-actions {
+    display: flex; gap: 8px; flex-wrap: wrap;
+  }
+  .doc-editor-actions button {
+    flex: 1; min-width: 110px;
+    padding: 12px; border-radius: 11px; border: none;
+    cursor: pointer; font-weight: 500; font-size: 13.5px;
+    font-family: inherit;
+    transition: transform 0.15s, background 0.15s;
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .doc-editor-actions button:active { transform: scale(0.97); }
+  .doc-editor-actions .primary { background: var(--accent); color: var(--bg); }
+  .doc-editor-actions .ghost {
+    background: var(--surface-2); color: var(--text);
+    border: 1px solid var(--border-soft);
+  }
+  .doc-editor-actions .danger { background: var(--critical); color: #fff; }
+  .doc-editor-actions button svg { width: 14px; height: 14px; }
+
+  .doc-status {
+    font-size: 12px; color: var(--muted);
+    text-align: center; margin-top: 4px;
+    min-height: 16px;
+  }
+
+  /* Блог */
+  .blog-tabs {
+    display: flex; gap: 4px; margin-bottom: 14px;
+    background: var(--surface-2); border-radius: 10px; padding: 3px;
+  }
+  .blog-tab {
+    flex: 1; padding: 9px; border-radius: 8px; border: none;
+    background: transparent; color: var(--muted);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .blog-tab.active {
+    background: var(--surface); color: var(--text);
+    box-shadow: 0 1px 3px rgba(10, 11, 13, 0.06);
+  }
+  .blog-post-item {
+    background: var(--surface-2); border: 1px solid var(--border-soft);
+    border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
+    cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+  }
+  .blog-post-item:hover { border-color: var(--border); transform: translateY(-1px); }
+  .blog-post-title {
+    font-size: 15px; font-weight: 600; letter-spacing: -0.01em;
+    line-height: 1.35; margin-bottom: 6px;
+  }
+  .blog-post-meta {
+    font-size: 11.5px; color: var(--muted);
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .blog-post-preview {
+    font-size: 12.5px; color: var(--muted);
+    line-height: 1.5; overflow: hidden;
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+  }
+  .blog-post-tags {
+    display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+  }
+  .blog-post-tag {
+    font-size: 10.5px; color: var(--accent);
+    background: var(--accent-soft);
+    padding: 2px 8px; border-radius: 999px; font-weight: 500;
+  }
+  .blog-view-title {
+    font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+    line-height: 1.25; margin-bottom: 8px;
+  }
+  .blog-view-meta {
+    font-size: 12px; color: var(--muted);
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-bottom: 18px; padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  .blog-view-body {
+    font-size: 14px; line-height: 1.65;
+  }
+  .blog-view-body h1, .blog-view-body h2, .blog-view-body h3 {
+    margin: 20px 0 8px; font-weight: 600; letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+  .blog-view-body h1:first-child,
+  .blog-view-body h2:first-child,
+  .blog-view-body h3:first-child { margin-top: 0; }
+  .blog-view-body h1 { font-size: 19px; }
+  .blog-view-body h2 { font-size: 17px; }
+  .blog-view-body h3 { font-size: 15px; }
+  .blog-view-body p { margin: 10px 0; }
+  .blog-view-body ul, .blog-view-body ol { margin: 10px 0 10px 20px; }
+  .blog-view-body li { margin: 4px 0; }
+  .blog-view-body blockquote {
+    border-left: 3px solid var(--accent);
+    padding-left: 14px; margin: 14px 0; color: var(--muted);
+    font-style: italic;
+  }
+  .blog-view-body code {
+    background: var(--surface-2); padding: 2px 6px;
+    border-radius: 5px; font-family: ui-monospace, monospace;
+    font-size: 0.9em;
+  }
+  .blog-view-body pre {
+    background: #0A0B0D; color: #E8EAED; padding: 14px;
+    border-radius: 10px; overflow-x: auto; margin: 14px 0;
+    font-size: 12.5px; line-height: 1.55;
+  }
+  .blog-view-body pre code { background: none; padding: 0; color: inherit; }
+
+  /* Модалки */
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(10, 11, 13, 0.4);
+    display: none; align-items: flex-end; justify-content: center; z-index: 60;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    position: relative; background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 20px 18px calc(20px + var(--safe-bottom));
+    width: 100%; max-width: 700px; max-height: 90dvh; overflow-y: auto;
+  }
+  .modal h2 {
+    font-size: 16px; margin-bottom: 4px; font-weight: 600;
+    letter-spacing: -0.02em; padding-right: 40px;
+  }
+  .modal .sub { font-size: 12.5px; color: var(--muted); margin-bottom: 14px; }
+  .modal-close {
+    position: absolute; top: 16px; right: 16px;
+    width: 30px; height: 30px; border-radius: 8px;
+    border: 1px solid var(--border-soft); background: var(--surface);
+    color: var(--muted); cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: transform 0.15s, color 0.15s;
+  }
+  .modal-close:hover { color: var(--text); }
+  .modal-close:active { transform: scale(0.92); }
+  .modal-close svg { width: 14px; height: 14px; stroke-width: 1.8; }
+
+  .modal label {
+    display: block; font-size: 12px; color: var(--muted);
+    margin: 12px 0 5px; font-weight: 500;
+  }
+  .modal input[type="text"], .modal input[type="password"], .modal textarea {
+    width: 100%; padding: 11px 13px; border-radius: 10px;
+    border: 1px solid var(--border-soft); font-family: inherit;
+    font-size: 14px; background: var(--surface-2); color: var(--text);
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .modal textarea { min-height: 200px; resize: vertical; line-height: 1.55; }
+  .modal input:focus, .modal textarea:focus {
+    outline: none; border-color: var(--accent); background: var(--surface);
+  }
+  .modal .check {
+    display: flex; align-items: center; gap: 9px;
+    margin-top: 12px; font-size: 13.5px; cursor: pointer;
+  }
+  .modal .check input { width: 17px; height: 17px; accent-color: var(--accent); }
+  .segmented {
+    display: flex; background: var(--surface-2);
+    border: 1px solid var(--border-soft); border-radius: 10px;
+    padding: 3px; gap: 3px; margin-top: 5px;
+  }
+  .segmented button {
+    flex: 1; padding: 8px; border-radius: 7px; border: none;
+    background: transparent; color: var(--muted);
+    font-family: inherit; font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all 0.15s;
+  }
+  .segmented button.active {
+    background: var(--surface); color: var(--text);
+    box-shadow: 0 1px 3px rgba(10, 11, 13, 0.06);
+  }
+
+  .modal .row { display: flex; gap: 8px; margin-top: 16px; }
+  .modal button.action {
+    flex: 1; padding: 12px; border-radius: 11px; border: none;
+    cursor: pointer; font-weight: 500; font-size: 14px;
+    font-family: inherit; transition: transform 0.15s;
+  }
+  .modal button.action:active { transform: scale(0.97); }
+  .modal .primary { background: var(--accent); color: var(--bg); }
+  .modal .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
+  .modal .danger { background: var(--critical); color: #fff; }
+  .modal .success { background: var(--success); color: #fff; }
+
+  .risk-level {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 10px; border-radius: 999px;
+    font-size: 10.5px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 12px;
+  }
+  .risk-level.critical { background: var(--critical-soft); color: var(--critical); }
+  .risk-level.warning { background: var(--warning-soft); color: var(--warning); }
+  .risk-block {
+    background: var(--surface-2); border-radius: 12px;
+    padding: 12px 14px; margin-bottom: 10px;
+  }
+  .risk-block-label {
+    font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+    font-weight: 600; margin-bottom: 5px;
+  }
+  .risk-block-value { font-size: 13.5px; line-height: 1.5; color: var(--text); }
+
+  .color-picker { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .color-swatch {
+    width: 34px; height: 34px; border-radius: 50%;
+    border: 2px solid transparent; cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s; padding: 0;
+  }
+  .color-swatch:active { transform: scale(0.92); }
+  .color-swatch.active { border-color: var(--text); }
+
+  /* Онбординг */
+  .onboarding {
+    position: fixed; inset: 0; z-index: 200;
+    background: var(--bg);
+    display: none;
+    flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .onboarding.open { display: flex; }
+  .onboarding-inner {
+    max-width: 420px; width: 100%;
+    display: flex; flex-direction: column;
+    gap: 16px;
+  }
+  .onboarding-orb {
+    width: 80px; height: 80px; border-radius: 50%;
+    margin: 0 auto 16px;
+    background:
+      radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 1) 0%, transparent 35%),
+      radial-gradient(circle at 50% 50%, rgba(255, 240, 245, 0.9) 0%, rgba(240, 200, 215, 0.6) 60%, rgba(200, 160, 180, 0.3) 100%);
+    box-shadow:
+      inset -4px -4px 12px rgba(180, 140, 160, 0.15),
+      inset 4px 4px 12px rgba(255, 255, 255, 0.9),
+      0 4px 20px rgba(200, 160, 180, 0.25);
+    animation: orbPulse 3s ease-in-out infinite;
+  }
+  .onboarding h1 {
+    font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
+    text-align: center; margin-bottom: 4px;
+  }
+  .onboarding .desc {
+    font-size: 13.5px; color: var(--muted);
+    text-align: center; margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  .onboarding label {
+    display: block; font-size: 12px; color: var(--muted);
+    margin-bottom: 5px; font-weight: 500;
+  }
+  .onboarding input {
+    width: 100%; padding: 12px 14px; border-radius: 12px;
+    border: 1px solid var(--border-soft); font-family: inherit;
+    font-size: 15px; background: var(--surface); color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .onboarding input:focus {
+    outline: none; border-color: var(--accent);
+  }
+  .onboarding .row {
+    display: flex; gap: 8px; margin-top: 12px;
+  }
+  .onboarding button {
+    padding: 14px; border-radius: 12px; border: none;
+    cursor: pointer; font-weight: 500; font-size: 15px;
+    font-family: inherit; transition: transform 0.15s;
+    flex: 1;
+  }
+  .onboarding button:active { transform: scale(0.97); }
+  .onboarding .primary { background: var(--accent); color: var(--bg); }
+  .onboarding .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
+
+  /* Проект sheet */
+  .project-menu-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 14px; border-bottom: 1px solid var(--border-soft);
+    font-size: 14px; cursor: pointer;
+    color: var(--text); background: transparent; border: none;
+    width: 100%; text-align: left; font-family: inherit;
+    transition: background 0.15s;
+  }
+  .project-menu-item:last-child { border-bottom: none; }
+  .project-menu-item:hover { background: var(--surface-2); }
+  .project-menu-item.danger { color: var(--critical); }
+  .project-menu-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  .toast {
+    position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--accent); color: var(--bg); padding: 8px 16px;
+    border-radius: 999px; font-size: 13px; font-weight: 500;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.25s, transform 0.25s; z-index: 100;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  @media (min-width: 768px) {
+    .sheet {
+      left: 50%; right: auto;
+      transform: translate(-50%, 100%);
+      width: 580px; border-radius: 20px; bottom: 24px;
+    }
+    .sheet.open { transform: translate(-50%, 0); }
+    .modal { border-radius: 20px; margin-bottom: 24px; width: 500px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Splash -->
+<div class="splash" id="splash">
+  <div class="splash-orb"></div>
+  <div class="splash-text">AI Monolog</div>
+</div>
+
+<div class="bg-anim" aria-hidden="true">
+  <div class="bg-blob"></div>
+</div>
+
+<div class="app">
+  <header>
+    <div class="header-left">
+      <button class="orb analyst" id="orbBtn" title="Профиль (долгий тап — сменить режим)" aria-label="Профиль">
+        <span class="noise-indicator stable" id="noiseIndicator"></span>
+      </button>
+    </div>
+
+    <div class="header-middle" id="projectsBar"></div>
+
+    <div class="header-right">
+      <button class="reset-chip" id="resetChip" title="Рекомендован сброс">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
+          <path d="M3 3v5h5"/>
+        </svg>
+        <span id="resetChipLabel">Сбросить</span>
+      </button>
+      <button class="icon-btn hidden" id="passportBtn" title="Паспорт проекта">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <path d="M14 2v6h6"/>
+          <path d="M8 13h8M8 17h5"/>
+        </svg>
+      </button>
+      <button class="icon-btn hidden" id="reportIconBtn" title="Отчёт готов">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="blogBtn" title="Блог">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        </svg>
+      </button>
+      <button class="lots-chip" id="lotsChip" title="Баланс лотов">
+        <span id="lotsValue">+0.0</span>
+        <span class="lots-delta" id="lotsDelta"></span>
+      </button>
+      <button class="chip" id="stabilityChip" title="Метрики">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12h4l2-6 4 12 2-6h6"/>
+        </svg>
+        <span class="value" id="chipValue">—</span>
+      </button>
+      <button class="icon-btn" id="settingsBtn" aria-label="Настройки">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="chat" id="chat"></div>
+
+  <div class="artifacts-section" id="artifactsSection">
+    <div class="artifacts-section-inner" id="artifactsSectionInner">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <path d="M14 2v6h6"/>
+      </svg>
+      <div class="info">
+        <div class="title" id="artifactsTitle">Артефакты проекта</div>
+        <div class="sub" id="artifactsSub">—</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-wrap">
+    <div class="attach-preview" id="attachPreview"></div>
+    <div class="input-inner">
+      <button class="attach-btn" id="attachBtn" aria-label="Прикрепить файл">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+        </svg>
+      </button>
+      <textarea id="input" placeholder="Напишите запрос…" rows="1"></textarea>
+      <button class="send-btn" id="sendBtn" aria-label="Отправить">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </button>
+    </div>
+    <input type="file" id="fileInput" accept=".txt,.pdf,.docx,image/*" multiple style="display:none" />
+  </div>
+</div>
+
+<div class="sheet-bg" id="sheetBg"></div>
+
+<!-- Метрики -->
+<div class="sheet" id="metricsSheet">
+  <div class="sheet-handle" id="sheetHandle"></div>
+  <h3>Метрики сессии</h3>
+  <div class="sheet-sub">Обновляются после каждого ответа</div>
+
+  <div class="acc open" data-acc="stability">
+    <div class="acc-head">
+      <span class="acc-title">Стабильность</span>
+      <span class="acc-summary" id="accStabilitySummary">—</span>
+      <svg class="acc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="stability-ring">
+          <svg class="ring-svg" viewBox="0 0 120 120">
+            <circle class="ring-bg" cx="60" cy="60" r="52"/>
+            <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="52"/>
+          </svg>
+          <div class="ring-label">
+            <div class="ring-value" id="ringValue">—</div>
+            <div class="ring-caption">Индекс</div>
+          </div>
+        </div>
+        <div class="sparkline-wrap" id="sparkline"></div>
+        <div class="hint"><strong>Что это:</strong> насколько решение устойчиво и полна картина. Ниже 0.5 — есть нерешённые коллизии.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc" data-acc="thinking">
+    <div class="acc-head">
+      <span class="acc-title">Мышление</span>
+      <span class="acc-summary" id="accThinkingSummary">—</span>
+      <svg class="acc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="metric-row"><span class="metric-row-label">Масштаб задачи</span><span class="metric-row-value" id="cMindScale">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Циклы мышления</span><span class="metric-row-value" id="cCycles">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Коллизии</span><span class="metric-row-value" id="cCollisions">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Импульс</span><span class="metric-row-value" id="cPulse">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Вклад человек / ИИ</span><span class="metric-row-value" id="cHuman">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acc" data-acc="session">
+    <div class="acc-head">
+      <span class="acc-title">Сессия</span>
+      <span class="acc-summary" id="accSessionSummary">—</span>
+      <svg class="acc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+    <div class="acc-body">
+      <div class="acc-body-inner">
+        <div class="metric-row"><span class="metric-row-label">Запросов</span><span class="metric-row-value" id="cSessionCount">0</span></div>
+        <div class="metric-row"><span class="metric-row-label">Длительность</span><span class="metric-row-value" id="cSessionTime">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Ключ</span><span class="metric-row-value" id="cKeySource">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Протокол</span><span class="metric-row-value" id="cProtocol">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Профиль -->
+<div class="sheet" id="profileSheet">
+  <div class="sheet-handle" id="profileHandle"></div>
+  <div id="profileContent"></div>
+</div>
+
+<!-- Паспорт -->
+<div class="sheet" id="passportSheet">
+  <div class="sheet-handle" id="passportHandle"></div>
+  <div id="passportContent"></div>
+</div>
+
+<!-- Артефакты -->
+<div class="sheet" id="artifactsSheet">
+  <div class="sheet-handle" id="artifactsHandle"></div>
+  <h3>Артефакты проекта</h3>
+  <div class="sheet-sub" id="artifactsSheetSub">Документы, планы, отчёты, код</div>
+  <div id="artifactsList"></div>
+</div>
+
+<!-- Редактор документа / статьи -->
+<div class="sheet" id="editorSheet">
+  <div class="sheet-handle" id="editorHandle"></div>
+  <h3 id="editorTitle">Редактор</h3>
+  <div class="sheet-sub" id="editorSub">Правьте текст, затем сохраните или опубликуйте</div>
+
+  <div class="doc-editor">
+    <div class="doc-editor-field">
+      <label for="editorName">Название</label>
+      <input type="text" id="editorName" placeholder="Название документа" maxlength="200" />
+    </div>
+    <div class="doc-editor-field">
+      <label for="editorBody">Содержимое (Markdown)</label>
+      <textarea id="editorBody" placeholder="## Заголовок&#10;&#10;Текст…"></textarea>
+    </div>
+    <div class="doc-editor-field" id="editorTagsField">
+      <label for="editorTags">Теги (через запятую)</label>
+      <input type="text" id="editorTags" placeholder="тег1, тег2" />
+    </div>
+    <div class="doc-editor-actions">
+      <button class="ghost" id="editorCopyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Копировать
+      </button>
+      <button class="ghost" id="editorDownloadBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Скачать
+      </button>
+    </div>
+    <div class="doc-editor-actions" id="editorPublishRow">
+      <button class="ghost" id="editorSaveBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Сохранить в проект
+      </button>
+      <button class="primary" id="editorPublishBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        Опубликовать
+      </button>
+    </div>
+    <div class="doc-status" id="editorStatus"></div>
+  </div>
+</div>
+
+<!-- Блог — список -->
+<div class="sheet" id="blogSheet">
+  <div class="sheet-handle" id="blogHandle"></div>
+  <h3>Блог автора</h3>
+  <div class="sheet-sub" id="blogSub">Лонгриды и заметки</div>
+
+  <div class="blog-tabs" id="blogTabs">
+    <button class="blog-tab active" data-tab="list">Статьи</button>
+    <button class="blog-tab" data-tab="new">Новая статья</button>
+  </div>
+
+  <div id="blogListPane">
+    <div id="blogList"></div>
+  </div>
+
+  <div id="blogNewPane" style="display:none;">
+    <button class="report-btn" id="blogNewBtn" style="margin-top:0;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Открыть пустой редактор
+    </button>
+    <div class="hint" style="margin-top:14px;">
+      Чтобы ИИ написал статью — попроси его в чате: <strong>«Напиши статью про …»</strong>. Затем нажми <strong>«Открыть в редакторе»</strong> под ответом.
+    </div>
+  </div>
+</div>
+
+<!-- Блог — просмотр статьи -->
+<div class="sheet" id="blogViewSheet">
+  <div class="sheet-handle" id="blogViewHandle"></div>
+  <div id="blogViewContent"></div>
+</div>
+
+<!-- Выбор действия с проектом -->
+<div class="sheet" id="projectMenuSheet">
+  <div class="sheet-handle" id="projectMenuHandle"></div>
+  <h3 id="projectMenuTitle">Проект</h3>
+  <div class="sheet-sub" id="projectMenuSub">Выберите действие</div>
+  <div style="border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden;">
+    <button class="project-menu-item" id="pmOpen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      Открыть
+    </button>
+    <button class="project-menu-item" id="pmRename">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+      Переименовать
+    </button>
+    <button class="project-menu-item danger" id="pmDelete">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+      Удалить
+    </button>
+  </div>
+</div>
+
+<!-- Модалка лотов -->
+<div class="modal-bg" id="lotsModalBg">
+  <div class="modal">
+    <button class="modal-close" id="lotsClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h2>Баланс системы</h2>
+    <div class="sub">Накопленный вклад в этой сессии</div>
+
+    <div class="metric-row" style="padding:14px 0; font-size:15px;">
+      <span class="metric-row-label">Текущий баланс</span>
+      <span class="metric-row-value" id="lotsModalValue" style="font-size:18px;">+0.0</span>
+    </div>
+
+    <div class="hint" style="margin-top:14px;">
+      <strong>Что это:</strong> накопленные «лоты» — ключевые инсайты, удачные решения, преодолённые препятствия. «Штрафы» — тупики и ошибки. Итоговая цифра — сальдо.
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:600; margin-bottom:8px;">Последние начисления</div>
+      <div id="lotsHistory"></div>
+    </div>
+
+    <div style="margin-top:16px;">
+      <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:600; margin-bottom:8px;">Узел связи</div>
+      <div class="metric-row"><span class="metric-row-label">Стабильность</span><span class="metric-row-value" id="lotsStability">—</span></div>
+      <div class="metric-row"><span class="metric-row-label">Масштаб</span><span class="metric-row-value" id="lotsMindScale">—</span></div>
+      <div class="metric-row"><span class="metric-row-label">Импульс</span><span class="metric-row-value" id="lotsPulse">—</span></div>
+      <div class="metric-row"><span class="metric-row-label">Циклы</span><span class="metric-row-value" id="lotsCycles">—</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка рисков -->
+<div class="modal-bg" id="riskModalBg">
+  <div class="modal">
+    <button class="modal-close" id="riskClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h2>Обнаружен риск</h2>
+    <div class="sub">Модель предлагает безопасную альтернативу</div>
+    <span class="risk-level critical" id="riskLevel">Критический риск</span>
+    <div class="risk-block">
+      <div class="risk-block-label">Запрошенное действие</div>
+      <div class="risk-block-value" id="riskAction">—</div>
+    </div>
+    <div class="risk-block">
+      <div class="risk-block-label">Безопасная альтернатива</div>
+      <div class="risk-block-value" id="riskAlternative">—</div>
+    </div>
+    <div class="row">
+      <button class="action ghost" id="riskCancel">Отменить</button>
+      <button class="action success" id="riskApply">Применить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка сброса -->
+<div class="modal-bg" id="resetModalBg">
+  <div class="modal">
+    <button class="modal-close" id="resetClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h2>Сбросить контекст?</h2>
+    <div class="sub" id="resetReason">Модель рекомендует сбросить проблемную ветку диалога.</div>
+    <div class="row">
+      <button class="action ghost" id="resetCancel">Отмена</button>
+      <button class="action danger" id="resetConfirm">Сбросить</button>
+    </div>
+  </div>
+</div>
+
+<!-- Модалка проекта -->
+<div class="modal-bg" id="projectModalBg">
+  <div class="modal">
+    <button class="modal-close" id="projectModalClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h2 id="projectModalTitle">Новый проект</h2>
+    <label for="projectNameInput">Название</label>
+    <input type="text" id="projectNameInput" placeholder="Например, Monolog" maxlength="40" />
+    <label>Цвет</label>
+    <div class="color-picker" id="projectColorPicker"></div>
+    <div class="row">
+      <button class="action ghost" id="projectCancel">Отмена</button>
+      <button class="action primary" id="projectSave">Сохранить</button>
+    </div>
+    <div class="row" id="projectDangerRow" style="display:none;">
+      <button class="action danger" id="projectDelete">Удалить проект</button>
+    </div>
+  </div>
+</div>
+
+<!-- Настройки -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <button class="modal-close" id="modalClose" aria-label="Закрыть">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 6L6 18M6 6l12 12"/>
+      </svg>
+    </button>
+    <h2>Настройки</h2>
+    <label for="keyInput">Groq API Key (gsk_…)</label>
+    <input type="password" id="keyInput" placeholder="gsk_..." autocomplete="off" />
+    <label class="check">
+      <input type="checkbox" id="rememberKey" />
+      Запомнить ключ
+    </label>
+    <label for="authorKeyInput">Ключ автора блога</label>
+    <input type="password" id="authorKeyInput" placeholder="Секретная строка" autocomplete="off" />
+    <label class="check">
+      <input type="checkbox" id="rememberAuthorKey" />
+      Запомнить ключ автора
+    </label>
+    <label>Режим глубины</label>
+    <div class="segmented" id="depthSeg">
+      <button data-depth="quiet">Тихий</button>
+      <button data-depth="deep">Глубокий</button>
+    </div>
+    <div class="row">
+      <button class="action ghost" id="exportData">Экспорт</button>
+      <button class="action ghost" id="importData">Импорт</button>
+    </div>
+    <div class="row">
+      <button class="action primary" id="saveSettings">Сохранить</button>
+    </div>
+    <input type="file" id="importFile" accept="application/json" style="display:none" />
+  </div>
+</div>
+
+<!-- Онбординг -->
+<div class="onboarding" id="onboarding">
+  <div class="onboarding-inner">
+    <div class="onboarding-orb"></div>
+    <h1>AI Monolog</h1>
+    <div class="desc">Когнитивный партнёр. Помогает видеть структуру, скрытые возможности и истинные цели.</div>
+
+    <div>
+      <label for="obName">Как тебя зовут?</label>
+      <input type="text" id="obName" placeholder="Имя" maxlength="40" />
+    </div>
+
+    <div>
+      <label for="obKey">Groq API Key (опционально)</label>
+      <input type="password" id="obKey" placeholder="gsk_..." autocomplete="off" />
+    </div>
+
+    <div class="row">
+      <button class="ghost" id="obSkip">Пропустить</button>
+      <button class="primary" id="obStart">Начать</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  const API_BASE = window.location.origin;
+  const LS_KEY = "monolog_api_key";
+  const LS_PROFILE = "monolog_profile";
+  const LS_AUTHOR = "monolog_author_key";
+  const LS_ONBOARDED = "monolog_onboarded";
+  const LS_FALLBACK = "monolog_state_fallback";
+  const LS_LEGACY = "monolog_state_fallback";
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
+  const MAX_TEXT_CHARS = 3000;
+  const MAX_FILES = 3;
+
+  const DB_NAME = "monolog_db_v2";
+  const DB_VERSION = 1;
+  const STORE_PROJECTS = "projects";
+  const STORE_META = "meta";
+
+  const PROJECT_COLORS = [
+    "#5A7BD6", // спокойный синий
+    "#C77B4E", // терракота
+    "#6B9A7B", // шалфей
+    "#A68B5B", // тёплый песок
+    "#8B7BC7", // лаванда
+    "#B85C5C", // коралл
+    "#4A5568", // графит
+    "#5D7A8C", // серо-голубой
+  ];
+
+  const THINKING_PHRASES = [
+    "Синхронизирую с плоскостью…",
+    "Проверяю коллизии…",
+    "Строю карту восприятия…",
+    "Оцениваю стабильность…"
+  ];
+
+  const COMPASS_AXES = [
+    { key: "развитие", label: "Развитие" },
+    { key: "стабильность", label: "Стабильность" },
+    { key: "свобода", label: "Свобода" },
+    { key: "контроль", label: "Контроль" },
+    { key: "связь", label: "Связь" },
+  ];
+
+  const state = {
+    apiKey: "",
+    authorKey: "",
+    profile: { depth: "deep", userName: "" },
+    projects: [],
+    currentProjectId: null,
+    attachments: [],
+    sessionStart: Date.now(),
+    lastKeySource: null,
+    mode: "analyst", // analyst | strategist
+    editingProjectId: null,
+    editingProjectColor: PROJECT_COLORS[0],
+    editorContext: null, // { type: 'artifact' | 'blog_post', projectId, artifactId?, blogPostId?, name, body, tags }
+    get project() {
+      return this.projects.find(function (p) { return p.id === state.currentProjectId; });
+    },
+  };
+
+  // --- IndexedDB ---
+  let _db = null, _dbFailed = false;
+  function openDB() {
+    return new Promise(function (resolve, reject) {
+      if (_db) return resolve(_db);
+      if (_dbFailed) return reject(new Error("db unavailable"));
+      try {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = function (e) {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_PROJECTS)) db.createObjectStore(STORE_PROJECTS, { keyPath: "id" });
+          if (!db.objectStoreNames.contains(STORE_META)) db.createObjectStore(STORE_META);
+        };
+        req.onsuccess = function (e) { _db = e.target.result; resolve(_db); };
+        req.onerror = function () { _dbFailed = true; reject(req.error); };
+      } catch (e) { _dbFailed = true; reject(e); }
+    });
+  }
+  async function dbGetAll(store) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(store, "readonly");
+        const req = tx.objectStore(store).getAll();
+        req.onsuccess = function () { resolve(req.result || []); };
+        req.onerror = function () { resolve([]); };
+      });
+    } catch (e) { return []; }
+  }
+  async function dbPut(store, val) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(store, "readwrite");
+        tx.objectStore(store).put(val);
+        tx.oncomplete = function () { resolve(true); };
+        tx.onerror = function () { resolve(false); };
+      });
+    } catch (e) { return false; }
+  }
+  async function dbDel(store, key) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(store, "readwrite");
+        tx.objectStore(store).delete(key);
+        tx.oncomplete = function () { resolve(true); };
+      });
+    } catch (e) { return false; }
+  }
+  async function dbGetMeta(key) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(STORE_META, "readonly");
+        const req = tx.objectStore(STORE_META).get(key);
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { resolve(null); };
+      });
+    } catch (e) { return null; }
+  }
+  async function dbSetMeta(key, val) {
+    try {
+      const db = await openDB();
+      return new Promise(function (resolve) {
+        const tx = db.transaction(STORE_META, "readwrite");
+        tx.objectStore(STORE_META).put(val, key);
+        tx.oncomplete = function () { resolve(true); };
+      });
+    } catch (e) { return false; }
+  }
+
+  function createProjectObj(name, color) {
+    return {
+      id: "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
+      name: name || "Проект",
+      color: color || PROJECT_COLORS[0],
+      createdAt: new Date().toISOString(),
+      archived: false,
+      history: [],
+      passport: null,
+      cognitive: null,
+      artifacts: [],
+      sessionCount: 0,
+      lastMetrics: null,
+      stabilityHistory: [],
+      lotsHistory: [],
+      _important: {},
+    };
+  }
+
+  async function loadProjects() {
+    const list = await dbGetAll(STORE_PROJECTS);
+    state.projects = list || [];
+    const currentId = await dbGetMeta("currentProjectId");
+    if (currentId && state.projects.find(function (p) { return p.id === currentId; })) {
+      state.currentProjectId = currentId;
+    } else if (state.projects.length) {
+      state.currentProjectId = state.projects[0].id;
+    } else {
+      // Миграция со старого формата
+      try {
+        const old = localStorage.getItem(LS_FALLBACK);
+        if (old) {
+          const oldData = JSON.parse(old);
+          const migrated = createProjectObj("Мой проект", PROJECT_COLORS[0]);
+          migrated.history = oldData.history || [];
+          migrated.passport = oldData.passport || null;
+          migrated.cognitive = oldData.cognitive || null;
+          migrated.artifacts = oldData.artifacts || [];
+          migrated.sessionCount = oldData.sessionCount || 0;
+          migrated.lastMetrics = oldData.lastMetrics || null;
+          await dbPut(STORE_PROJECTS, migrated);
+          state.projects.push(migrated);
+          state.currentProjectId = migrated.id;
+          await dbSetMeta("currentProjectId", migrated.id);
+          localStorage.removeItem(LS_FALLBACK);
+          return;
+        }
+      } catch (e) {}
+      const fresh = createProjectObj("Мой проект", PROJECT_COLORS[0]);
+      await dbPut(STORE_PROJECTS, fresh);
+      state.projects.push(fresh);
+      state.currentProjectId = fresh.id;
+      await dbSetMeta("currentProjectId", fresh.id);
+    }
+  }
+
+  async function persistCurrentProject() {
+    const p = state.project;
+    if (!p) return;
+    await dbPut(STORE_PROJECTS, p);
+    await dbSetMeta("currentProjectId", p.id);
+  }
+
+  function toast(text) {
+    const el = document.getElementById("toast");
+    el.textContent = text;
+    el.classList.add("show");
+    clearTimeout(el._t);
+    el._t = setTimeout(function () { el.classList.remove("show"); }, 1800);
+  }
+
+  function applyThemeFromMode() {
+    // Глубокий режим = тёмная тема, тихий = светлая
+    const theme = state.profile.depth === "deep" ? "dark" : "light";
+    document.documentElement.setAttribute("data-theme", theme);
+    document.querySelector('meta[name="theme-color"]').setAttribute("content", theme === "dark" ? "#0F1115" : "#F7F8FA");
+  }
+
+  function applyProfile() {
+    document.querySelectorAll("#depthSeg button").forEach(function (el) {
+      el.classList.toggle("active", el.dataset.depth === state.profile.depth);
+    });
+    applyThemeFromMode();
+  }
+
+  function renderOrb() {
+    const orb = document.getElementById("orbBtn");
+    orb.className = "orb " + state.mode;
+  }
+
+  function switchMode() {
+    state.mode = state.mode === "analyst" ? "strategist" : "analyst";
+    const orb = document.getElementById("orbBtn");
+    orb.classList.add("switching");
+    setTimeout(function () {
+      orb.className = "orb " + state.mode;
+    }, 200);
+    setTimeout(function () {
+      orb.classList.remove("switching");
+    }, 700);
+    toast(state.mode === "analyst" ? "Режим Аналитика" : "Режим Стратега");
+    try {
+      localStorage.setItem("monolog_mode", state.mode);
+    } catch (e) {}
+  }
+
+  function renderMarkdown(text) {
+    const safe = text == null ? "" : String(text);
+    if (typeof marked !== "undefined" && marked && typeof marked.parse === "function") {
+      try { return marked.parse(safe); } catch (e) {}
+    }
+    const esc = safe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
+  }
+
+  function escHtml(t) {
+    return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function initials(name) {
+    const parts = (name || "?").trim().split(/\s+/).slice(0, 2);
+    return parts.map(function (s) { return (s[0] || "").toUpperCase(); }).join("") || "?";
+  }
+
+  // --- Рендер сообщений ---
+  function renderDecisionCards(choices) {
+    if (!choices || !choices.length) return null;
+    const wrap = document.createElement("div");
+    wrap.className = "decision-cards";
+    const title = document.createElement("div");
+    title.className = "decision-title";
+    title.textContent = "Варианты";
+    wrap.appendChild(title);
+    choices.forEach(function (choice) {
+      if (!choice || !choice.options) return;
+      choice.options.forEach(function (opt, idx) {
+        const btn = document.createElement("button");
+        btn.className = "decision-card";
+        btn.type = "button";
+        const label = opt.label || String.fromCharCode(65 + idx);
+        const shortTerm = (opt.consequences && opt.consequences.short_term) || "";
+        const longTerm = (opt.consequences && opt.consequences.long_term) || "";
+        let text = "";
+        if (shortTerm) text += "<strong>Сейчас:</strong> " + escHtml(shortTerm) + " ";
+        if (longTerm) text += "<strong>Потом:</strong> " + escHtml(longTerm);
+        btn.innerHTML = '<div class="decision-card-head">'
+          + '<span class="decision-card-label">' + escHtml(label) + '</span>'
+          + '<span class="decision-card-tag">Вариант</span>'
+          + '</div>'
+          + '<div class="decision-card-text">' + (text || escHtml(opt.text || "")) + '</div>';
+        btn.addEventListener("click", function () {
+          if (btn.classList.contains("disabled")) return;
+          document.querySelectorAll(".decision-card").forEach(function (c) { c.classList.add("disabled"); });
+          const input = document.getElementById("input");
+          input.value = label + ": " + (opt.text || shortTerm || label);
+          send();
+        });
+        wrap.appendChild(btn);
+      });
+    });
+    return wrap;
+  }
+
+  function renderArtifactRow(artifact) {
+    if (!artifact || !artifact.id) return null;
+    const row = document.createElement("button");
+    row.className = "artifact-row";
+    row.type = "button";
+    row.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
+      + '<div class="info"><div class="name">' + escHtml(artifact.name || "Артефакт") + '</div>'
+      + '<div class="meta">' + escHtml(artifact.type || "документ") + ' · ' + escHtml(artifact.version || "v1.0") + ' · ' + escHtml(artifact.stage || "hypothesis") + '</div></div>'
+      + '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>';
+    row.addEventListener("click", function () { openArtifactInEditor(artifact.id); });
+    return row;
+  }
+
+  function renderOpenEditorButton(artifactStatus, replyText) {
+    if (!artifactStatus || !artifactStatus.ready) return null;
+    if (!state.authorKey && artifactStatus.type === "blog_post") return null;
+
+    const btn = document.createElement("button");
+    btn.className = "open-editor-btn";
+    btn.type = "button";
+    btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'
+      + (artifactStatus.type === "blog_post" ? "Открыть в редакторе" : "Открыть документ");
+    btn.addEventListener("click", function () {
+      openEditor({
+        type: artifactStatus.type === "blog_post" ? "blog_post" : "document",
+        name: artifactStatus.title || "Документ",
+        body: replyText || "",
+        tags: artifactStatus.suggested_tags || [],
+      });
+    });
+    return btn;
+  }
+
+  function addRow(role, content, metrics, options) {
+    options = options || {};
+    const chat = document.getElementById("chat");
+    if (!chat) return null;
+
+    const row = document.createElement("div");
+    row.className = "row " + role;
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+
+    if (role === "agent") {
+      bubble.innerHTML = renderMarkdown(content);
+
+      // Карточки решений
+      if (metrics && metrics.value_choices && metrics.value_choices.length) {
+        const cards = renderDecisionCards(metrics.value_choices);
+        if (cards) bubble.appendChild(cards);
+      }
+      // Артефакты-строки
+      if (metrics && metrics.artifacts && metrics.artifacts.length) {
+        metrics.artifacts.forEach(function (art) {
+          const r = renderArtifactRow(art);
+          if (r) bubble.appendChild(r);
+        });
+      }
+      // Кнопка «Открыть в редакторе» / «Открыть документ»
+      if (metrics && metrics.artifact_status && metrics.artifact_status.ready) {
+        const openBtn = renderOpenEditorButton(metrics.artifact_status, content);
+        if (openBtn) bubble.appendChild(openBtn);
+      }
+
+      // Действия
+      const actions = document.createElement("div");
+      actions.className = "msg-actions";
+
+      const copyBtn = document.createElement("button");
+      copyBtn.className = "msg-action";
+      copyBtn.type = "button";
+      copyBtn.title = "Копировать";
+      copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+      copyBtn.addEventListener("click", function () {
+        if (navigator.clipboard) navigator.clipboard.writeText(content || "");
+        toast("Скопировано");
+      });
+      actions.appendChild(copyBtn);
+
+      const impBtn = document.createElement("button");
+      impBtn.className = "msg-action";
+      impBtn.type = "button";
+      impBtn.title = "Пометить как важное";
+      impBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>';
+      const p = state.project;
+      const msgId = options.msgId != null ? options.msgId : (p ? p.history.length : 0);
+      if (p && p._important && p._important[msgId]) impBtn.classList.add("active");
+      impBtn.addEventListener("click", function () {
+        if (!p) return;
+        p._important = p._important || {};
+        if (p._important[msgId]) delete p._important[msgId];
+        else p._important[msgId] = true;
+        impBtn.classList.toggle("active");
+        persistCurrentProject();
+      });
+      actions.appendChild(impBtn);
+
+      bubble.appendChild(actions);
+
+      bubble.querySelectorAll("pre").forEach(function (pre) {
+        const btn = document.createElement("button");
+        btn.className = "copy-code-btn";
+        btn.type = "button";
+        btn.textContent = "Копировать";
+        btn.addEventListener("click", function () {
+          const code = pre.querySelector("code");
+          const text = code ? code.innerText : pre.innerText;
+          if (navigator.clipboard) navigator.clipboard.writeText(text);
+          btn.textContent = "Готово";
+          setTimeout(function () { btn.textContent = "Копировать"; }, 1200);
+        });
+        pre.appendChild(btn);
+      });
+    } else {
+      bubble.textContent = content;
+    }
+
+    row.appendChild(bubble);
+    chat.appendChild(row);
+    chat.scrollTop = chat.scrollHeight;
+    return { row: row, bubble: bubble };
+  }
+
+  // --- Обновление метрик ---
+  function updateChip(metrics) {
+    const chip = document.getElementById("stabilityChip");
+    const val = document.getElementById("chipValue");
+    if (!chip || !val) return;
+    const si = metrics && typeof metrics.stability_index === "number" ? metrics.stability_index : 0;
+    chip.className = "chip";
+    if (si < 0.5) chip.classList.add("critical");
+    else if (si < 0.75) chip.classList.add("warning");
+    val.textContent = si.toFixed(2);
+  }
+
+  function updateLotsChip(metrics) {
+    const chip = document.getElementById("lotsChip");
+    const val = document.getElementById("lotsValue");
+    const delta = document.getElementById("lotsDelta");
+    if (!chip || !val) return;
+
+    const lots = (metrics && metrics.lots_balance) || "+0.0";
+    val.textContent = lots;
+    chip.classList.remove("positive", "negative");
+    const n = parseFloat(String(lots).replace(/[^\d.-]/g, ""));
+    if (!isNaN(n)) {
+      if (n > 0) chip.classList.add("positive");
+      else if (n < 0) chip.classList.add("negative");
+    }
+
+    // Анимация начисления
+    const p = state.project;
+    if (p) {
+      p.lotsHistory = p.lotsHistory || [];
+      const lastLots = p.lotsHistory.length ? p.lotsHistory[p.lotsHistory.length - 1].value : 0;
+      const now = isNaN(n) ? 0 : n;
+      const diff = now - lastLots;
+      if (Math.abs(diff) > 0.001) {
+        p.lotsHistory.push({ value: now, delta: diff, at: Date.now() });
+        if (p.lotsHistory.length > 30) p.lotsHistory.shift();
+        delta.textContent = (diff > 0 ? "+" : "") + diff.toFixed(1);
+        delta.classList.remove("negative");
+        if (diff < 0) delta.classList.add("negative");
+        delta.classList.add("show");
+        setTimeout(function () { delta.classList.remove("show"); }, 1500);
+      }
+    }
+  }
+
+  function updateNoise(metrics) {
+    const ind = document.getElementById("noiseIndicator");
+    if (!ind) return;
+    const pulse = (metrics && metrics.cognitive_pulse) || "stable";
+    ind.className = "noise-indicator " + pulse;
+  }
+
+  function updateConditionalUI(metrics) {
+    const scale = metrics && metrics.mind_scale;
+    const passportBtn = document.getElementById("passportBtn");
+    passportBtn.classList.toggle("hidden", !(scale === "strategic" || scale === "systemic"));
+
+    const rp = metrics && metrics.reset_proposal;
+    const chip = document.getElementById("resetChip");
+    if (rp && rp.recommended) {
+      let label = "Сбросить";
+      if (rp.reset_point) {
+        const m = String(rp.reset_point).match(/#?(\d+)/);
+        if (m) label = "Сбросить с #" + m[1];
+      }
+      document.getElementById("resetChipLabel").textContent = label;
+      chip.classList.add("show");
+      chip.dataset.reason = rp.reason || "";
+      chip.dataset.point = rp.reset_point || "";
+    } else chip.classList.remove("show");
+
+    const p = state.project;
+    const hasReport = p && (p.sessionCount >= 5 || (p.artifacts && p.artifacts.length > 0));
+    document.getElementById("reportIconBtn").classList.toggle("hidden", !hasReport);
+
+    const ri = metrics && metrics.risk_intercept;
+    if (ri && ri.active) showRiskModal(ri);
+  }
+
+  function showRiskModal(ri) {
+    document.getElementById("riskLevel").textContent = (ri.risk_level === "critical" ? "Критический риск" : "Умеренный риск");
+    document.getElementById("riskLevel").className = "risk-level " + (ri.risk_level === "critical" ? "critical" : "warning");
+    document.getElementById("riskAction").textContent = ri.requested_action || "—";
+    document.getElementById("riskAlternative").textContent = ri.safe_alternative || "—";
+    const el = document.getElementById("riskModalBg");
+    el.classList.add("open");
+    el.dataset.alt = ri.safe_alternative || "";
+  }
+
+  function updateMetrics(metrics) {
+    const m = metrics || {};
+    const p = state.project;
+    if (!p) return;
+    p.lastMetrics = m;
+
+    if (typeof m.stability_index === "number") {
+      p.stabilityHistory = p.stabilityHistory || [];
+      p.stabilityHistory.push(m.stability_index);
+      if (p.stabilityHistory.length > 20) p.stabilityHistory.shift();
+    }
+    if (m.passport) p.passport = Object.assign(p.passport || {}, m.passport);
+    if (m.profile) {
+      p.cognitive = p.cognitive || { values: {}, patterns: [], distortions: [], insights: [] };
+      if (m.profile.values && typeof m.profile.values === "object") {
+        p.cognitive.values = Object.assign(p.cognitive.values || {}, m.profile.values);
+      }
+      ["patterns", "distortions", "insights"].forEach(function (k) {
+        const old = p.cognitive[k] || [];
+        const incoming = m.profile[k] || [];
+        const seen = new Set(old.map(String));
+        incoming.forEach(function (it) {
+          if (!seen.has(String(it))) { old.push(it); seen.add(String(it)); }
+        });
+        p.cognitive[k] = old;
+      });
+    }
+    if (m.required_skills && m.required_skills.length) {
+      p.skills = p.skills || {};
+      m.required_skills.forEach(function (s) {
+        const name = typeof s === "string" ? s : (s.skill || "");
+        if (!name) return;
+        p.skills[name] = (p.skills[name] || 0) + 1;
+      });
+    }
+    if (m.artifacts && m.artifacts.length) {
+      p.artifacts = p.artifacts || [];
+      const seen = new Set(p.artifacts.map(function (a) { return a.id; }));
+      m.artifacts.forEach(function (a) {
+        if (a && a.id && !seen.has(a.id)) { p.artifacts.push(a); seen.add(a.id); }
+      });
+      updateArtifactsSection();
+    }
+    persistCurrentProject();
+
+    const si = typeof m.stability_index === "number" ? m.stability_index : 0;
+    document.getElementById("ringValue").textContent = si.toFixed(2);
+    const ring = document.getElementById("ringFill");
+    const circ = 2 * Math.PI * 52;
+    ring.style.strokeDasharray = circ;
+    ring.style.strokeDashoffset = circ * (1 - si);
+    ring.className = "ring-fill";
+    if (si < 0.5) ring.classList.add("critical");
+    else if (si < 0.75) ring.classList.add("warning");
+
+    document.getElementById("accStabilitySummary").textContent = si.toFixed(2);
+    renderSparkline();
+
+    const scaleLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
+    document.getElementById("cMindScale").textContent = scaleLabels[m.mind_scale] || "—";
+    document.getElementById("cCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
+    document.getElementById("cCollisions").textContent = m.collisions_resolved || "—";
+    document.getElementById("cPulse").textContent = m.cognitive_pulse || "—";
+    const hc = typeof m.human_contribution === "number" ? m.human_contribution : null;
+    document.getElementById("cHuman").textContent = hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—";
+    document.getElementById("accThinkingSummary").textContent = (scaleLabels[m.mind_scale] || "—");
+
+    document.getElementById("cSessionCount").textContent = p.sessionCount || 0;
+    document.getElementById("cSessionTime").textContent = fmtDuration(Date.now() - state.sessionStart);
+    document.getElementById("cKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
+    document.getElementById("cProtocol").textContent = m.protocol_integrity === false ? "сбой" : "соблюдён";
+    document.getElementById("accSessionSummary").textContent = (p.sessionCount || 0) + " запросов";
+
+    updateChip(m);
+    updateLotsChip(m);
+    updateNoise(m);
+    updateConditionalUI(m);
+  }
+
+  function renderSparkline() {
+    const box = document.getElementById("sparkline");
+    box.innerHTML = "";
+    const p = state.project;
+    const hist = (p && p.stabilityHistory ? p.stabilityHistory : []).slice(-10);
+    for (let i = 0; i < 10; i++) {
+      const bar = document.createElement("div");
+      bar.className = "spark-bar";
+      const v = hist[i];
+      if (v == null) { bar.classList.add("empty"); bar.style.height = "6px"; }
+      else {
+        if (v < 0.5) bar.classList.add("critical");
+        else if (v < 0.75) bar.classList.add("warning");
+        bar.style.height = (4 + v * 32) + "px";
+      }
+      box.appendChild(bar);
+    }
+  }
+
+  function fmtDuration(ms) {
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    if (h > 0) return h + " ч " + m + " мин";
+    if (m > 0) return m + " мин";
+    return s + " с";
+  }
+
+  // --- Files ---
+  function fileIcon(type) {
+    if (type && type.startsWith("image/")) {
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
+    }
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
+  }
+
+  async function extractTextFromFile(file) {
+    const name = file.name || "", type = file.type || "";
+    const ext = name.split(".").pop().toLowerCase();
+    if (type.startsWith("image/")) return "[Изображение: " + name + "]";
+    if (ext === "txt" || type === "text/plain") return await file.text();
+    if (ext === "docx" && window.mammoth) {
+      try {
+        const buf = await file.arrayBuffer();
+        const r = await window.mammoth.extractRawText({ arrayBuffer: buf });
+        return r.value || "";
+      } catch (e) { return "[Не удалось прочитать DOCX]"; }
+    }
+    if (ext === "pdf" && window.pdfjsLib) {
+      try {
+        const buf = await file.arrayBuffer();
+        const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
+        let out = "";
+        const pages = Math.min(pdf.numPages, 10);
+        for (let i = 1; i <= pages; i++) {
+          const page = await pdf.getPage(i);
+          const c = await page.getTextContent();
+          out += c.items.map(function (it) { return it.str; }).join(" ") + "\n";
+        }
+        return out;
+      } catch (e) { return "[Не удалось прочитать PDF]"; }
+    }
+    return "[Формат не поддерживается: " + name + "]";
+  }
+
+  function renderAttachPreview() {
+    const box = document.getElementById("attachPreview");
+    box.innerHTML = "";
+    state.attachments.forEach(function (a, idx) {
+      const chip = document.createElement("div");
+      chip.className = "attach-chip";
+      chip.innerHTML = fileIcon(a.type)
+        + '<span class="name">' + escHtml(a.name) + '</span>'
+        + '<button class="remove" title="Удалить">×</button>';
+      chip.querySelector(".remove").addEventListener("click", function () {
+        state.attachments.splice(idx, 1);
+        renderAttachPreview();
+      });
+      box.appendChild(chip);
+    });
+  }
+
+  async function handleFiles(files) {
+    const list = Array.from(files || []);
+    for (const f of list) {
+      if (state.attachments.length >= MAX_FILES) { alert("Максимум " + MAX_FILES + " файла"); break; }
+      if (f.size > MAX_FILE_SIZE) { alert("Файл " + f.name + " больше 5 МБ"); continue; }
+      let text = await extractTextFromFile(f);
+      if (text.length > MAX_TEXT_CHARS) text = text.slice(0, MAX_TEXT_CHARS) + "\n…[обрезано]";
+      state.attachments.push({ name: f.name, type: f.type, text: text });
+    }
+    renderAttachPreview();
+  }
+
+  // --- Textarea auto-grow ---
+  function setupTextarea() {
+    const ta = document.getElementById("input");
+    function resize() {
+      ta.style.height = "auto";
+      const sh = ta.scrollHeight;
+      const maxH = 88;
+      if (sh > maxH) {
+        ta.style.height = maxH + "px";
+        ta.classList.add("grows");
+      } else {
+        ta.style.height = sh + "px";
+        ta.classList.remove("grows");
+      }
+    }
+    ta.addEventListener("input", resize);
+    resize();
+  }
+
+  // --- Send ---
+  async function send() {
+    const input = document.getElementById("input");
+    const btn = document.getElementById("sendBtn");
+    const text = (input.value || "").trim();
+    const p = state.project;
+    if (!p) return;
+    if (!text && state.attachments.length === 0) return;
+
+    const userDisplay = text || ("[Вложение: " + state.attachments.map(function (a) { return a.name; }).join(", ") + "]");
+    input.value = "";
+    input.style.height = "auto";
+    input.classList.remove("grows");
+    addRow("user", userDisplay);
+
+    const attachmentsPayload = state.attachments.slice();
+    state.attachments = [];
+    renderAttachPreview();
+
+    btn.disabled = true;
+    const thinking = addRow("agent", "");
+    const bubble = thinking.bubble;
+    const orb = document.getElementById("orbBtn");
+    orb.classList.add("thinking");
+    bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>'
+      + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
+
+    const headers = { "Content-Type": "application/json" };
+    if (state.apiKey) headers["X-Groq-Key"] = state.apiKey;
+
+    const carried = { passport: p.passport || {}, profile: p.cognitive || {}, artifacts: p.artifacts || [] };
+
+    try {
+      const r = await fetch(API_BASE + "/chat", {
+        method: "POST", headers: headers,
+        body: JSON.stringify({
+          message: text || "Проанализируй вложения.",
+          attachments: attachmentsPayload,
+          carried_metrics: carried,
+        }),
+      });
+      let data = null;
+      try { data = await r.json(); } catch (e) {}
+      const chat = document.getElementById("chat");
+      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
+      orb.classList.remove("thinking");
+      if (!r.ok) {
+        addRow("agent", "Ошибка: " + ((data && data.detail) || r.statusText));
+      } else if (data) {
+        state.lastKeySource = data.key_source || null;
+        p.sessionCount = (p.sessionCount || 0) + 1;
+        const newMsgId = p.history.length;
+        addRow("agent", data.reply_text || "", data.metrics, { msgId: newMsgId });
+        updateMetrics(data.metrics);
+        p.history.push({ role: "user", content: userDisplay });
+        p.history.push({ role: "assistant", content: data.reply_text || "" });
+        persistCurrentProject();
+      } else {
+        addRow("agent", "Пустой ответ сервера.");
+      }
+    } catch (e) {
+      const chat = document.getElementById("chat");
+      if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
+      orb.classList.remove("thinking");
+      addRow("agent", "Сбой сети: " + (e && e.message ? e.message : "unknown"));
+    } finally {
+      btn.disabled = false;
+      input.focus();
+    }
+  }
+
+  // --- Sheets ---
+  function openSheet(id) {
+    document.getElementById("sheetBg").classList.add("open");
+    document.getElementById(id).classList.add("open");
+  }
+  function closeAllSheets() {
+    document.getElementById("sheetBg").classList.remove("open");
+    document.querySelectorAll(".sheet").forEach(function (s) { s.classList.remove("open"); });
+  }
+
+  function updateArtifactsSection() {
+    const p = state.project;
+    const sec = document.getElementById("artifactsSection");
+    if (!p || !p.artifacts || p.artifacts.length < 3) {
+      sec.classList.remove("show");
+      return;
+    }
+    sec.classList.add("show");
+    document.getElementById("artifactsSub").textContent = p.artifacts.length + " " + pluralize(p.artifacts.length, ["документ", "документа", "документов"]);
+  }
+
+  function pluralize(n, forms) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return forms[0];
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1];
+    return forms[2];
+  }
+
+  function renderArtifactsList() {
+    const box = document.getElementById("artifactsList");
+    const p = state.project;
+    box.innerHTML = "";
+    if (!p || !p.artifacts || !p.artifacts.length) {
+      box.innerHTML = '<div class="empty-note">Пока нет артефактов. Они появятся автоматически, когда в диалоге создаётся документ, план или отчёт.</div>';
+      return;
+    }
+    p.artifacts.forEach(function (a) {
+      const item = document.createElement("div");
+      item.className = "artifact-item";
+      const stage = a.stage || "hypothesis";
+      const stageLabels = { hypothesis: "Гипотеза", prototype: "Прототип", working: "Рабочая", finalized: "Финализировано" };
+      item.innerHTML = '<div class="artifact-item-head">'
+        + '<span class="artifact-item-name">' + escHtml(a.name || "Артефакт") + '</span>'
+        + '<span class="artifact-item-stage ' + stage + '">' + (stageLabels[stage] || stage) + '</span>'
+        + '</div>'
+        + '<div class="artifact-item-meta"><span>' + escHtml(a.type || "документ") + '</span><span>' + escHtml(a.version || "v1.0") + '</span><span>' + escHtml(a.format || "markdown") + '</span></div>';
+      item.addEventListener("click", function () { openArtifactInEditor(a.id); });
+      box.appendChild(item);
+    });
+  }
+
+  // --- Редактор ---
+  function openEditor(context) {
+    state.editorContext = context || {};
+    const name = context.name || "Документ";
+    const body = context.body || "";
+    const tags = context.tags || [];
+
+    document.getElementById("editorName").value = name;
+    document.getElementById("editorBody").value = body;
+    document.getElementById("editorTags").value = tags.join(", ");
+    document.getElementById("editorStatus").textContent = "";
+
+    const isBlog = context.type === "blog_post";
+    document.getElementById("editorTitle").textContent = isBlog ? "Редактор статьи" : "Редактор документа";
+    document.getElementById("editorSub").textContent = isBlog
+      ? "Правьте текст, затем опубликуйте в блог"
+      : "Правьте текст, затем сохраните или скачайте";
+    document.getElementById("editorTagsField").style.display = isBlog ? "block" : "none";
+    document.getElementById("editorPublishRow").style.display = "flex";
+
+    openSheet("editorSheet");
+  }
+
+  function openArtifactInEditor(artifactId) {
+    const p = state.project;
+    if (!p || !p.artifacts) return;
+    const a = p.artifacts.find(function (x) { return x.id === artifactId; });
+    if (!a) { toast("Артефакт не найден"); return; }
+    openEditor({
+      type: a.type === "blog_post" ? "blog_post" : "document",
+      artifactId: a.id,
+      name: a.name || "Документ",
+      body: a.content || "",
+      tags: a.tags || [],
+    });
+  }
+
+  function downloadEditorFile() {
+    const name = (document.getElementById("editorName").value || "document").trim();
+    const body = document.getElementById("editorBody").value || "";
+    const ctx = state.editorContext || {};
+    const safeName = name.replace(/[^\w\-а-яА-Я]+/gi, "_") || "document";
+
+    if (ctx.type === "document" || ctx.type === "blog_post") {
+      // Word-экспорт через API
+      fetch(API_BASE + "/export/docx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: name, body: body }),
+      }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.blob();
+      }).then(function (blob) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = safeName + ".docx";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast("Word скачан");
+      }).catch(function (e) {
+        // Fallback: md
+        const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = safeName + ".md";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast("Word недоступен, скачан Markdown");
+      });
+    } else {
+      const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = safeName + ".md";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+  }
+
+  async function saveEditorToProject() {
+    const name = (document.getElementById("editorName").value || "").trim();
+    const body = (document.getElementById("editorBody").value || "").trim();
+    const status = document.getElementById("editorStatus");
+    if (!name || !body) { status.textContent = "Нужны название и текст"; return; }
+
+    const p = state.project;
+    if (!p) return;
+
+    p.artifacts = p.artifacts || [];
+    const ctx = state.editorContext || {};
+    if (ctx.artifactId) {
+      const existing = p.artifacts.find(function (a) { return a.id === ctx.artifactId; });
+      if (existing) {
+        existing.name = name;
+        existing.content = body;
+        existing.version = bumpVersion(existing.version || "v1.0");
+      }
+    } else {
+      const id = "art_" + Date.now();
+      p.artifacts.push({
+        id: id,
+        name: name,
+        type: "document",
+        format: "markdown",
+        stage: "working",
+        version: "v1.0",
+        content: body,
+        comment: "Создан вручную",
+      });
+    }
+    await persistCurrentProject();
+    updateArtifactsSection();
+    status.textContent = "Сохранено в проект";
+    toast("Сохранено");
+    setTimeout(function () { closeAllSheets(); }, 700);
+  }
+
+  function bumpVersion(v) {
+    const m = String(v).match(/v(\d+)\.(\d+)/);
+    if (!m) return "v1.1";
+    return "v" + m[1] + "." + (parseInt(m[2], 10) + 1);
+  }
+
+  async function publishEditorToBlog() {
+    const title = (document.getElementById("editorName").value || "").trim();
+    const body = (document.getElementById("editorBody").value || "").trim();
+    const tagsRaw = (document.getElementById("editorTags").value || "").trim();
+    const status = document.getElementById("editorStatus");
+
+    if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
+    if (!state.authorKey) { status.textContent = "Введи ключ автора в настройках"; return; }
+
+    status.textContent = "Публикую…";
+    const tags = tagsRaw ? tagsRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    try {
+      const r = await fetch(API_BASE + "/blog/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+        body: JSON.stringify({ title: title, body: body, tags: tags, author: "Эльвира" }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+      status.textContent = "Опубликовано в блог";
+      toast("Опубликовано");
+      setTimeout(function () { closeAllSheets(); }, 800);
+    } catch (e) {
+      status.textContent = "Ошибка: " + e.message;
+    }
+  }
+
+  // --- Блог ---
+  function switchBlogTab(tab) {
+    document.querySelectorAll(".blog-tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.tab === tab);
+    });
+    document.getElementById("blogListPane").style.display = tab === "list" ? "block" : "none";
+    document.getElementById("blogNewPane").style.display = tab === "new" ? "block" : "none";
+  }
+
+  async function loadBlogList() {
+    const box = document.getElementById("blogList");
+    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
+    try {
+      const r = await fetch(API_BASE + "/blog");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const data = await r.json();
+      const posts = data.posts || [];
+      document.getElementById("blogSub").textContent = posts.length ? (posts.length + " " + pluralize(posts.length, ["статья", "статьи", "статей"])) : "Пока нет статей";
+      if (!posts.length) {
+        box.innerHTML = '<div class="empty-note">Пока нет статей. Открой вкладку «Новая статья».</div>';
+        return;
+      }
+      box.innerHTML = "";
+      posts.forEach(function (p) {
+        const item = document.createElement("div");
+        item.className = "blog-post-item";
+        item.innerHTML = '<div class="blog-post-title">' + escHtml(p.title || "Без названия") + '</div>'
+          + '<div class="blog-post-meta">'
+          + '<span>' + escHtml(p.author || "Эльвира") + '</span>'
+          + '<span>' + fmtBlogDate(p.created_at) + '</span>'
+          + '</div>'
+          + (p.preview ? '<div class="blog-post-preview">' + escHtml(p.preview) + '…</div>' : '')
+          + (p.tags && p.tags.length ? '<div class="blog-post-tags">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>' : '');
+        item.addEventListener("click", function () { openBlogView(p.id); });
+        box.appendChild(item);
+      });
+    } catch (e) {
+      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
+    }
+  }
+
+  function fmtBlogDate(iso) {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+    } catch (e) { return iso; }
+  }
+
+  async function openBlogView(id) {
+    const box = document.getElementById("blogViewContent");
+    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
+    openSheet("blogViewSheet");
+    try {
+      const r = await fetch(API_BASE + "/blog/" + encodeURIComponent(id));
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const p = await r.json();
+      let html = '<div class="blog-view-title">' + escHtml(p.title || "Без названия") + '</div>';
+      html += '<div class="blog-view-meta"><span>' + escHtml(p.author || "Эльвира") + '</span><span>' + fmtBlogDate(p.created_at) + '</span>'
+        + (p.updated_at && p.updated_at !== p.created_at ? '<span>обновлено ' + fmtBlogDate(p.updated_at) + '</span>' : '') + '</div>';
+      if (p.tags && p.tags.length) {
+        html += '<div class="blog-post-tags" style="margin-bottom:16px;">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>';
+      }
+      html += '<div class="blog-view-body">' + renderMarkdown(p.body || "") + '</div>';
+      box.innerHTML = html;
+    } catch (e) {
+      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
+    }
+  }
+
+  // --- Профиль ---
+  function renderProfile() {
+    const box = document.getElementById("profileContent");
+    const p = state.project;
+    const c = p && p.cognitive;
+
+    let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта пользователя</div>';
+
+    // Навыки
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Развивающиеся навыки</div>';
+    const skills = p && p.skills ? Object.entries(p.skills).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8) : [];
+    if (!skills.length) {
+      html += '<div class="empty-note">Пока нет данных. Навыки появятся, когда модель их определит.</div>';
+    } else {
+      html += '<div>';
+      const maxCount = Math.max.apply(null, skills.map(function (s) { return s[1]; }));
+      skills.forEach(function (s) {
+        const pct = Math.round((s[1] / maxCount) * 100);
+        html += '<div class="skill-row">'
+          + '<span class="skill-name">' + escHtml(s[0]) + '</span>'
+          + '<span class="skill-bar"><span class="skill-fill" style="width:' + pct + '%;"></span></span>'
+          + '<span class="skill-percent">' + pct + '%</span>'
+          + '</div>';
+      });
+      html += '</div>';
+    }
+
+    // Компас
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Ценностный компас</div>';
+    if (!c || !c.values || Object.keys(c.values).length === 0) {
+      html += '<div class="empty-note">Пока нет данных.</div>';
+    } else {
+      html += '<div class="compass-wrap">' + renderCompass(c.values) + '</div>';
+    }
+
+    // Паттерны
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Паттерны мышления</div>';
+    if (!c || !c.patterns || c.patterns.length === 0) {
+      html += '<div class="empty-note">Пока не выявлены.</div>';
+    } else {
+      html += '<div class="tag-list">' + c.patterns.map(function (pp) { return '<span class="tag">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
+    }
+
+    // Искажения
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Когнитивные искажения</div>';
+    if (!c || !c.distortions || c.distortions.length === 0) {
+      html += '<div class="empty-note">Не обнаружены.</div>';
+    } else {
+      html += '<div class="tag-list">' + c.distortions.map(function (pp) { return '<span class="tag warm">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
+    }
+
+    // Наблюдения
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Наблюдения</div>';
+    if (!c || !c.insights || c.insights.length === 0) {
+      html += '<div class="empty-note">Пока нет.</div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">'
+        + c.insights.map(function (i) { return '<div style="font-size:13px;line-height:1.5;">' + escHtml(i) + '</div>'; }).join("")
+        + '</div>';
+    }
+
+    box.innerHTML = html;
+  }
+
+  function renderCompass(values) {
+    const size = 220, cx = size / 2, cy = size / 2, radius = 80, n = COMPASS_AXES.length;
+    function point(i, r) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
+    }
+    let svg = '<svg class="compass-svg" viewBox="0 0 ' + size + ' ' + size + '">';
+    [1, 0.66, 0.33].forEach(function (scale) {
+      let ring = "";
+      for (let i = 0; i < n; i++) {
+        const [x, y] = point(i, radius * scale);
+        ring += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      }
+      ring += "Z";
+      svg += '<path class="compass-ring" d="' + ring + '"/>';
+    });
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius);
+      svg += '<line class="compass-axis" x1="' + cx + '" y1="' + cy + '" x2="' + x.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>';
+    }
+    const vals = COMPASS_AXES.map(function (a) {
+      const v = values && typeof values[a.key] === "number" ? values[a.key] : 0;
+      return Math.max(0, Math.min(1, v));
+    });
+    if (vals.some(function (v) { return v > 0; })) {
+      let poly = "";
+      vals.forEach(function (v, i) {
+        const [x, y] = point(i, radius * v);
+        poly += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      });
+      poly += "Z";
+      svg += '<path class="compass-fill" d="' + poly + '"/>';
+      vals.forEach(function (v, i) {
+        if (v <= 0) return;
+        const [x, y] = point(i, radius * v);
+        svg += '<circle class="compass-dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5"/>';
+      });
+    }
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius + 20);
+      const anchor = Math.abs(x - cx) < 4 ? "middle" : (x > cx ? "start" : "end");
+      svg += '<text class="compass-label" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" dominant-baseline="middle">' + COMPASS_AXES[i].label + '</text>';
+    }
+    svg += '</svg>';
+    return svg;
+  }
+
+  // --- Паспорт ---
+  function renderPassport() {
+    const box = document.getElementById("passportContent");
+    const p = state.project;
+    const ps = p && p.passport;
+    if (!ps || (!ps.title && !ps.goal && !ps.result)) {
+      box.innerHTML = '<h3>Паспорт проекта</h3><div class="sheet-sub">Пока не заполнен</div>'
+        + '<div class="empty-note">Паспорт заполняется автоматически по мере диалога.</div>';
+      return;
+    }
+    const levelLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
+    const lvl = ps.level || "micro";
+    const completion = Math.max(0, Math.min(100, ps.completion || 0));
+    let html = '<h3>Паспорт проекта</h3>';
+    html += '<div class="sheet-sub">Обновляется автоматически</div>';
+    html += '<span class="passport-level">' + (levelLabels[lvl] || lvl) + '</span>';
+    if (ps.title) html += '<div class="passport-title">' + escHtml(ps.title) + '</div>';
+    if (ps.goal) html += '<div class="passport-goal">' + escHtml(ps.goal) + '</div>';
+    html += '<div style="margin-top:12px;">'
+      + '<div class="metric-row"><span class="metric-row-label">Наполнение</span><span class="metric-row-value">' + completion + '%</span></div>'
+      + '<div style="height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:8px;"><div style="height:100%;width:' + completion + '%;background:var(--accent);"></div></div>'
+      + '</div>';
+    function field(label, value) {
+      if (!value) return "";
+      if (Array.isArray(value)) {
+        if (value.length === 0) return "";
+        return '<div class="passport-field"><div class="passport-field-label">' + label + '</div><div class="passport-field-value"><ul>'
+          + value.map(function (v) { return '<li>' + escHtml(typeof v === "string" ? v : JSON.stringify(v)) + '</li>'; }).join("") + '</ul></div></div>';
+      }
+      return '<div class="passport-field"><div class="passport-field-label">' + label + '</div><div class="passport-field-value">' + escHtml(value) + '</div></div>';
+    }
+    html += field("Результат", ps.result);
+    html += field("Миссия", ps.mission);
+    html += field("Ценности", ps.values);
+    html += field("Ограничения", ps.constraints);
+    html += field("Стейкхолдеры", ps.stakeholders);
+    html += field("Риски", ps.risks);
+    html += field("Метрики успеха", ps.metrics);
+    box.innerHTML = html;
+  }
+
+  // --- Лоты модалка ---
+  function openLotsModal() {
+    const p = state.project;
+    const m = (p && p.lastMetrics) || {};
+    const lots = m.lots_balance || "+0.0";
+    document.getElementById("lotsModalValue").textContent = lots;
+
+    const valEl = document.getElementById("lotsModalValue");
+    valEl.style.color = "var(--accent)";
+    const n = parseFloat(String(lots).replace(/[^\d.-]/g, ""));
+    if (!isNaN(n)) {
+      if (n > 0) valEl.style.color = "var(--success)";
+      else if (n < 0) valEl.style.color = "var(--critical)";
+    }
+
+    document.getElementById("lotsStability").textContent = (typeof m.stability_index === "number") ? m.stability_index.toFixed(2) : "—";
+    const scaleLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
+    document.getElementById("lotsMindScale").textContent = scaleLabels[m.mind_scale] || "—";
+    document.getElementById("lotsPulse").textContent = m.cognitive_pulse || "—";
+    document.getElementById("lotsCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
+
+    // История начислений
+    const hist = document.getElementById("lotsHistory");
+    hist.innerHTML = "";
+    const list = (p && p.lotsHistory) || [];
+    const recent = list.slice(-5).reverse();
+    if (!recent.length) {
+      hist.innerHTML = '<div class="empty-note">Пока нет начислений в этой сессии.</div>';
+    } else {
+      recent.forEach(function (h) {
+        const row = document.createElement("div");
+        row.className = "metric-row";
+        const deltaSign = h.delta > 0 ? "+" : "";
+        const deltaColor = h.delta > 0 ? "var(--success)" : "var(--critical)";
+        const time = new Date(h.at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+        row.innerHTML = '<span class="metric-row-label" style="color:var(--muted);font-size:12px;">' + time + '</span>'
+          + '<span class="metric-row-value" style="color:' + deltaColor + ';">' + deltaSign + h.delta.toFixed(1) + '</span>';
+        hist.appendChild(row);
+      });
+    }
+
+    document.getElementById("lotsModalBg").classList.add("open");
+  }
+
+  // --- Проекты ---
+  function renderProjectsBar() {
+    const bar = document.getElementById("projectsBar");
+    bar.innerHTML = "";
+    state.projects.forEach(function (p) {
+      if (p.archived) return;
+      const tab = document.createElement("button");
+      tab.className = "project-tab";
+      if (p.id === state.currentProjectId) tab.classList.add("active");
+      tab.style.background = p.color || PROJECT_COLORS[0];
+      tab.textContent = initials(p.name);
+      tab.title = p.name;
+
+      let pressTimer = null;
+      let moved = false;
+
+      tab.addEventListener("pointerdown", function (e) {
+        moved = false;
+        pressTimer = setTimeout(function () {
+          pressTimer = null;
+          tab.classList.add("long-press");
+          setTimeout(function () { tab.classList.remove("long-press"); }, 400);
+          openProjectMenu(p.id);
+        }, 550);
+      });
+      tab.addEventListener("pointermove", function () {
+        moved = true;
+        if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+      });
+      ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) {
+        tab.addEventListener(ev, function () {
+          if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
+          if (!moved && ev === "pointerup") {
+            // Обычный тап — переключение
+            if (p.id !== state.currentProjectId) switchProject(p.id);
+          }
+        });
+      });
+      bar.appendChild(tab);
+    });
+    const add = document.createElement("button");
+    add.className = "project-add";
+    add.title = "Новый проект";
+    add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
+    add.addEventListener("click", function () { openProjectModal(null); });
+    bar.appendChild(add);
+  }
+
+  async function switchProject(id) {
+    if (id === state.currentProjectId) return;
+    state.currentProjectId = id;
+    await dbSetMeta("currentProjectId", id);
+    document.getElementById("chat").innerHTML = "";
+    renderCurrentProject();
+    renderProjectsBar();
+    toast("Проект: " + (state.project ? state.project.name : ""));
+  }
+
+  function renderCurrentProject() {
+    const p = state.project;
+    if (!p) return;
+    p.history = p.history || [];
+    p.history.forEach(function (m, idx) {
+      addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
+    });
+    if (p.lastMetrics) { updateChip(p.lastMetrics); updateLotsChip(p.lastMetrics); updateNoise(p.lastMetrics); updateConditionalUI(p.lastMetrics); }
+    renderSparkline();
+    updateArtifactsSection();
+  }
+
+  function openProjectMenu(id) {
+    state.editingProjectId = id;
+    const p = state.projects.find(function (x) { return x.id === id; });
+    if (!p) return;
+    document.getElementById("projectMenuTitle").textContent = p.name || "Проект";
+    document.getElementById("projectMenuSub").textContent = "Выберите действие";
+    document.getElementById("pmOpen").style.display = "none";
+    openSheet("projectMenuSheet");
+  }
+
+  function openProjectModal(editId) {
+    state.editingProjectId = editId;
+    const p = editId ? state.projects.find(function (x) { return x.id === editId; }) : null;
+    document.getElementById("projectModalTitle").textContent = p ? "Редактировать проект" : "Новый проект";
+    document.getElementById("projectNameInput").value = p ? p.name : "";
+    state.editingProjectColor = (p && p.color) || PROJECT_COLORS[0];
+    renderColorPicker();
+    document.getElementById("projectDangerRow").style.display = p ? "flex" : "none";
+    document.getElementById("projectModalBg").classList.add("open");
+    setTimeout(function () { document.getElementById("projectNameInput").focus(); }, 100);
+  }
+  function closeProjectModal() {
+    document.getElementById("projectModalBg").classList.remove("open");
+  }
+  function renderColorPicker() {
+    const box = document.getElementById("projectColorPicker");
+    box.innerHTML = "";
+    PROJECT_COLORS.forEach(function (c) {
+      const sw = document.createElement("button");
+      sw.className = "color-swatch";
+      if (c === state.editingProjectColor) sw.classList.add("active");
+      sw.style.background = c;
+      sw.type = "button";
+      sw.addEventListener("click", function () { state.editingProjectColor = c; renderColorPicker(); });
+      box.appendChild(sw);
+    });
+  }
+
+  // --- Swipe close ---
+  function setupSwipeToClose(sheetEl, handleEl) {
+    if (!sheetEl || !handleEl) return;
+    let startY = 0, currentY = 0, dragging = false;
+    function onStart(e) { dragging = true; startY = (e.touches ? e.touches[0].clientY : e.clientY); sheetEl.style.transition = "none"; }
+    function onMove(e) { if (!dragging) return; currentY = (e.touches ? e.touches[0].clientY : e.clientY); const dy = Math.max(0, currentY - startY); sheetEl.style.transform = "translateY(" + dy + "px)"; }
+    function onEnd() {
+      if (!dragging) return;
+      dragging = false;
+      sheetEl.style.transition = "";
+      sheetEl.style.transform = "";
+      if (currentY - startY > 70) closeAllSheets();
+    }
+    handleEl.addEventListener("touchstart", onStart, { passive: true });
+    handleEl.addEventListener("touchmove", onMove, { passive: true });
+    handleEl.addEventListener("touchend", onEnd);
+    handleEl.addEventListener("mousedown", onStart);
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onEnd);
+  }
+
+  function setupViewport() {
+    if (window.visualViewport) {
+      const setVh = function () { document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px"); };
+      window.visualViewport.addEventListener("resize", setVh);
+      window.visualViewport.addEventListener("scroll", setVh);
+      setVh();
+    }
+  }
+
+  // --- Онбординг ---
+  function maybeShowOnboarding() {
+    let onboarded = false;
+    try { onboarded = localStorage.getItem(LS_ONBOARDED) === "true"; } catch (e) {}
+    if (!onboarded) {
+      document.getElementById("onboarding").classList.add("open");
+    }
+  }
+
+  // --- Init ---
+  async function init() {
+    applyProfile();
+    setupViewport();
+    setupTextarea();
+
+    // Загрузка режима из localStorage
+    try {
+      const m = localStorage.getItem("monolog_mode");
+      if (m === "analyst" || m === "strategist") state.mode = m;
+    } catch (e) {}
+    renderOrb();
+
+    // Загрузка профиля
+    try {
+      const prof = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
+      if (prof) state.profile = Object.assign(state.profile, prof);
+      state.apiKey = localStorage.getItem(LS_KEY) || "";
+      state.authorKey = localStorage.getItem(LS_AUTHOR) || "";
+    } catch (e) {}
+    applyProfile();
+
+    await loadProjects();
+    renderProjectsBar();
+    renderCurrentProject();
+
+    // Swipe-close
+    ["metricsSheet", "profileSheet", "passportSheet", "artifactsSheet", "editorSheet", "blogSheet", "blogViewSheet", "projectMenuSheet"].forEach(function (id) {
+      const sheet = document.getElementById(id);
+      const handle = sheet ? sheet.querySelector(".sheet-handle") : null;
+      if (sheet && handle) setupSwipeToClose(sheet, handle);
+    });
+
+    setTimeout(function () { document.getElementById("splash").classList.add("hide"); }, 900);
+
+    // Онбординг
+    maybeShowOnboarding();
+
+    const sendBtn = document.getElementById("sendBtn");
+    const input = document.getElementById("input");
+    const fileInput = document.getElementById("fileInput");
+
+    sendBtn.addEventListener("click", send);
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+
+    document.getElementById("attachBtn").addEventListener("click", function () { fileInput.click(); });
+    fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
+
+    // Сфера
+    const orbBtn = document.getElementById("orbBtn");
+    let orbPressTimer = null;
+    let orbMoved = false;
+    orbBtn.addEventListener("pointerdown", function () {
+      orbMoved = false;
+      orbPressTimer = setTimeout(function () {
+        orbPressTimer = null;
+        switchMode();
+      }, 550);
+    });
+    orbBtn.addEventListener("pointermove", function () {
+      orbMoved = true;
+      if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) {
+      orbBtn.addEventListener(ev, function () {
+        if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
+        if (!orbMoved && ev === "pointerup") {
+          renderProfile();
+          openSheet("profileSheet");
+        }
+      });
+    });
+
+    // Метрики
+    document.getElementById("stabilityChip").addEventListener("click", function () { openSheet("metricsSheet"); });
+    document.getElementById("passportBtn").addEventListener("click", function () { renderPassport(); openSheet("passportSheet"); });
+    document.getElementById("reportIconBtn").addEventListener("click", downloadReport);
+    document.getElementById("artifactsSectionInner").addEventListener("click", function () { renderArtifactsList(); openSheet("artifactsSheet"); });
+
+    // Лоты
+    document.getElementById("lotsChip").addEventListener("click", openLotsModal);
+    document.getElementById("lotsClose").addEventListener("click", function () { document.getElementById("lotsModalBg").classList.remove("open"); });
+    document.getElementById("lotsModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+
+    // Блог
+    document.getElementById("blogBtn").addEventListener("click", function () {
+      switchBlogTab("list");
+      loadBlogList();
+      openSheet("blogSheet");
+    });
+    document.querySelectorAll(".blog-tab").forEach(function (t) {
+      t.addEventListener("click", function () { switchBlogTab(t.dataset.tab); });
+    });
+    document.getElementById("blogNewBtn").addEventListener("click", function () {
+      closeAllSheets();
+      openEditor({ type: "blog_post", name: "", body: "", tags: [] });
+    });
+
+    // Редактор
+    document.getElementById("editorCopyBtn").addEventListener("click", function () {
+      const body = document.getElementById("editorBody").value || "";
+      if (navigator.clipboard) navigator.clipboard.writeText(body);
+      toast("Скопировано");
+    });
+    document.getElementById("editorDownloadBtn").addEventListener("click", downloadEditorFile);
+    document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToProject);
+    document.getElementById("editorPublishBtn").addEventListener("click", publishEditorToBlog);
+
+    document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
+
+    document.querySelectorAll(".acc-head").forEach(function (h) {
+      h.addEventListener("click", function () { h.parentElement.classList.toggle("open"); });
+    });
+
+    // Меню проекта
+    document.getElementById("projectMenuHandle").addEventListener("click", function () {});
+    document.getElementById("pmOpen").addEventListener("click", function () {
+      if (state.editingProjectId) switchProject(state.editingProjectId);
+      closeAllSheets();
+    });
+    document.getElementById("pmRename").addEventListener("click", function () {
+      const id = state.editingProjectId;
+      closeAllSheets();
+      setTimeout(function () { openProjectModal(id); }, 300);
+    });
+    document.getElementById("pmDelete").addEventListener("click", async function () {
+      const id = state.editingProjectId;
+      if (!id) return;
+      const p = state.projects.find(function (x) { return x.id === id; });
+      if (!p) return;
+      if (!confirm("Удалить проект «" + p.name + "» и все его данные?")) return;
+      await dbDel(STORE_PROJECTS, id);
+      state.projects = state.projects.filter(function (x) { return x.id !== id; });
+      if (!state.projects.length) {
+        const fresh = createProjectObj("Мой проект", PROJECT_COLORS[0]);
+        await dbPut(STORE_PROJECTS, fresh);
+        state.projects.push(fresh);
+        state.currentProjectId = fresh.id;
+        await dbSetMeta("currentProjectId", fresh.id);
+      } else if (state.currentProjectId === id) {
+        state.currentProjectId = state.projects[0].id;
+        await dbSetMeta("currentProjectId", state.currentProjectId);
+      }
+      document.getElementById("chat").innerHTML = "";
+      renderCurrentProject();
+      renderProjectsBar();
+      closeAllSheets();
+      toast("Проект удалён");
+    });
+
+    // Модалка рисков
+    document.getElementById("riskClose").addEventListener("click", function () { document.getElementById("riskModalBg").classList.remove("open"); });
+    document.getElementById("riskModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+    document.getElementById("riskCancel").addEventListener("click", function () {
+      document.getElementById("riskModalBg").classList.remove("open");
+      toast("Действие отменено");
+    });
+    document.getElementById("riskApply").addEventListener("click", function () {
+      const alt = document.getElementById("riskModalBg").dataset.alt || "";
+      document.getElementById("riskModalBg").classList.remove("open");
+      document.getElementById("input").value = alt;
+      toast("Альтернатива вставлена");
+    });
+
+    // Сброс
+    document.getElementById("resetChip").addEventListener("click", function () {
+      const chip = document.getElementById("resetChip");
+      document.getElementById("resetReason").textContent = chip.dataset.reason || "Модель рекомендует сбросить проблемную ветку диалога.";
+      document.getElementById("resetModalBg").classList.add("open");
+    });
+    document.getElementById("resetClose").addEventListener("click", function () { document.getElementById("resetModalBg").classList.remove("open"); });
+    document.getElementById("resetModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+    document.getElementById("resetCancel").addEventListener("click", function () { document.getElementById("resetModalBg").classList.remove("open"); });
+    document.getElementById("resetConfirm").addEventListener("click", function () {
+      const chip = document.getElementById("resetChip");
+      const point = chip.dataset.point || "";
+      const p = state.project;
+      if (!p) return;
+      const match = String(point).match(/#?(\d+)/);
+      if (match) {
+        const idx = parseInt(match[1], 10);
+        if (idx >= 0 && idx < p.history.length) p.history = p.history.slice(0, idx);
+      } else p.history = [];
+      document.getElementById("chat").innerHTML = "";
+      p.history.forEach(function (m, idx) {
+        addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
+      });
+      persistCurrentProject();
+      chip.classList.remove("show");
+      document.getElementById("resetModalBg").classList.remove("open");
+      toast("Контекст сброшен");
+    });
+
+    // Модалка проекта
+    document.getElementById("projectModalClose").addEventListener("click", closeProjectModal);
+    document.getElementById("projectCancel").addEventListener("click", closeProjectModal);
+    document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
+    document.getElementById("projectSave").addEventListener("click", async function () {
+      const name = (document.getElementById("projectNameInput").value || "").trim() || "Проект";
+      if (state.editingProjectId) {
+        const p = state.projects.find(function (x) { return x.id === state.editingProjectId; });
+        if (p) { p.name = name; p.color = state.editingProjectColor; await dbPut(STORE_PROJECTS, p); }
+      } else {
+        const fresh = createProjectObj(name, state.editingProjectColor);
+        await dbPut(STORE_PROJECTS, fresh);
+        state.projects.push(fresh);
+        state.currentProjectId = fresh.id;
+        await dbSetMeta("currentProjectId", fresh.id);
+        document.getElementById("chat").innerHTML = "";
+        renderCurrentProject();
+      }
+      renderProjectsBar();
+      closeProjectModal();
+      toast("Сохранено");
+    });
+    document.getElementById("projectDelete").addEventListener("click", async function () {
+      if (!state.editingProjectId) return;
+      const p = state.projects.find(function (x) { return x.id === state.editingProjectId; });
+      if (!p) return;
+      if (!confirm("Удалить проект «" + p.name + "» и все его данные?")) return;
+      await dbDel(STORE_PROJECTS, p.id);
+      state.projects = state.projects.filter(function (x) { return x.id !== p.id; });
+      if (!state.projects.length) {
+        const fresh = createProjectObj("Мой проект", PROJECT_COLORS[0]);
+        await dbPut(STORE_PROJECTS, fresh);
+        state.projects.push(fresh);
+        state.currentProjectId = fresh.id;
+        await dbSetMeta("currentProjectId", fresh.id);
+      } else if (state.currentProjectId === p.id) {
+        state.currentProjectId = state.projects[0].id;
+        await dbSetMeta("currentProjectId", state.currentProjectId);
+      }
+      document.getElementById("chat").innerHTML = "";
+      renderCurrentProject();
+      renderProjectsBar();
+      closeProjectModal();
+      toast("Проект удалён");
+    });
+
+    // Настройки
+    document.getElementById("settingsBtn").addEventListener("click", function () {
+      document.getElementById("keyInput").value = state.apiKey || "";
+      document.getElementById("authorKeyInput").value = state.authorKey || "";
+      document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
+      document.getElementById("rememberAuthorKey").checked = !!localStorage.getItem(LS_AUTHOR);
+      applyProfile();
+      document.getElementById("modalBg").classList.add("open");
+    });
+    document.getElementById("modalClose").addEventListener("click", function () { document.getElementById("modalBg").classList.remove("open"); });
+    document.getElementById("modalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
+    document.querySelectorAll("#depthSeg button").forEach(function (el) {
+      el.addEventListener("click", function () {
+        state.profile.depth = el.dataset.depth;
+        applyProfile();
+      });
+    });
+    document.getElementById("saveSettings").addEventListener("click", function () {
+      const key = (document.getElementById("keyInput").value || "").trim();
+      const remember = document.getElementById("rememberKey").checked;
+      state.apiKey = key;
+      if (remember && key) localStorage.setItem(LS_KEY, key);
+      else localStorage.removeItem(LS_KEY);
+
+      const authorKey = (document.getElementById("authorKeyInput").value || "").trim();
+      const rememberAuthor = document.getElementById("rememberAuthorKey").checked;
+      state.authorKey = authorKey;
+      if (rememberAuthor && authorKey) localStorage.setItem(LS_AUTHOR, authorKey);
+      else localStorage.removeItem(LS_AUTHOR);
+
+      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+      document.getElementById("modalBg").classList.remove("open");
+      toast("Настройки сохранены");
+    });
+
+    // Экспорт / Импорт
+    document.getElementById("exportData").addEventListener("click", function () {
+      const blob = new Blob([JSON.stringify({ projects: state.projects, profile: state.profile }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "monolog_export_" + Date.now() + ".json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    document.getElementById("importData").addEventListener("click", function () {
+      document.getElementById("importFile").click();
+    });
+    document.getElementById("importFile").addEventListener("change", function (e) {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async function () {
+        try {
+          const data = JSON.parse(reader.result);
+          if (data.projects && Array.isArray(data.projects)) {
+            for (const p of data.projects) await dbPut(STORE_PROJECTS, p);
+          }
+          if (data.profile) {
+            state.profile = Object.assign(state.profile, data.profile);
+            localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+          }
+          location.reload();
+        } catch (err) { alert("Некорректный файл"); }
+      };
+      reader.readAsText(file);
+    });
+
+    // Онбординг
+    document.getElementById("obStart").addEventListener("click", function () {
+      const name = (document.getElementById("obName").value || "").trim();
+      const key = (document.getElementById("obKey").value || "").trim();
+      if (name) {
+        state.profile.userName = name;
+        const p = state.project;
+        if (p && (!p.name || p.name === "Мой проект")) p.name = name;
+      }
+      if (key) {
+        state.apiKey = key;
+        localStorage.setItem(LS_KEY, key);
+      }
+      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+      localStorage.setItem(LS_ONBOARDED, "true");
+      document.getElementById("onboarding").classList.remove("open");
+      renderProjectsBar();
+      toast("Готово");
+    });
+    document.getElementById("obSkip").addEventListener("click", function () {
+      localStorage.setItem(LS_ONBOARDED, "true");
+      document.getElementById("onboarding").classList.remove("open");
+    });
+  }
+
+  function generateReport() {
+    const lines = [];
+    const now = new Date();
+    const p = state.project || {};
+    const ps = p.passport || {}, c = p.cognitive || {}, m = p.lastMetrics || {};
+    lines.push("# Отчёт сессии — AI Monolog");
+    lines.push("");
+    lines.push("**Проект:** " + (p.name || "—"));
+    lines.push("**Дата:** " + now.toLocaleString("ru-RU"));
+    lines.push("**Запросов:** " + (p.sessionCount || 0));
+    lines.push("");
+    lines.push("## Метрики");
+    lines.push("");
+    lines.push("- Стабильность: " + (typeof m.stability_index === "number" ? m.stability_index.toFixed(2) : "—"));
+    lines.push("- Масштаб: " + (m.mind_scale || "—"));
+    lines.push("- Баланс: " + (m.lots_balance || "—"));
+    lines.push("");
+    if (p.artifacts && p.artifacts.length) {
+      lines.push("## Артефакты (" + p.artifacts.length + ")");
+      lines.push("");
+      p.artifacts.forEach(function (a) {
+        lines.push("- **" + (a.name || "Артефакт") + "** (" + (a.type || "документ") + ", " + (a.version || "v1.0") + ", " + (a.stage || "hypothesis") + ")");
+      });
+      lines.push("");
+    }
+    if (p.history && p.history.length) {
+      lines.push("## История диалога");
+      lines.push("");
+      p.history.forEach(function (h) {
+        lines.push("**" + (h.role === "user" ? "Вы" : "AI Monolog") + ":** " + (h.content || ""));
+        lines.push("");
+      });
+    }
+    return lines.join("\n");
+  }
+
+  function downloadReport() {
+    const md = generateReport();
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "monolog_report_" + Date.now() + ".md";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Отчёт скачан");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>
