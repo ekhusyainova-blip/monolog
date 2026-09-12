@@ -1260,6 +1260,14 @@
     </button>
   </div>
 
+<div class="menu-section hidden" id="menuCodeSection">
+    <div class="menu-section-title">Разработка</div>
+    <button class="menu-item" id="menuCode" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      <div class="info"><div class="name">Работа с кодом</div><div class="desc">Открыть файл из репозитория</div></div>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
   <div class="menu-section hidden" id="menuMoodBoardSection">
     <div class="menu-section-title">Желания</div>
     <button class="menu-item" id="menuMoodBoard" type="button">
@@ -1510,6 +1518,16 @@
         Скачать
       </button>
     </div>
+    <div class="doc-editor-actions" id="editorCodeRow" style="display:none;">
+      <button class="ghost" id="editorCodeBranch" type="button" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+        Ветка: dev
+      </button>
+      <button class="primary" id="editorCodeSave" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+        Сохранить в dev
+      </button>
+    </div>
     <div class="doc-editor-actions" id="editorPublishRow">
       <button class="ghost" id="editorSaveBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
@@ -1695,6 +1713,22 @@
     </div>
 
     <input type="file" id="importFile" accept="application/json" style="display:none" />
+  </div>
+</div>
+<div class="modal-bg" id="codePathModalBg">
+  <div class="modal">
+    <button class="modal-close" id="codePathClose" aria-label="Закрыть" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h2>Открыть файл кода</h2>
+    <div class="sub">Введите путь в репозитории</div>
+    <label for="codePathInput">Путь</label>
+    <input type="text" id="codePathInput" placeholder="app.py или prompts/layer_a.txt" />
+    <div class="row">
+      <button class="action ghost" id="codePathCancel" type="button">Отмена</button>
+      <button class="action primary" id="codePathOpen" type="button">Открыть</button>
+    </div>
+    <div class="doc-status" id="codePathStatus"></div>
   </div>
 </div>
 
@@ -2270,6 +2304,12 @@
     else menuPassport.classList.add("hidden");
 
     // Идеи
+// Раздел «Код» — только для автора
+    const codeSection = document.getElementById("menuCodeSection");
+    if (codeSection) {
+      if (state.authorKey) codeSection.classList.remove("hidden");
+      else codeSection.classList.add("hidden");
+    }
     const ideasCount = (p.ideas || []).length;
     const ideasSection = document.getElementById("menuIdeasSection");
     const ideasBadge = document.getElementById("menuIdeasBadge");
@@ -3284,29 +3324,59 @@
     });
   }
 
-  function openEditor(context) {
+function openEditor(context) {
     state.editorContext = context || {};
-    // Применяем edit, если пришёл
+
+    const name = context.name || "Документ";
+    const body = context.body || "";
+    const tags = context.tags || [];
+
+    // Применяем edit, если пришёл — до записи в поле
+    let finalBody = body;
+    if (context.edit && context.edit.new_text) {
+      const target = context.edit.target || "";
+      const newText = context.edit.new_text;
+      const m = target.match(/(\d+)/);
+      if (m && m[1]) {
+        const idx = parseInt(m[1], 10) - 1;
+        const parts = finalBody.split(/\n\n+/);
+        if (idx >= 0 && idx < parts.length) {
+          parts[idx] = newText;
+          finalBody = parts.join("\n\n");
+        }
+      } else {
+        if (target && finalBody.indexOf(target) !== -1) {
+          finalBody = finalBody.replace(target, newText);
+        } else {
+          finalBody = finalBody + "\n\n<!-- Замена: " + target + " -->\n" + newText;
+        }
+      }
+    }
+
+    document.getElementById("editorName").value = name;
+    document.getElementById("editorBody").value = finalBody;
+    document.getElementById("editorTags").value = tags.join(", ");
+    document.getElementById("editorStatus").textContent = "";
+
+    const isBlog = context.type === "blog_post";
+    const isCode = context.type === "code";
+
+    document.getElementById("editorTitle").textContent = isBlog ? "Редактор статьи" : (isCode ? "Редактор кода: " + name : "Редактор документа");
+    document.getElementById("editorSub").textContent = isBlog
+      ? "Правьте текст, затем опубликуйте в блог"
+      : (isCode ? "Правьте код, затем сохраните в ветку dev" : "Правьте текст, затем сохраните или скачайте");
+
+    document.getElementById("editorTagsField").style.display = isBlog ? "block" : "none";
+    document.getElementById("editorPublishRow").style.display = isBlog ? "flex" : "none";
+    document.getElementById("editorCodeRow").style.display = isCode ? "flex" : "none";
+
     if (context.edit && context.edit.target && context.edit.new_text) {
-      // Показываем уведомление о применённой правке
       setTimeout(function () {
         const status = document.getElementById("editorStatus");
         if (status) status.textContent = "Применена замена: " + context.edit.target;
       }, 300);
     }
-    const name = context.name || "Документ";
-    const body = context.body || "";
-    const tags = context.tags || [];
-    document.getElementById("editorName").value = name;
-    document.getElementById("editorBody").value = body;
-    document.getElementById("editorTags").value = tags.join(", ");
-    document.getElementById("editorStatus").textContent = "";
-    const isBlog = context.type === "blog_post";
-    document.getElementById("editorTitle").textContent = isBlog ? "Редактор статьи" : "Редактор документа";
-    document.getElementById("editorSub").textContent = isBlog
-      ? "Правьте текст, затем опубликуйте в блог"
-      : "Правьте текст, затем сохраните или скачайте";
-    document.getElementById("editorPublishBtn").style.display = isBlog ? "inline-flex" : "none";
+
     openSheet("editorSheet");
   }
 
@@ -3315,13 +3385,19 @@
     if (!p || !p.artifacts) return;
     const a = p.artifacts.find(function (x) { return x.id === artifactId; });
     if (!a) { toast("Артефакт не найден"); return; }
-    openEditor({
-      type: a.type === "blog_post" ? "blog_post" : "document",
-      artifactId: a.id,
-      name: a.name || "Документ",
-      body: a.content || "",
-      tags: a.tags || [],
-    });
+   let ctxType = "document";
+      if (artifactStatus.type === "blog_post") ctxType = "blog_post";
+      else if (artifactStatus.type === "code") ctxType = "code";
+
+      openEditor({
+        type: ctxType,
+        name: artifactStatus.title || "Документ",
+        body: replyText || "",
+        tags: artifactStatus.suggested_tags || [],
+        path: artifactStatus.path || null,
+        language: artifactStatus.language || null,
+        edit: artifactStatus.edit || null,
+      });
   }
 
   function downloadEditorFile() {
@@ -3662,6 +3738,15 @@
       closeAllSheets();
       setTimeout(function () { renderDimensionsList(); openSheet("dimensionsSheet"); }, 200);
     });
+    // Меню: работа с кодом
+    document.getElementById("menuCode").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () {
+        document.getElementById("codePathInput").value = "";
+        document.getElementById("codePathStatus").textContent = "";
+        document.getElementById("codePathModalBg").classList.add("open");
+      }, 200);
+    });
     document.getElementById("menuMoodBoard").addEventListener("click", function () {
       closeAllSheets();
       setTimeout(function () { renderMoodBoardList(); openSheet("moodBoardSheet"); }, 200);
@@ -3766,6 +3851,48 @@
       toast("Контекст сброшен");
     });
 
+// Модалка пути кода
+    document.getElementById("codePathClose").addEventListener("click", function () {
+      document.getElementById("codePathModalBg").classList.remove("open");
+    });
+    document.getElementById("codePathCancel").addEventListener("click", function () {
+      document.getElementById("codePathModalBg").classList.remove("open");
+    });
+    document.getElementById("codePathModalBg").addEventListener("click", function (e) {
+      if (e.target === this) this.classList.remove("open");
+    });
+    document.getElementById("codePathOpen").addEventListener("click", async function () {
+      const path = (document.getElementById("codePathInput").value || "").trim();
+      const status = document.getElementById("codePathStatus");
+      if (!path) { status.textContent = "Введите путь"; return; }
+      if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
+      status.textContent = "Загружаю…";
+      try {
+        const r = await fetch(API_BASE + "/code/read?path=" + encodeURIComponent(path), {
+          headers: { "X-Author-Key": state.authorKey },
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+        if (!data.exists) {
+          status.textContent = "Файл не найден. Можно создать новый.";
+          const input = document.getElementById("input");
+          input.value = "Создай файл " + path;
+          input.focus();
+        } else {
+          // Открываем в редакторе как код
+          document.getElementById("codePathModalBg").classList.remove("open");
+          openEditor({
+            type: "code",
+            name: path,
+            body: data.content || "",
+            path: path,
+            language: (path.split(".").pop() || "").toLowerCase(),
+          });
+        }
+      } catch (e) {
+        status.textContent = "Ошибка: " + e.message;
+      }
+    });
     document.getElementById("projectModalClose").addEventListener("click", closeProjectModal);
     document.getElementById("projectCancel").addEventListener("click", closeProjectModal);
     document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
@@ -3837,6 +3964,48 @@
     document.getElementById("editorDownloadBtn").addEventListener("click", downloadEditorFile);
     document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToProject);
     document.getElementById("editorPublishBtn").addEventListener("click", publishEditorToBlog);
+    document.getElementById("editorCodeSave").addEventListener("click", async function () {
+      const ctx = state.editorContext || {};
+      const path = ctx.path || (document.getElementById("editorName").value || "").trim();
+      const body = document.getElementById("editorBody").value || "";
+      const status = document.getElementById("editorStatus");
+      if (!path) { status.textContent = "Не указан путь файла"; return; }
+      if (!body) { status.textContent = "Файл пустой"; return; }
+      if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
+      if (!confirm("Сохранить " + path + " в ветку dev?")) return;
+
+      status.textContent = "Сохраняю в dev…";
+      try {
+        const r = await fetch(API_BASE + "/code/save", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-Author-Key": state.authorKey,
+          },
+          body: JSON.stringify({
+            path: path,
+            content: body,
+            message: "Update " + path + " via Monolog",
+          }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+        status.textContent = "Сохранено в ветку dev";
+        toast("Сохранено в dev");
+        if (data.html_url) {
+          const link = document.createElement("a");
+          link.href = data.html_url;
+          link.target = "_blank";
+          link.rel = "noopener";
+          link.textContent = "Открыть коммит на GitHub";
+          link.style.cssText = "font-size:12px;color:var(--accent);margin-top:6px;display:inline-block;";
+          document.getElementById("editorStatus").appendChild(document.createElement("br"));
+          document.getElementById("editorStatus").appendChild(link);
+        }
+      } catch (e) {
+        status.textContent = "Ошибка: " + e.message;
+      }
+    });
 
     document.getElementById("settingsBtn").addEventListener("click", function () {
       document.getElementById("keyInput").value = state.apiKey || "";
