@@ -26,7 +26,7 @@ log = logging.getLogger("monolog")
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 MODEL = "qwen/qwen3.6-27b"
 MAX_TOKENS = 2500
-TIMEOUT = 60.0
+TIMEOUT = 90.0
 
 _DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
 _dev_key_cycle = itertools.cycle(_DEV_KEYS) if _DEV_KEYS else None
