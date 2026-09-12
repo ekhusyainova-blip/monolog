@@ -135,10 +135,7 @@ def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]
 
 
 def pick_provider_and_model(request: Request, user_message: str, carried_metrics: Optional[Dict[str, Any]] = None):
-    """Возвращает (provider, base_url, model, api_key, source).
-    Приоритет: пользовательский ключ + provider из заголовка.
-    Fallback: сервисный ключ Groq.
-    """
+    """Возвращает (provider, base_url, model, api_key, source)."""
     provider = request.headers.get("X-Provider", "groq").strip().lower()
     if provider not in PROVIDERS:
         provider = "groq"
@@ -189,6 +186,14 @@ BASE_METRICS = {
         "reason": None,
         "level": "inactive",
     },
+    "dominant_trait": {
+        "detected": False,
+        "influence": None,
+        "risk": None,
+        "stability_delta": 0.0,
+        "hint": None,
+        "steps": [],
+    },
     "passport": {
         "level": "micro", "title": None, "goal": None, "result": None,
         "mission": None, "values": [], "constraints": [], "stakeholders": [],
@@ -224,6 +229,7 @@ COMPACT_SCHEMA = {
     "value_choices": "[{question, options: [{label, consequences}]}]",
     "risk_intercept": "{active, requested_action, risk_level, safe_alternative} | null",
     "social_adaptation": "{active: bool, reason: string | null, level: inactive|low|medium|high}",
+    "dominant_trait": "{detected: bool, influence: string | null, risk: string | null, stability_delta: float, hint: string | null, steps: [string]}",
     "passport": {
         "level": "micro | tactical | strategic | systemic",
         "title": "string | null",
@@ -326,12 +332,12 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     result = {**BASE_METRICS, **carried}
 
     for k, v in (incoming or {}).items():
-        if k in ("passport", "profile", "reminder", "artifacts", "social_adaptation"):
+        if k in ("passport", "profile", "reminder", "artifacts", "social_adaptation", "dominant_trait"):
             continue
         if v is not None:
             result[k] = v
 
-    # social_adaptation — перезапись
+    # social_adaptation
     inc_sa = (incoming or {}).get("social_adaptation")
     if isinstance(inc_sa, dict):
         result["social_adaptation"] = {
@@ -341,6 +347,20 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         }
     else:
         result["social_adaptation"] = carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
+
+    # dominant_trait
+    inc_dt = (incoming or {}).get("dominant_trait")
+    if isinstance(inc_dt, dict):
+        result["dominant_trait"] = {
+            "detected": bool(inc_dt.get("detected")),
+            "influence": inc_dt.get("influence"),
+            "risk": inc_dt.get("risk"),
+            "stability_delta": float(inc_dt.get("stability_delta") or 0.0),
+            "hint": inc_dt.get("hint"),
+            "steps": list(inc_dt.get("steps") or []) if isinstance(inc_dt.get("steps"), list) else [],
+        }
+    else:
+        result["dominant_trait"] = carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
 
     # passport
     inc_pass = (incoming or {}).get("passport") or {}
@@ -376,7 +396,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                     seen.add(str(item))
         merged_prof[list_key] = old
 
-    # somatic — простая перезапись + note
+    # somatic
     inc_som = inc_prof.get("somatic")
     car_som = merged_prof.get("somatic") or {}
     if isinstance(inc_som, dict):
@@ -546,7 +566,6 @@ app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], all
 
 @app.get("/providers")
 async def providers_info():
-    """Информация о провайдерах и инструкции."""
     return JSONResponse({
         "providers": [
             {
