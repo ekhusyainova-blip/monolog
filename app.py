@@ -315,17 +315,23 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         }
     arts = carried.get("artifacts") or []
     if arts:
-        out["artifacts"] = [
-            {
+        compacted_arts = []
+        for a in arts[-3:]:
+            if not isinstance(a, dict):
+                continue
+            item = {
                 "id": a.get("id"),
                 "name": a.get("name"),
                 "type": a.get("type"),
                 "version": a.get("version"),
                 "stage": a.get("stage"),
             }
-            for a in arts[-5:]
-            if isinstance(a, dict)
-        ]
+            # Передаём content только если он есть и не слишком большой
+            content = a.get("content") or ""
+            if content and len(content) < 8000:
+                item["content"] = content
+            compacted_arts.append(item)
+        out["artifacts"] = compacted_arts
     return out
 
 
