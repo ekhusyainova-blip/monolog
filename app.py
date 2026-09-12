@@ -1,7 +1,7 @@
 # app.py
-# Monolog — stateless-прокси к Groq + блог + Word-экспорт.
-# Ротация моделей: gpt-oss-20b / gpt-oss-120b / qwen3.6-27b.
-# Слой B НЕ отправляется. История НЕ отправляется.
+# Monolog — stateless-прокси к 4 провайдерам LLM + блог + Word-экспорт.
+# Провайдеры: Groq, OpenRouter, Cerebras, SambaNova (OpenAI-совместимые).
+# Слой B НЕ отправляется. История НЕ отправляется. Ключи не сохраняются.
 
 import os
 import re
@@ -24,17 +24,55 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("monolog")
 
-GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+# --- Провайдеры ---
+PROVIDERS = {
+    "groq": {
+        "name": "Groq",
+        "base_url": "https://api.groq.com/openai/v1/chat/completions",
+        "models": {
+            "light": "openai/gpt-oss-20b",
+            "medium": "openai/gpt-oss-120b",
+            "heavy": "qwen/qwen3.6-27b",
+        },
+        "reasoning_effort": True,
+    },
+    "openrouter": {
+        "name": "OpenRouter",
+        "base_url": "https://openrouter.ai/api/v1/chat/completions",
+        "models": {
+            "light": "openai/gpt-oss-20b:free",
+            "medium": "openai/gpt-oss-120b:free",
+            "heavy": "qwen/qwen3-coder:free",
+        },
+        "reasoning_effort": False,
+    },
+    "cerebras": {
+        "name": "Cerebras",
+        "base_url": "https://api.cerebras.ai/v1/chat/completions",
+        "models": {
+            "light": "gpt-oss-20b",
+            "medium": "gpt-oss-120b",
+            "heavy": "gpt-oss-120b",
+        },
+        "reasoning_effort": True,
+    },
+    "sambanova": {
+        "name": "SambaNova",
+        "base_url": "https://api.sambanova.ai/v1/chat/completions",
+        "models": {
+            "light": "Meta-Llama-3.3-70B-Instruct",
+            "medium": "Meta-Llama-3.3-70B-Instruct",
+            "heavy": "DeepSeek-V3.1",
+        },
+        "reasoning_effort": False,
+    },
+}
+
 MAX_TOKENS = 2500
 TIMEOUT = 90.0
 
-# --- Актуальные модели Groq (после 16.08.2026) ---
-MODEL_LIGHT = "openai/gpt-oss-20b"
-MODEL_MEDIUM = "openai/gpt-oss-120b"
-MODEL_HEAVY = "qwen/qwen3.6-27b"
-
-_DEV_KEYS: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
-_dev_key_cycle = itertools.cycle(_DEV_KEYS) if _DEV_KEYS else None
+_DEV_KEYS_GROQ: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
+_dev_key_cycle = itertools.cycle(_DEV_KEYS_GROQ) if _DEV_KEYS_GROQ else None
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
 
 # --- Blog config ---
@@ -68,17 +106,6 @@ def next_dev_key() -> Optional[str]:
     return next(_dev_key_cycle)
 
 
-def pick_key(request: Request):
-    if ALLOW_BYOK:
-        user_key = request.headers.get("X-Groq-Key", "").strip()
-        if user_key.startswith("gsk_"):
-            return user_key, "user"
-    dev = next_dev_key()
-    if dev:
-        return dev, "developer"
-    return None, "none"
-
-
 def check_author(request: Request):
     if not AUTHOR_SECRET:
         raise HTTPException(status_code=503, detail="AUTHOR_SECRET не настроен на сервере")
@@ -87,15 +114,9 @@ def check_author(request: Request):
         raise HTTPException(status_code=403, detail="Неверный ключ автора")
 
 
-def pick_model(user_message: str, carried_metrics: Optional[Dict[str, Any]] = None) -> str:
-    """Ротация по эвристике.
-    Сложные задачи → qwen3.6-27b.
-    Средние → gpt-oss-120b.
-    Простые → gpt-oss-20b.
-    """
+def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]], models: Dict[str, str]) -> str:
+    """Выбирает tier модели: light / medium / heavy."""
     text = (user_message or "").lower()
-
-    # Тяжёлые — статьи, анализ, планы, стратегии
     heavy_keywords = [
         "статья", "лонгрид", "пост", "напиши",
         "проанализируй", "анализ", "план", "стратег",
@@ -103,29 +124,44 @@ def pick_model(user_message: str, carried_metrics: Optional[Dict[str, Any]] = No
         "документ", "тз", "отчёт", "отчет",
     ]
     if any(kw in text for kw in heavy_keywords):
-        return MODEL_HEAVY
-
-    # Средние — длинные запросы или стратегический проект
+        return models.get("heavy") or models.get("medium") or models.get("light")
     if len(user_message or "") > 200:
-        return MODEL_MEDIUM
+        return models.get("medium") or models.get("light")
     if carried_metrics:
         passport = carried_metrics.get("passport") or {}
         if passport.get("level") in ("strategic", "systemic"):
-            return MODEL_MEDIUM
+            return models.get("medium") or models.get("light")
+    return models.get("light") or models.get("medium")
 
-    # Простые — приветствия, короткие вопросы
-    return MODEL_LIGHT
+
+def pick_provider_and_model(request: Request, user_message: str, carried_metrics: Optional[Dict[str, Any]] = None):
+    """Возвращает (provider, base_url, model, api_key, source).
+    Приоритет: пользовательский ключ + provider из заголовка.
+    Fallback: сервисный ключ Groq.
+    """
+    provider = request.headers.get("X-Provider", "groq").strip().lower()
+    if provider not in PROVIDERS:
+        provider = "groq"
+
+    user_key = request.headers.get("X-Api-Key", "").strip()
+    if user_key:
+        cfg = PROVIDERS[provider]
+        model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
+        return provider, cfg["base_url"], model, user_key, "user"
+
+    dev_key = next_dev_key()
+    if dev_key:
+        cfg = PROVIDERS["groq"]
+        model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
+        return "groq", cfg["base_url"], model, dev_key, "developer"
+
+    return None, None, None, None, "none"
 
 
 BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
     "cycles_completed": 0,
-    "social_adaptation": {
-        "active": False,
-        "reason": None,
-        "level": "inactive",
-    },
     "collisions_resolved": "0/0",
     "lots_balance": "+0.0",
     "patterns_applied": [],
@@ -148,6 +184,11 @@ BASE_METRICS = {
     "developer_mode": False,
     "reminder": None,
     "artifacts": [],
+    "social_adaptation": {
+        "active": False,
+        "reason": None,
+        "level": "inactive",
+    },
     "passport": {
         "level": "micro", "title": None, "goal": None, "result": None,
         "mission": None, "values": [], "constraints": [], "stakeholders": [],
@@ -175,6 +216,7 @@ COMPACT_SCHEMA = {
     "artifact_status": "{type, title, ready, suggested_tags, format} | null",
     "value_choices": "[{question, options: [{label, consequences}]}]",
     "risk_intercept": "{active, requested_action, risk_level, safe_alternative} | null",
+    "social_adaptation": "{active: bool, reason: string | null, level: inactive|low|medium|high}",
     "passport": {
         "level": "micro | tactical | strategic | systemic",
         "title": "string | null",
@@ -276,12 +318,12 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     result = {**BASE_METRICS, **carried}
 
     for k, v in (incoming or {}).items():
-        if k in ("passport", "profile", "inder", "artifacts", "social_adaptation"):
+        if k in ("passport", "profile", "reminder", "artifacts", "social_adaptation"):
             continue
         if v is not None:
             result[k] = v
 
-    # social_adaptation — простое перезаписывание (не накапливается)
+    # social_adaptation — перезапись
     inc_sa = (incoming or {}).get("social_adaptation")
     if isinstance(inc_sa, dict):
         result["social_adaptation"] = {
@@ -292,6 +334,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     else:
         result["social_adaptation"] = carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
 
+    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -308,6 +351,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
+    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
@@ -325,9 +369,11 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         merged_prof[list_key] = old
     result["profile"] = merged_prof
 
+    # reminder
     inc_rem = (incoming or {}).get("reminder")
     result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
 
+    # artifacts
     inc_art = (incoming or {}).get("artifacts") or []
     car_art = list(carried.get("artifacts") or [])
     seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
@@ -351,41 +397,51 @@ SYSTEM_PROMPT = (
     "reply_text — Markdown-текст ответа на русском языке. "
     "metrics — строго по схеме ниже. Все поля обязательны. "
     "НЕ дублируй содержимое в artifacts.content — только метаданные.\n\n"
-    f"=== СЛОЙ A (ИНСТРУКЦИЯ) ===\n{LAYER_A}\n\n"
+    f"=== КОГНИТИВНЫЙ ПРОМПТ (СЛОИ A + B + C + D) ===\n{LAYER_A}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(COMPACT_SCHEMA, ensure_ascii=False)}"
 )
 
 
-async def groq_call(messages: List[Dict[str, str]], api_key: str, model: str) -> str:
-    headers = {"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"}
+async def call_provider(messages: List[Dict[str, str]], api_key: str, base_url: str, model: str, provider: str) -> str:
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    if provider == "openrouter":
+        headers["HTTP-Referer"] = "https://agent-23r6.onrender.com"
+        headers["X-Title"] = "AI Monolog"
+
     payload = {
         "model": model,
         "messages": messages,
         "max_tokens": MAX_TOKENS,
         "temperature": 0.6,
     }
-    # reasoning_effort только для моделей, которые его поддерживают
-    if model.startswith("qwen"):
-        payload["reasoning_effort"] = "none"
+
+    cfg = PROVIDERS.get(provider, {})
+    if cfg.get("reasoning_effort"):
+        if model.startswith("openai/gpt-oss") or model.startswith("gpt-oss"):
+            payload["reasoning_effort"] = "low"
+        elif model.startswith("qwen"):
+            payload["reasoning_effort"] = "none"
 
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
-        r = await client.post(GROQ_URL, headers=headers, json=payload)
+        r = await client.post(base_url, headers=headers, json=payload)
 
     remaining = r.headers.get("x-ratelimit-remaining-tokens", "?")
-    log.info(f"Groq [{model}] | status={r.status_code} | remaining={remaining}")
+    log.info(f"Provider [{provider}/{model}] | status={r.status_code} | remaining={remaining}")
 
     if r.status_code == 429:
         retry_after = r.headers.get("retry-after", "неизвестно")
         raise HTTPException(
             status_code=429,
-            detail=f"Лимит Groq исчерпан. Повторите через {retry_after} сек. Или введите свой ключ."
+            detail=f"Лимит исчерпан. Повторите через {retry_after} сек. Или введите свой ключ."
         )
+    if r.status_code == 402:
+        raise HTTPException(status_code=402, detail="Недостаточно кредитов на OpenRouter. Пополните баланс или смените провайдера.")
     if r.status_code >= 400:
-        log.error(f"Groq error {r.status_code}: {r.text[:300]}")
-        # Если модель недоступна — попробуем fallback
-        if r.status_code in (400, 404) and "model" in r.text.lower():
-            raise HTTPException(status_code=502, detail=f"Модель {model} недоступна")
-        raise HTTPException(status_code=r.status_code, detail="Ошибка Groq API")
+        log.error(f"Provider error {r.status_code}: {r.text[:300]}")
+        raise HTTPException(status_code=r.status_code, detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API")
 
     data = r.json()
     content = data["choices"][0]["message"]["content"]
@@ -465,6 +521,67 @@ app = FastAPI(title="Monolog MVP")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
 
 
+@app.get("/providers")
+async def providers_info():
+    """Информация о провайдерах и инструкции."""
+    return JSONResponse({
+        "providers": [
+            {
+                "id": "groq",
+                "name": "Groq",
+                "url": "https://console.groq.com/keys",
+                "steps": [
+                    "Открой console.groq.com",
+                    "Зарегистрируйся или войди",
+                    "Слева выбери API Keys",
+                    "Нажми Create API Key",
+                    "Скопируй ключ (начинается на gsk_)",
+                ],
+                "free": "30 запросов/мин, 1000/день",
+            },
+            {
+                "id": "openrouter",
+                "name": "OpenRouter",
+                "url": "https://openrouter.ai/keys",
+                "steps": [
+                    "Открой openrouter.ai",
+                    "Зарегистрируйся через Google или email",
+                    "Перейди в Keys",
+                    "Нажми Create Key",
+                    "Скопируй ключ (начинается на sk-or-)",
+                ],
+                "free": "20/мин, 50/день (1000 после $10)",
+            },
+            {
+                "id": "cerebras",
+                "name": "Cerebras",
+                "url": "https://cloud.cerebras.ai",
+                "steps": [
+                    "Открой cloud.cerebras.ai",
+                    "Зарегистрируйся",
+                    "Перейди в API Keys",
+                    "Нажми Generate",
+                    "Скопируй ключ (начинается на csk-)",
+                ],
+                "free": "30/мин, 14400/день",
+            },
+            {
+                "id": "sambanova",
+                "name": "SambaNova",
+                "url": "https://cloud.sambanova.ai",
+                "steps": [
+                    "Открой cloud.sambanova.ai",
+                    "Зарегистрируйся",
+                    "Перейди в API Keys",
+                    "Нажми Create",
+                    "Скопируй ключ",
+                ],
+                "free": "60/мин, 12000/день",
+            },
+        ]
+    })
+
+
 @app.get("/")
 async def root():
     return FileResponse("index.html")
@@ -474,15 +591,11 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "dev_keys": len(_DEV_KEYS),
+        "dev_keys": len(_DEV_KEYS_GROQ),
         "byok": ALLOW_BYOK,
         "blog_ready": bool(GITHUB_TOKEN),
         "author_secret_set": bool(AUTHOR_SECRET),
-        "models": {
-            "light": MODEL_LIGHT,
-            "medium": MODEL_MEDIUM,
-            "heavy": MODEL_HEAVY,
-        },
+        "providers": list(PROVIDERS.keys()),
     }
 
 
@@ -496,12 +609,11 @@ async def chat(request: Request):
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
 
-    api_key, source = pick_key(request)
+    provider, base_url, model, api_key, source = pick_provider_and_model(request, user_message, carried_metrics)
     if not api_key:
-        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ Groq.")
+        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках.")
 
-    model = pick_model(user_message, carried_metrics)
-    log.info(f"Chat | key_source={source} | key={mask_key(api_key)} | model={model} | len={len(user_message)} | files={len(attachments)}")
+    log.info(f"Chat | provider={provider} | key_source={source} | key={mask_key(api_key)} | model={model} | len={len(user_message)} | files={len(attachments)}")
 
     compacted = compact_carried(carried_metrics)
 
@@ -519,7 +631,7 @@ async def chat(request: Request):
 
     messages.append({"role": "user", "content": user_content})
 
-    raw = await groq_call(messages, api_key, model)
+    raw = await call_provider(messages, api_key, base_url, model, provider)
     parsed = extract_json(raw)
 
     if parsed and "reply_text" in parsed:
@@ -528,6 +640,7 @@ async def chat(request: Request):
             "reply_text": parsed["reply_text"],
             "metrics": metrics,
             "key_source": source,
+            "provider_used": provider,
             "model_used": model,
         })
 
@@ -540,6 +653,7 @@ async def chat(request: Request):
         "reply_text": cleaned or "Не удалось получить корректный ответ. Попробуйте переформулировать.",
         "metrics": fallback_metrics,
         "key_source": source,
+        "provider_used": provider,
         "model_used": model,
     })
 
