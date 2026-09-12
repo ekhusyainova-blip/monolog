@@ -653,7 +653,7 @@ async def chat(request: Request):
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
 
-    provider, base_url, model, api_key, source = pick_provider_and_model(request, user_message, carried_metrics)
+    provider, base_url, model, api_key, source = pick_provider_and_model(body, user_message, carried_metrics)
     if not api_key:
         raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках.")
 
