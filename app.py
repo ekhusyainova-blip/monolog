@@ -196,6 +196,13 @@ BASE_METRICS = {
     },
     "profile": {
         "values": {}, "patterns": [], "distortions": [], "insights": [],
+        "somatic": {
+            "energy": 0.5,
+            "tension": 0.3,
+            "focus": 0.5,
+            "mood": None,
+            "note": None,
+        },
     },
 }
 
@@ -235,8 +242,9 @@ COMPACT_SCHEMA = {
         "patterns": "[string]",
         "distortions": "[string]",
         "insights": "[string]",
+        "somatic": "{energy: 0-1, tension: 0-1, focus: 0-1, mood: string | null, note: string | null}",
     },
-    "artifacts": "[{id, name, type, format, stage, version, comment}] (без content!)",
+    "artifacts": "[{id, name, type, format, stage, version, comment}] (content — по необходимости)",
 }
 
 
@@ -367,6 +375,22 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                     old.append(item)
                     seen.add(str(item))
         merged_prof[list_key] = old
+
+    # somatic — простая перезапись + note
+    inc_som = inc_prof.get("somatic")
+    car_som = merged_prof.get("somatic") or {}
+    if isinstance(inc_som, dict):
+        merged_som = {**car_som}
+        for k in ("energy", "tension", "focus"):
+            v = inc_som.get(k)
+            if isinstance(v, (int, float)):
+                merged_som[k] = max(0.0, min(1.0, v))
+        if inc_som.get("mood"):
+            merged_som["mood"] = inc_som["mood"]
+        if inc_som.get("note"):
+            merged_som["note"] = inc_som["note"]
+        merged_prof["somatic"] = merged_som
+
     result["profile"] = merged_prof
 
     # reminder
@@ -395,8 +419,7 @@ SYSTEM_PROMPT = (
     "Ничего до { и ничего после }. "
     "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
     "reply_text — Markdown-текст ответа на русском языке. "
-    "metrics — строго по схеме ниже. Все поля обязательны. "
-    "НЕ дублируй содержимое в artifacts.content — только метаданные.\n\n"
+    "metrics — строго по схеме ниже. Все поля обязательны.\n\n"
     f"=== КОГНИТИВНЫЙ ПРОМПТ (СЛОИ A + B + C + D) ===\n{LAYER_A}\n\n"
     f"=== СХЕМА METRICS ===\n{json.dumps(COMPACT_SCHEMA, ensure_ascii=False)}"
 )
