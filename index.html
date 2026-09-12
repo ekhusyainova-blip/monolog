@@ -27,6 +27,8 @@
     --shadow: 0 1px 2px rgba(10, 11, 13, 0.03);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
+    --particle-color: rgba(74, 108, 247, 0.25);
+    --particle-direction: -1;
   }
 
   html[data-theme="dark"] {
@@ -45,6 +47,22 @@
     --critical-soft: rgba(224, 123, 123, 0.15);
     --success: #6BB88E;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --particle-color: rgba(168, 181, 255, 0.28);
+  }
+
+  html[data-mode="strategist"] {
+    --particle-color: rgba(74, 108, 247, 0.22);
+    --particle-direction: -1;
+  }
+  html[data-mode="analyst"] {
+    --particle-color: rgba(224, 122, 95, 0.22);
+    --particle-direction: 1;
+  }
+  html[data-theme="dark"][data-mode="strategist"] {
+    --particle-color: rgba(168, 181, 255, 0.28);
+  }
+  html[data-theme="dark"][data-mode="analyst"] {
+    --particle-color: rgba(240, 168, 150, 0.24);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -58,29 +76,30 @@
     overscroll-behavior: none;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
-    transition: background 0.4s ease, color 0.4s ease;
+    transition: background 0.6s ease, color 0.6s ease;
   }
 
+  /* Фон с частицами */
   .bg-anim {
-    position: fixed; inset: -10% 0 0 0; z-index: 0;
+    position: fixed; inset: 0; z-index: 0;
     pointer-events: none; overflow: hidden;
-    opacity: 0.4;
     transition: opacity 0.6s;
   }
-  html[data-theme="dark"] .bg-anim { opacity: 0.25; }
-  .bg-blob {
-    position: absolute; width: 560px; height: 560px; border-radius: 50%;
-    filter: blur(120px);
-    background: rgba(74, 108, 247, 0.14);
-    top: -100px; right: -140px;
-    animation: floatA 32s ease-in-out infinite;
+  .particle {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--particle-color);
+    filter: blur(2px);
+    animation: floatParticle 22s ease-in-out infinite;
+    transition: background 0.8s ease;
   }
-  html[data-theme="dark"] .bg-blob { background: rgba(120, 140, 255, 0.18); }
-  @keyframes floatA {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(-40px, 60px) scale(1.08); }
+  @keyframes floatParticle {
+    0% { transform: translateY(0) scale(1); opacity: 0.6; }
+    50% { transform: translateY(calc(-40px * var(--particle-direction))) scale(1.15); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 0.6; }
   }
-  @media (prefers-reduced-motion: reduce) { .bg-blob { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { .particle { animation: none; } }
 
   .splash {
     position: fixed; inset: 0; z-index: 999;
@@ -92,37 +111,41 @@
   }
   .splash.hide { opacity: 0; pointer-events: none; }
   .splash-orb {
-    width: 120px; height: 120px; border-radius: 50%;
+    width: 140px; height: 140px; border-radius: 50%;
     position: relative;
     background:
       radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.95) 0%, transparent 30%),
-      radial-gradient(circle at 70% 70%, rgba(180, 160, 255, 0.4) 0%, transparent 50%),
-      radial-gradient(circle at 50% 50%, rgba(200, 200, 240, 0.7) 0%, rgba(140, 140, 180, 0.4) 60%, rgba(80, 80, 120, 0.2) 100%);
+      radial-gradient(circle at 70% 70%, rgba(180, 160, 255, 0.45) 0%, transparent 55%),
+      radial-gradient(circle at 50% 50%, rgba(210, 210, 245, 0.75) 0%, rgba(140, 140, 180, 0.5) 60%, rgba(80, 80, 120, 0.25) 100%);
     box-shadow:
-      inset -8px -8px 24px rgba(0, 0, 0, 0.06),
-      inset 8px 8px 24px rgba(255, 255, 255, 0.5),
-      0 8px 40px rgba(120, 120, 200, 0.15);
-    animation: orbPulse 3s ease-in-out infinite;
+      inset -10px -10px 30px rgba(0, 0, 0, 0.08),
+      inset 10px 10px 30px rgba(255, 255, 255, 0.55),
+      0 12px 60px rgba(120, 120, 200, 0.2);
+    animation: orbPulse 4s ease-in-out infinite, orbRotate 20s linear infinite;
   }
   .splash-orb::after {
     content: "";
-    position: absolute; inset: 15%; border-radius: 50%;
-    background: radial-gradient(circle at 40% 35%, rgba(255, 255, 255, 0.6) 0%, transparent 50%);
-    opacity: 0.7;
-    animation: orbShine 4s ease-in-out infinite;
+    position: absolute; inset: 14%; border-radius: 50%;
+    background: radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.75) 0%, transparent 55%);
+    opacity: 0.8;
+    animation: orbShine 5s ease-in-out infinite;
   }
   @keyframes orbPulse {
     0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.04); }
+    50% { transform: scale(1.05); }
+  }
+  @keyframes orbRotate {
+    0% { filter: hue-rotate(0deg); }
+    100% { filter: hue-rotate(30deg); }
   }
   @keyframes orbShine {
-    0%, 100% { opacity: 0.5; transform: translate(-2px, -2px); }
-    50% { opacity: 0.9; transform: translate(2px, 2px); }
+    0%, 100% { opacity: 0.5; transform: translate(-3px, -3px); }
+    50% { opacity: 0.95; transform: translate(3px, 3px); }
   }
   .splash-text {
     font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
     color: var(--muted);
-    animation: splashTextPulse 2s ease-in-out infinite;
+    animation: splashTextPulse 2.5s ease-in-out infinite;
   }
   @keyframes splashTextPulse {
     0%, 100% { opacity: 1; }
@@ -139,12 +162,10 @@
     display: flex; align-items: center; gap: 8px;
     padding: calc(var(--safe-top) + 10px) 12px 10px;
     margin: 0 -12px;
-    background: color-mix(in srgb, var(--bg) 70%, transparent);
+    background: color-mix(in srgb, var(--bg) 65%, transparent);
     backdrop-filter: blur(20px) saturate(140%);
     -webkit-backdrop-filter: blur(20px) saturate(140%);
     flex-shrink: 0;
-    mask-image: linear-gradient(to bottom, black calc(100% - 10px), transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, black calc(100% - 10px), transparent 100%);
   }
 
   .header-left { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
@@ -160,7 +181,7 @@
   .orb {
     width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
     cursor: pointer; position: relative;
-    transition: transform 0.2s, box-shadow 0.4s;
+    transition: transform 0.2s, box-shadow 0.6s ease, background 0.6s ease;
     padding: 0; border: none; overflow: hidden;
   }
   .orb:active { transform: scale(0.94); }
@@ -201,23 +222,18 @@
     40% { transform: scale(0.85); opacity: 0.7; }
     100% { transform: scale(1); opacity: 1; }
   }
-
-  .noise-indicator {
-    position: absolute; bottom: -2px; right: -2px;
-    width: 10px; height: 10px; border-radius: 50%;
-    border: 1.5px solid var(--bg);
-    background: var(--muted);
-    transition: background 0.3s;
+  .orb.fast-pulse::before {
+    content: "";
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--warning);
+    opacity: 0.7;
+    animation: fastRing 1.5s ease-in-out infinite;
   }
-  .noise-indicator.slow { background: var(--success); }
-  .noise-indicator.stable { background: var(--muted); }
-  .noise-indicator.fast {
-    background: var(--warning);
-    animation: noisePulse 1s ease-in-out infinite;
-  }
-  @keyframes noisePulse {
-    0%, 100% { box-shadow: 0 0 0 0 var(--warning); }
-    50% { box-shadow: 0 0 0 4px transparent; }
+  @keyframes fastRing {
+    0% { transform: scale(0.9); opacity: 0.8; }
+    50% { transform: scale(1.05); opacity: 0.4; }
+    100% { transform: scale(0.9); opacity: 0.8; }
   }
 
   .icon-btn {
@@ -249,11 +265,11 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 11px; font-weight: 700; color: #fff;
     letter-spacing: 0; border: none;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
   }
   .project-tab:active { transform: scale(0.94); }
   .project-tab.active {
-    box-shadow: 0 0 0 2px var(--text), 0 1px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 0 0 2px var(--accent-soft), 0 1px 4px rgba(0, 0, 0, 0.06);
   }
   .project-tab.long-press { animation: tabPress 0.4s ease; }
   @keyframes tabPress {
@@ -354,6 +370,34 @@
 
   .row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .row.user { align-items: flex-end; }
+
+  /* Показатели над сообщением агента */
+  .msg-metrics {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 4px;
+    min-height: 0;
+  }
+  .msg-metrics:empty { display: none; }
+  .msg-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10.5px;
+    color: var(--muted);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+  }
+  .msg-metric .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+  .msg-metric.success { color: var(--success); }
+  .msg-metric.warning { color: var(--warning); }
+  .msg-metric.critical { color: var(--critical); }
+  .msg-metric.accent { color: var(--accent); }
 
   .row.user .bubble {
     background: var(--accent-soft);
@@ -631,7 +675,7 @@
     transform: translateY(100%);
     transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
     z-index: 51; overflow-y: auto;
-    box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
     max-width: 700px; margin: 0 auto;
   }
   .sheet.open { transform: translateY(0); }
@@ -811,6 +855,31 @@
     min-width: 32px; text-align: right;
   }
 
+  /* Соматика — состояние */
+  .somatic-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+    gap: 10px;
+  }
+  .somatic-item:last-child { border-bottom: none; }
+  .somatic-label { color: var(--muted); }
+  .somatic-value { font-weight: 500; color: var(--text); }
+  .somatic-note {
+    margin-top: 10px;
+    padding: 10px 12px;
+    background: var(--surface);
+    border-radius: 8px;
+    border: 1px solid var(--border-soft);
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+    font-style: italic;
+  }
+
   .artifact-item {
     background: var(--surface-2); border: 1px solid var(--border-soft);
     border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
@@ -965,6 +1034,86 @@
     font-size: 12.5px; line-height: 1.55;
   }
   .blog-view-body pre code { background: none; padding: 0; color: inherit; }
+
+  /* Настройки — секции */
+  .settings-section {
+    margin-bottom: 20px;
+  }
+  .settings-section:last-child { margin-bottom: 0; }
+  .settings-section-title {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .settings-hint {
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--muted);
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+  .settings-hint strong { color: var(--text); font-weight: 600; }
+
+  .provider-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .provider-btn {
+    flex: 1;
+    min-width: 100px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--border-soft);
+    background: var(--surface-2);
+    color: var(--text);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    align-items: flex-start;
+  }
+  .provider-btn:hover { border-color: var(--border); }
+  .provider-btn.active {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .provider-btn:active { transform: scale(0.98); }
+  .provider-btn .name { font-weight: 600; }
+  .provider-btn .free {
+    font-size: 10.5px;
+    color: var(--muted);
+    font-weight: 400;
+    line-height: 1.3;
+  }
+
+  .link-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border-radius: 10px;
+    font-size: 12.5px;
+    color: var(--text);
+    text-decoration: none;
+    margin-bottom: 6px;
+    border: 1px solid var(--border-soft);
+    transition: border-color 0.15s;
+  }
+  .link-row:hover { border-color: var(--border); }
+  .link-row svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+  .link-row .url { flex: 1; color: var(--muted); font-size: 11.5px; }
 
   .modal-bg {
     position: fixed; inset: 0; background: rgba(10, 11, 13, 0.4);
@@ -1144,6 +1293,88 @@
   .project-menu-item.danger { color: var(--critical); }
   .project-menu-item svg { width: 18px; height: 18px; flex-shrink: 0; }
 
+  /* Туториал */
+  .tutorial {
+    position: fixed; inset: 0; z-index: 250;
+    background: rgba(10, 11, 13, 0.5);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  .tutorial.open { display: flex; }
+  .tutorial-box {
+    background: var(--surface);
+    border-radius: 20px;
+    padding: 24px;
+    max-width: 380px;
+    width: 100%;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    text-align: center;
+  }
+  .tutorial-icon {
+    width: 48px; height: 48px;
+    margin: 0 auto 16px;
+    color: var(--accent);
+  }
+  .tutorial h3 {
+    font-size: 17px; font-weight: 600;
+    letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .tutorial p {
+    font-size: 13.5px; color: var(--muted);
+    line-height: 1.55; margin-bottom: 20px;
+  }
+  .tutorial-dots {
+    display: flex; justify-content: center; gap: 6px; margin-bottom: 18px;
+  }
+  .tutorial-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--border); transition: background 0.2s;
+  }
+  .tutorial-dot.active { background: var(--accent); }
+  .tutorial-actions {
+    display: flex; gap: 8px;
+  }
+  .tutorial-actions button {
+    flex: 1; padding: 12px; border-radius: 11px; border: none;
+    font-family: inherit; font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: transform 0.15s;
+  }
+  .tutorial-actions button:active { transform: scale(0.97); }
+  .tutorial-actions .primary { background: var(--accent); color: var(--bg); }
+  .tutorial-actions .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
+
+  .demo-block {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: var(--shadow);
+  }
+  .demo-block-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .demo-user {
+    background: var(--accent-soft);
+    padding: 8px 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .demo-agent {
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
   .toast {
     position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
     transform: translateX(-50%) translateY(20px);
@@ -1173,16 +1404,12 @@
   <div class="splash-text">AI Monolog</div>
 </div>
 
-<div class="bg-anim" aria-hidden="true">
-  <div class="bg-blob"></div>
-</div>
+<div class="bg-anim" id="bgAnim" aria-hidden="true"></div>
 
 <div class="app">
   <header>
     <div class="header-left">
-      <button class="orb analyst" id="orbBtn" title="Профиль (долгий тап — сменить режим)" aria-label="Профиль">
-        <span class="noise-indicator stable" id="noiseIndicator"></span>
-      </button>
+      <button class="orb analyst" id="orbBtn" title="Профиль (долгий тап — сменить режим)" aria-label="Профиль"></button>
     </div>
 
     <div class="header-middle" id="projectsBar"></div>
@@ -1278,6 +1505,7 @@
 
 <div class="sheet-bg" id="sheetBg"></div>
 
+<!-- Метрики -->
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="sheetHandle"></div>
   <h3>Метрики сессии</h3>
@@ -1335,22 +1563,26 @@
         <div class="metric-row"><span class="metric-row-label">Запросов</span><span class="metric-row-value" id="cSessionCount">0</span></div>
         <div class="metric-row"><span class="metric-row-label">Длительность</span><span class="metric-row-value" id="cSessionTime">—</span></div>
         <div class="metric-row"><span class="metric-row-label">Ключ</span><span class="metric-row-value" id="cKeySource">—</span></div>
+        <div class="metric-row"><span class="metric-row-label">Провайдер</span><span class="metric-row-value" id="cProvider">—</span></div>
         <div class="metric-row"><span class="metric-row-label">Протокол</span><span class="metric-row-value" id="cProtocol">—</span></div>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Профиль -->
 <div class="sheet" id="profileSheet">
   <div class="sheet-handle" id="profileHandle"></div>
   <div id="profileContent"></div>
 </div>
 
+<!-- Паспорт -->
 <div class="sheet" id="passportSheet">
   <div class="sheet-handle" id="passportHandle"></div>
   <div id="passportContent"></div>
 </div>
 
+<!-- Артефакты -->
 <div class="sheet" id="artifactsSheet">
   <div class="sheet-handle" id="artifactsHandle"></div>
   <h3>Артефакты проекта</h3>
@@ -1358,6 +1590,7 @@
   <div id="artifactsList"></div>
 </div>
 
+<!-- Редактор -->
 <div class="sheet" id="editorSheet">
   <div class="sheet-handle" id="editorHandle"></div>
   <h3 id="editorTitle">Редактор</h3>
@@ -1377,21 +1610,21 @@
       <input type="text" id="editorTags" placeholder="тег1, тег2" />
     </div>
     <div class="doc-editor-actions">
-      <button class="ghost" id="editorCopyBtn">
+      <button class="ghost" id="editorCopyBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
         Копировать
       </button>
-      <button class="ghost" id="editorDownloadBtn">
+      <button class="ghost" id="editorDownloadBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
         Скачать
       </button>
     </div>
     <div class="doc-editor-actions" id="editorPublishRow">
-      <button class="ghost" id="editorSaveBtn">
+      <button class="ghost" id="editorSaveBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
         Сохранить в проект
       </button>
-      <button class="primary" id="editorPublishBtn">
+      <button class="primary" id="editorPublishBtn" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
         Опубликовать
       </button>
@@ -1400,14 +1633,15 @@
   </div>
 </div>
 
+<!-- Блог -->
 <div class="sheet" id="blogSheet">
   <div class="sheet-handle" id="blogHandle"></div>
   <h3>Блог автора</h3>
   <div class="sheet-sub" id="blogSub">Лонгриды и заметки</div>
 
   <div class="blog-tabs" id="blogTabs">
-    <button class="blog-tab active" data-tab="list">Статьи</button>
-    <button class="blog-tab" data-tab="new">Новая статья</button>
+    <button class="blog-tab active" data-tab="list" type="button">Статьи</button>
+    <button class="blog-tab" data-tab="new" type="button">Новая статья</button>
   </div>
 
   <div id="blogListPane">
@@ -1415,7 +1649,7 @@
   </div>
 
   <div id="blogNewPane" style="display:none;">
-    <button class="report-btn" id="blogNewBtn" style="margin-top:0;">
+    <button class="report-btn" id="blogNewBtn" type="button" style="margin-top:0;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
       Открыть пустой редактор
     </button>
@@ -1425,34 +1659,37 @@
   </div>
 </div>
 
+<!-- Просмотр статьи -->
 <div class="sheet" id="blogViewSheet">
   <div class="sheet-handle" id="blogViewHandle"></div>
   <div id="blogViewContent"></div>
 </div>
 
+<!-- Меню проекта -->
 <div class="sheet" id="projectMenuSheet">
   <div class="sheet-handle" id="projectMenuHandle"></div>
   <h3 id="projectMenuTitle">Проект</h3>
   <div class="sheet-sub" id="projectMenuSub">Выберите действие</div>
   <div style="border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden;">
-    <button class="project-menu-item" id="pmOpen">
+    <button class="project-menu-item" id="pmOpen" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       Открыть
     </button>
-    <button class="project-menu-item" id="pmRename">
+    <button class="project-menu-item" id="pmRename" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Переименовать
+      Переименовать и цвет
     </button>
-    <button class="project-menu-item danger" id="pmDelete">
+    <button class="project-menu-item danger" id="pmDelete" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
       Удалить
     </button>
   </div>
 </div>
 
+<!-- Модалка лотов -->
 <div class="modal-bg" id="lotsModalBg">
   <div class="modal">
-    <button class="modal-close" id="lotsClose" aria-label="Закрыть">
+    <button class="modal-close" id="lotsClose" aria-label="Закрыть" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
@@ -1484,9 +1721,10 @@
   </div>
 </div>
 
+<!-- Риск -->
 <div class="modal-bg" id="riskModalBg">
   <div class="modal">
-    <button class="modal-close" id="riskClose" aria-label="Закрыть">
+    <button class="modal-close" id="riskClose" aria-label="Закрыть" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
@@ -1503,15 +1741,16 @@
       <div class="risk-block-value" id="riskAlternative">—</div>
     </div>
     <div class="row">
-      <button class="action ghost" id="riskCancel">Отменить</button>
-      <button class="action success" id="riskApply">Применить</button>
+      <button class="action ghost" id="riskCancel" type="button">Отменить</button>
+      <button class="action success" id="riskApply" type="button">Применить</button>
     </div>
   </div>
 </div>
 
+<!-- Сброс -->
 <div class="modal-bg" id="resetModalBg">
   <div class="modal">
-    <button class="modal-close" id="resetClose" aria-label="Закрыть">
+    <button class="modal-close" id="resetClose" aria-label="Закрыть" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
@@ -1519,15 +1758,16 @@
     <h2>Сбросить контекст?</h2>
     <div class="sub" id="resetReason">Модель рекомендует сбросить проблемную ветку диалога.</div>
     <div class="row">
-      <button class="action ghost" id="resetCancel">Отмена</button>
-      <button class="action danger" id="resetConfirm">Сбросить</button>
+      <button class="action ghost" id="resetCancel" type="button">Отмена</button>
+      <button class="action danger" id="resetConfirm" type="button">Сбросить</button>
     </div>
   </div>
 </div>
 
+<!-- Проект -->
 <div class="modal-bg" id="projectModalBg">
   <div class="modal">
-    <button class="modal-close" id="projectModalClose" aria-label="Закрыть">
+    <button class="modal-close" id="projectModalClose" aria-label="Закрыть" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
@@ -1537,52 +1777,85 @@
     <input type="text" id="projectNameInput" placeholder="Например, Monolog" maxlength="40" />
     <label>Цвет</label>
     <div class="color-picker" id="projectColorPicker"></div>
+    <label for="projectGoalInput">Цель (для паспорта проекта)</label>
+    <input type="text" id="projectGoalInput" placeholder="Кратко: зачем этот проект" maxlength="200" />
     <div class="row">
-      <button class="action ghost" id="projectCancel">Отмена</button>
-      <button class="action primary" id="projectSave">Сохранить</button>
+      <button class="action ghost" id="projectCancel" type="button">Отмена</button>
+      <button class="action primary" id="projectSave" type="button">Сохранить</button>
     </div>
     <div class="row" id="projectDangerRow" style="display:none;">
-      <button class="action danger" id="projectDelete">Удалить проект</button>
+      <button class="action danger" id="projectDelete" type="button">Удалить проект</button>
     </div>
   </div>
 </div>
 
+<!-- Настройки -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
-    <button class="modal-close" id="modalClose" aria-label="Закрыть">
+    <button class="modal-close" id="modalClose" aria-label="Закрыть" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
         <path d="M18 6L6 18M6 6l12 12"/>
       </svg>
     </button>
     <h2>Настройки</h2>
-    <label for="keyInput">Groq API Key (gsk_…)</label>
-    <input type="password" id="keyInput" placeholder="gsk_..." autocomplete="off" />
-    <label class="check">
-      <input type="checkbox" id="rememberKey" />
-      Запомнить ключ
-    </label>
-    <label for="authorKeyInput">Ключ автора блога</label>
-    <input type="password" id="authorKeyInput" placeholder="Секретная строка" autocomplete="off" />
-    <label class="check">
-      <input type="checkbox" id="rememberAuthorKey" />
-      Запомнить ключ автора
-    </label>
-    <label>Режим глубины</label>
-    <div class="segmented" id="depthSeg">
-      <button data-depth="quiet">Тихий</button>
-      <button data-depth="deep">Глубокий</button>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Провайдер</div>
+      <div class="provider-row" id="providerRow"></div>
     </div>
-    <div class="row">
-      <button class="action ghost" id="exportData">Экспорт</button>
-      <button class="action ghost" id="importData">Импорт</button>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Ключ API</div>
+      <div class="settings-hint">
+        Все данные хранятся <strong>только на вашем устройстве</strong>. Мы не храним диалоги, документы и ключи. Ключ передаётся только для соединения с моделью.
+      </div>
+      <input type="password" id="keyInput" placeholder="Вставьте ключ" autocomplete="off" />
+      <label class="check">
+        <input type="checkbox" id="rememberKey" />
+        Запомнить ключ
+      </label>
+      <div id="keyInstructions"></div>
     </div>
-    <div class="row">
-      <button class="action primary" id="saveSettings">Сохранить</button>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Ключ автора блога</div>
+      <input type="password" id="authorKeyInput" placeholder="Секретная строка" autocomplete="off" />
+      <label class="check">
+        <input type="checkbox" id="rememberAuthorKey" />
+        Запомнить ключ автора
+      </label>
     </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Режим глубины</div>
+      <div class="segmented" id="depthSeg">
+        <button data-depth="quiet" type="button">Тихий (светлая)</button>
+        <button data-depth="deep" type="button">Глубокий (тёмная)</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="settings-section-title">Данные</div>
+      <div class="settings-hint">
+        Экспорт — сохранить резервную копию всех проектов. Импорт — восстановить из файла.
+      </div>
+      <div class="row">
+        <button class="action ghost" id="exportData" type="button">Экспорт</button>
+        <button class="action ghost" id="importData" type="button">Импорт</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="row">
+        <button class="action primary" id="saveSettings" type="button">Сохранить</button>
+      </div>
+    </div>
+
     <input type="file" id="importFile" accept="application/json" style="display:none" />
   </div>
 </div>
 
+<!-- Онбординг -->
 <div class="onboarding" id="onboarding">
   <div class="onboarding-inner">
     <div class="onboarding-orb"></div>
@@ -1595,13 +1868,27 @@
     </div>
 
     <div>
-      <label for="obKey">Groq API Key (опционально)</label>
-      <input type="password" id="obKey" placeholder="gsk_..." autocomplete="off" />
+      <label for="obKey">Ключ API (опционально)</label>
+      <input type="password" id="obKey" placeholder="Вставьте ключ" autocomplete="off" />
     </div>
 
     <div class="row">
-      <button class="ghost" id="obSkip">Пропустить</button>
-      <button class="primary" id="obStart">Начать</button>
+      <button class="ghost" id="obSkip" type="button">Пропустить</button>
+      <button class="primary" id="obStart" type="button">Начать</button>
+    </div>
+  </div>
+</div>
+
+<!-- Туториал -->
+<div class="tutorial" id="tutorial">
+  <div class="tutorial-box">
+    <div class="tutorial-icon" id="tutorialIcon"></div>
+    <h3 id="tutorialTitle">Сфера</h3>
+    <p id="tutorialText">Это ваш режим мышления. Долгий тап — переключить между Аналитиком и Стратегом.</p>
+    <div class="tutorial-dots" id="tutorialDots"></div>
+    <div class="tutorial-actions">
+      <button class="ghost" id="tutorialSkip" type="button">Пропустить</button>
+      <button class="primary" id="tutorialNext" type="button">Далее</button>
     </div>
   </div>
 </div>
@@ -1616,7 +1903,9 @@
   const LS_KEY = "monolog_api_key";
   const LS_PROFILE = "monolog_profile";
   const LS_AUTHOR = "monolog_author_key";
+  const LS_PROVIDER = "monolog_provider";
   const LS_ONBOARDED = "monolog_onboarded";
+  const LS_TUTORIAL = "monolog_tutorial_shown";
   const LS_FALLBACK = "monolog_state_fallback";
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const MAX_TEXT_CHARS = 3000;
@@ -1628,8 +1917,15 @@
   const STORE_META = "meta";
 
   const PROJECT_COLORS = [
-    "#5A7BD6", "#C77B4E", "#6B9A7B", "#A68B5B",
-    "#8B7BC7", "#B85C5C", "#4A5568", "#5D7A8C",
+    "#A8B5C8", "#C4A8A8", "#A8C4B0", "#C4B8A8",
+    "#B8A8C4", "#A8B8C4", "#C4B8B8", "#A8A8B8",
+  ];
+
+  const PROVIDERS_FALLBACK = [
+    { id: "groq", name: "Groq", free: "1000/день" },
+    { id: "openrouter", name: "OpenRouter", free: "50/день" },
+    { id: "cerebras", name: "Cerebras", free: "14400/день" },
+    { id: "sambanova", name: "SambaNova", free: "12000/день" },
   ];
 
   const THINKING_PHRASES = [
@@ -1647,24 +1943,53 @@
     { key: "связь", label: "Связь" },
   ];
 
+  const TUTORIAL_STEPS = [
+    {
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+      title: "Сфера режима",
+      text: "Долгий тап на сфере переключает Аналитика и Стратега. Обычный тап — профиль.",
+    },
+    {
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>',
+      title: "Метрики",
+      text: "Число в шапке — индекс стабильности решения. Тап раскрывает подробности.",
+    },
+    {
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
+      title: "Проекты",
+      text: "Создавайте проекты под разные задачи. Долгий тап на кружке — меню.",
+    },
+    {
+      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
+      title: "Артефакты",
+      text: "Документы, планы и отчёты сохраняются как артефакты проекта. Их можно править и скачивать.",
+    },
+  ];
+
+  let _providersCache = PROVIDERS_FALLBACK;
+
   const state = {
     apiKey: "",
     authorKey: "",
+    provider: "groq",
     profile: { depth: "deep", userName: "" },
     projects: [],
     currentProjectId: null,
     attachments: [],
     sessionStart: Date.now(),
     lastKeySource: null,
+    lastProvider: null,
     mode: "analyst",
     editingProjectId: null,
     editingProjectColor: PROJECT_COLORS[0],
     editorContext: null,
+    tutorialStep: 0,
     get project() {
       return this.projects.find(function (p) { return p.id === state.currentProjectId; });
     },
   };
 
+  // --- IndexedDB ---
   let _db = null, _dbFailed = false;
   function openDB() {
     return new Promise(function (resolve, reject) {
@@ -1736,7 +2061,7 @@
     } catch (e) { return false; }
   }
 
-  function createProjectObj(name, color) {
+  function createProjectObj(name, color, goal) {
     return {
       id: "proj_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8),
       name: name || "Проект",
@@ -1744,7 +2069,7 @@
       createdAt: new Date().toISOString(),
       archived: false,
       history: [],
-      passport: null,
+      passport: goal ? { level: "micro", title: name, goal: goal, result: null, mission: null, values: [], constraints: [], stakeholders: [], risks: [], metrics: [], completion: 20 } : null,
       cognitive: null,
       artifacts: [],
       sessionCount: 0,
@@ -1810,6 +2135,7 @@
   function applyThemeFromMode() {
     const theme = state.profile.depth === "deep" ? "dark" : "light";
     document.documentElement.setAttribute("data-theme", theme);
+    document.documentElement.setAttribute("data-mode", state.mode);
     const meta = document.querySelector('meta[name="theme-color"]');
     if (meta) meta.setAttribute("content", theme === "dark" ? "#0F1115" : "#F7F8FA");
   }
@@ -1836,8 +2162,27 @@
     setTimeout(function () {
       orb.classList.remove("switching");
     }, 700);
+    document.documentElement.setAttribute("data-mode", state.mode);
     toast(state.mode === "analyst" ? "Режим Аналитика" : "Режим Стратега");
     try { localStorage.setItem("monolog_mode", state.mode); } catch (e) {}
+  }
+
+  // Частицы фона
+  function renderParticles() {
+    const box = document.getElementById("bgAnim");
+    box.innerHTML = "";
+    for (let i = 0; i < 14; i++) {
+      const p = document.createElement("div");
+      p.className = "particle";
+      p.style.left = (Math.random() * 100) + "%";
+      p.style.top = (Math.random() * 100) + "%";
+      p.style.animationDelay = (Math.random() * -22) + "s";
+      p.style.animationDuration = (18 + Math.random() * 12) + "s";
+      const size = 4 + Math.random() * 6;
+      p.style.width = size + "px";
+      p.style.height = size + "px";
+      box.appendChild(p);
+    }
   }
 
   function renderMarkdown(text) {
@@ -1856,6 +2201,44 @@
   function initials(name) {
     const parts = (name || "?").trim().split(/\s+/).slice(0, 2);
     return parts.map(function (s) { return (s[0] || "").toUpperCase(); }).join("") || "?";
+  }
+
+  // Показатели над сообщением
+  function renderMsgMetrics(metrics) {
+    if (!metrics) return null;
+    const row = document.createElement("div");
+    row.className = "msg-metrics";
+
+    function add(cls, text) {
+      const el = document.createElement("span");
+      el.className = "msg-metric " + cls;
+      el.innerHTML = '<span class="dot"></span>' + escHtml(text);
+      row.appendChild(el);
+    }
+
+    const si = typeof metrics.stability_index === "number" ? metrics.stability_index : null;
+    if (si != null) {
+      const cls = si < 0.5 ? "critical" : (si < 0.75 ? "warning" : "success");
+      add(cls, "Стабильность " + si.toFixed(2));
+    }
+    if (metrics.lots_balance && metrics.lots_balance !== "+0.0") {
+      add("accent", "Лоты " + metrics.lots_balance);
+    }
+    if (metrics.social_adaptation && metrics.social_adaptation.active) {
+      const lv = metrics.social_adaptation.level || "low";
+      const cls = lv === "high" ? "critical" : (lv === "medium" ? "warning" : "accent");
+      const labels = { low: "низкая", medium: "средняя", high: "высокая" };
+      add(cls, "Соц. адаптация " + (labels[lv] || lv));
+    }
+    if (metrics.cognitive_pulse === "fast") {
+      add("warning", "Импульс быстрый");
+    }
+    if (metrics.mind_scale && (metrics.mind_scale === "strategic" || metrics.mind_scale === "systemic")) {
+      const scaleLabels = { strategic: "Стратегический", systemic: "Системный" };
+      add("accent", scaleLabels[metrics.mind_scale]);
+    }
+
+    return row.children.length ? row : null;
   }
 
   function renderDecisionCards(choices) {
@@ -1941,6 +2324,12 @@
     bubble.className = "bubble";
 
     if (role === "agent") {
+      // Показатели над сообщением
+      if (metrics) {
+        const mm = renderMsgMetrics(metrics);
+        if (mm) row.appendChild(mm);
+      }
+
       bubble.innerHTML = renderMarkdown(content);
 
       if (metrics && metrics.value_choices && metrics.value_choices.length) {
@@ -2061,10 +2450,12 @@
   }
 
   function updateNoise(metrics) {
-    const ind = document.getElementById("noiseIndicator");
-    if (!ind) return;
-    const pulse = (metrics && metrics.cognitive_pulse) || "stable";
-    ind.className = "noise-indicator " + pulse;
+    const orb = document.getElementById("orbBtn");
+    if (!orb) return;
+    orb.classList.remove("fast-pulse");
+    if (metrics && metrics.cognitive_pulse === "fast") {
+      orb.classList.add("fast-pulse");
+    }
   }
 
   function updateSocialIndicator(metrics) {
@@ -2103,7 +2494,7 @@
     } else chip.classList.remove("show");
 
     const p = state.project;
-    const hasReport = p && (p.sessionCount >= 5 || (p.artifacts && p.artifacts.length > 0));
+    const hasReport = p && p.sessionCount >= 10;
     document.getElementById("reportIconBtn").classList.toggle("hidden", !hasReport);
 
     const ri = metrics && metrics.risk_intercept;
@@ -2133,7 +2524,7 @@
     }
     if (m.passport) p.passport = Object.assign(p.passport || {}, m.passport);
     if (m.profile) {
-      p.cognitive = p.cognitive || { values: {}, patterns: [], distortions: [], insights: [] };
+      p.cognitive = p.cognitive || { values: {}, patterns: [], distortions: [], insights: [], somatic: {} };
       if (m.profile.values && typeof m.profile.values === "object") {
         p.cognitive.values = Object.assign(p.cognitive.values || {}, m.profile.values);
       }
@@ -2146,6 +2537,10 @@
         });
         p.cognitive[k] = old;
       });
+      // Соматика
+      if (m.profile.somatic && typeof m.profile.somatic === "object") {
+        p.cognitive.somatic = Object.assign(p.cognitive.somatic || {}, m.profile.somatic);
+      }
     }
     if (m.required_skills && m.required_skills.length) {
       p.skills = p.skills || {};
@@ -2190,6 +2585,7 @@
     document.getElementById("cSessionCount").textContent = p.sessionCount || 0;
     document.getElementById("cSessionTime").textContent = fmtDuration(Date.now() - state.sessionStart);
     document.getElementById("cKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
+    document.getElementById("cProvider").textContent = PROVIDERS_FALLBACK.find(function (pr) { return pr.id === state.lastProvider; })?.name || "—";
     document.getElementById("cProtocol").textContent = m.protocol_integrity === false ? "сбой" : "соблюдён";
     document.getElementById("accSessionSummary").textContent = (p.sessionCount || 0) + " запросов";
 
@@ -2271,7 +2667,7 @@
       chip.className = "attach-chip";
       chip.innerHTML = fileIcon(a.type)
         + '<span class="name">' + escHtml(a.name) + '</span>'
-        + '<button class="remove" title="Удалить">×</button>';
+        + '<button class="remove" title="Удалить" type="button">×</button>';
       chip.querySelector(".remove").addEventListener("click", function () {
         state.attachments.splice(idx, 1);
         renderAttachPreview();
@@ -2337,7 +2733,8 @@
       + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
 
     const headers = { "Content-Type": "application/json" };
-    if (state.apiKey) headers["X-Groq-Key"] = state.apiKey;
+    if (state.apiKey) headers["X-Api-Key"] = state.apiKey;
+    if (state.provider) headers["X-Provider"] = state.provider;
 
     const carried = { passport: p.passport || {}, profile: p.cognitive || {}, artifacts: p.artifacts || [] };
 
@@ -2359,6 +2756,7 @@
         addRow("agent", "Ошибка: " + ((data && data.detail) || r.statusText));
       } else if (data) {
         state.lastKeySource = data.key_source || null;
+        state.lastProvider = data.provider_used || state.provider;
         p.sessionCount = (p.sessionCount || 0) + 1;
         const newMsgId = p.history.length;
         addRow("agent", data.reply_text || "", data.metrics, { msgId: newMsgId });
@@ -2565,7 +2963,7 @@
       const r = await fetch(API_BASE + "/blog/publish", {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
-        body: JSON.stringify({ title: title, body: body, tags: tags, author: "Эльвира" }),
+        body: JSON.stringify({ title: title, body: body, tags: tags, author: state.profile.userName || "Эльвира" }),
       });
       const data = await r.json();
       if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
@@ -2646,6 +3044,35 @@
     }
   }
 
+  // --- Соматика в профиле ---
+  function renderSomatic(somatic) {
+    if (!somatic || typeof somatic !== "object") return "";
+    const energy = typeof somatic.energy === "number" ? somatic.energy : null;
+    const tension = typeof somatic.tension === "number" ? somatic.tension : null;
+    const focus = typeof somatic.focus === "number" ? somatic.focus : null;
+    const mood = somatic.mood || null;
+    const note = somatic.note || null;
+
+    function describe(value, axis) {
+      if (value == null) return "—";
+      const v = value;
+      const map = {
+        energy: v < 0.3 ? "спокойный темп" : (v < 0.6 ? "ровный" : "активный"),
+        tension: v < 0.3 ? "расслабленный" : (v < 0.6 ? "ровный" : "сдержанный"),
+        focus: v < 0.3 ? "мягкий" : (v < 0.6 ? "устойчивый" : "собранный"),
+      };
+      return map[axis] || "—";
+    }
+
+    let html = "";
+    if (energy != null) html += '<div class="somatic-item"><span class="somatic-label">Темп</span><span class="somatic-value">' + describe(energy, "energy") + '</span></div>';
+    if (tension != null) html += '<div class="somatic-item"><span class="somatic-label">Тон</span><span class="somatic-value">' + describe(tension, "tension") + '</span></div>';
+    if (focus != null) html += '<div class="somatic-item"><span class="somatic-label">Фокус</span><span class="somatic-value">' + describe(focus, "focus") + '</span></div>';
+    if (mood) html += '<div class="somatic-item"><span class="somatic-label">Настроение</span><span class="somatic-value">' + escHtml(mood) + '</span></div>';
+    if (note) html += '<div class="somatic-note">' + escHtml(note) + '</div>';
+    return html;
+  }
+
   function renderProfile() {
     const box = document.getElementById("profileContent");
     const p = state.project;
@@ -2653,7 +3080,17 @@
 
     let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта пользователя</div>';
 
-    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Развивающиеся навыки</div>';
+    // Состояние
+    if (c && c.somatic) {
+      const somaticHtml = renderSomatic(c.somatic);
+      if (somaticHtml) {
+        html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:0 0 8px;font-weight:600;">Состояние</div>';
+        html += '<div>' + somaticHtml + '</div>';
+      }
+    }
+
+    // Навыки
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Развивающиеся навыки</div>';
     const skills = p && p.skills ? Object.entries(p.skills).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8) : [];
     if (!skills.length) {
       html += '<div class="empty-note">Пока нет данных. Навыки появятся, когда модель их определит.</div>';
@@ -2671,6 +3108,7 @@
       html += '</div>';
     }
 
+    // Компас
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Ценностный компас</div>';
     if (!c || !c.values || Object.keys(c.values).length === 0) {
       html += '<div class="empty-note">Пока нет данных.</div>';
@@ -2678,6 +3116,7 @@
       html += '<div class="compass-wrap">' + renderCompass(c.values) + '</div>';
     }
 
+    // Паттерны
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Паттерны мышления</div>';
     if (!c || !c.patterns || c.patterns.length === 0) {
       html += '<div class="empty-note">Пока не выявлены.</div>';
@@ -2685,6 +3124,7 @@
       html += '<div class="tag-list">' + c.patterns.map(function (pp) { return '<span class="tag">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
     }
 
+    // Искажения
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Когнитивные искажения</div>';
     if (!c || !c.distortions || c.distortions.length === 0) {
       html += '<div class="empty-note">Не обнаружены.</div>';
@@ -2692,6 +3132,7 @@
       html += '<div class="tag-list">' + c.distortions.map(function (pp) { return '<span class="tag warm">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
     }
 
+    // Наблюдения
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Наблюдения</div>';
     if (!c || !c.insights || c.insights.length === 0) {
       html += '<div class="empty-note">Пока нет.</div>';
@@ -2844,6 +3285,7 @@
       tab.style.background = p.color || PROJECT_COLORS[0];
       tab.textContent = initials(p.name);
       tab.title = p.name;
+      tab.type = "button";
 
       let pressTimer = null;
       let moved = false;
@@ -2874,6 +3316,7 @@
     const add = document.createElement("button");
     add.className = "project-add";
     add.title = "Новый проект";
+    add.type = "button";
     add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
     add.addEventListener("click", function () { openProjectModal(null); });
     bar.appendChild(add);
@@ -2921,6 +3364,7 @@
     const p = editId ? state.projects.find(function (x) { return x.id === editId; }) : null;
     document.getElementById("projectModalTitle").textContent = p ? "Редактировать проект" : "Новый проект";
     document.getElementById("projectNameInput").value = p ? p.name : "";
+    document.getElementById("projectGoalInput").value = p && p.passport && p.passport.goal ? p.passport.goal : "";
     state.editingProjectColor = (p && p.color) || PROJECT_COLORS[0];
     renderColorPicker();
     document.getElementById("projectDangerRow").style.display = p ? "flex" : "none";
@@ -2978,6 +3422,94 @@
     try { onboarded = localStorage.getItem(LS_ONBOARDED) === "true"; } catch (e) {}
     if (!onboarded) {
       document.getElementById("onboarding").classList.add("open");
+    } else {
+      // Туториал — если ещё не показывали
+      let tutorialShown = false;
+      try { tutorialShown = localStorage.getItem(LS_TUTORIAL) === "true"; } catch (e) {}
+      if (!tutorialShown) {
+        setTimeout(function () { openTutorial(); }, 1200);
+      }
+    }
+  }
+
+  function openTutorial() {
+    state.tutorialStep = 0;
+    renderTutorialStep();
+    document.getElementById("tutorial").classList.add("open");
+  }
+  function renderTutorialStep() {
+    const step = TUTORIAL_STEPS[state.tutorialStep];
+    if (!step) return;
+    document.getElementById("tutorialIcon").innerHTML = step.icon;
+    document.getElementById("tutorialTitle").textContent = step.title;
+    document.getElementById("tutorialText").textContent = step.text;
+    const dots = document.getElementById("tutorialDots");
+    dots.innerHTML = "";
+    TUTORIAL_STEPS.forEach(function (_, i) {
+      const d = document.createElement("div");
+      d.className = "tutorial-dot" + (i === state.tutorialStep ? " active" : "");
+      dots.appendChild(d);
+    });
+    const nextBtn = document.getElementById("tutorialNext");
+    nextBtn.textContent = state.tutorialStep === TUTORIAL_STEPS.length - 1 ? "Понятно" : "Далее";
+  }
+
+  // --- Провайдеры ---
+  async function loadProviders() {
+    try {
+      const r = await fetch(API_BASE + "/providers");
+      if (r.ok) {
+        const data = await r.json();
+        if (data.providers && data.providers.length) {
+          _providersCache = data.providers.map(function (p) {
+            return { id: p.id, name: p.name, free: p.free, url: p.url, steps: p.steps };
+          });
+        }
+      }
+    } catch (e) {}
+  }
+
+  function renderProviderRow() {
+    const row = document.getElementById("providerRow");
+    row.innerHTML = "";
+    _providersCache.forEach(function (pr) {
+      const btn = document.createElement("button");
+      btn.className = "provider-btn" + (state.provider === pr.id ? " active" : "");
+      btn.type = "button";
+      btn.innerHTML = '<span class="name">' + escHtml(pr.name) + '</span><span class="free">' + escHtml(pr.free || "") + '</span>';
+      btn.addEventListener("click", function () {
+        state.provider = pr.id;
+        try { localStorage.setItem(LS_PROVIDER, pr.id); } catch (e) {}
+        renderProviderRow();
+        renderKeyInstructions();
+      });
+      row.appendChild(btn);
+    });
+  }
+
+  function renderKeyInstructions() {
+    const box = document.getElementById("keyInstructions");
+    box.innerHTML = "";
+    const pr = _providersCache.find(function (p) { return p.id === state.provider; });
+    if (!pr) return;
+
+    if (pr.url) {
+      const link = document.createElement("a");
+      link.className = "link-row";
+      link.href = pr.url;
+      link.target = "_blank";
+      link.rel = "noopener";
+      link.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+        + '<span>' + escHtml(pr.name) + '</span><span class="url">' + escHtml(pr.url.replace("https://", "")) + '</span>';
+      box.appendChild(link);
+    }
+
+    if (pr.steps && pr.steps.length) {
+      const hint = document.createElement("div");
+      hint.className = "settings-hint";
+      hint.style.marginTop = "8px";
+      hint.innerHTML = '<strong>Как получить ключ:</strong><br>' + pr.steps.map(function (s, i) { return (i + 1) + '. ' + escHtml(s); }).join("<br>");
+      box.appendChild(hint);
     }
   }
 
@@ -2985,18 +3517,21 @@
     applyProfile();
     setupViewport();
     setupTextarea();
+    renderParticles();
 
     try {
       const m = localStorage.getItem("monolog_mode");
       if (m === "analyst" || m === "strategist") state.mode = m;
     } catch (e) {}
     renderOrb();
+    document.documentElement.setAttribute("data-mode", state.mode);
 
     try {
       const prof = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
       if (prof) state.profile = Object.assign(state.profile, prof);
       state.apiKey = localStorage.getItem(LS_KEY) || "";
       state.authorKey = localStorage.getItem(LS_AUTHOR) || "";
+      state.provider = localStorage.getItem(LS_PROVIDER) || "groq";
     } catch (e) {}
     applyProfile();
 
@@ -3010,7 +3545,10 @@
       if (sheet && handle) setupSwipeToClose(sheet, handle);
     });
 
-    setTimeout(function () { document.getElementById("splash").classList.add("hide"); }, 900);
+    setTimeout(function () { document.getElementById("splash").classList.add("hide"); }, 1100);
+
+    await loadProviders();
+    renderProviderRow();
 
     maybeShowOnboarding();
 
@@ -3178,11 +3716,21 @@
     document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
     document.getElementById("projectSave").addEventListener("click", async function () {
       const name = (document.getElementById("projectNameInput").value || "").trim() || "Проект";
+      const goal = (document.getElementById("projectGoalInput").value || "").trim();
       if (state.editingProjectId) {
         const p = state.projects.find(function (x) { return x.id === state.editingProjectId; });
-        if (p) { p.name = name; p.color = state.editingProjectColor; await dbPut(STORE_PROJECTS, p); }
+        if (p) {
+          p.name = name;
+          p.color = state.editingProjectColor;
+          if (goal) {
+            p.passport = p.passport || { level: "micro", title: name, goal: goal, result: null, mission: null, values: [], constraints: [], stakeholders: [], risks: [], metrics: [], completion: 20 };
+            p.passport.goal = goal;
+            p.passport.title = p.passport.title || name;
+          }
+          await dbPut(STORE_PROJECTS, p);
+        }
       } else {
-        const fresh = createProjectObj(name, state.editingProjectColor);
+        const fresh = createProjectObj(name, state.editingProjectColor, goal);
         await dbPut(STORE_PROJECTS, fresh);
         state.projects.push(fresh);
         state.currentProjectId = fresh.id;
@@ -3224,6 +3772,8 @@
       document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
       document.getElementById("rememberAuthorKey").checked = !!localStorage.getItem(LS_AUTHOR);
       applyProfile();
+      renderProviderRow();
+      renderKeyInstructions();
       document.getElementById("modalBg").classList.add("open");
     });
     document.getElementById("modalClose").addEventListener("click", function () { document.getElementById("modalBg").classList.remove("open"); });
@@ -3248,6 +3798,7 @@
       else localStorage.removeItem(LS_AUTHOR);
 
       localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+      localStorage.setItem(LS_PROVIDER, state.provider);
       document.getElementById("modalBg").classList.remove("open");
       toast("Настройки сохранены");
     });
@@ -3300,10 +3851,31 @@
       document.getElementById("onboarding").classList.remove("open");
       renderProjectsBar();
       toast("Готово");
+      let tutorialShown = false;
+      try { tutorialShown = localStorage.getItem(LS_TUTORIAL) === "true"; } catch (e) {}
+      if (!tutorialShown) setTimeout(function () { openTutorial(); }, 500);
     });
     document.getElementById("obSkip").addEventListener("click", function () {
       localStorage.setItem(LS_ONBOARDED, "true");
       document.getElementById("onboarding").classList.remove("open");
+      let tutorialShown = false;
+      try { tutorialShown = localStorage.getItem(LS_TUTORIAL) === "true"; } catch (e) {}
+      if (!tutorialShown) setTimeout(function () { openTutorial(); }, 500);
+    });
+
+    // Туториал
+    document.getElementById("tutorialSkip").addEventListener("click", function () {
+      localStorage.setItem(LS_TUTORIAL, "true");
+      document.getElementById("tutorial").classList.remove("open");
+    });
+    document.getElementById("tutorialNext").addEventListener("click", function () {
+      if (state.tutorialStep >= TUTORIAL_STEPS.length - 1) {
+        localStorage.setItem(LS_TUTORIAL, "true");
+        document.getElementById("tutorial").classList.remove("open");
+      } else {
+        state.tutorialStep++;
+        renderTutorialStep();
+      }
     });
   }
 
@@ -3324,6 +3896,16 @@
     lines.push("- Масштаб: " + (m.mind_scale || "—"));
     lines.push("- Баланс: " + (m.lots_balance || "—"));
     lines.push("");
+    if (c.somatic) {
+      lines.push("## Состояние");
+      lines.push("");
+      lines.push("- Темп: " + (c.somatic.energy != null ? c.somatic.energy.toFixed(2) : "—"));
+      lines.push("- Тон: " + (c.somatic.tension != null ? c.somatic.tension.toFixed(2) : "—"));
+      lines.push("- Фокус: " + (c.somatic.focus != null ? c.somatic.focus.toFixed(2) : "—"));
+      if (c.somatic.mood) lines.push("- Настроение: " + c.somatic.mood);
+      if (c.somatic.note) lines.push("- Наблюдение: " + c.somatic.note);
+      lines.push("");
+    }
     if (p.artifacts && p.artifacts.length) {
       lines.push("## Артефакты (" + p.artifacts.length + ")");
       lines.push("");
