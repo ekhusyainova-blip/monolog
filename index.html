@@ -688,7 +688,7 @@
   }
 
   .compass-wrap { display: flex; justify-content: center; padding: 8px 0 14px; }
-  .compass-svg { width: 220px; height: 220px; }
+  .compass-svg { width: 220px; height: 220px; overflow: visible; }
   .compass-axis { stroke: var(--border); stroke-width: 1; fill: none; }
   .compass-ring { stroke: var(--border); stroke-width: 1; fill: none; }
   .compass-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
@@ -3181,7 +3181,7 @@
       const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
       return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
     }
-    let svg = '<svg class="compass-svg" viewBox="0 0 ' + size + ' ' + size + '">';
+    let svg = '<svg class="compass-svg" viewBox="-30 -30 ' + (size + 60) + ' ' + (size + 60) + '">';
     [1, 0.66, 0.33].forEach(function (scale) {
       let ring = "";
       for (let i = 0; i < n; i++) {
