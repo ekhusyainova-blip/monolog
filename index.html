@@ -25,6 +25,7 @@
     --critical-soft: rgba(184, 84, 80, 0.12);
     --success: #4F8A6B;
     --shadow: 0 1px 2px rgba(10, 11, 13, 0.03);
+    --shadow-md: 0 4px 16px rgba(10, 11, 13, 0.06);
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --safe-top: env(safe-area-inset-top, 0px);
     --particle-color: rgba(74, 108, 247, 0.25);
@@ -47,23 +48,16 @@
     --critical-soft: rgba(224, 123, 123, 0.15);
     --success: #6BB88E;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
     --particle-color: rgba(168, 181, 255, 0.28);
   }
 
-  html[data-mode="strategist"] {
-    --particle-color: rgba(74, 108, 247, 0.22);
-    --particle-direction: -1;
-  }
-  html[data-mode="analyst"] {
-    --particle-color: rgba(224, 122, 95, 0.22);
-    --particle-direction: 1;
-  }
-  html[data-theme="dark"][data-mode="strategist"] {
-    --particle-color: rgba(168, 181, 255, 0.28);
-  }
-  html[data-theme="dark"][data-mode="analyst"] {
-    --particle-color: rgba(240, 168, 150, 0.24);
-  }
+  html[data-mode="strategist"] { --particle-direction: -1; }
+  html[data-mode="analyst"] { --particle-direction: 1; }
+  html[data-mode="strategist"] { --particle-color: rgba(74, 108, 247, 0.22); }
+  html[data-mode="analyst"] { --particle-color: rgba(224, 122, 95, 0.22); }
+  html[data-theme="dark"][data-mode="strategist"] { --particle-color: rgba(168, 181, 255, 0.28); }
+  html[data-theme="dark"][data-mode="analyst"] { --particle-color: rgba(240, 168, 150, 0.24); }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
   html, body {
@@ -79,16 +73,10 @@
     transition: background 0.6s ease, color 0.6s ease;
   }
 
-  .bg-anim {
-    position: fixed; inset: 0; z-index: 0;
-    pointer-events: none; overflow: hidden;
-  }
+  .bg-anim { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
   .particle {
-    position: absolute;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--particle-color);
-    filter: blur(2px);
+    position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--particle-color); filter: blur(2px);
     animation: floatParticle 22s ease-in-out infinite;
     transition: background 0.8s ease;
   }
@@ -100,17 +88,13 @@
   @media (prefers-reduced-motion: reduce) { .particle { animation: none; } }
 
   .splash {
-    position: fixed; inset: 0; z-index: 999;
-    background: var(--bg);
-    display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    gap: 24px;
-    transition: opacity 0.6s ease;
+    position: fixed; inset: 0; z-index: 999; background: var(--bg);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 24px; transition: opacity 0.6s ease;
   }
   .splash.hide { opacity: 0; pointer-events: none; }
   .splash-orb {
-    width: 140px; height: 140px; border-radius: 50%;
-    position: relative;
+    width: 140px; height: 140px; border-radius: 50%; position: relative;
     background:
       radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.95) 0%, transparent 30%),
       radial-gradient(circle at 70% 70%, rgba(180, 160, 255, 0.45) 0%, transparent 55%),
@@ -122,29 +106,20 @@
     animation: orbPulse 4s ease-in-out infinite;
   }
   .splash-orb::after {
-    content: "";
-    position: absolute; inset: 14%; border-radius: 50%;
+    content: ""; position: absolute; inset: 14%; border-radius: 50%;
     background: radial-gradient(circle at 38% 32%, rgba(255, 255, 255, 0.75) 0%, transparent 55%);
-    opacity: 0.8;
-    animation: orbShine 5s ease-in-out infinite;
+    opacity: 0.8; animation: orbShine 5s ease-in-out infinite;
   }
-  @keyframes orbPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-  }
+  @keyframes orbPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   @keyframes orbShine {
     0%, 100% { opacity: 0.5; transform: translate(-3px, -3px); }
     50% { opacity: 0.95; transform: translate(3px, 3px); }
   }
   .splash-text {
     font-size: 18px; font-weight: 600; letter-spacing: -0.01em;
-    color: var(--muted);
-    animation: splashTextPulse 2.5s ease-in-out infinite;
+    color: var(--muted); animation: splashTextPulse 2.5s ease-in-out infinite;
   }
-  @keyframes splashTextPulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-  }
+  @keyframes splashTextPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
   .app {
     position: relative; z-index: 1; display: flex; flex-direction: column;
@@ -153,7 +128,7 @@
 
   header {
     position: sticky; top: 0; z-index: 20;
-    display: flex; align-items: center; gap: 8px;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px;
     padding: calc(var(--safe-top) + 10px) 12px 10px;
     margin: 0 -12px;
     background: color-mix(in srgb, var(--bg) 65%, transparent);
@@ -161,16 +136,6 @@
     -webkit-backdrop-filter: blur(20px) saturate(140%);
     flex-shrink: 0;
   }
-
-  .header-left { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
-  .header-middle {
-    flex: 1; min-width: 0;
-    display: flex; align-items: center; gap: 6px;
-    overflow-x: auto; -webkit-overflow-scrolling: touch;
-    padding: 2px 0; scrollbar-width: none;
-  }
-  .header-middle::-webkit-scrollbar { display: none; }
-  .header-right { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
 
   .orb {
     width: 38px; height: 38px; border-radius: 50%; flex-shrink: 0;
@@ -180,9 +145,8 @@
   }
   .orb:active { transform: scale(0.94); }
   .orb::after {
-    content: ""; position: absolute; inset: 0;
-    border-radius: 50%; overflow: hidden;
-    pointer-events: none;
+    content: ""; position: absolute; inset: 0; border-radius: 50%;
+    overflow: hidden; pointer-events: none;
   }
   .orb.analyst::after {
     background:
@@ -205,10 +169,7 @@
       0 2px 12px rgba(0, 0, 0, 0.3);
   }
   .orb.thinking { animation: orbBreathe 1.6s ease-in-out infinite; }
-  @keyframes orbBreathe {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.08); }
-  }
+  @keyframes orbBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
   .orb.switching { animation: orbSwitch 0.6s ease; }
   @keyframes orbSwitch {
     0% { transform: scale(1); }
@@ -216,13 +177,9 @@
     100% { transform: scale(1); opacity: 1; }
   }
   .orb.fast-pulse::before {
-    content: "";
-    position: absolute; inset: -4px;
-    border-radius: 50%;
-    border: 2px solid var(--warning);
-    opacity: 0.7;
-    animation: fastRing 1.5s ease-in-out infinite;
-    z-index: -1;
+    content: ""; position: absolute; inset: -4px; border-radius: 50%;
+    border: 2px solid var(--warning); opacity: 0.7;
+    animation: fastRing 1.5s ease-in-out infinite; z-index: -1;
   }
   @keyframes fastRing {
     0% { transform: scale(0.9); opacity: 0.8; }
@@ -241,212 +198,170 @@
   .icon-btn:hover { background: var(--surface-2); border-color: var(--border); }
   .icon-btn:active { transform: scale(0.94); }
   .icon-btn svg { width: 16px; height: 16px; stroke-width: 1.6; }
-  .icon-btn.hidden { display: none; }
   .icon-btn .badge {
     position: absolute; top: -3px; right: -3px;
-    min-width: 14px; height: 14px; padding: 0 4px;
+    min-width: 16px; height: 16px; padding: 0 4px;
     background: var(--accent); color: var(--bg);
-    border-radius: 7px; font-size: 9px; font-weight: 700;
+    border-radius: 8px; font-size: 9px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     line-height: 1;
   }
   .icon-btn .badge.hidden { display: none; }
 
-  .project-tab {
-    width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
-    padding: 0; cursor: pointer; position: relative;
-    transition: transform 0.15s, box-shadow 0.2s;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 11px; font-weight: 700; color: #fff;
-    letter-spacing: 0; border: none;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  /* Меню — bottom sheet */
+  .menu-sheet {
+    position: fixed; left: 0; right: 0; bottom: 0; max-height: 88dvh;
+    background: var(--surface); border-radius: 20px 20px 0 0;
+    padding: 12px 18px calc(20px + var(--safe-bottom));
+    transform: translateY(100%);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    z-index: 51; overflow-y: auto;
+    box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
+    max-width: 700px; margin: 0 auto;
   }
-  .project-tab:active { transform: scale(0.94); }
-  .project-tab.active {
-    box-shadow: 0 0 0 2px var(--accent-soft), 0 1px 4px rgba(0, 0, 0, 0.06);
-  }
-  .project-tab.long-press { animation: tabPress 0.4s ease; }
-  @keyframes tabPress {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(0.9); }
-  }
+  .menu-sheet.open { transform: translateY(0); }
 
-  .project-add {
-    width: 36px; height: 36px; border-radius: 50%;
-    border: 1.5px dashed var(--border); background: transparent;
-    color: var(--muted); cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center;
-    flex-shrink: 0; transition: transform 0.15s, color 0.15s, border-color 0.15s;
+  .menu-section {
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border-soft);
+    padding-bottom: 12px;
   }
-  .project-add:hover { color: var(--accent); border-color: var(--accent); }
-  .project-add:active { transform: scale(0.94); }
-  .project-add svg { width: 16px; height: 16px; stroke-width: 1.8; }
-
-  .lots-chip {
-    display: inline-flex; align-items: center; gap: 5px;
-    background: var(--surface); border: 1px solid var(--border-soft);
-    border-radius: 12px; padding: 0 9px; height: 34px;
-    font-size: 11.5px; font-weight: 600; color: var(--text);
-    cursor: pointer; transition: transform 0.15s, border-color 0.15s;
-    box-shadow: var(--shadow); flex-shrink: 0;
-    font-variant-numeric: tabular-nums;
-    position: relative;
-  }
-  .lots-chip:hover { border-color: var(--border); }
-  .lots-chip:active { transform: scale(0.96); }
-  .lots-chip.positive { color: var(--success); }
-  .lots-chip.negative { color: var(--critical); }
-  .lots-chip .lots-delta {
-    position: absolute; top: -20px; right: 0;
-    font-size: 11px; font-weight: 600;
-    color: var(--success);
-    opacity: 0; pointer-events: none;
-    transition: opacity 0.3s, transform 0.3s;
-  }
-  .lots-chip .lots-delta.show { opacity: 1; transform: translateY(-6px); }
-  .lots-chip .lots-delta.negative { color: var(--critical); }
-
-  .social-indicator {
-    width: 34px; height: 34px; border-radius: 12px;
-    background: var(--surface); border: 1px solid var(--border-soft);
-    color: var(--muted); cursor: pointer;
-    display: inline-flex; align-items: center; justify-content: center;
-    transition: transform 0.15s, color 0.3s, border-color 0.3s;
-    box-shadow: var(--shadow); flex-shrink: 0;
-    position: relative;
-    padding: 0;
-  }
-  .social-indicator:active { transform: scale(0.94); }
-  .social-indicator svg { width: 16px; height: 16px; stroke-width: 1.8; }
-  .social-indicator.low { color: var(--warning); border-color: rgba(198, 139, 63, 0.3); }
-  .social-indicator.medium { color: var(--warning); border-color: rgba(198, 139, 63, 0.55); background: var(--warning-soft); }
-  .social-indicator.high { color: var(--critical); border-color: rgba(184, 84, 80, 0.5); background: var(--critical-soft); }
-  .social-indicator.active::after {
-    content: ""; position: absolute; top: -2px; right: -2px;
-    width: 8px; height: 8px; border-radius: 50%;
-    border: 1.5px solid var(--surface);
-    background: currentColor;
-  }
-
-  /* Системное сообщение о доминировании */
-  .impulse-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    margin-top: 10px;
-    gap: 0;
-  }
-  .impulse-notice {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 10px;
-    background: var(--warning-soft);
-    border: 1px solid rgba(198, 139, 63, 0.28);
-    border-radius: 8px;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    font-size: 11px;
-    color: var(--warning);
-    cursor: pointer;
-    transition: transform 0.15s, border-color 0.2s;
-    user-select: none;
-  }
-  .impulse-notice:hover { border-color: rgba(198, 139, 63, 0.5); }
-  .impulse-notice:active { transform: scale(0.98); }
-  .impulse-notice svg { width: 12px; height: 12px; stroke-width: 2; }
-  .impulse-notice.open {
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
-  .impulse-detail {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.3s ease, margin-top 0.2s ease;
-    margin-top: 0;
-    font-family: ui-monospace, SFMono-Regular, monospace;
-    font-size: 11.5px;
-    color: var(--text);
-    line-height: 1.55;
-    width: 100%;
-  }
-  .impulse-notice.open + .impulse-detail {
-    max-height: 400px;
-    margin-top: 0;
-  }
-  .impulse-detail-inner {
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border: 1px solid rgba(198, 139, 63, 0.2);
-    border-top: none;
-    border-bottom-left-radius: 8px;
-    border-bottom-right-radius: 8px;
-  }
-  .impulse-row {
-    display: block;
-    margin: 3px 0;
-  }
-  .impulse-row strong {
-    color: var(--muted);
-    font-weight: 500;
-    text-transform: lowercase;
-  }
-  .impulse-row .value {
-    color: var(--text);
-    margin-left: 4px;
-  }
-  .impulse-steps {
-    margin-top: 6px;
-    padding-top: 6px;
-    border-top: 1px dashed var(--border);
-  }
-  .impulse-steps-title {
-    color: var(--muted);
+  .menu-section:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .menu-section-title {
     font-size: 10.5px;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 4px;
+    letter-spacing: 0.08em;
+    color: var(--muted);
+    font-weight: 600;
+    margin-bottom: 8px;
   }
-  .impulse-step {
-    display: block;
-    padding: 2px 0 2px 12px;
-    position: relative;
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border-radius: 12px;
+    cursor: pointer;
+    border: none;
+    width: 100%;
+    text-align: left;
+    font-family: inherit;
+    color: var(--text);
+    margin-bottom: 6px;
+    transition: transform 0.15s, border-color 0.15s;
+    border: 1px solid var(--border-soft);
+  }
+  .menu-item:last-child { margin-bottom: 0; }
+  .menu-item:hover { border-color: var(--border); }
+  .menu-item:active { transform: scale(0.98); }
+  .menu-item svg { width: 20px; height: 20px; color: var(--accent); flex-shrink: 0; }
+  .menu-item .info { flex: 1; min-width: 0; }
+  .menu-item .name { font-size: 14px; font-weight: 500; }
+  .menu-item .desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .menu-item .arrow { color: var(--muted); flex-shrink: 0; }
+  .menu-item .badge-mini {
+    font-size: 10.5px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+  .menu-item .badge-mini.warning { background: var(--warning-soft); color: var(--warning); }
+  .menu-item .badge-mini.critical { background: var(--critical-soft); color: var(--critical); }
+  .menu-item.hidden { display: none; }
+
+  /* Метрики — карточки */
+  .metric-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+  }
+  .metric-card:hover { border-color: var(--border); }
+  .metric-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .metric-card-label {
+    font-size: 13px;
+    font-weight: 500;
     color: var(--text);
   }
-  .impulse-step::before {
-    content: "·";
-    position: absolute;
-    left: 2px;
-    color: var(--warning);
-    font-weight: 700;
+  .metric-card-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+  .metric-card-value.warning { color: var(--warning); }
+  .metric-card-value.critical { color: var(--critical); }
+  .metric-card-value.success { color: var(--success); }
+  .metric-card-bar {
+    height: 5px;
+    border-radius: 3px;
+    background: var(--border);
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+  .metric-card-bar-fill {
+    height: 100%;
+    background: var(--accent);
+    transition: width 0.4s;
+  }
+  .metric-card-bar-fill.warning { background: var(--warning); }
+  .metric-card-bar-fill.critical { background: var(--critical); }
+  .metric-card-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+  .metric-card-expand {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s;
+    margin-top: 0;
+  }
+  .metric-card.open .metric-card-expand {
+    max-height: 400px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed var(--border);
+  }
+  .metric-card-expand p {
+    font-size: 12.5px;
+    line-height: 1.55;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .metric-card-expand p strong {
+    color: var(--text);
+    font-weight: 600;
+  }
+  .metric-card-hint {
+    font-size: 11px;
+    color: var(--accent);
+    font-weight: 500;
+    margin-top: 6px;
   }
 
-  .reset-chip {
-    display: none; align-items: center; gap: 6px;
-    background: var(--warning-soft);
-    border: 1px solid rgba(198, 139, 63, 0.28);
-    color: var(--warning);
-    padding: 0 10px; height: 34px; border-radius: 12px;
-    font-size: 11.5px; font-weight: 600; cursor: pointer;
-    transition: transform 0.15s; flex-shrink: 0;
-  }
-  .reset-chip.show { display: inline-flex; }
-  .reset-chip:active { transform: scale(0.96); }
-  .reset-chip svg { width: 13px; height: 13px; }
-
-  .chip {
-    display: inline-flex; align-items: center; gap: 6px;
-    background: var(--surface); border: 1px solid var(--border-soft);
-    border-radius: 12px; padding: 0 10px; height: 34px;
-    font-size: 11.5px; font-weight: 600; color: var(--text);
-    cursor: pointer; transition: transform 0.15s;
-    box-shadow: var(--shadow);
-  }
-  .chip:active { transform: scale(0.96); }
-  .chip svg { width: 14px; height: 14px; color: var(--accent); stroke-width: 1.8; }
-  .chip.warning svg { color: var(--warning); }
-  .chip.critical svg { color: var(--critical); }
-  .chip .value { font-variant-numeric: tabular-nums; }
-
+  /* Чат */
   .chat {
     flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
     display: flex; flex-direction: column; gap: 16px;
@@ -457,33 +372,6 @@
   .row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
   .row.user { align-items: flex-end; }
 
-  .msg-metrics {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-    margin-bottom: 4px;
-    min-height: 0;
-  }
-  .msg-metrics:empty { display: none; }
-  .msg-metric {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10.5px;
-    color: var(--muted);
-    font-weight: 500;
-    letter-spacing: 0.02em;
-  }
-  .msg-metric .dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    background: currentColor;
-    flex-shrink: 0;
-  }
-  .msg-metric.success { color: var(--success); }
-  .msg-metric.warning { color: var(--warning); }
-  .msg-metric.critical { color: var(--critical); }
-  .msg-metric.accent { color: var(--accent); }
-
   .row.user .bubble {
     background: var(--accent-soft);
     padding: 10px 14px;
@@ -493,8 +381,7 @@
     word-wrap: break-word;
   }
   .row.agent .bubble {
-    background: transparent;
-    padding: 0;
+    background: transparent; padding: 0;
     width: 100%;
     font-size: 14px; line-height: 1.55;
     word-wrap: break-word; overflow-wrap: break-word;
@@ -502,18 +389,14 @@
   }
 
   .msg-actions {
-    display: flex;
-    gap: 4px;
-    margin-top: 8px;
-    opacity: 0.5;
+    display: flex; gap: 4px; margin-top: 8px; opacity: 0.5;
     transition: opacity 0.15s;
   }
   .row.agent:hover .msg-actions { opacity: 1; }
   .msg-action {
     width: 26px; height: 26px; border-radius: 8px;
     border: 1px solid var(--border-soft);
-    background: var(--surface);
-    color: var(--muted); cursor: pointer;
+    background: var(--surface); color: var(--muted); cursor: pointer;
     display: inline-flex; align-items: center; justify-content: center;
     transition: transform 0.15s, color 0.15s;
   }
@@ -528,13 +411,9 @@
     letter-spacing: -0.02em;
   }
   .bubble h1:first-child, .bubble h2:first-child, .bubble h3:first-child { margin-top: 0; }
-  .bubble h1 { font-size: 16px; }
-  .bubble h2 { font-size: 15px; }
-  .bubble h3 { font-size: 14px; }
-  .bubble p { margin: 6px 0; }
-  .bubble p:first-child { margin-top: 0; }
-  .bubble ul, .bubble ol { margin: 6px 0 6px 20px; }
-  .bubble li { margin: 3px 0; }
+  .bubble h1 { font-size: 16px; } .bubble h2 { font-size: 15px; } .bubble h3 { font-size: 14px; }
+  .bubble p { margin: 6px 0; } .bubble p:first-child { margin-top: 0; }
+  .bubble ul, .bubble ol { margin: 6px 0 6px 20px; } .bubble li { margin: 3px 0; }
   .bubble li::marker { color: var(--accent); }
   .bubble strong { font-weight: 600; }
   .bubble a { color: var(--accent); text-decoration: none; border-bottom: 1px solid var(--accent-soft); }
@@ -565,7 +444,6 @@
     font-size: 10.5px; color: #E8EAED; cursor: pointer;
   }
   .copy-code-btn:active { transform: scale(0.95); }
-
   .bubble table {
     width: 100%; border-collapse: collapse; margin: 10px 0;
     font-size: 13px; display: block; overflow-x: auto;
@@ -594,9 +472,53 @@
     margin-left: 8px; font-style: italic;
   }
 
+  /* Демо-диалог */
+  .demo-block {
+    background: var(--surface);
+    border: 1px solid var(--border-soft);
+    border-radius: 16px;
+    padding: 18px;
+    margin-top: 16px;
+    box-shadow: var(--shadow);
+  }
+  .demo-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .demo-suggestion {
+    display: block;
+    padding: 12px 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 13.5px;
+    color: var(--text);
+    text-align: left;
+    width: 100%;
+    transition: transform 0.15s, border-color 0.15s, background 0.15s;
+  }
+  .demo-suggestion:last-child { margin-bottom: 0; }
+  .demo-suggestion:hover {
+    border-color: var(--accent);
+    background: var(--accent-soft);
+  }
+  .demo-suggestion:active { transform: scale(0.98); }
+  .demo-suggestion .label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+  }
+  .demo-suggestion .label svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
+
+  /* Карточки решений */
   .decision-cards {
-    margin-top: 12px;
-    display: flex; flex-direction: column; gap: 8px;
+    margin-top: 12px; display: flex; flex-direction: column; gap: 8px;
   }
   .decision-title {
     font-size: 11px; text-transform: uppercase;
@@ -628,6 +550,72 @@
   .decision-card-text { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
   .decision-card-text strong { color: var(--text); font-weight: 500; }
 
+  /* Импульс */
+  .impulse-wrap {
+    display: flex; flex-direction: column;
+    align-items: flex-start; margin-top: 10px; gap: 0;
+  }
+  .impulse-notice {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 5px 10px;
+    background: var(--warning-soft);
+    border: 1px solid rgba(198, 139, 63, 0.28);
+    border-radius: 8px;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11px; color: var(--warning);
+    cursor: pointer;
+    transition: transform 0.15s, border-color 0.2s;
+    user-select: none;
+  }
+  .impulse-notice:hover { border-color: rgba(198, 139, 63, 0.5); }
+  .impulse-notice:active { transform: scale(0.98); }
+  .impulse-notice svg { width: 12px; height: 12px; stroke-width: 2; }
+  .impulse-notice.open {
+    border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  }
+  .impulse-detail {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.3s ease, margin-top 0.2s ease;
+    margin-top: 0;
+    font-family: ui-monospace, SFMono-Regular, monospace;
+    font-size: 11.5px; color: var(--text);
+    line-height: 1.55; width: 100%;
+  }
+  .impulse-notice.open + .impulse-detail {
+    max-height: 400px; margin-top: 0;
+  }
+  .impulse-detail-inner {
+    padding: 10px 12px;
+    background: var(--surface-2);
+    border: 1px solid rgba(198, 139, 63, 0.2);
+    border-top: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+  }
+  .impulse-row { display: block; margin: 3px 0; }
+  .impulse-row strong {
+    color: var(--muted); font-weight: 500; text-transform: lowercase;
+  }
+  .impulse-row .value { color: var(--text); margin-left: 4px; }
+  .impulse-steps {
+    margin-top: 6px; padding-top: 6px;
+    border-top: 1px dashed var(--border);
+  }
+  .impulse-steps-title {
+    color: var(--muted); font-size: 10.5px;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    margin-bottom: 4px;
+  }
+  .impulse-step {
+    display: block; padding: 2px 0 2px 12px;
+    position: relative; color: var(--text);
+  }
+  .impulse-step::before {
+    content: "·"; position: absolute;
+    left: 2px; color: var(--warning); font-weight: 700;
+  }
+
+  /* Артефакты */
   .artifact-row {
     display: flex; align-items: center; gap: 10px;
     background: var(--surface); border: 1px solid var(--border-soft);
@@ -657,6 +645,7 @@
   .open-editor-btn:active { transform: scale(0.97); }
   .open-editor-btn svg { width: 14px; height: 14px; }
 
+  /* Вложения */
   .attach-preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 2px 4px; }
   .attach-chip {
     display: inline-flex; align-items: center; gap: 6px;
@@ -675,22 +664,6 @@
     padding: 0 2px; flex-shrink: 0;
   }
   .attach-chip .remove:hover { color: var(--text); }
-
-  .artifacts-section { flex-shrink: 0; padding: 4px 0; display: none; }
-  .artifacts-section.show { display: block; }
-  .artifacts-section-inner {
-    background: var(--surface);
-    border: 1px solid var(--border-soft);
-    border-radius: 12px; padding: 10px 14px;
-    display: flex; align-items: center; gap: 10px;
-    cursor: pointer; transition: border-color 0.15s;
-    box-shadow: var(--shadow);
-  }
-  .artifacts-section-inner:hover { border-color: var(--border); }
-  .artifacts-section-inner svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
-  .artifacts-section-inner .info { flex: 1; min-width: 0; }
-  .artifacts-section-inner .title { font-size: 13px; font-weight: 500; }
-  .artifacts-section-inner .sub { font-size: 11.5px; color: var(--muted); margin-top: 1px; }
 
   .input-wrap {
     flex-shrink: 0;
@@ -711,37 +684,27 @@
     width: 32px; height: 32px; border-radius: 50%; border: none;
     background: transparent; color: var(--muted); cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-    align-self: flex-end;
-    margin-bottom: 1px;
+    flex-shrink: 0; align-self: flex-end; margin-bottom: 1px;
     transition: color 0.15s, transform 0.15s;
   }
   .attach-btn:hover { color: var(--accent); }
   .attach-btn:active { transform: scale(0.92); }
   .attach-btn svg { width: 17px; height: 17px; stroke-width: 1.8; }
   textarea {
-    flex: 1;
-    border: none; outline: none; resize: none;
-    background: transparent;
-    padding: 7px 4px;
-    font-family: inherit;
-    font-size: 14px;
-    line-height: 1.4;
-    color: var(--text);
-    max-height: 88px;
-    min-height: 24px;
-    overflow-y: hidden;
-    word-wrap: break-word;
+    flex: 1; border: none; outline: none; resize: none;
+    background: transparent; padding: 7px 4px;
+    font-family: inherit; font-size: 14px; line-height: 1.4;
+    color: var(--text); max-height: 88px; min-height: 24px;
+    overflow-y: hidden; word-wrap: break-word;
   }
   textarea::placeholder { color: var(--muted); }
   textarea.grows { overflow-y: auto; }
   .send-btn {
-    flex-shrink: 0;
-    width: 32px; height: 32px; border-radius: 50%; border: none;
+    flex-shrink: 0; width: 32px; height: 32px;
+    border-radius: 50%; border: none;
     background: var(--accent); color: var(--bg); cursor: pointer;
     display: flex; align-items: center; justify-content: center;
-    align-self: flex-end;
-    margin-bottom: 1px;
+    align-self: flex-end; margin-bottom: 1px;
     transition: transform 0.15s, opacity 0.2s;
   }
   .send-btn:active { transform: scale(0.92); }
@@ -771,100 +734,23 @@
   .sheet h3 { font-size: 14px; margin-bottom: 3px; font-weight: 600; letter-spacing: -0.02em; }
   .sheet-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; }
 
-  .acc {
-    border: 1px solid var(--border-soft); border-radius: 12px;
-    margin-bottom: 8px; background: var(--surface-2); overflow: hidden;
-  }
-  .acc-head {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 14px; cursor: pointer; user-select: none;
-    transition: background 0.15s; gap: 10px;
-  }
-  .acc-head:hover { background: var(--surface); }
-  .acc-title { font-size: 13.5px; font-weight: 600; letter-spacing: -0.01em; flex: 1; }
-  .acc-summary { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .acc-arrow {
-    width: 14px; height: 14px; color: var(--muted);
-    transition: transform 0.25s; flex-shrink: 0;
-  }
-  .acc.open .acc-arrow { transform: rotate(180deg); }
-  .acc-body { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
-  .acc.open .acc-body { max-height: 900px; }
-  .acc-body-inner { padding: 0 14px 14px; }
-
-  .stability-ring {
-    display: flex; justify-content: center; align-items: center;
-    padding: 4px 0 10px; position: relative;
-  }
-  .ring-svg { width: 130px; height: 130px; transform: rotate(-90deg); }
-  .ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
-  .ring-fill {
-    fill: none; stroke: var(--accent); stroke-width: 8;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 0.6s ease, stroke 0.3s;
-  }
-  .ring-fill.warning { stroke: var(--warning); }
-  .ring-fill.critical { stroke: var(--critical); }
-  .ring-label {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%, -50%); text-align: center;
-  }
-  .ring-value {
-    font-size: 26px; font-weight: 600; letter-spacing: -0.03em;
-    font-variant-numeric: tabular-nums; line-height: 1;
-  }
-  .ring-caption {
-    font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em;
-    color: var(--muted); font-weight: 600; margin-top: 4px;
+  /* Узел связи */
+  .node-svg { width: 100%; max-width: 260px; height: 220px; margin: 0 auto; display: block; }
+  .node-bg { fill: none; stroke: var(--border); stroke-width: 1; }
+  .node-ring { fill: none; stroke: var(--border); stroke-width: 1; opacity: 0.5; }
+  .node-core { fill: var(--accent); }
+  .node-core-glow { fill: var(--accent); opacity: 0.15; }
+  .node-spoke { stroke: var(--border); stroke-width: 1; }
+  .node-spoke.active { stroke: var(--accent); stroke-width: 2; }
+  .node-dot { fill: var(--muted); }
+  .node-dot.active { fill: var(--accent); }
+  .node-label {
+    font-size: 8px; fill: var(--muted);
+    font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
-  .sparkline-wrap {
-    padding: 8px 0 6px; display: flex; align-items: flex-end;
-    justify-content: center; gap: 4px; height: 40px;
-  }
-  .spark-bar {
-    width: 10px; background: var(--accent); border-radius: 3px;
-    min-height: 4px; transition: height 0.3s, background 0.3s; opacity: 0.75;
-  }
-  .spark-bar.warning { background: var(--warning); }
-  .spark-bar.critical { background: var(--critical); }
-  .spark-bar.empty { background: var(--border); opacity: 0.5; }
-
-  .metric-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 9px 0; border-bottom: 1px solid var(--border-soft);
-    font-size: 13px; gap: 10px;
-  }
-  .metric-row:last-child { border-bottom: none; }
-  .metric-row-label { color: var(--text); }
-  .metric-row-value {
-    font-weight: 600; color: var(--accent);
-    font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
-    text-align: right;
-  }
-  .metric-row-value.warning { color: var(--warning); }
-  .metric-row-value.critical { color: var(--critical); }
-
-  .hint {
-    font-size: 12px; line-height: 1.45; color: var(--muted);
-    margin-top: 6px; padding: 8px 10px;
-    background: var(--surface); border-radius: 8px;
-    border: 1px solid var(--border-soft);
-  }
-  .hint strong { color: var(--text); font-weight: 600; }
-
-  .report-btn {
-    width: 100%; padding: 12px; border-radius: 11px;
-    border: 1px solid var(--border); background: var(--surface-2); color: var(--text);
-    font-family: inherit; font-size: 13.5px; font-weight: 500;
-    cursor: pointer; margin-top: 16px;
-    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-    transition: transform 0.15s, background 0.15s;
-  }
-  .report-btn:hover { background: var(--surface); }
-  .report-btn:active { transform: scale(0.98); }
-  .report-btn svg { width: 15px; height: 15px; }
-
+  /* Профиль */
   .passport-level {
     display: inline-flex; align-items: center; gap: 6px;
     background: var(--accent-soft); color: var(--accent);
@@ -941,29 +827,22 @@
   }
 
   .somatic-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 9px 0;
-    border-bottom: 1px solid var(--border-soft);
-    font-size: 13px;
-    gap: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 9px 0; border-bottom: 1px solid var(--border-soft);
+    font-size: 13px; gap: 10px;
   }
   .somatic-item:last-child { border-bottom: none; }
   .somatic-label { color: var(--muted); }
   .somatic-value { font-weight: 500; color: var(--text); }
   .somatic-note {
-    margin-top: 10px;
-    padding: 10px 12px;
-    background: var(--surface);
-    border-radius: 8px;
+    margin-top: 10px; padding: 10px 12px;
+    background: var(--surface); border-radius: 8px;
     border: 1px solid var(--border-soft);
-    font-size: 12.5px;
-    color: var(--muted);
-    line-height: 1.5;
-    font-style: italic;
+    font-size: 12.5px; color: var(--muted);
+    line-height: 1.5; font-style: italic;
   }
 
+  /* Артефакты */
   .artifact-item {
     background: var(--surface-2); border: 1px solid var(--border-soft);
     border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
@@ -987,6 +866,7 @@
     display: flex; gap: 10px; flex-wrap: wrap;
   }
 
+  /* Редактор */
   .doc-editor { display: flex; flex-direction: column; gap: 12px; }
   .doc-editor-field label {
     display: block; font-size: 12px; color: var(--muted);
@@ -1025,15 +905,13 @@
     background: var(--surface-2); color: var(--text);
     border: 1px solid var(--border-soft);
   }
-  .doc-editor-actions .danger { background: var(--critical); color: #fff; }
   .doc-editor-actions button svg { width: 14px; height: 14px; }
-
   .doc-status {
     font-size: 12px; color: var(--muted);
-    text-align: center; margin-top: 4px;
-    min-height: 16px;
+    text-align: center; margin-top: 4px; min-height: 16px;
   }
 
+  /* Блог */
   .blog-tabs {
     display: flex; gap: 4px; margin-bottom: 14px;
     background: var(--surface-2); border-radius: 10px; padding: 3px;
@@ -1060,8 +938,7 @@
   }
   .blog-post-meta {
     font-size: 11.5px; color: var(--muted);
-    display: flex; gap: 10px; flex-wrap: wrap;
-    margin-bottom: 8px;
+    display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;
   }
   .blog-post-preview {
     font-size: 12.5px; color: var(--muted);
@@ -1086,12 +963,9 @@
     margin-bottom: 18px; padding-bottom: 14px;
     border-bottom: 1px solid var(--border-soft);
   }
-  .blog-view-body {
-    font-size: 14px; line-height: 1.65;
-  }
+  .blog-view-body { font-size: 14px; line-height: 1.65; }
   .blog-view-body h1, .blog-view-body h2, .blog-view-body h3 {
-    margin: 20px 0 8px; font-weight: 600; letter-spacing: -0.02em;
-    line-height: 1.3;
+    margin: 20px 0 8px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3;
   }
   .blog-view-body h1:first-child,
   .blog-view-body h2:first-child,
@@ -1109,8 +983,7 @@
   }
   .blog-view-body code {
     background: var(--surface-2); padding: 2px 6px;
-    border-radius: 5px; font-family: ui-monospace, monospace;
-    font-size: 0.9em;
+    border-radius: 5px; font-family: ui-monospace, monospace; font-size: 0.9em;
   }
   .blog-view-body pre {
     background: #0A0B0D; color: #E8EAED; padding: 14px;
@@ -1119,77 +992,48 @@
   }
   .blog-view-body pre code { background: none; padding: 0; color: inherit; }
 
-  .settings-section {
-    margin-bottom: 20px;
-  }
+  /* Настройки */
+  .settings-section { margin-bottom: 20px; }
   .settings-section:last-child { margin-bottom: 0; }
   .settings-section-title {
-    font-size: 10.5px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--muted);
-    font-weight: 600;
-    margin-bottom: 8px;
+    font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 0.08em; color: var(--muted);
+    font-weight: 600; margin-bottom: 8px;
   }
   .settings-hint {
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--muted);
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border-radius: 10px;
-    margin-bottom: 12px;
+    font-size: 12px; line-height: 1.5; color: var(--muted);
+    padding: 10px 12px; background: var(--surface-2);
+    border-radius: 10px; margin-bottom: 12px;
   }
   .settings-hint strong { color: var(--text); font-weight: 600; }
 
-  .provider-row {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-  }
+  .provider-row { display: flex; gap: 8px; flex-wrap: wrap; }
   .provider-btn {
-    flex: 1;
-    min-width: 100px;
-    padding: 12px 14px;
-    border-radius: 12px;
-    border: 1px solid var(--border-soft);
-    background: var(--surface-2);
-    color: var(--text);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
+    flex: 1; min-width: 100px; padding: 12px 14px;
+    border-radius: 12px; border: 1px solid var(--border-soft);
+    background: var(--surface-2); color: var(--text);
+    font-family: inherit; font-size: 13px; font-weight: 500;
     cursor: pointer;
     transition: transform 0.15s, border-color 0.15s, background 0.15s;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 3px;
-    align-items: flex-start;
+    text-align: left; display: flex; flex-direction: column;
+    gap: 3px; align-items: flex-start;
   }
   .provider-btn:hover { border-color: var(--border); }
   .provider-btn.active {
-    border-color: var(--accent);
-    background: var(--accent-soft);
+    border-color: var(--accent); background: var(--accent-soft);
   }
   .provider-btn:active { transform: scale(0.98); }
   .provider-btn .name { font-weight: 600; }
   .provider-btn .free {
-    font-size: 10.5px;
-    color: var(--muted);
-    font-weight: 400;
-    line-height: 1.3;
+    font-size: 10.5px; color: var(--muted);
+    font-weight: 400; line-height: 1.3;
   }
 
   .link-row {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 10px 12px;
-    background: var(--surface-2);
-    border-radius: 10px;
-    font-size: 12.5px;
-    color: var(--text);
-    text-decoration: none;
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 12px; background: var(--surface-2);
+    border-radius: 10px; font-size: 12.5px;
+    color: var(--text); text-decoration: none;
     margin-bottom: 6px;
     border: 1px solid var(--border-soft);
     transition: border-color 0.15s;
@@ -1198,6 +1042,7 @@
   .link-row svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
   .link-row .url { flex: 1; color: var(--muted); font-size: 11.5px; }
 
+  /* Модалки */
   .modal-bg {
     position: fixed; inset: 0; background: rgba(10, 11, 13, 0.4);
     display: none; align-items: flex-end; justify-content: center; z-index: 60;
@@ -1260,7 +1105,6 @@
     background: var(--surface); color: var(--text);
     box-shadow: 0 1px 3px rgba(10, 11, 13, 0.06);
   }
-
   .modal .row { display: flex; gap: 8px; margin-top: 16px; }
   .modal button.action {
     flex: 1; padding: 12px; border-radius: 11px; border: none;
@@ -1305,8 +1149,7 @@
   .onboarding {
     position: fixed; inset: 0; z-index: 200;
     background: var(--bg);
-    display: none;
-    flex-direction: column;
+    display: none; flex-direction: column;
     align-items: center; justify-content: center;
     padding: 24px;
   }
@@ -1314,10 +1157,10 @@
   .onboarding-inner {
     max-width: 420px; width: 100%;
     display: flex; flex-direction: column;
-    gap: 16px;
+    gap: 16px; text-align: center;
   }
   .onboarding-orb {
-    width: 80px; height: 80px; border-radius: 50%;
+    width: 100px; height: 100px; border-radius: 50%;
     margin: 0 auto 16px;
     background:
       radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 1) 0%, transparent 35%),
@@ -1329,104 +1172,44 @@
     animation: orbPulse 3s ease-in-out infinite;
   }
   .onboarding h1 {
-    font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
-    text-align: center; margin-bottom: 4px;
+    font-size: 24px; font-weight: 600; letter-spacing: -0.02em;
   }
   .onboarding .desc {
-    font-size: 13.5px; color: var(--muted);
-    text-align: center; margin-bottom: 12px;
+    font-size: 14px; color: var(--muted);
+    line-height: 1.6; margin-bottom: 8px;
+  }
+  .onboarding .features {
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 16px 0;
+  }
+  .onboarding .feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 13.5px;
+    color: var(--text);
     line-height: 1.5;
   }
-  .onboarding label {
-    display: block; font-size: 12px; color: var(--muted);
-    margin-bottom: 5px; font-weight: 500;
-  }
-  .onboarding input {
-    width: 100%; padding: 12px 14px; border-radius: 12px;
-    border: 1px solid var(--border-soft); font-family: inherit;
-    font-size: 15px; background: var(--surface); color: var(--text);
-    transition: border-color 0.2s;
-  }
-  .onboarding input:focus {
-    outline: none; border-color: var(--accent);
+  .onboarding .feature svg {
+    width: 18px; height: 18px;
+    color: var(--accent);
+    flex-shrink: 0;
+    margin-top: 1px;
   }
   .onboarding .row {
     display: flex; gap: 8px; margin-top: 12px;
   }
   .onboarding button {
-    padding: 14px; border-radius: 12px; border: none;
+    padding: 15px; border-radius: 14px; border: none;
     cursor: pointer; font-weight: 500; font-size: 15px;
     font-family: inherit; transition: transform 0.15s;
     flex: 1;
   }
   .onboarding button:active { transform: scale(0.97); }
   .onboarding .primary { background: var(--accent); color: var(--bg); }
-  .onboarding .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
-
-  .project-menu-item {
-    display: flex; align-items: center; gap: 12px;
-    padding: 14px 14px; border-bottom: 1px solid var(--border-soft);
-    font-size: 14px; cursor: pointer;
-    color: var(--text); background: transparent; border: none;
-    width: 100%; text-align: left; font-family: inherit;
-    transition: background 0.15s;
-  }
-  .project-menu-item:last-child { border-bottom: none; }
-  .project-menu-item:hover { background: var(--surface-2); }
-  .project-menu-item.danger { color: var(--critical); }
-  .project-menu-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-
-  .tutorial {
-    position: fixed; inset: 0; z-index: 250;
-    background: rgba(10, 11, 13, 0.5);
-    backdrop-filter: blur(4px);
-    display: none;
-    align-items: center; justify-content: center;
-    padding: 24px;
-  }
-  .tutorial.open { display: flex; }
-  .tutorial-box {
-    background: var(--surface);
-    border-radius: 20px;
-    padding: 24px;
-    max-width: 380px;
-    width: 100%;
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    text-align: center;
-  }
-  .tutorial-icon {
-    width: 48px; height: 48px;
-    margin: 0 auto 16px;
-    color: var(--accent);
-  }
-  .tutorial-icon svg { width: 100%; height: 100%; }
-  .tutorial h3 {
-    font-size: 17px; font-weight: 600;
-    letter-spacing: -0.02em; margin-bottom: 8px;
-  }
-  .tutorial p {
-    font-size: 13.5px; color: var(--muted);
-    line-height: 1.55; margin-bottom: 20px;
-  }
-  .tutorial-dots {
-    display: flex; justify-content: center; gap: 6px; margin-bottom: 18px;
-  }
-  .tutorial-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--border); transition: background 0.2s;
-  }
-  .tutorial-dot.active { background: var(--accent); }
-  .tutorial-actions {
-    display: flex; gap: 8px;
-  }
-  .tutorial-actions button {
-    flex: 1; padding: 12px; border-radius: 11px; border: none;
-    font-family: inherit; font-size: 14px; font-weight: 500;
-    cursor: pointer; transition: transform 0.15s;
-  }
-  .tutorial-actions button:active { transform: scale(0.97); }
-  .tutorial-actions .primary { background: var(--accent); color: var(--bg); }
-  .tutorial-actions .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
 
   .toast {
     position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
@@ -1440,12 +1223,12 @@
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   @media (min-width: 768px) {
-    .sheet {
+    .sheet, .menu-sheet {
       left: 50%; right: auto;
       transform: translate(-50%, 100%);
       width: 580px; border-radius: 20px; bottom: 24px;
     }
-    .sheet.open { transform: translate(-50%, 0); }
+    .sheet.open, .menu-sheet.open { transform: translate(-50%, 0); }
     .modal { border-radius: 20px; margin-bottom: 24px; width: 500px; }
   }
 </style>
@@ -1461,57 +1244,14 @@
 
 <div class="app">
   <header>
-    <div class="header-left">
-      <button class="orb analyst" id="orbBtn" title="Профиль (долгий тап — сменить режим)" aria-label="Профиль" type="button"></button>
-    </div>
+    <button class="orb analyst" id="orbBtn" title="Профиль (долгий тап — сменить режим)" aria-label="Профиль" type="button"></button>
 
-    <div class="header-middle" id="projectsBar"></div>
-
-    <div class="header-right">
-      <button class="reset-chip" id="resetChip" title="Рекомендован сброс" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12a9 9 0 1 0 3-6.7L3 8"/>
-          <path d="M3 3v5h5"/>
-        </svg>
-        <span id="resetChipLabel">Сбросить</span>
-      </button>
-      <button class="icon-btn hidden" id="passportBtn" title="Паспорт проекта" type="button">
+    <div style="display: flex; gap: 6px;">
+      <button class="icon-btn" id="menuBtn" aria-label="Меню" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-          <path d="M14 2v6h6"/>
-          <path d="M8 13h8M8 17h5"/>
+          <path d="M3 6h18M3 12h18M3 18h18"/>
         </svg>
-      </button>
-      <button class="icon-btn hidden" id="reportIconBtn" title="Отчёт готов" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-      </button>
-      <button class="icon-btn" id="blogBtn" title="Блог" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
-          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
-        </svg>
-      </button>
-      <button class="lots-chip" id="lotsChip" title="Баланс лотов" type="button">
-        <span id="lotsValue">+0.0</span>
-        <span class="lots-delta" id="lotsDelta"></span>
-      </button>
-      <button class="social-indicator" id="socialIndicator" title="Социальная адаптация" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="9" cy="9" r="4"/>
-          <path d="M2 21c0-3.5 3-6 7-6s7 2.5 7 6"/>
-          <path d="M17 4c1.5 1.5 1.5 4 0 5.5"/>
-          <path d="M20 2c2.5 2.5 2.5 7 0 9.5"/>
-        </svg>
-      </button>
-      <button class="chip" id="stabilityChip" title="Метрики" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 12h4l2-6 4 12 2-6h6"/>
-        </svg>
-        <span class="value" id="chipValue">—</span>
+        <span class="badge hidden" id="menuBadge">0</span>
       </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Настройки" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
@@ -1523,19 +1263,6 @@
   </header>
 
   <div class="chat" id="chat"></div>
-
-  <div class="artifacts-section" id="artifactsSection">
-    <div class="artifacts-section-inner" id="artifactsSectionInner">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-        <path d="M14 2v6h6"/>
-      </svg>
-      <div class="info">
-        <div class="title" id="artifactsTitle">Артефакты проекта</div>
-        <div class="sub" id="artifactsSub">—</div>
-      </div>
-    </div>
-  </div>
 
   <div class="input-wrap">
     <div class="attach-preview" id="attachPreview"></div>
@@ -1558,87 +1285,256 @@
 
 <div class="sheet-bg" id="sheetBg"></div>
 
+<!-- Меню -->
+<div class="menu-sheet" id="menuSheet">
+  <div class="sheet-handle" id="menuHandle"></div>
+  <h3>Меню</h3>
+  <div class="sheet-sub">Всё, что нужно — здесь</div>
+
+  <div class="menu-section">
+    <div class="menu-section-title">Работа</div>
+
+    <button class="menu-item" id="menuProjects" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      <div class="info">
+        <div class="name">Проекты</div>
+        <div class="desc" id="menuProjectsDesc">—</div>
+      </div>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <button class="menu-item" id="menuArtifacts" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+      <div class="info">
+        <div class="name">Артефакты</div>
+        <div class="desc" id="menuArtifactsDesc">Документы и планы проекта</div>
+      </div>
+      <span class="badge-mini hidden" id="menuArtifactsBadge">0</span>
+    </button>
+
+    <button class="menu-item" id="menuPassport" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+      <div class="info">
+        <div class="name">Паспорт проекта</div>
+        <div class="desc" id="menuPassportDesc">Цель, миссия, метрики</div>
+      </div>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-section-title">Развитие</div>
+
+    <button class="menu-item" id="menuProfile" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+      <div class="info">
+        <div class="name">Мой профиль</div>
+        <div class="desc">Навыки, компас, состояние</div>
+      </div>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <button class="menu-item" id="menuMetrics" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+      <div class="info">
+        <div class="name">Метрики сессии</div>
+        <div class="desc" id="menuMetricsDesc">Стабильность решения, вклад</div>
+      </div>
+      <span class="badge-mini" id="menuMetricsBadge">—</span>
+    </button>
+  </div>
+
+  <div class="menu-section">
+    <div class="menu-section-title">Публикации</div>
+
+    <button class="menu-item" id="menuBlog" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <div class="info">
+        <div class="name">Блог автора</div>
+        <div class="desc">Статьи, лонгриды</div>
+      </div>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+
+    <button class="menu-item hidden" id="menuReport" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      <div class="info">
+        <div class="name">Скачать отчёт</div>
+        <div class="desc">Итоги сессии</div>
+      </div>
+      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
+    </button>
+  </div>
+
+  <div class="menu-section hidden" id="menuResetSection">
+    <button class="menu-item" id="menuReset" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+      <div class="info">
+        <div class="name">Сбросить контекст</div>
+        <div class="desc" id="menuResetDesc">Рекомендовано моделью</div>
+      </div>
+      <span class="badge-mini warning" id="menuResetBadge">↺</span>
+    </button>
+  </div>
+</div>
+
+<!-- Метрики (sheet) -->
 <div class="sheet" id="metricsSheet">
-  <div class="sheet-handle" id="sheetHandle"></div>
+  <div class="sheet-handle" id="metricsHandle"></div>
   <h3>Метрики сессии</h3>
-  <div class="sheet-sub">Обновляются после каждого ответа</div>
+  <div class="sheet-sub">Нажмите на карточку, чтобы узнать подробнее</div>
 
-  <div class="acc open" data-acc="stability">
-    <div class="acc-head">
-      <span class="acc-title">Стабильность</span>
-      <span class="acc-summary" id="accStabilitySummary">—</span>
-      <svg class="acc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  <div class="metric-card" data-metric="stability">
+    <div class="metric-card-head">
+      <span class="metric-card-label">Стабильность решения</span>
+      <span class="metric-card-value" id="mcStabilityValue">—</span>
     </div>
-    <div class="acc-body">
-      <div class="acc-body-inner">
-        <div class="stability-ring">
-          <svg class="ring-svg" viewBox="0 0 120 120">
-            <circle class="ring-bg" cx="60" cy="60" r="52"/>
-            <circle class="ring-fill" id="ringFill" cx="60" cy="60" r="52"/>
-          </svg>
-          <div class="ring-label">
-            <div class="ring-value" id="ringValue">—</div>
-            <div class="ring-caption">Индекс</div>
-          </div>
-        </div>
-        <div class="sparkline-wrap" id="sparkline"></div>
-        <div class="hint"><strong>Что это:</strong> насколько решение устойчиво и полна картина. Ниже 0.5 — есть нерешённые коллизии.</div>
-      </div>
+    <div class="metric-card-bar"><div class="metric-card-bar-fill" id="mcStabilityBar" style="width:0%"></div></div>
+    <div class="metric-card-desc" id="mcStabilityDesc">—</div>
+    <div class="metric-card-expand">
+      <p><strong>Что это:</strong> насколько решение устойчиво к изменениям и полна картина.</p>
+      <p><strong>Что значит:</strong> <span id="mcStabilityMeaning">—</span></p>
+      <p><strong>Что делать:</strong> <span id="mcStabilityAction">—</span></p>
     </div>
   </div>
 
-  <div class="acc" data-acc="thinking">
-    <div class="acc-head">
-      <span class="acc-title">Мышление</span>
-      <span class="acc-summary" id="accThinkingSummary">—</span>
-      <svg class="acc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  <div class="metric-card" data-metric="mind">
+    <div class="metric-card-head">
+      <span class="metric-card-label">Масштаб мышления</span>
+      <span class="metric-card-value" id="mcMindValue">—</span>
     </div>
-    <div class="acc-body">
-      <div class="acc-body-inner">
-        <div class="metric-row"><span class="metric-row-label">Масштаб задачи</span><span class="metric-row-value" id="cMindScale">—</span></div>
-        <div class="metric-row"><span class="metric-row-label">Циклы мышления</span><span class="metric-row-value" id="cCycles">—</span></div>
-        <div class="metric-row"><span class="metric-row-label">Коллизии</span><span class="metric-row-value" id="cCollisions">—</span></div>
-        <div class="metric-row"><span class="metric-row-label">Импульс</span><span class="metric-row-value" id="cPulse">—</span></div>
-        <div class="metric-row"><span class="metric-row-label">Вклад человек / ИИ</span><span class="metric-row-value" id="cHuman">—</span></div>
-      </div>
+    <div class="metric-card-desc" id="mcMindDesc">—</div>
+    <div class="metric-card-expand">
+      <p><strong>Что это:</strong> уровень задачи, под который адаптируется глубина анализа.</p>
+      <p><strong>Что значит:</strong> <span id="mcMindMeaning">—</span></p>
+      <p><strong>Что делать:</strong> <span id="mcMindAction">—</span></p>
     </div>
   </div>
 
-  <div class="acc" data-acc="session">
-    <div class="acc-head">
-      <span class="acc-title">Сессия</span>
-      <span class="acc-summary" id="accSessionSummary">—</span>
-      <svg class="acc-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  <div class="metric-card" data-metric="lots">
+    <div class="metric-card-head">
+      <span class="metric-card-label">Баланс системы</span>
+      <span class="metric-card-value" id="mcLotsValue">+0.0</span>
     </div>
-    <div class="acc-body">
-      <div class="acc-body-inner">
-        <div class="metric-row"><span class="metric-row-label">Запросов</span><span class="metric-row-value" id="cSessionCount">0</span></div>
-        <div class="metric-row"><span class="metric-row-label">Длительность</span><span class="metric-row-value" id="cSessionTime">—</span></div>
-        <div class="metric-row"><span class="metric-row-label">Ключ</span><span class="metric-row-value" id="cKeySource">—</span></div>
-        <div class="metric-row"><span class="metric-row-label">Провайдер</span><span class="metric-row-value" id="cProvider">—</span></div>
-        <div class="metric-row"><span class="metric-row-label">Протокол</span><span class="metric-row-value" id="cProtocol">—</span></div>
+    <div class="metric-card-desc" id="mcLotsDesc">—</div>
+    <div class="metric-card-expand">
+      <p><strong>Что это:</strong> накопленный вклад — инсайты и преодолённые препятствия.</p>
+      <p><strong>Что значит:</strong> <span id="mcLotsMeaning">—</span></p>
+      <p><strong>Что делать:</strong> <span id="mcLotsAction">—</span></p>
+      <div style="margin-top:10px;font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;">Последние начисления</div>
+      <div id="mcLotsHistory" style="margin-top:6px;"></div>
+    </div>
+  </div>
+
+  <div class="metric-card" data-metric="human">
+    <div class="metric-card-head">
+      <span class="metric-card-label">Вклад человек / ИИ</span>
+      <span class="metric-card-value" id="mcHumanValue">—</span>
+    </div>
+    <div class="metric-card-bar"><div class="metric-card-bar-fill" id="mcHumanBar" style="width:0%"></div></div>
+    <div class="metric-card-desc" id="mcHumanDesc">—</div>
+    <div class="metric-card-expand">
+      <p><strong>Что это:</strong> соотношение вашего вклада и работы алгоритма.</p>
+      <p><strong>Что значит:</strong> <span id="mcHumanMeaning">—</span></p>
+      <p><strong>Что делать:</strong> <span id="mcHumanAction">—</span></p>
+    </div>
+  </div>
+
+  <div class="metric-card" data-metric="pulse">
+    <div class="metric-card-head">
+      <span class="metric-card-label">Импульс</span>
+      <span class="metric-card-value" id="mcPulseValue">—</span>
+    </div>
+    <div class="metric-card-desc" id="mcPulseDesc">—</div>
+    <div class="metric-card-expand">
+      <p><strong>Что это:</strong> темп мышления в текущей сессии.</p>
+      <p><strong>Что значит:</strong> <span id="mcPulseMeaning">—</span></p>
+      <p><strong>Что делать:</strong> <span id="mcPulseAction">—</span></p>
+    </div>
+  </div>
+
+  <div class="metric-card" data-metric="social">
+    <div class="metric-card-head">
+      <span class="metric-card-label">Социальная адаптация</span>
+      <span class="metric-card-value" id="mcSocialValue">—</span>
+    </div>
+    <div class="metric-card-desc" id="mcSocialDesc">—</div>
+    <div class="metric-card-expand">
+      <p><strong>Что это:</strong> учитывается ли реакция окружающих при подготовке ответа.</p>
+      <p><strong>Что значит:</strong> <span id="mcSocialMeaning">—</span></p>
+      <p><strong>Что делать:</strong> <span id="mcSocialAction">—</span></p>
+    </div>
+  </div>
+
+  <div style="margin-top:16px;">
+    <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin-bottom:10px;">Узел связи</div>
+    <div id="nodeWrap"></div>
+    <div style="margin-top:12px;">
+      <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin-bottom:6px;">Стабильность за сессию</div>
+      <div class="sparkline-wrap" id="sparkline" style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:40px;"></div>
+    </div>
+  </div>
+
+  <div class="metric-card" data-metric="session" style="margin-top:16px;">
+    <div class="metric-card-head">
+      <span class="metric-card-label">Сессия</span>
+      <span class="metric-card-value" id="mcSessionValue">—</span>
+    </div>
+    <div class="metric-card-desc" id="mcSessionDesc">—</div>
+    <div class="metric-card-expand">
+      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
+        <span style="color:var(--muted);">Запросов</span>
+        <span id="mcSessionCount" style="font-weight:500;">0</span>
+      </div>
+      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
+        <span style="color:var(--muted);">Длительность</span>
+        <span id="mcSessionTime" style="font-weight:500;">—</span>
+      </div>
+      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;border-bottom:1px solid var(--border-soft);">
+        <span style="color:var(--muted);">Ключ</span>
+        <span id="mcKeySource" style="font-weight:500;">—</span>
+      </div>
+      <div class="metric-row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px;">
+        <span style="color:var(--muted);">Провайдер</span>
+        <span id="mcProvider" style="font-weight:500;">—</span>
       </div>
     </div>
   </div>
 </div>
 
+<!-- Профиль -->
 <div class="sheet" id="profileSheet">
   <div class="sheet-handle" id="profileHandle"></div>
   <div id="profileContent"></div>
 </div>
 
+<!-- Паспорт -->
 <div class="sheet" id="passportSheet">
   <div class="sheet-handle" id="passportHandle"></div>
   <div id="passportContent"></div>
 </div>
 
+<!-- Артефакты -->
 <div class="sheet" id="artifactsSheet">
   <div class="sheet-handle" id="artifactsHandle"></div>
   <h3>Артефакты проекта</h3>
-  <div class="sheet-sub" id="artifactsSheetSub">Документы, планы, отчёты, код</div>
+  <div class="sheet-sub" id="artifactsSheetSub">Документы, планы, отчёты</div>
   <div id="artifactsList"></div>
 </div>
 
+<!-- Проекты -->
+<div class="sheet" id="projectsSheet">
+  <div class="sheet-handle" id="projectsHandle"></div>
+  <h3>Проекты</h3>
+  <div class="sheet-sub">Каждый проект — отдельная задача</div>
+  <div id="projectsList"></div>
+  <button class="open-editor-btn" id="projectsCreateBtn" style="width:100%;justify-content:center;" type="button">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+    Новый проект
+  </button>
+</div>
+
+<!-- Редактор -->
 <div class="sheet" id="editorSheet">
   <div class="sheet-handle" id="editorHandle"></div>
   <h3 id="editorTitle">Редактор</h3>
@@ -1681,96 +1577,59 @@
   </div>
 </div>
 
+<!-- Блог -->
 <div class="sheet" id="blogSheet">
   <div class="sheet-handle" id="blogHandle"></div>
   <h3>Блог автора</h3>
-  <div class="sheet-sub" id="blogSub">Лонгриды и заметки</div>
-
+  <div class="sheet-sub" id="blogSub">Статьи и лонгриды</div>
   <div class="blog-tabs" id="blogTabs">
     <button class="blog-tab active" data-tab="list" type="button">Статьи</button>
     <button class="blog-tab" data-tab="new" type="button">Новая статья</button>
   </div>
-
-  <div id="blogListPane">
-    <div id="blogList"></div>
-  </div>
-
+  <div id="blogListPane"><div id="blogList"></div></div>
   <div id="blogNewPane" style="display:none;">
-    <button class="report-btn" id="blogNewBtn" type="button" style="margin-top:0;">
+    <button class="open-editor-btn" id="blogNewBtn" type="button" style="width:100%;justify-content:center;">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
       Открыть пустой редактор
     </button>
-    <div class="hint" style="margin-top:14px;">
+    <div class="settings-hint" style="margin-top:14px;">
       Чтобы ИИ написал статью — попроси его в чате: <strong>«Напиши статью про …»</strong>. Затем нажми <strong>«Открыть в редакторе»</strong> под ответом.
     </div>
   </div>
 </div>
 
+<!-- Просмотр статьи -->
 <div class="sheet" id="blogViewSheet">
   <div class="sheet-handle" id="blogViewHandle"></div>
   <div id="blogViewContent"></div>
 </div>
 
+<!-- Меню проекта -->
 <div class="sheet" id="projectMenuSheet">
   <div class="sheet-handle" id="projectMenuHandle"></div>
   <h3 id="projectMenuTitle">Проект</h3>
   <div class="sheet-sub" id="projectMenuSub">Выберите действие</div>
   <div style="border: 1px solid var(--border-soft); border-radius: 12px; overflow: hidden;">
-    <button class="project-menu-item" id="pmOpen" type="button">
+    <button class="menu-item" id="pmOpen" type="button" style="border-radius:0;margin-bottom:0;border:none;border-bottom:1px solid var(--border-soft);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
-      Открыть
+      <div class="info"><div class="name">Открыть</div></div>
     </button>
-    <button class="project-menu-item" id="pmRename" type="button">
+    <button class="menu-item" id="pmRename" type="button" style="border-radius:0;margin-bottom:0;border:none;border-bottom:1px solid var(--border-soft);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-      Переименовать и цвет
+      <div class="info"><div class="name">Переименовать и цвет</div></div>
     </button>
-    <button class="project-menu-item danger" id="pmDelete" type="button">
+    <button class="menu-item" id="pmDelete" type="button" style="border-radius:0;margin-bottom:0;border:none;color:var(--critical);">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-      Удалить
+      <div class="info"><div class="name">Удалить</div></div>
     </button>
   </div>
 </div>
 
-<div class="modal-bg" id="lotsModalBg">
-  <div class="modal">
-    <button class="modal-close" id="lotsClose" aria-label="Закрыть" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6L6 18M6 6l12 12"/>
-      </svg>
-    </button>
-    <h2>Баланс системы</h2>
-    <div class="sub">Накопленный вклад в этой сессии</div>
-
-    <div class="metric-row" style="padding:14px 0; font-size:15px;">
-      <span class="metric-row-label">Текущий баланс</span>
-      <span class="metric-row-value" id="lotsModalValue" style="font-size:18px;">+0.0</span>
-    </div>
-
-    <div class="hint" style="margin-top:14px;">
-      <strong>Что это:</strong> накопленные «лоты» — ключевые инсайты, удачные решения, преодолённые препятствия. «Штрафы» — тупики и ошибки. Итоговая цифра — сальдо.
-    </div>
-
-    <div style="margin-top:16px;">
-      <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:600; margin-bottom:8px;">Последние начисления</div>
-      <div id="lotsHistory"></div>
-    </div>
-
-    <div style="margin-top:16px;">
-      <div style="font-size:10.5px; text-transform:uppercase; letter-spacing:0.08em; color:var(--muted); font-weight:600; margin-bottom:8px;">Узел связи</div>
-      <div class="metric-row"><span class="metric-row-label">Стабильность</span><span class="metric-row-value" id="lotsStability">—</span></div>
-      <div class="metric-row"><span class="metric-row-label">Масштаб</span><span class="metric-row-value" id="lotsMindScale">—</span></div>
-      <div class="metric-row"><span class="metric-row-label">Импульс</span><span class="metric-row-value" id="lotsPulse">—</span></div>
-      <div class="metric-row"><span class="metric-row-label">Циклы</span><span class="metric-row-value" id="lotsCycles">—</span></div>
-    </div>
-  </div>
-</div>
-
+<!-- Риск -->
 <div class="modal-bg" id="riskModalBg">
   <div class="modal">
     <button class="modal-close" id="riskClose" aria-label="Закрыть" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6L6 18M6 6l12 12"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <h2>Обнаружен риск</h2>
     <div class="sub">Модель предлагает безопасную альтернативу</div>
@@ -1790,12 +1649,11 @@
   </div>
 </div>
 
+<!-- Сброс -->
 <div class="modal-bg" id="resetModalBg">
   <div class="modal">
     <button class="modal-close" id="resetClose" aria-label="Закрыть" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6L6 18M6 6l12 12"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <h2>Сбросить контекст?</h2>
     <div class="sub" id="resetReason">Модель рекомендует сбросить проблемную ветку диалога.</div>
@@ -1806,19 +1664,18 @@
   </div>
 </div>
 
+<!-- Проект -->
 <div class="modal-bg" id="projectModalBg">
   <div class="modal">
     <button class="modal-close" id="projectModalClose" aria-label="Закрыть" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6L6 18M6 6l12 12"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <h2 id="projectModalTitle">Новый проект</h2>
     <label for="projectNameInput">Название</label>
-    <input type="text" id="projectNameInput" placeholder="Например, Monolog" maxlength="40" />
+    <input type="text" id="projectNameInput" placeholder="Например, Разработка Monolog" maxlength="60" />
     <label>Цвет</label>
     <div class="color-picker" id="projectColorPicker"></div>
-    <label for="projectGoalInput">Цель (для паспорта проекта)</label>
+    <label for="projectGoalInput">Цель (для паспорта)</label>
     <input type="text" id="projectGoalInput" placeholder="Кратко: зачем этот проект" maxlength="200" />
     <div class="row">
       <button class="action ghost" id="projectCancel" type="button">Отмена</button>
@@ -1830,12 +1687,11 @@
   </div>
 </div>
 
+<!-- Настройки -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <button class="modal-close" id="modalClose" aria-label="Закрыть" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M18 6L6 18M6 6l12 12"/>
-      </svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
     </button>
     <h2>Настройки</h2>
 
@@ -1895,39 +1751,29 @@
   </div>
 </div>
 
+<!-- Онбординг -->
 <div class="onboarding" id="onboarding">
   <div class="onboarding-inner">
     <div class="onboarding-orb"></div>
-    <h1>AI Monolog</h1>
-    <div class="desc">Когнитивный партнёр. Помогает видеть структуру, скрытые возможности и истинные цели.</div>
+    <h1>Monolog</h1>
+    <div class="desc">Когнитивный партнёр. Помогает видеть структуру и принимать устойчивые решения.</div>
 
-    <div>
-      <label for="obName">Как тебя зовут?</label>
-      <input type="text" id="obName" placeholder="Имя" maxlength="40" />
+    <div class="features">
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        <span>Два режима мышления: Аналитик и Стратег</span>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+        <span>Метрики устойчивости решения в реальном времени</span>
+      </div>
+      <div class="feature">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
+        <span>Документы и статьи сохраняются в проекте</span>
+      </div>
     </div>
 
-    <div>
-      <label for="obKey">Ключ API (опционально)</label>
-      <input type="password" id="obKey" placeholder="Вставьте ключ" autocomplete="off" />
-    </div>
-
-    <div class="row">
-      <button class="ghost" id="obSkip" type="button">Пропустить</button>
-      <button class="primary" id="obStart" type="button">Начать</button>
-    </div>
-  </div>
-</div>
-
-<div class="tutorial" id="tutorial">
-  <div class="tutorial-box">
-    <div class="tutorial-icon" id="tutorialIcon"></div>
-    <h3 id="tutorialTitle">Сфера</h3>
-    <p id="tutorialText">Это ваш режим мышления. Долгий тап — переключить между Аналитиком и Стратегом.</p>
-    <div class="tutorial-dots" id="tutorialDots"></div>
-    <div class="tutorial-actions">
-      <button class="ghost" id="tutorialSkip" type="button">Пропустить</button>
-      <button class="primary" id="tutorialNext" type="button">Далее</button>
-    </div>
+    <button class="primary" id="obStart" type="button">Начать работу</button>
   </div>
 </div>
 
@@ -1943,7 +1789,7 @@
   const LS_AUTHOR = "monolog_author_key";
   const LS_PROVIDER = "monolog_provider";
   const LS_ONBOARDED = "monolog_onboarded";
-  const LS_TUTORIAL = "monolog_tutorial_shown";
+  const LS_DEMO_SHOWN = "monolog_demo_shown";
   const LS_FALLBACK = "monolog_state_fallback";
   const MAX_FILE_SIZE = 5 * 1024 * 1024;
   const MAX_TEXT_CHARS = 3000;
@@ -1981,27 +1827,11 @@
     { key: "связь", label: "Связь" },
   ];
 
-  const TUTORIAL_STEPS = [
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
-      title: "Сфера режима",
-      text: "Долгий тап на сфере переключает Аналитика и Стратега. Обычный тап — профиль.",
-    },
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>',
-      title: "Метрики",
-      text: "Число в шапке — индекс стабильности решения. Тап раскрывает подробности.",
-    },
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
-      title: "Проекты",
-      text: "Создавайте проекты под разные задачи. Долгий тап на кружке — меню.",
-    },
-    {
-      icon: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>',
-      title: "Артефакты",
-      text: "Документы, планы и отчёты сохраняются как артефакты проекта. Их можно править и скачивать.",
-    },
+  const DEMO_SUGGESTIONS = [
+    { icon: "◆", text: "Помоги выбрать: быстро запустить MVP или доделать архитектуру?" },
+    { icon: "◆", text: "Напиши статью про когнитивные искажения" },
+    { icon: "◆", text: "Разбери мою задачу: хочу запустить продукт за месяц" },
+    { icon: "◆", text: "Помоги решить: стоит ли менять подход к проекту" },
   ];
 
   let _providersCache = PROVIDERS_FALLBACK;
@@ -2021,7 +1851,6 @@
     editingProjectId: null,
     editingProjectColor: PROJECT_COLORS[0],
     editorContext: null,
-    tutorialStep: 0,
     get project() {
       return this.projects.find(function (p) { return p.id === state.currentProjectId; });
     },
@@ -2127,25 +1956,6 @@
     } else if (state.projects.length) {
       state.currentProjectId = state.projects[0].id;
     } else {
-      try {
-        const old = localStorage.getItem(LS_FALLBACK);
-        if (old) {
-          const oldData = JSON.parse(old);
-          const migrated = createProjectObj("Мой проект", PROJECT_COLORS[0]);
-          migrated.history = oldData.history || [];
-          migrated.passport = oldData.passport || null;
-          migrated.cognitive = oldData.cognitive || null;
-          migrated.artifacts = oldData.artifacts || [];
-          migrated.sessionCount = oldData.sessionCount || 0;
-          migrated.lastMetrics = oldData.lastMetrics || null;
-          await dbPut(STORE_PROJECTS, migrated);
-          state.projects.push(migrated);
-          state.currentProjectId = migrated.id;
-          await dbSetMeta("currentProjectId", migrated.id);
-          localStorage.removeItem(LS_FALLBACK);
-          return;
-        }
-      } catch (e) {}
       const fresh = createProjectObj("Мой проект", PROJECT_COLORS[0]);
       await dbPut(STORE_PROJECTS, fresh);
       state.projects.push(fresh);
@@ -2239,49 +2049,10 @@
     return parts.map(function (s) { return (s[0] || "").toUpperCase(); }).join("") || "?";
   }
 
-  function renderMsgMetrics(metrics) {
-    if (!metrics) return null;
-    const row = document.createElement("div");
-    row.className = "msg-metrics";
-
-    function add(cls, text) {
-      const el = document.createElement("span");
-      el.className = "msg-metric " + cls;
-      el.innerHTML = '<span class="dot"></span>' + escHtml(text);
-      row.appendChild(el);
-    }
-
-    const si = typeof metrics.stability_index === "number" ? metrics.stability_index : null;
-    if (si != null) {
-      const cls = si < 0.5 ? "critical" : (si < 0.75 ? "warning" : "success");
-      add(cls, "Стабильность " + si.toFixed(2));
-    }
-    if (metrics.lots_balance && metrics.lots_balance !== "+0.0") {
-      add("accent", "Лоты " + metrics.lots_balance);
-    }
-    if (metrics.social_adaptation && metrics.social_adaptation.active) {
-      const lv = metrics.social_adaptation.level || "low";
-      const cls = lv === "high" ? "critical" : (lv === "medium" ? "warning" : "accent");
-      const labels = { low: "низкая", medium: "средняя", high: "высокая" };
-      add(cls, "Соц. адаптация " + (labels[lv] || lv));
-    }
-    if (metrics.cognitive_pulse === "fast") {
-      add("warning", "Импульс быстрый");
-    }
-    if (metrics.mind_scale && (metrics.mind_scale === "strategic" || metrics.mind_scale === "systemic")) {
-      const scaleLabels = { strategic: "Стратегический", systemic: "Системный" };
-      add("accent", scaleLabels[metrics.mind_scale]);
-    }
-
-    return row.children.length ? row : null;
-  }
-
   function renderImpulseNotice(dt) {
     if (!dt || !dt.detected) return null;
-
     const wrap = document.createElement("div");
     wrap.className = "impulse-wrap";
-
     const btn = document.createElement("button");
     btn.className = "impulse-notice";
     btn.type = "button";
@@ -2292,30 +2063,20 @@
       btn.classList.toggle("open");
     });
     wrap.appendChild(btn);
-
     const detail = document.createElement("div");
     detail.className = "impulse-detail";
-
     let inner = '<div class="impulse-detail-inner">';
-    if (dt.influence) {
-      inner += '<div class="impulse-row"><strong>преобладает:</strong><span class="value">' + escHtml(dt.influence) + '</span></div>';
-    }
-    if (dt.risk) {
-      inner += '<div class="impulse-row"><strong>риск:</strong><span class="value">' + escHtml(dt.risk) + '</span></div>';
-    }
-    if (dt.hint) {
-      inner += '<div class="impulse-row">' + escHtml(dt.hint) + '</div>';
-    }
+    if (dt.influence) inner += '<div class="impulse-row"><strong>преобладает:</strong><span class="value">' + escHtml(dt.influence) + '</span></div>';
+    if (dt.risk) inner += '<div class="impulse-row"><strong>риск:</strong><span class="value">' + escHtml(dt.risk) + '</span></div>';
+    if (dt.hint) inner += '<div class="impulse-row">' + escHtml(dt.hint) + '</div>';
     if (Array.isArray(dt.steps) && dt.steps.length) {
-      inner += '<div class="impulse-steps">'
-        + '<div class="impulse-steps-title">шаги стабилизации</div>'
+      inner += '<div class="impulse-steps"><div class="impulse-steps-title">шаги стабилизации</div>'
         + dt.steps.map(function (s) { return '<span class="impulse-step">' + escHtml(s) + '</span>'; }).join("")
         + '</div>';
     }
     inner += '</div>';
     detail.innerHTML = inner;
     wrap.appendChild(detail);
-
     return wrap;
   }
 
@@ -2364,7 +2125,7 @@
     row.type = "button";
     row.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>'
       + '<div class="info"><div class="name">' + escHtml(artifact.name || "Артефакт") + '</div>'
-      + '<div class="meta">' + escHtml(artifact.type || "документ") + ' · ' + escHtml(artifact.version || "v1.0") + ' · ' + escHtml(artifact.stage || "hypothesis") + '</div></div>'
+      + '<div class="meta">' + escHtml(artifact.type || "документ") + ' · ' + escHtml(artifact.version || "v1.0") + '</div></div>'
       + '<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>';
     row.addEventListener("click", function () { openArtifactInEditor(artifact.id); });
     return row;
@@ -2373,7 +2134,6 @@
   function renderOpenEditorButton(artifactStatus, replyText) {
     if (!artifactStatus || !artifactStatus.ready) return null;
     if (!state.authorKey && artifactStatus.type === "blog_post") return null;
-
     const btn = document.createElement("button");
     btn.className = "open-editor-btn";
     btn.type = "button";
@@ -2390,25 +2150,39 @@
     return btn;
   }
 
+  function renderDemo() {
+    const chat = document.getElementById("chat");
+    if (chat.children.length > 0) return;
+    const block = document.createElement("div");
+    block.className = "demo-block";
+    block.innerHTML = '<div class="demo-title">Попробуй:</div>'
+      + DEMO_SUGGESTIONS.map(function (s) {
+        return '<button class="demo-suggestion" type="button" data-text="' + escHtml(s.text) + '">'
+          + '<span class="label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' + escHtml(s.text) + '</span>'
+          + '</button>';
+      }).join("");
+    chat.appendChild(block);
+    block.querySelectorAll(".demo-suggestion").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        const text = btn.dataset.text;
+        const input = document.getElementById("input");
+        input.value = text;
+        input.focus();
+      });
+    });
+  }
+
   function addRow(role, content, metrics, options) {
     options = options || {};
     const chat = document.getElementById("chat");
     if (!chat) return null;
-
     const row = document.createElement("div");
     row.className = "row " + role;
-
     const bubble = document.createElement("div");
     bubble.className = "bubble";
 
     if (role === "agent") {
-      if (metrics) {
-        const mm = renderMsgMetrics(metrics);
-        if (mm) row.appendChild(mm);
-      }
-
       bubble.innerHTML = renderMarkdown(content);
-
       if (metrics && metrics.value_choices && metrics.value_choices.length) {
         const cards = renderDecisionCards(metrics.value_choices);
         if (cards) bubble.appendChild(cards);
@@ -2427,10 +2201,8 @@
         const notice = renderImpulseNotice(metrics.dominant_trait);
         if (notice) bubble.appendChild(notice);
       }
-
       const actions = document.createElement("div");
       actions.className = "msg-actions";
-
       const copyBtn = document.createElement("button");
       copyBtn.className = "msg-action";
       copyBtn.type = "button";
@@ -2441,7 +2213,6 @@
         toast("Скопировано");
       });
       actions.appendChild(copyBtn);
-
       const impBtn = document.createElement("button");
       impBtn.className = "msg-action";
       impBtn.type = "button";
@@ -2459,9 +2230,7 @@
         persistCurrentProject();
       });
       actions.appendChild(impBtn);
-
       bubble.appendChild(actions);
-
       bubble.querySelectorAll("pre").forEach(function (pre) {
         const btn = document.createElement("button");
         btn.className = "copy-code-btn";
@@ -2479,117 +2248,94 @@
     } else {
       bubble.textContent = content;
     }
-
     row.appendChild(bubble);
     chat.appendChild(row);
     chat.scrollTop = chat.scrollHeight;
     return { row: row, bubble: bubble };
   }
 
-  function updateChip(metrics) {
-    const chip = document.getElementById("stabilityChip");
-    const val = document.getElementById("chipValue");
-    if (!chip || !val) return;
-    const si = metrics && typeof metrics.stability_index === "number" ? metrics.stability_index : 0;
-    chip.className = "chip";
-    if (si < 0.5) chip.classList.add("critical");
-    else if (si < 0.75) chip.classList.add("warning");
-    val.textContent = si.toFixed(2);
+  function describeStability(si) {
+    if (si >= 0.85) return { meaning: "Решение устойчиво, картина полная.", action: "Можно двигаться дальше." };
+    if (si >= 0.7) return { meaning: "Решение достаточно устойчиво.", action: "Продолжайте — при необходимости уточним." };
+    if (si >= 0.5) return { meaning: "Есть нерешённые коллизии или неполная картина.", action: "Добавьте деталей или уточните цель." };
+    return { meaning: "Решение неустойчиво — есть значимые пробелы.", action: "Стоит пересмотреть задачу целиком." };
   }
 
-  function updateLotsChip(metrics) {
-    const chip = document.getElementById("lotsChip");
-    const val = document.getElementById("lotsValue");
-    const delta = document.getElementById("lotsDelta");
-    if (!chip || !val) return;
+  function updateMenu() {
+    const p = state.project;
+    if (!p) return;
 
-    const lots = (metrics && metrics.lots_balance) || "+0.0";
-    val.textContent = lots;
-    chip.classList.remove("positive", "negative");
-    const n = parseFloat(String(lots).replace(/[^\d.-]/g, ""));
-    if (!isNaN(n)) {
-      if (n > 0) chip.classList.add("positive");
-      else if (n < 0) chip.classList.add("negative");
+    // Проекты
+    const projectsDesc = document.getElementById("menuProjectsDesc");
+    if (projectsDesc) {
+      const activeCount = state.projects.filter(function (x) { return !x.archived; }).length;
+      projectsDesc.textContent = activeCount + " " + pluralize(activeCount, ["проект", "проекта", "проектов"]);
     }
 
-    const p = state.project;
-    if (p) {
-      p.lotsHistory = p.lotsHistory || [];
-      const lastLots = p.lotsHistory.length ? p.lotsHistory[p.lotsHistory.length - 1].value : 0;
-      const now = isNaN(n) ? 0 : n;
-      const diff = now - lastLots;
-      if (Math.abs(diff) > 0.001) {
-        p.lotsHistory.push({ value: now, delta: diff, at: Date.now() });
-        if (p.lotsHistory.length > 30) p.lotsHistory.shift();
-        delta.textContent = (diff > 0 ? "+" : "") + diff.toFixed(1);
-        delta.classList.remove("negative");
-        if (diff < 0) delta.classList.add("negative");
-        delta.classList.add("show");
-        setTimeout(function () { delta.classList.remove("show"); }, 1500);
+    // Артефакты
+    const artsCount = (p.artifacts || []).length;
+    const artsBadge = document.getElementById("menuArtifactsBadge");
+    const artsDesc = document.getElementById("menuArtifactsDesc");
+    if (artsBadge) {
+      if (artsCount > 0) {
+        artsBadge.classList.remove("hidden");
+        artsBadge.textContent = artsCount;
+      } else {
+        artsBadge.classList.add("hidden");
       }
     }
-  }
-
-  function updateNoise(metrics) {
-    const orb = document.getElementById("orbBtn");
-    if (!orb) return;
-    orb.classList.remove("fast-pulse");
-    if (metrics && metrics.cognitive_pulse === "fast") {
-      orb.classList.add("fast-pulse");
+    if (artsDesc) {
+      artsDesc.textContent = artsCount ? (artsCount + " " + pluralize(artsCount, ["документ", "документа", "документов"])) : "Документы и планы проекта";
     }
-  }
 
-  function updateSocialIndicator(metrics) {
-    const ind = document.getElementById("socialIndicator");
-    if (!ind) return;
-    const sa = metrics && metrics.social_adaptation;
-    if (!sa || !sa.active) {
-      ind.className = "social-indicator";
-      ind.title = "Социальная адаптация: не активна";
-      return;
+    // Паспорт
+    const passportDesc = document.getElementById("menuPassportDesc");
+    const menuPassport = document.getElementById("menuPassport");
+    if (p.passport && p.passport.goal) {
+      passportDesc.textContent = p.passport.goal.slice(0, 60);
+    } else {
+      passportDesc.textContent = "Цель, миссия, метрики";
     }
-    const level = sa.level || "low";
-    ind.className = "social-indicator active " + level;
-    const labels = { low: "низкая", medium: "средняя", high: "высокая" };
-    const reason = sa.reason ? " — " + sa.reason : "";
-    ind.title = "Социальная адаптация: " + (labels[level] || level) + reason;
-  }
+    const scale = p.lastMetrics && p.lastMetrics.mind_scale;
+    if (scale === "strategic" || scale === "systemic") {
+      menuPassport.classList.remove("hidden");
+    } else {
+      menuPassport.classList.add("hidden");
+    }
 
-  function updateConditionalUI(metrics) {
-    const scale = metrics && metrics.mind_scale;
-    const passportBtn = document.getElementById("passportBtn");
-    passportBtn.classList.toggle("hidden", !(scale === "strategic" || scale === "systemic"));
+    // Метрики
+    const metricsBadge = document.getElementById("menuMetricsBadge");
+    const metricsDesc = document.getElementById("menuMetricsDesc");
+    const m = p.lastMetrics || {};
+    const si = typeof m.stability_index === "number" ? m.stability_index : null;
+    if (metricsBadge && si != null) {
+      metricsBadge.textContent = si.toFixed(2);
+      metricsBadge.classList.remove("warning", "critical");
+      if (si < 0.5) metricsBadge.classList.add("critical");
+      else if (si < 0.75) metricsBadge.classList.add("warning");
+    }
+    if (metricsDesc && si != null) {
+      const d = describeStability(si);
+      metricsDesc.textContent = d.meaning.slice(0, 60);
+    }
 
-    const rp = metrics && metrics.reset_proposal;
-    const chip = document.getElementById("resetChip");
+    // Отчёт
+    const menuReport = document.getElementById("menuReport");
+    if (p.sessionCount >= 10) {
+      menuReport.classList.remove("hidden");
+    } else {
+      menuReport.classList.add("hidden");
+    }
+
+    // Сброс
+    const menuResetSection = document.getElementById("menuResetSection");
+    const resetSection = document.getElementById("menuResetSection");
+    const rp = m.reset_proposal;
     if (rp && rp.recommended) {
-      let label = "Сбросить";
-      if (rp.reset_point) {
-        const m = String(rp.reset_point).match(/#?(\d+)/);
-        if (m) label = "Сбросить с #" + m[1];
-      }
-      document.getElementById("resetChipLabel").textContent = label;
-      chip.classList.add("show");
-      chip.dataset.reason = rp.reason || "";
-      chip.dataset.point = rp.reset_point || "";
-    } else chip.classList.remove("show");
-
-    const p = state.project;
-    const hasReport = p && p.sessionCount >= 10;
-    document.getElementById("reportIconBtn").classList.toggle("hidden", !hasReport);
-
-    const ri = metrics && metrics.risk_intercept;
-    if (ri && ri.active) showRiskModal(ri);
-  }
-
-  function showRiskModal(ri) {
-    document.getElementById("riskLevel").textContent = (ri.risk_level === "critical" ? "Критический риск" : "Умеренный риск");
-    document.getElementById("riskLevel").className = "risk-level " + (ri.risk_level === "critical" ? "critical" : "warning");
-    document.getElementById("riskAction").textContent = ri.requested_action || "—";
-    document.getElementById("riskAlternative").textContent = ri.safe_alternative || "—";
-    const el = document.getElementById("riskModalBg");
-    el.classList.add("open");
-    el.dataset.alt = ri.safe_alternative || "";
+      resetSection.classList.remove("hidden");
+    } else {
+      resetSection.classList.add("hidden");
+    }
   }
 
   function updateMetrics(metrics) {
@@ -2636,44 +2382,134 @@
       m.artifacts.forEach(function (a) {
         if (a && a.id && !seen.has(a.id)) { p.artifacts.push(a); seen.add(a.id); }
       });
-      updateArtifactsSection();
     }
     persistCurrentProject();
 
+    // Обновление карточек метрик
     const si = typeof m.stability_index === "number" ? m.stability_index : 0;
-    document.getElementById("ringValue").textContent = si.toFixed(2);
-    const ring = document.getElementById("ringFill");
-    const circ = 2 * Math.PI * 52;
-    ring.style.strokeDasharray = circ;
-    ring.style.strokeDashoffset = circ * (1 - si);
-    ring.className = "ring-fill";
-    if (si < 0.5) ring.classList.add("critical");
-    else if (si < 0.75) ring.classList.add("warning");
-
-    document.getElementById("accStabilitySummary").textContent = si.toFixed(2);
-    renderSparkline();
+    const d = describeStability(si);
+    document.getElementById("mcStabilityValue").textContent = si.toFixed(2);
+    document.getElementById("mcStabilityBar").style.width = (si * 100) + "%";
+    document.getElementById("mcStabilityBar").className = "metric-card-bar-fill";
+    if (si < 0.5) document.getElementById("mcStabilityBar").classList.add("critical");
+    else if (si < 0.75) document.getElementById("mcStabilityBar").classList.add("warning");
+    document.getElementById("mcStabilityDesc").textContent = d.meaning;
+    document.getElementById("mcStabilityMeaning").textContent = d.meaning;
+    document.getElementById("mcStabilityAction").textContent = d.action;
 
     const scaleLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
-    document.getElementById("cMindScale").textContent = scaleLabels[m.mind_scale] || "—";
-    document.getElementById("cCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
-    document.getElementById("cCollisions").textContent = m.collisions_resolved || "—";
-    document.getElementById("cPulse").textContent = m.cognitive_pulse || "—";
+    const scaleDescriptions = {
+      micro: "Задача на 1-2 параметра. Ответ краткий.",
+      tactical: "Задача на 3-5 параметров. Удерживайте фокус на цели.",
+      strategic: "Долгосрочная задача с миссией и рисками. Откройте паспорт.",
+      systemic: "Задача влияет на смежные системы. Учитывайте последствия.",
+    };
+    const scale = m.mind_scale || "micro";
+    document.getElementById("mcMindValue").textContent = scaleLabels[scale] || "—";
+    document.getElementById("mcMindDesc").textContent = scaleDescriptions[scale] || "—";
+    document.getElementById("mcMindMeaning").textContent = scaleDescriptions[scale] || "—";
+    document.getElementById("mcMindAction").textContent = scale === "strategic" || scale === "systemic" ? "Откройте паспорт проекта." : "Продолжайте работу.";
+
+    const lots = m.lots_balance || "+0.0";
+    document.getElementById("mcLotsValue").textContent = lots;
+    const n = parseFloat(String(lots).replace(/[^\d.-]/g, ""));
+    let lotsMeaning = "Пока нет накоплений.";
+    let lotsAction = "Продолжайте — баланс начнёт расти.";
+    if (!isNaN(n) && n > 0) {
+      lotsMeaning = "Есть полезные выводы и пройденные препятствия.";
+      lotsAction = "Продолжайте в том же духе.";
+    } else if (!isNaN(n) && n < 0) {
+      lotsMeaning = "Накопились штрафы — были тупики или ошибки.";
+      lotsAction = "Пересмотрите последние решения.";
+    }
+    document.getElementById("mcLotsDesc").textContent = lotsMeaning;
+    document.getElementById("mcLotsMeaning").textContent = lotsMeaning;
+    document.getElementById("mcLotsAction").textContent = lotsAction;
+
     const hc = typeof m.human_contribution === "number" ? m.human_contribution : null;
-    document.getElementById("cHuman").textContent = hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—";
-    document.getElementById("accThinkingSummary").textContent = (scaleLabels[m.mind_scale] || "—");
+    document.getElementById("mcHumanValue").textContent = hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—";
+    document.getElementById("mcHumanBar").style.width = (hc != null ? hc * 100 : 0) + "%";
+    let humanMeaning = "—", humanAction = "—";
+    if (hc != null) {
+      if (hc >= 0.7) { humanMeaning = "Ваш вклад высокий (" + Math.round(hc * 100) + "%)."; humanAction = "Это ваше решение."; }
+      else if (hc >= 0.4) { humanMeaning = "Баланс между вами и алгоритмом."; humanAction = "Работаете вместе."; }
+      else { humanMeaning = "Алгоритм внёс больше (" + Math.round((1 - hc) * 100) + "%)."; humanAction = "Уточните — может, чего-то не хватает."; }
+    }
+    document.getElementById("mcHumanDesc").textContent = humanMeaning;
+    document.getElementById("mcHumanMeaning").textContent = humanMeaning;
+    document.getElementById("mcHumanAction").textContent = humanAction;
 
-    document.getElementById("cSessionCount").textContent = p.sessionCount || 0;
-    document.getElementById("cSessionTime").textContent = fmtDuration(Date.now() - state.sessionStart);
-    document.getElementById("cKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
-    document.getElementById("cProvider").textContent = (_providersCache.find(function (pr) { return pr.id === state.lastProvider; }) || {}).name || "—";
-    document.getElementById("cProtocol").textContent = m.protocol_integrity === false ? "сбой" : "соблюдён";
-    document.getElementById("accSessionSummary").textContent = (p.sessionCount || 0) + " запросов";
+    const pulse = m.cognitive_pulse || "stable";
+    const pulseLabels = { slow: "Спокойный", stable: "Ровный", fast: "Быстрый" };
+    const pulseDescriptions = {
+      slow: "Медленный темп, обдумывание.",
+      stable: "Ровный темп, без спешки.",
+      fast: "Быстрый темп, много деталей.",
+    };
+    document.getElementById("mcPulseValue").textContent = pulseLabels[pulse] || "—";
+    document.getElementById("mcPulseDesc").textContent = pulseDescriptions[pulse] || "—";
+    document.getElementById("mcPulseMeaning").textContent = pulseDescriptions[pulse] || "—";
+    document.getElementById("mcPulseAction").textContent = pulse === "fast" ? "Проверьте, все ли детали учтены." : "Продолжайте.";
 
-    updateChip(m);
-    updateLotsChip(m);
-    updateNoise(m);
-    updateSocialIndicator(m);
-    updateConditionalUI(m);
+    const sa = m.social_adaptation || {};
+    const socialLabels = { inactive: "Не активна", low: "Низкая", medium: "Средняя", high: "Высокая" };
+    document.getElementById("mcSocialValue").textContent = socialLabels[sa.level || "inactive"] || "—";
+    document.getElementById("mcSocialDesc").textContent = sa.reason || (sa.active ? "Учитывается контекст публикации." : "Ответ личный, без учёта окружающих.");
+    document.getElementById("mcSocialMeaning").textContent = sa.active ? "Учитывается реакция окружающих." : "Ответ личный, без учёта окружающих.";
+    document.getElementById("mcSocialAction").textContent = sa.active ? "Перечитайте перед отправкой." : "Ничего не нужно.";
+
+    // Лоты история
+    const lotsHist = document.getElementById("mcLotsHistory");
+    lotsHist.innerHTML = "";
+    const hist = (p.lotsHistory || []).slice(-5).reverse();
+    if (!hist.length) {
+      lotsHist.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;">Пока нет начислений.</div>';
+    } else {
+      hist.forEach(function (h) {
+        const row = document.createElement("div");
+        row.style.cssText = "display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px;";
+        const deltaColor = h.delta > 0 ? "var(--success)" : "var(--critical)";
+        const time = new Date(h.at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
+        row.innerHTML = '<span style="color:var(--muted);">' + time + '</span>'
+          + '<span style="color:' + deltaColor + ';font-weight:500;">' + (h.delta > 0 ? "+" : "") + h.delta.toFixed(1) + '</span>';
+        lotsHist.appendChild(row);
+      });
+    }
+
+    // Сессия
+    document.getElementById("mcSessionCount").textContent = p.sessionCount || 0;
+    document.getElementById("mcSessionTime").textContent = fmtDuration(Date.now() - state.sessionStart);
+    document.getElementById("mcKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
+    document.getElementById("mcProvider").textContent = (_providersCache.find(function (pr) { return pr.id === state.lastProvider; }) || {}).name || "—";
+    document.getElementById("mcSessionValue").textContent = (p.sessionCount || 0) + " запросов";
+    document.getElementById("mcSessionDesc").textContent = "Активная сессия";
+
+    // Спакрлайн
+    renderSparkline();
+
+    // Узел связи
+    renderNodeConnection();
+
+    // Меню
+    updateMenu();
+
+    // Сброс
+    const rp = m.reset_proposal;
+    if (rp && rp.recommended) {
+      document.getElementById("menuResetSection").classList.remove("hidden");
+      document.getElementById("menuResetDesc").textContent = rp.reason || "Рекомендовано моделью";
+    } else {
+      document.getElementById("menuResetSection").classList.add("hidden");
+    }
+
+    // Риск
+    const ri = m.risk_intercept;
+    if (ri && ri.active) showRiskModal(ri);
+
+    // Орб
+    const orb = document.getElementById("orbBtn");
+    orb.classList.remove("fast-pulse");
+    if (m.cognitive_pulse === "fast") orb.classList.add("fast-pulse");
   }
 
   function renderSparkline() {
@@ -2684,15 +2520,63 @@
     for (let i = 0; i < 10; i++) {
       const bar = document.createElement("div");
       bar.className = "spark-bar";
+      bar.style.cssText = "width:10px;background:var(--accent);border-radius:3px;min-height:4px;opacity:0.75;transition:height 0.3s;";
       const v = hist[i];
-      if (v == null) { bar.classList.add("empty"); bar.style.height = "6px"; }
-      else {
-        if (v < 0.5) bar.classList.add("critical");
-        else if (v < 0.75) bar.classList.add("warning");
+      if (v == null) {
+        bar.style.background = "var(--border)";
+        bar.style.opacity = "0.5";
+        bar.style.height = "6px";
+      } else {
+        if (v < 0.5) bar.style.background = "var(--critical)";
+        else if (v < 0.75) bar.style.background = "var(--warning)";
         bar.style.height = (4 + v * 32) + "px";
       }
       box.appendChild(bar);
     }
+  }
+
+  function renderNodeConnection() {
+    const wrap = document.getElementById("nodeWrap");
+    if (!wrap) return;
+    const p = state.project;
+    const m = (p && p.lastMetrics) || {};
+    const si = typeof m.stability_index === "number" ? m.stability_index : 0;
+
+    const size = 220;
+    const cx = size / 2;
+    const cy = size / 2;
+
+    const points = [
+      { x: cx, y: 30, label: "Цель", active: !!p.passport && !!p.passport.goal },
+      { x: size - 30, y: cy, label: "Метрики", active: si > 0.7 },
+      { x: cx, y: size - 30, label: "Действия", active: p.sessionCount > 0 },
+      { x: 30, y: cy, label: "Знания", active: p.skills && Object.keys(p.skills).length > 0 },
+    ];
+
+    let svg = '<svg class="node-svg" viewBox="0 0 ' + size + ' ' + size + '">';
+
+    // Кольца
+    [30, 55, 80].forEach(function (r) {
+      svg += '<circle class="node-ring" cx="' + cx + '" cy="' + cy + '" r="' + r + '"/>';
+    });
+
+    // Лучи
+    points.forEach(function (pt) {
+      svg += '<line class="node-spoke' + (pt.active ? " active" : "") + '" x1="' + cx + '" y1="' + cy + '" x2="' + pt.x + '" y2="' + pt.y + '"/>';
+    });
+
+    // Центр
+    svg += '<circle class="node-core-glow" cx="' + cx + '" cy="' + cy + '" r="' + (10 + si * 12) + '"/>';
+    svg += '<circle class="node-core" cx="' + cx + '" cy="' + cy + '" r="6"/>';
+
+    // Точки
+    points.forEach(function (pt) {
+      svg += '<circle class="node-dot' + (pt.active ? " active" : "") + '" cx="' + pt.x + '" cy="' + pt.y + '" r="4"/>';
+      svg += '<text class="node-label" x="' + pt.x + '" y="' + (pt.y + (pt.y < cy ? -8 : 14)) + '" text-anchor="middle">' + pt.label + '</text>';
+    });
+
+    svg += '</svg>';
+    wrap.innerHTML = svg;
   }
 
   function fmtDuration(ms) {
@@ -2701,6 +2585,13 @@
     if (h > 0) return h + " ч " + m + " мин";
     if (m > 0) return m + " мин";
     return s + " с";
+  }
+
+  function pluralize(n, forms) {
+    const mod10 = n % 10, mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return forms[0];
+    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1];
+    return forms[2];
   }
 
   function fileIcon(type) {
@@ -2794,6 +2685,10 @@
     if (!p) return;
     if (!text && state.attachments.length === 0) return;
 
+    // Удаляем демо-блок при первом сообщении
+    const demoBlock = document.querySelector(".demo-block");
+    if (demoBlock) demoBlock.remove();
+
     const userDisplay = text || ("[Вложение: " + state.attachments.map(function (a) { return a.name; }).join(", ") + "]");
     input.value = "";
     input.style.height = "auto";
@@ -2864,534 +2759,52 @@
   }
   function closeAllSheets() {
     document.getElementById("sheetBg").classList.remove("open");
-    document.querySelectorAll(".sheet").forEach(function (s) { s.classList.remove("open"); });
+    document.querySelectorAll(".sheet, .menu-sheet").forEach(function (s) { s.classList.remove("open"); });
   }
 
-  function updateArtifactsSection() {
-    const p = state.project;
-    const sec = document.getElementById("artifactsSection");
-    if (!p || !p.artifacts || p.artifacts.length < 3) {
-      sec.classList.remove("show");
-      return;
-    }
-    sec.classList.add("show");
-    document.getElementById("artifactsSub").textContent = p.artifacts.length + " " + pluralize(p.artifacts.length, ["документ", "документа", "документов"]);
-  }
-
-  function pluralize(n, forms) {
-    const mod10 = n % 10, mod100 = n % 100;
-    if (mod10 === 1 && mod100 !== 11) return forms[0];
-    if (mod10 >= 2 && mod10 <= 4 && (mod100 < 10 || mod100 >= 20)) return forms[1];
-    return forms[2];
-  }
-
-  function renderArtifactsList() {
-    const box = document.getElementById("artifactsList");
-    const p = state.project;
+  // Проекты в sheet
+  function renderProjectsList() {
+    const box = document.getElementById("projectsList");
     box.innerHTML = "";
-    if (!p || !p.artifacts || !p.artifacts.length) {
-      box.innerHTML = '<div class="empty-note">Пока нет артефактов. Они появятся автоматически, когда в диалоге создаётся документ, план или отчёт.</div>';
+    const active = state.projects.filter(function (p) { return !p.archived; });
+    if (!active.length) {
+      box.innerHTML = '<div class="empty-note">Пока нет проектов. Создайте первый.</div>';
       return;
     }
-    p.artifacts.forEach(function (a) {
+    active.forEach(function (p) {
       const item = document.createElement("div");
       item.className = "artifact-item";
-      const stage = a.stage || "hypothesis";
-      const stageLabels = { hypothesis: "Гипотеза", prototype: "Прототип", working: "Рабочая", finalized: "Финализировано" };
+      const isActive = p.id === state.currentProjectId;
+      const count = p.history ? p.history.length : 0;
       item.innerHTML = '<div class="artifact-item-head">'
-        + '<span class="artifact-item-name">' + escHtml(a.name || "Артефакт") + '</span>'
-        + '<span class="artifact-item-stage ' + stage + '">' + (stageLabels[stage] || stage) + '</span>'
+        + '<span class="artifact-item-name" style="display:flex;align-items:center;gap:8px;">'
+        + '<span style="display:inline-block;width:12px;height:12px;border-radius:50%;background:' + escHtml(p.color || "#888") + ';"></span>'
+        + escHtml(p.name)
+        + (isActive ? '<span style="font-size:10px;color:var(--accent);font-weight:600;">· текущий</span>' : '')
+        + '</span>'
         + '</div>'
-        + '<div class="artifact-item-meta"><span>' + escHtml(a.type || "документ") + '</span><span>' + escHtml(a.version || "v1.0") + '</span><span>' + escHtml(a.format || "markdown") + '</span></div>';
-      item.addEventListener("click", function () { openArtifactInEditor(a.id); });
-      box.appendChild(item);
-    });
-  }
-
-  function openEditor(context) {
-    state.editorContext = context || {};
-    const name = context.name || "Документ";
-    const body = context.body || "";
-    const tags = context.tags || [];
-
-    document.getElementById("editorName").value = name;
-    document.getElementById("editorBody").value = body;
-    document.getElementById("editorTags").value = tags.join(", ");
-    document.getElementById("editorStatus").textContent = "";
-
-    const isBlog = context.type === "blog_post";
-    document.getElementById("editorTitle").textContent = isBlog ? "Редактор статьи" : "Редактор документа";
-    document.getElementById("editorSub").textContent = isBlog
-      ? "Правьте текст, затем опубликуйте в блог"
-      : "Правьте текст, затем сохраните или скачайте";
-    document.getElementById("editorTagsField").style.display = isBlog ? "block" : "none";
-    document.getElementById("editorPublishRow").style.display = "flex";
-
-    openSheet("editorSheet");
-  }
-
-  function openArtifactInEditor(artifactId) {
-    const p = state.project;
-    if (!p || !p.artifacts) return;
-    const a = p.artifacts.find(function (x) { return x.id === artifactId; });
-    if (!a) { toast("Артефакт не найден"); return; }
-    openEditor({
-      type: a.type === "blog_post" ? "blog_post" : "document",
-      artifactId: a.id,
-      name: a.name || "Документ",
-      body: a.content || "",
-      tags: a.tags || [],
-    });
-  }
-
-  function downloadEditorFile() {
-    const name = (document.getElementById("editorName").value || "document").trim();
-    const body = document.getElementById("editorBody").value || "";
-    const ctx = state.editorContext || {};
-    const safeName = name.replace(/[^\w\-а-яА-Я]+/gi, "_") || "document";
-
-    if (ctx.type === "document" || ctx.type === "blog_post") {
-      fetch(API_BASE + "/export/docx", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title: name, body: body }),
-      }).then(function (r) {
-        if (!r.ok) throw new Error("HTTP " + r.status);
-        return r.blob();
-      }).then(function (blob) {
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = safeName + ".docx";
-        a.click();
-        URL.revokeObjectURL(a.href);
-        toast("Word скачан");
-      }).catch(function (e) {
-        const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = safeName + ".md";
-        a.click();
-        URL.revokeObjectURL(a.href);
-        toast("Word недоступен, скачан Markdown");
-      });
-    } else {
-      const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = safeName + ".md";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
-  }
-
-  async function saveEditorToProject() {
-    const name = (document.getElementById("editorName").value || "").trim();
-    const body = (document.getElementById("editorBody").value || "").trim();
-    const status = document.getElementById("editorStatus");
-    if (!name || !body) { status.textContent = "Нужны название и текст"; return; }
-
-    const p = state.project;
-    if (!p) return;
-
-    p.artifacts = p.artifacts || [];
-    const ctx = state.editorContext || {};
-    if (ctx.artifactId) {
-      const existing = p.artifacts.find(function (a) { return a.id === ctx.artifactId; });
-      if (existing) {
-        existing.name = name;
-        existing.content = body;
-        existing.version = bumpVersion(existing.version || "v1.0");
-      }
-    } else {
-      const id = "art_" + Date.now();
-      p.artifacts.push({
-        id: id,
-        name: name,
-        type: "document",
-        format: "markdown",
-        stage: "working",
-        version: "v1.0",
-        content: body,
-        comment: "Создан вручную",
-      });
-    }
-    await persistCurrentProject();
-    updateArtifactsSection();
-    status.textContent = "Сохранено в проект";
-    toast("Сохранено");
-    setTimeout(function () { closeAllSheets(); }, 700);
-  }
-
-  function bumpVersion(v) {
-    const m = String(v).match(/v(\d+)\.(\d+)/);
-    if (!m) return "v1.1";
-    return "v" + m[1] + "." + (parseInt(m[2], 10) + 1);
-  }
-
-  async function publishEditorToBlog() {
-    const title = (document.getElementById("editorName").value || "").trim();
-    const body = (document.getElementById("editorBody").value || "").trim();
-    const tagsRaw = (document.getElementById("editorTags").value || "").trim();
-    const status = document.getElementById("editorStatus");
-
-    if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
-    if (!state.authorKey) { status.textContent = "Введи ключ автора в настройках"; return; }
-
-    status.textContent = "Публикую…";
-    const tags = tagsRaw ? tagsRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean) : [];
-    try {
-      const r = await fetch(API_BASE + "/blog/publish", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
-        body: JSON.stringify({ title: title, body: body, tags: tags, author: state.profile.userName || "Эльвира" }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
-      status.textContent = "Опубликовано в блог";
-      toast("Опубликовано");
-      setTimeout(function () { closeAllSheets(); }, 800);
-    } catch (e) {
-      status.textContent = "Ошибка: " + e.message;
-    }
-  }
-
-  function switchBlogTab(tab) {
-    document.querySelectorAll(".blog-tab").forEach(function (t) {
-      t.classList.toggle("active", t.dataset.tab === tab);
-    });
-    document.getElementById("blogListPane").style.display = tab === "list" ? "block" : "none";
-    document.getElementById("blogNewPane").style.display = tab === "new" ? "block" : "none";
-  }
-
-  async function loadBlogList() {
-    const box = document.getElementById("blogList");
-    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
-    try {
-      const r = await fetch(API_BASE + "/blog");
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const data = await r.json();
-      const posts = data.posts || [];
-      document.getElementById("blogSub").textContent = posts.length ? (posts.length + " " + pluralize(posts.length, ["статья", "статьи", "статей"])) : "Пока нет статей";
-      if (!posts.length) {
-        box.innerHTML = '<div class="empty-note">Пока нет статей. Открой вкладку «Новая статья».</div>';
-        return;
-      }
-      box.innerHTML = "";
-      posts.forEach(function (p) {
-        const item = document.createElement("div");
-        item.className = "blog-post-item";
-        item.innerHTML = '<div class="blog-post-title">' + escHtml(p.title || "Без названия") + '</div>'
-          + '<div class="blog-post-meta">'
-          + '<span>' + escHtml(p.author || "Эльвира") + '</span>'
-          + '<span>' + fmtBlogDate(p.created_at) + '</span>'
-          + '</div>'
-          + (p.preview ? '<div class="blog-post-preview">' + escHtml(p.preview) + '…</div>' : '')
-          + (p.tags && p.tags.length ? '<div class="blog-post-tags">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>' : '');
-        item.addEventListener("click", function () { openBlogView(p.id); });
-        box.appendChild(item);
-      });
-    } catch (e) {
-      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
-    }
-  }
-
-  function fmtBlogDate(iso) {
-    if (!iso) return "";
-    try {
-      const d = new Date(iso);
-      return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
-    } catch (e) { return iso; }
-  }
-
-  async function openBlogView(id) {
-    const box = document.getElementById("blogViewContent");
-    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
-    openSheet("blogViewSheet");
-    try {
-      const r = await fetch(API_BASE + "/blog/" + encodeURIComponent(id));
-      if (!r.ok) throw new Error("HTTP " + r.status);
-      const p = await r.json();
-      let html = '<div class="blog-view-title">' + escHtml(p.title || "Без названия") + '</div>';
-      html += '<div class="blog-view-meta"><span>' + escHtml(p.author || "Эльвира") + '</span><span>' + fmtBlogDate(p.created_at) + '</span>'
-        + (p.updated_at && p.updated_at !== p.created_at ? '<span>обновлено ' + fmtBlogDate(p.updated_at) + '</span>' : '') + '</div>';
-      if (p.tags && p.tags.length) {
-        html += '<div class="blog-post-tags" style="margin-bottom:16px;">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>';
-      }
-      html += '<div class="blog-view-body">' + renderMarkdown(p.body || "") + '</div>';
-      box.innerHTML = html;
-    } catch (e) {
-      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
-    }
-  }
-
-  function renderSomatic(somatic) {
-    if (!somatic || typeof somatic !== "object") return "";
-    const energy = typeof somatic.energy === "number" ? somatic.energy : null;
-    const tension = typeof somatic.tension === "number" ? somatic.tension : null;
-    const focus = typeof somatic.focus === "number" ? somatic.focus : null;
-    const mood = somatic.mood || null;
-    const note = somatic.note || null;
-
-    function describe(value, axis) {
-      if (value == null) return "—";
-      const map = {
-        energy: value < 0.3 ? "спокойный темп" : (value < 0.6 ? "ровный" : "активный"),
-        tension: value < 0.3 ? "расслабленный" : (value < 0.6 ? "ровный" : "сдержанный"),
-        focus: value < 0.3 ? "мягкий" : (value < 0.6 ? "устойчивый" : "собранный"),
-      };
-      return map[axis] || "—";
-    }
-
-    let html = "";
-    if (energy != null) html += '<div class="somatic-item"><span class="somatic-label">Темп</span><span class="somatic-value">' + describe(energy, "energy") + '</span></div>';
-    if (tension != null) html += '<div class="somatic-item"><span class="somatic-label">Тон</span><span class="somatic-value">' + describe(tension, "tension") + '</span></div>';
-    if (focus != null) html += '<div class="somatic-item"><span class="somatic-label">Фокус</span><span class="somatic-value">' + describe(focus, "focus") + '</span></div>';
-    if (mood) html += '<div class="somatic-item"><span class="somatic-label">Настроение</span><span class="somatic-value">' + escHtml(mood) + '</span></div>';
-    if (note) html += '<div class="somatic-note">' + escHtml(note) + '</div>';
-    return html;
-  }
-
-  function renderProfile() {
-    const box = document.getElementById("profileContent");
-    const p = state.project;
-    const c = p && p.cognitive;
-
-    let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта пользователя</div>';
-
-    if (c && c.somatic) {
-      const somaticHtml = renderSomatic(c.somatic);
-      if (somaticHtml) {
-        html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:0 0 8px;font-weight:600;">Состояние</div>';
-        html += '<div>' + somaticHtml + '</div>';
-      }
-    }
-
-    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Развивающиеся навыки</div>';
-    const skills = p && p.skills ? Object.entries(p.skills).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8) : [];
-    if (!skills.length) {
-      html += '<div class="empty-note">Пока нет данных. Навыки появятся, когда модель их определит.</div>';
-    } else {
-      html += '<div>';
-      const maxCount = Math.max.apply(null, skills.map(function (s) { return s[1]; }));
-      skills.forEach(function (s) {
-        const pct = Math.round((s[1] / maxCount) * 100);
-        html += '<div class="skill-row">'
-          + '<span class="skill-name">' + escHtml(s[0]) + '</span>'
-          + '<span class="skill-bar"><span class="skill-fill" style="width:' + pct + '%;"></span></span>'
-          + '<span class="skill-percent">' + pct + '%</span>'
-          + '</div>';
-      });
-      html += '</div>';
-    }
-
-    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Ценностный компас</div>';
-    if (!c || !c.values || Object.keys(c.values).length === 0) {
-      html += '<div class="empty-note">Пока нет данных.</div>';
-    } else {
-      html += '<div class="compass-wrap">' + renderCompass(c.values) + '</div>';
-    }
-
-    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Паттерны мышления</div>';
-    if (!c || !c.patterns || c.patterns.length === 0) {
-      html += '<div class="empty-note">Пока не выявлены.</div>';
-    } else {
-      html += '<div class="tag-list">' + c.patterns.map(function (pp) { return '<span class="tag">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
-    }
-
-    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Когнитивные искажения</div>';
-    if (!c || !c.distortions || c.distortions.length === 0) {
-      html += '<div class="empty-note">Не обнаружены.</div>';
-    } else {
-      html += '<div class="tag-list">' + c.distortions.map(function (pp) { return '<span class="tag warm">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
-    }
-
-    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Наблюдения</div>';
-    if (!c || !c.insights || c.insights.length === 0) {
-      html += '<div class="empty-note">Пока нет.</div>';
-    } else {
-      html += '<div style="display:flex;flex-direction:column;gap:8px;">'
-        + c.insights.map(function (i) { return '<div style="font-size:13px;line-height:1.5;">' + escHtml(i) + '</div>'; }).join("")
+        + '<div class="artifact-item-meta"><span>' + count + ' сообщений</span>'
+        + (p.passport && p.passport.goal ? '<span>' + escHtml(p.passport.goal.slice(0, 40)) + '</span>' : '')
         + '</div>';
-    }
-
-    box.innerHTML = html;
-  }
-
-  function renderCompass(values) {
-    const size = 220, cx = size / 2, cy = size / 2, radius = 80, n = COMPASS_AXES.length;
-    function point(i, r) {
-      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
-      return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
-    }
-    let svg = '<svg class="compass-svg" viewBox="0 0 ' + size + ' ' + size + '">';
-    [1, 0.66, 0.33].forEach(function (scale) {
-      let ring = "";
-      for (let i = 0; i < n; i++) {
-        const [x, y] = point(i, radius * scale);
-        ring += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
-      }
-      ring += "Z";
-      svg += '<path class="compass-ring" d="' + ring + '"/>';
-    });
-    for (let i = 0; i < n; i++) {
-      const [x, y] = point(i, radius);
-      svg += '<line class="compass-axis" x1="' + cx + '" y1="' + cy + '" x2="' + x.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>';
-    }
-    const vals = COMPASS_AXES.map(function (a) {
-      const v = values && typeof values[a.key] === "number" ? values[a.key] : 0;
-      return Math.max(0, Math.min(1, v));
-    });
-    if (vals.some(function (v) { return v > 0; })) {
-      let poly = "";
-      vals.forEach(function (v, i) {
-        const [x, y] = point(i, radius * v);
-        poly += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      item.addEventListener("click", function () {
+        if (p.id !== state.currentProjectId) switchProject(p.id);
+        closeAllSheets();
       });
-      poly += "Z";
-      svg += '<path class="compass-fill" d="' + poly + '"/>';
-      vals.forEach(function (v, i) {
-        if (v <= 0) return;
-        const [x, y] = point(i, radius * v);
-        svg += '<circle class="compass-dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5"/>';
-      });
-    }
-    for (let i = 0; i < n; i++) {
-      const [x, y] = point(i, radius + 20);
-      const anchor = Math.abs(x - cx) < 4 ? "middle" : (x > cx ? "start" : "end");
-      svg += '<text class="compass-label" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" dominant-baseline="middle">' + COMPASS_AXES[i].label + '</text>';
-    }
-    svg += '</svg>';
-    return svg;
-  }
-
-  function renderPassport() {
-    const box = document.getElementById("passportContent");
-    const p = state.project;
-    const ps = p && p.passport;
-    if (!ps || (!ps.title && !ps.goal && !ps.result)) {
-      box.innerHTML = '<h3>Паспорт проекта</h3><div class="sheet-sub">Пока не заполнен</div>'
-        + '<div class="empty-note">Паспорт заполняется автоматически по мере диалога.</div>';
-      return;
-    }
-    const levelLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
-    const lvl = ps.level || "micro";
-    const completion = Math.max(0, Math.min(100, ps.completion || 0));
-    let html = '<h3>Паспорт проекта</h3>';
-    html += '<div class="sheet-sub">Обновляется автоматически</div>';
-    html += '<span class="passport-level">' + (levelLabels[lvl] || lvl) + '</span>';
-    if (ps.title) html += '<div class="passport-title">' + escHtml(ps.title) + '</div>';
-    if (ps.goal) html += '<div class="passport-goal">' + escHtml(ps.goal) + '</div>';
-    html += '<div style="margin-top:12px;">'
-      + '<div class="metric-row"><span class="metric-row-label">Наполнение</span><span class="metric-row-value">' + completion + '%</span></div>'
-      + '<div style="height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:8px;"><div style="height:100%;width:' + completion + '%;background:var(--accent);"></div></div>'
-      + '</div>';
-    function field(label, value) {
-      if (!value) return "";
-      if (Array.isArray(value)) {
-        if (value.length === 0) return "";
-        return '<div class="passport-field"><div class="passport-field-label">' + label + '</div><div class="passport-field-value"><ul>'
-          + value.map(function (v) { return '<li>' + escHtml(typeof v === "string" ? v : JSON.stringify(v)) + '</li>'; }).join("") + '</ul></div></div>';
-      }
-      return '<div class="passport-field"><div class="passport-field-label">' + label + '</div><div class="passport-field-value">' + escHtml(value) + '</div></div>';
-    }
-    html += field("Результат", ps.result);
-    html += field("Миссия", ps.mission);
-    html += field("Ценности", ps.values);
-    html += field("Ограничения", ps.constraints);
-    html += field("Стейкхолдеры", ps.stakeholders);
-    html += field("Риски", ps.risks);
-    html += field("Метрики успеха", ps.metrics);
-    box.innerHTML = html;
-  }
-
-  function openLotsModal() {
-    const p = state.project;
-    const m = (p && p.lastMetrics) || {};
-    const lots = m.lots_balance || "+0.0";
-    document.getElementById("lotsModalValue").textContent = lots;
-
-    const valEl = document.getElementById("lotsModalValue");
-    valEl.style.color = "var(--accent)";
-    const n = parseFloat(String(lots).replace(/[^\d.-]/g, ""));
-    if (!isNaN(n)) {
-      if (n > 0) valEl.style.color = "var(--success)";
-      else if (n < 0) valEl.style.color = "var(--critical)";
-    }
-
-    document.getElementById("lotsStability").textContent = (typeof m.stability_index === "number") ? m.stability_index.toFixed(2) : "—";
-    const scaleLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
-    document.getElementById("lotsMindScale").textContent = scaleLabels[m.mind_scale] || "—";
-    document.getElementById("lotsPulse").textContent = m.cognitive_pulse || "—";
-    document.getElementById("lotsCycles").textContent = m.cycles_completed != null ? m.cycles_completed : "—";
-
-    const hist = document.getElementById("lotsHistory");
-    hist.innerHTML = "";
-    const list = (p && p.lotsHistory) || [];
-    const recent = list.slice(-5).reverse();
-    if (!recent.length) {
-      hist.innerHTML = '<div class="empty-note">Пока нет начислений в этой сессии.</div>';
-    } else {
-      recent.forEach(function (h) {
-        const row = document.createElement("div");
-        row.className = "metric-row";
-        const deltaSign = h.delta > 0 ? "+" : "";
-        const deltaColor = h.delta > 0 ? "var(--success)" : "var(--critical)";
-        const time = new Date(h.at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
-        row.innerHTML = '<span class="metric-row-label" style="color:var(--muted);font-size:12px;">' + time + '</span>'
-          + '<span class="metric-row-value" style="color:' + deltaColor + ';">' + deltaSign + h.delta.toFixed(1) + '</span>';
-        hist.appendChild(row);
-      });
-    }
-
-    document.getElementById("lotsModalBg").classList.add("open");
-  }
-
-  function renderProjectsBar() {
-    const bar = document.getElementById("projectsBar");
-    bar.innerHTML = "";
-    state.projects.forEach(function (p) {
-      if (p.archived) return;
-      const tab = document.createElement("button");
-      tab.className = "project-tab";
-      if (p.id === state.currentProjectId) tab.classList.add("active");
-      tab.style.background = p.color || PROJECT_COLORS[0];
-      tab.textContent = initials(p.name);
-      tab.title = p.name;
-      tab.type = "button";
-
       let pressTimer = null;
-      let moved = false;
-
-      tab.addEventListener("pointerdown", function (e) {
-        moved = false;
+      item.addEventListener("pointerdown", function () {
         pressTimer = setTimeout(function () {
           pressTimer = null;
-          tab.classList.add("long-press");
-          setTimeout(function () { tab.classList.remove("long-press"); }, 400);
-          openProjectMenu(p.id);
+          closeAllSheets();
+          setTimeout(function () { openProjectMenu(p.id); }, 200);
         }, 550);
       });
-      tab.addEventListener("pointermove", function () {
-        moved = true;
-        if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-      });
       ["pointerup", "pointerleave", "pointercancel"].forEach(function (ev) {
-        tab.addEventListener(ev, function () {
+        item.addEventListener(ev, function () {
           if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; }
-          if (!moved && ev === "pointerup") {
-            if (p.id !== state.currentProjectId) switchProject(p.id);
-          }
         });
       });
-      bar.appendChild(tab);
+      box.appendChild(item);
     });
-    const add = document.createElement("button");
-    add.className = "project-add";
-    add.title = "Новый проект";
-    add.type = "button";
-    add.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>';
-    add.addEventListener("click", function () { openProjectModal(null); });
-    bar.appendChild(add);
   }
 
   async function switchProject(id) {
@@ -3400,7 +2813,7 @@
     await dbSetMeta("currentProjectId", id);
     document.getElementById("chat").innerHTML = "";
     renderCurrentProject();
-    renderProjectsBar();
+    updateMenu();
     toast("Проект: " + (state.project ? state.project.name : ""));
   }
 
@@ -3408,18 +2821,18 @@
     const p = state.project;
     if (!p) return;
     p.history = p.history || [];
-    p.history.forEach(function (m, idx) {
-      addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
-    });
-    if (p.lastMetrics) {
-      updateChip(p.lastMetrics);
-      updateLotsChip(p.lastMetrics);
-      updateNoise(p.lastMetrics);
-      updateSocialIndicator(p.lastMetrics);
-      updateConditionalUI(p.lastMetrics);
+    if (!p.history.length) {
+      renderDemo();
+    } else {
+      p.history.forEach(function (m, idx) {
+        addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
+      });
+      const chat = document.getElementById("chat");
+      if (chat) chat.scrollTop = chat.scrollHeight;
     }
-    renderSparkline();
-    updateArtifactsSection();
+    if (p.lastMetrics) {
+      updateMetrics(p.lastMetrics);
+    }
   }
 
   function openProjectMenu(id) {
@@ -3489,42 +2902,6 @@
     }
   }
 
-  function maybeShowOnboarding() {
-    let onboarded = false;
-    try { onboarded = localStorage.getItem(LS_ONBOARDED) === "true"; } catch (e) {}
-    if (!onboarded) {
-      document.getElementById("onboarding").classList.add("open");
-    } else {
-      let tutorialShown = false;
-      try { tutorialShown = localStorage.getItem(LS_TUTORIAL) === "true"; } catch (e) {}
-      if (!tutorialShown) {
-        setTimeout(function () { openTutorial(); }, 1200);
-      }
-    }
-  }
-
-  function openTutorial() {
-    state.tutorialStep = 0;
-    renderTutorialStep();
-    document.getElementById("tutorial").classList.add("open");
-  }
-  function renderTutorialStep() {
-    const step = TUTORIAL_STEPS[state.tutorialStep];
-    if (!step) return;
-    document.getElementById("tutorialIcon").innerHTML = step.icon;
-    document.getElementById("tutorialTitle").textContent = step.title;
-    document.getElementById("tutorialText").textContent = step.text;
-    const dots = document.getElementById("tutorialDots");
-    dots.innerHTML = "";
-    TUTORIAL_STEPS.forEach(function (_, i) {
-      const d = document.createElement("div");
-      d.className = "tutorial-dot" + (i === state.tutorialStep ? " active" : "");
-      dots.appendChild(d);
-    });
-    const nextBtn = document.getElementById("tutorialNext");
-    nextBtn.textContent = state.tutorialStep === TUTORIAL_STEPS.length - 1 ? "Понятно" : "Далее";
-  }
-
   async function loadProviders() {
     try {
       const r = await fetch(API_BASE + "/providers");
@@ -3562,7 +2939,6 @@
     box.innerHTML = "";
     const pr = _providersCache.find(function (p) { return p.id === state.provider; });
     if (!pr) return;
-
     if (pr.url) {
       const link = document.createElement("a");
       link.className = "link-row";
@@ -3573,13 +2949,479 @@
         + '<span>' + escHtml(pr.name) + '</span><span class="url">' + escHtml(pr.url.replace("https://", "")) + '</span>';
       box.appendChild(link);
     }
-
     if (pr.steps && pr.steps.length) {
       const hint = document.createElement("div");
       hint.className = "settings-hint";
       hint.style.marginTop = "8px";
       hint.innerHTML = '<strong>Как получить ключ:</strong><br>' + pr.steps.map(function (s, i) { return (i + 1) + '. ' + escHtml(s); }).join("<br>");
       box.appendChild(hint);
+    }
+  }
+
+  // Профиль
+  function renderSomatic(somatic) {
+    if (!somatic || typeof somatic !== "object") return "";
+    const energy = typeof somatic.energy === "number" ? somatic.energy : null;
+    const tension = typeof somatic.tension === "number" ? somatic.tension : null;
+    const focus = typeof somatic.focus === "number" ? somatic.focus : null;
+    const mood = somatic.mood || null;
+    const note = somatic.note || null;
+    function describe(value, axis) {
+      if (value == null) return "—";
+      const map = {
+        energy: value < 0.3 ? "спокойный темп" : (value < 0.6 ? "ровный" : "активный"),
+        tension: value < 0.3 ? "расслабленный" : (value < 0.6 ? "ровный" : "сдержанный"),
+        focus: value < 0.3 ? "мягкий" : (value < 0.6 ? "устойчивый" : "собранный"),
+      };
+      return map[axis] || "—";
+    }
+    let html = "";
+    if (energy != null) html += '<div class="somatic-item"><span class="somatic-label">Темп</span><span class="somatic-value">' + describe(energy, "energy") + '</span></div>';
+    if (tension != null) html += '<div class="somatic-item"><span class="somatic-label">Тон</span><span class="somatic-value">' + describe(tension, "tension") + '</span></div>';
+    if (focus != null) html += '<div class="somatic-item"><span class="somatic-label">Фокус</span><span class="somatic-value">' + describe(focus, "focus") + '</span></div>';
+    if (mood) html += '<div class="somatic-item"><span class="somatic-label">Настроение</span><span class="somatic-value">' + escHtml(mood) + '</span></div>';
+    if (note) html += '<div class="somatic-note">' + escHtml(note) + '</div>';
+    return html;
+  }
+
+  function renderProfile() {
+    const box = document.getElementById("profileContent");
+    const p = state.project;
+    const c = p && p.cognitive;
+    let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта</div>';
+
+    if (c && c.somatic) {
+      const somaticHtml = renderSomatic(c.somatic);
+      if (somaticHtml) {
+        html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:0 0 8px;font-weight:600;">Состояние</div>';
+        html += '<div>' + somaticHtml + '</div>';
+      }
+    }
+
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Развивающиеся навыки</div>';
+    const skills = p && p.skills ? Object.entries(p.skills).sort(function (a, b) { return b[1] - a[1]; }).slice(0, 8) : [];
+    if (!skills.length) {
+      html += '<div class="empty-note">Пока нет данных.</div>';
+    } else {
+      html += '<div>';
+      const maxCount = Math.max.apply(null, skills.map(function (s) { return s[1]; }));
+      skills.forEach(function (s) {
+        const pct = Math.round((s[1] / maxCount) * 100);
+        html += '<div class="skill-row"><span class="skill-name">' + escHtml(s[0]) + '</span>'
+          + '<span class="skill-bar"><span class="skill-fill" style="width:' + pct + '%;"></span></span>'
+          + '<span class="skill-percent">' + pct + '%</span></div>';
+      });
+      html += '</div>';
+    }
+
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:18px 0 8px;font-weight:600;">Ценностный компас</div>';
+    if (!c || !c.values || Object.keys(c.values).length === 0) {
+      html += '<div class="empty-note">Пока нет данных.</div>';
+    } else {
+      html += '<div class="compass-wrap">' + renderCompass(c.values) + '</div>';
+    }
+
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Паттерны мышления</div>';
+    if (!c || !c.patterns || c.patterns.length === 0) {
+      html += '<div class="empty-note">Пока не выявлены.</div>';
+    } else {
+      html += '<div class="tag-list">' + c.patterns.map(function (pp) { return '<span class="tag">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
+    }
+
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Когнитивные искажения</div>';
+    if (!c || !c.distortions || c.distortions.length === 0) {
+      html += '<div class="empty-note">Не обнаружены.</div>';
+    } else {
+      html += '<div class="tag-list">' + c.distortions.map(function (pp) { return '<span class="tag warm">' + escHtml(pp) + '</span>'; }).join("") + '</div>';
+    }
+
+    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);margin:16px 0 8px;font-weight:600;">Наблюдения</div>';
+    if (!c || !c.insights || c.insights.length === 0) {
+      html += '<div class="empty-note">Пока нет.</div>';
+    } else {
+      html += '<div style="display:flex;flex-direction:column;gap:8px;">'
+        + c.insights.map(function (i) { return '<div style="font-size:13px;line-height:1.5;">' + escHtml(i) + '</div>'; }).join("") + '</div>';
+    }
+    box.innerHTML = html;
+  }
+
+  function renderCompass(values) {
+    const size = 220, cx = size / 2, cy = size / 2, radius = 80, n = COMPASS_AXES.length;
+    function point(i, r) {
+      const angle = (Math.PI * 2 * i / n) - Math.PI / 2;
+      return [cx + Math.cos(angle) * r, cy + Math.sin(angle) * r];
+    }
+    let svg = '<svg class="compass-svg" viewBox="0 0 ' + size + ' ' + size + '">';
+    [1, 0.66, 0.33].forEach(function (scale) {
+      let ring = "";
+      for (let i = 0; i < n; i++) {
+        const [x, y] = point(i, radius * scale);
+        ring += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      }
+      ring += "Z";
+      svg += '<path class="compass-ring" d="' + ring + '"/>';
+    });
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius);
+      svg += '<line class="compass-axis" x1="' + cx + '" y1="' + cy + '" x2="' + x.toFixed(1) + '" y2="' + y.toFixed(1) + '"/>';
+    }
+    const vals = COMPASS_AXES.map(function (a) {
+      const v = values && typeof values[a.key] === "number" ? values[a.key] : 0;
+      return Math.max(0, Math.min(1, v));
+    });
+    if (vals.some(function (v) { return v > 0; })) {
+      let poly = "";
+      vals.forEach(function (v, i) {
+        const [x, y] = point(i, radius * v);
+        poly += (i === 0 ? "M" : "L") + x.toFixed(1) + " " + y.toFixed(1) + " ";
+      });
+      poly += "Z";
+      svg += '<path class="compass-fill" d="' + poly + '"/>';
+      vals.forEach(function (v, i) {
+        if (v <= 0) return;
+        const [x, y] = point(i, radius * v);
+        svg += '<circle class="compass-dot" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="2.5"/>';
+      });
+    }
+    for (let i = 0; i < n; i++) {
+      const [x, y] = point(i, radius + 20);
+      const anchor = Math.abs(x - cx) < 4 ? "middle" : (x > cx ? "start" : "end");
+      svg += '<text class="compass-label" x="' + x.toFixed(1) + '" y="' + y.toFixed(1) + '" text-anchor="' + anchor + '" dominant-baseline="middle">' + COMPASS_AXES[i].label + '</text>';
+    }
+    svg += '</svg>';
+    return svg;
+  }
+
+  function renderPassport() {
+    const box = document.getElementById("passportContent");
+    const p = state.project;
+    const ps = p && p.passport;
+    if (!ps || (!ps.title && !ps.goal && !ps.result)) {
+      box.innerHTML = '<h3>Паспорт проекта</h3><div class="sheet-sub">Пока не заполнен</div>'
+        + '<div class="empty-note">Паспорт заполняется автоматически по мере диалога.</div>';
+      return;
+    }
+    const levelLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
+    const lvl = ps.level || "micro";
+    const completion = Math.max(0, Math.min(100, ps.completion || 0));
+    let html = '<h3>Паспорт проекта</h3>';
+    html += '<div class="sheet-sub">Обновляется автоматически</div>';
+    html += '<span class="passport-level">' + (levelLabels[lvl] || lvl) + '</span>';
+    if (ps.title) html += '<div class="passport-title">' + escHtml(ps.title) + '</div>';
+    if (ps.goal) html += '<div class="passport-goal">' + escHtml(ps.goal) + '</div>';
+    html += '<div style="margin-top:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;">'
+      + '<span style="color:var(--muted);">Наполнение</span><span style="font-weight:600;">' + completion + '%</span></div>'
+      + '<div style="height:5px;border-radius:3px;background:var(--border);overflow:hidden;margin-top:6px;"><div style="height:100%;width:' + completion + '%;background:var(--accent);"></div></div></div>';
+    function field(label, value) {
+      if (!value) return "";
+      if (Array.isArray(value)) {
+        if (value.length === 0) return "";
+        return '<div class="passport-field"><div class="passport-field-label">' + label + '</div><div class="passport-field-value"><ul>'
+          + value.map(function (v) { return '<li>' + escHtml(typeof v === "string" ? v : JSON.stringify(v)) + '</li>'; }).join("") + '</ul></div></div>';
+      }
+      return '<div class="passport-field"><div class="passport-field-label">' + label + '</div><div class="passport-field-value">' + escHtml(value) + '</div></div>';
+    }
+    html += field("Результат", ps.result);
+    html += field("Миссия", ps.mission);
+    html += field("Ценности", ps.values);
+    html += field("Ограничения", ps.constraints);
+    html += field("Стейкхолдеры", ps.stakeholders);
+    html += field("Риски", ps.risks);
+    html += field("Метрики успеха", ps.metrics);
+    box.innerHTML = html;
+  }
+
+  function renderArtifactsList() {
+    const box = document.getElementById("artifactsList");
+    const p = state.project;
+    box.innerHTML = "";
+    if (!p || !p.artifacts || !p.artifacts.length) {
+      box.innerHTML = '<div class="empty-note">Пока нет артефактов. Они появятся автоматически, когда в диалоге создаётся документ, план или отчёт.</div>';
+      return;
+    }
+    p.artifacts.forEach(function (a) {
+      const item = document.createElement("div");
+      item.className = "artifact-item";
+      const stage = a.stage || "hypothesis";
+      const stageLabels = { hypothesis: "Гипотеза", prototype: "Прототип", working: "Рабочая", finalized: "Финализировано" };
+      item.innerHTML = '<div class="artifact-item-head">'
+        + '<span class="artifact-item-name">' + escHtml(a.name || "Артефакт") + '</span>'
+        + '<span class="artifact-item-stage ' + stage + '">' + (stageLabels[stage] || stage) + '</span>'
+        + '</div>'
+        + '<div class="artifact-item-meta"><span>' + escHtml(a.type || "документ") + '</span><span>' + escHtml(a.version || "v1.0") + '</span></div>';
+      item.addEventListener("click", function () { closeAllSheets(); setTimeout(function () { openArtifactInEditor(a.id); }, 200); });
+      box.appendChild(item);
+    });
+  }
+
+  function openEditor(context) {
+    state.editorContext = context || {};
+    const name = context.name || "Документ";
+    const body = context.body || "";
+    const tags = context.tags || [];
+    document.getElementById("editorName").value = name;
+    document.getElementById("editorBody").value = body;
+    document.getElementById("editorTags").value = tags.join(", ");
+    document.getElementById("editorStatus").textContent = "";
+    const isBlog = context.type === "blog_post";
+    document.getElementById("editorTitle").textContent = isBlog ? "Редактор статьи" : "Редактор документа";
+    document.getElementById("editorSub").textContent = isBlog
+      ? "Правьте текст, затем опубликуйте в блог"
+      : "Правьте текст, затем сохраните или скачайте";
+    document.getElementById("editorTagsField").style.display = isBlog ? "block" : "none";
+    document.getElementById("editorPublishRow").style.display = "flex";
+    openSheet("editorSheet");
+  }
+
+  function openArtifactInEditor(artifactId) {
+    const p = state.project;
+    if (!p || !p.artifacts) return;
+    const a = p.artifacts.find(function (x) { return x.id === artifactId; });
+    if (!a) { toast("Артефакт не найден"); return; }
+    openEditor({
+      type: a.type === "blog_post" ? "blog_post" : "document",
+      artifactId: a.id,
+      name: a.name || "Документ",
+      body: a.content || "",
+      tags: a.tags || [],
+    });
+  }
+
+  function downloadEditorFile() {
+    const name = (document.getElementById("editorName").value || "document").trim();
+    const body = document.getElementById("editorBody").value || "";
+    const ctx = state.editorContext || {};
+    const safeName = name.replace(/[^\w\-а-яА-Я]+/gi, "_") || "document";
+    if (ctx.type === "document" || ctx.type === "blog_post") {
+      fetch(API_BASE + "/export/docx", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: name, body: body }),
+      }).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.blob();
+      }).then(function (blob) {
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = safeName + ".docx";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast("Word скачан");
+      }).catch(function (e) {
+        const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = safeName + ".md";
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast("Word недоступен, скачан Markdown");
+      });
+    } else {
+      const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = safeName + ".md";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    }
+  }
+
+  async function saveEditorToProject() {
+    const name = (document.getElementById("editorName").value || "").trim();
+    const body = (document.getElementById("editorBody").value || "").trim();
+    const status = document.getElementById("editorStatus");
+    if (!name || !body) { status.textContent = "Нужны название и текст"; return; }
+    const p = state.project;
+    if (!p) return;
+    p.artifacts = p.artifacts || [];
+    const ctx = state.editorContext || {};
+    if (ctx.artifactId) {
+      const existing = p.artifacts.find(function (a) { return a.id === ctx.artifactId; });
+      if (existing) {
+        existing.name = name;
+        existing.content = body;
+        existing.version = bumpVersion(existing.version || "v1.0");
+      }
+    } else {
+      const id = "art_" + Date.now();
+      p.artifacts.push({
+        id: id, name: name, type: "document", format: "markdown",
+        stage: "working", version: "v1.0", content: body, comment: "Создан вручную",
+      });
+    }
+    await persistCurrentProject();
+    updateMenu();
+    status.textContent = "Сохранено в проект";
+    toast("Сохранено");
+    setTimeout(function () { closeAllSheets(); }, 700);
+  }
+
+  function bumpVersion(v) {
+    const m = String(v).match(/v(\d+)\.(\d+)/);
+    if (!m) return "v1.1";
+    return "v" + m[1] + "." + (parseInt(m[2], 10) + 1);
+  }
+
+  async function publishEditorToBlog() {
+    const title = (document.getElementById("editorName").value || "").trim();
+    const body = (document.getElementById("editorBody").value || "").trim();
+    const tagsRaw = (document.getElementById("editorTags").value || "").trim();
+    const status = document.getElementById("editorStatus");
+    if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
+    if (!state.authorKey) { status.textContent = "Введи ключ автора в настройках"; return; }
+    status.textContent = "Публикую…";
+    const tags = tagsRaw ? tagsRaw.split(",").map(function (s) { return s.trim(); }).filter(Boolean) : [];
+    try {
+      const r = await fetch(API_BASE + "/blog/publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+        body: JSON.stringify({ title: title, body: body, tags: tags, author: state.profile.userName || "Эльвира" }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+      status.textContent = "Опубликовано в блог";
+      toast("Опубликовано");
+      setTimeout(function () { closeAllSheets(); }, 800);
+    } catch (e) {
+      status.textContent = "Ошибка: " + e.message;
+    }
+  }
+
+  function switchBlogTab(tab) {
+    document.querySelectorAll(".blog-tab").forEach(function (t) {
+      t.classList.toggle("active", t.dataset.tab === tab);
+    });
+    document.getElementById("blogListPane").style.display = tab === "list" ? "block" : "none";
+    document.getElementById("blogNewPane").style.display = tab === "new" ? "block" : "none";
+  }
+
+  async function loadBlogList() {
+    const box = document.getElementById("blogList");
+    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
+    try {
+      const r = await fetch(API_BASE + "/blog");
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const data = await r.json();
+      const posts = data.posts || [];
+      document.getElementById("blogSub").textContent = posts.length ? (posts.length + " " + pluralize(posts.length, ["статья", "статьи", "статей"])) : "Пока нет статей";
+      if (!posts.length) {
+        box.innerHTML = '<div class="empty-note">Пока нет статей. Открой вкладку «Новая статья».</div>';
+        return;
+      }
+      box.innerHTML = "";
+      posts.forEach(function (p) {
+        const item = document.createElement("div");
+        item.className = "blog-post-item";
+        item.innerHTML = '<div class="blog-post-title">' + escHtml(p.title || "Без названия") + '</div>'
+          + '<div class="blog-post-meta"><span>' + escHtml(p.author || "Эльвира") + '</span><span>' + fmtBlogDate(p.created_at) + '</span></div>'
+          + (p.preview ? '<div class="blog-post-preview">' + escHtml(p.preview) + '…</div>' : '')
+          + (p.tags && p.tags.length ? '<div class="blog-post-tags">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>' : '');
+        item.addEventListener("click", function () { openBlogView(p.id); });
+        box.appendChild(item);
+      });
+    } catch (e) {
+      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
+    }
+  }
+
+  function fmtBlogDate(iso) {
+    if (!iso) return "";
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString("ru-RU", { day: "numeric", month: "long", year: "numeric" });
+    } catch (e) { return iso; }
+  }
+
+  async function openBlogView(id) {
+    const box = document.getElementById("blogViewContent");
+    box.innerHTML = '<div class="empty-note">Загружаю…</div>';
+    openSheet("blogViewSheet");
+    try {
+      const r = await fetch(API_BASE + "/blog/" + encodeURIComponent(id));
+      if (!r.ok) throw new Error("HTTP " + r.status);
+      const p = await r.json();
+      let html = '<div class="blog-view-title">' + escHtml(p.title || "Без названия") + '</div>';
+      html += '<div class="blog-view-meta"><span>' + escHtml(p.author || "Эльвира") + '</span><span>' + fmtBlogDate(p.created_at) + '</span>'
+        + (p.updated_at && p.updated_at !== p.created_at ? '<span>обновлено ' + fmtBlogDate(p.updated_at) + '</span>' : '') + '</div>';
+      if (p.tags && p.tags.length) {
+        html += '<div class="blog-post-tags" style="margin-bottom:16px;">' + p.tags.map(function (t) { return '<span class="blog-post-tag">' + escHtml(t) + '</span>'; }).join("") + '</div>';
+      }
+      html += '<div class="blog-view-body">' + renderMarkdown(p.body || "") + '</div>';
+      box.innerHTML = html;
+    } catch (e) {
+      box.innerHTML = '<div class="empty-note">Не удалось загрузить: ' + escHtml(e.message) + '</div>';
+    }
+  }
+
+  function showRiskModal(ri) {
+    document.getElementById("riskLevel").textContent = (ri.risk_level === "critical" ? "Критический риск" : "Умеренный риск");
+    document.getElementById("riskLevel").className = "risk-level " + (ri.risk_level === "critical" ? "critical" : "warning");
+    document.getElementById("riskAction").textContent = ri.requested_action || "—";
+    document.getElementById("riskAlternative").textContent = ri.safe_alternative || "—";
+    const el = document.getElementById("riskModalBg");
+    el.classList.add("open");
+    el.dataset.alt = ri.safe_alternative || "";
+  }
+
+  function generateReport() {
+    const lines = [];
+    const now = new Date();
+    const p = state.project || {};
+    const ps = p.passport || {}, c = p.cognitive || {}, m = p.lastMetrics || {};
+    lines.push("# Отчёт сессии — AI Monolog");
+    lines.push("");
+    lines.push("**Проект:** " + (p.name || "—"));
+    lines.push("**Дата:** " + now.toLocaleString("ru-RU"));
+    lines.push("**Запросов:** " + (p.sessionCount || 0));
+    lines.push("");
+    lines.push("## Метрики");
+    lines.push("");
+    lines.push("- Стабильность: " + (typeof m.stability_index === "number" ? m.stability_index.toFixed(2) : "—"));
+    lines.push("- Масштаб: " + (m.mind_scale || "—"));
+    lines.push("- Баланс: " + (m.lots_balance || "—"));
+    lines.push("");
+    if (c.somatic) {
+      lines.push("## Состояние");
+      lines.push("");
+      if (c.somatic.mood) lines.push("- Настроение: " + c.somatic.mood);
+      if (c.somatic.note) lines.push("- Наблюдение: " + c.somatic.note);
+      lines.push("");
+    }
+    if (p.artifacts && p.artifacts.length) {
+      lines.push("## Артефакты (" + p.artifacts.length + ")");
+      lines.push("");
+      p.artifacts.forEach(function (a) {
+        lines.push("- **" + (a.name || "Артефакт") + "** (" + (a.type || "документ") + ", " + (a.version || "v1.0") + ")");
+      });
+      lines.push("");
+    }
+    if (p.history && p.history.length) {
+      lines.push("## История диалога");
+      lines.push("");
+      p.history.forEach(function (h) {
+        lines.push("**" + (h.role === "user" ? "Вы" : "AI Monolog") + ":** " + (h.content || ""));
+        lines.push("");
+      });
+    }
+    return lines.join("\n");
+  }
+
+  function downloadReport() {
+    const md = generateReport();
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "monolog_report_" + Date.now() + ".md";
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast("Отчёт скачан");
+  }
+
+  function maybeShowOnboarding() {
+    let onboarded = false;
+    try { onboarded = localStorage.getItem(LS_ONBOARDED) === "true"; } catch (e) {}
+    if (!onboarded) {
+      document.getElementById("onboarding").classList.add("open");
     }
   }
 
@@ -3606,10 +3448,12 @@
     applyProfile();
 
     await loadProjects();
-    renderProjectsBar();
     renderCurrentProject();
+    updateMenu();
 
-    ["metricsSheet", "profileSheet", "passportSheet", "artifactsSheet", "editorSheet", "blogSheet", "blogViewSheet", "projectMenuSheet"].forEach(function (id) {
+    ["menuSheet", "metricsSheet", "profileSheet", "passportSheet", "artifactsSheet",
+     "projectsSheet", "editorSheet", "blogSheet", "blogViewSheet", "projectMenuSheet"
+    ].forEach(function (id) {
       const sheet = document.getElementById(id);
       const handle = sheet ? sheet.querySelector(".sheet-handle") : null;
       if (sheet && handle) setupSwipeToClose(sheet, handle);
@@ -3634,6 +3478,7 @@
     document.getElementById("attachBtn").addEventListener("click", function () { fileInput.click(); });
     fileInput.addEventListener("change", function (e) { handleFiles(e.target.files); fileInput.value = ""; });
 
+    // Сфера
     const orbBtn = document.getElementById("orbBtn");
     let orbPressTimer = null;
     let orbMoved = false;
@@ -3658,54 +3503,61 @@
       });
     });
 
-    document.getElementById("stabilityChip").addEventListener("click", function () { openSheet("metricsSheet"); });
-    document.getElementById("passportBtn").addEventListener("click", function () { renderPassport(); openSheet("passportSheet"); });
-    document.getElementById("reportIconBtn").addEventListener("click", downloadReport);
-    document.getElementById("artifactsSectionInner").addEventListener("click", function () { renderArtifactsList(); openSheet("artifactsSheet"); });
-
-    document.getElementById("lotsChip").addEventListener("click", openLotsModal);
-    document.getElementById("lotsClose").addEventListener("click", function () { document.getElementById("lotsModalBg").classList.remove("open"); });
-    document.getElementById("lotsModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
-
-    document.getElementById("socialIndicator").addEventListener("click", function () {
-      const m = (state.project && state.project.lastMetrics) || {};
-      const sa = m.social_adaptation || {};
-      if (!sa.active) {
-        toast("Социальная адаптация: не активна");
-      } else {
-        const labels = { low: "низкая", medium: "средняя", high: "высокая" };
-        toast("Социальная адаптация: " + (labels[sa.level] || sa.level) + (sa.reason ? " — " + sa.reason : ""));
-      }
+    // Меню
+    document.getElementById("menuBtn").addEventListener("click", function () {
+      updateMenu();
+      openSheet("menuSheet");
     });
 
-    document.getElementById("blogBtn").addEventListener("click", function () {
-      switchBlogTab("list");
-      loadBlogList();
-      openSheet("blogSheet");
-    });
-    document.querySelectorAll(".blog-tab").forEach(function (t) {
-      t.addEventListener("click", function () { switchBlogTab(t.dataset.tab); });
-    });
-    document.getElementById("blogNewBtn").addEventListener("click", function () {
+    document.getElementById("menuProjects").addEventListener("click", function () {
       closeAllSheets();
-      openEditor({ type: "blog_post", name: "", body: "", tags: [] });
+      setTimeout(function () { renderProjectsList(); openSheet("projectsSheet"); }, 200);
+    });
+    document.getElementById("projectsCreateBtn").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { openProjectModal(null); }, 200);
+    });
+    document.getElementById("menuArtifacts").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { renderArtifactsList(); openSheet("artifactsSheet"); }, 200);
+    });
+    document.getElementById("menuPassport").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { renderPassport(); openSheet("passportSheet"); }, 200);
+    });
+    document.getElementById("menuProfile").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { renderProfile(); openSheet("profileSheet"); }, 200);
+    });
+    document.getElementById("menuMetrics").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { openSheet("metricsSheet"); }, 200);
+    });
+    document.getElementById("menuBlog").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { switchBlogTab("list"); loadBlogList(); openSheet("blogSheet"); }, 200);
+    });
+    document.getElementById("menuReport").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(downloadReport, 200);
+    });
+    document.getElementById("menuReset").addEventListener("click", function () {
+      closeAllSheets();
+      const p = state.project;
+      const m = (p && p.lastMetrics) || {};
+      const rp = m.reset_proposal || {};
+      document.getElementById("resetReason").textContent = rp.reason || "Модель рекомендует сбросить проблемную ветку.";
+      setTimeout(function () { document.getElementById("resetModalBg").classList.add("open"); }, 200);
     });
 
-    document.getElementById("editorCopyBtn").addEventListener("click", function () {
-      const body = document.getElementById("editorBody").value || "";
-      if (navigator.clipboard) navigator.clipboard.writeText(body);
-      toast("Скопировано");
+    // Метрики — раскрытие карточек
+    document.querySelectorAll(".metric-card").forEach(function (card) {
+      card.addEventListener("click", function () { card.classList.toggle("open"); });
     });
-    document.getElementById("editorDownloadBtn").addEventListener("click", downloadEditorFile);
-    document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToProject);
-    document.getElementById("editorPublishBtn").addEventListener("click", publishEditorToBlog);
 
     document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
 
-    document.querySelectorAll(".acc-head").forEach(function (h) {
-      h.addEventListener("click", function () { h.parentElement.classList.toggle("open"); });
-    });
-
+    // Меню проекта
     document.getElementById("pmOpen").addEventListener("click", function () {
       if (state.editingProjectId) switchProject(state.editingProjectId);
       closeAllSheets();
@@ -3735,11 +3587,12 @@
       }
       document.getElementById("chat").innerHTML = "";
       renderCurrentProject();
-      renderProjectsBar();
+      updateMenu();
       closeAllSheets();
       toast("Проект удалён");
     });
 
+    // Риск
     document.getElementById("riskClose").addEventListener("click", function () { document.getElementById("riskModalBg").classList.remove("open"); });
     document.getElementById("riskModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
     document.getElementById("riskCancel").addEventListener("click", function () {
@@ -3753,34 +3606,30 @@
       toast("Альтернатива вставлена");
     });
 
-    document.getElementById("resetChip").addEventListener("click", function () {
-      const chip = document.getElementById("resetChip");
-      document.getElementById("resetReason").textContent = chip.dataset.reason || "Модель рекомендует сбросить проблемную ветку диалога.";
-      document.getElementById("resetModalBg").classList.add("open");
-    });
+    // Сброс
     document.getElementById("resetClose").addEventListener("click", function () { document.getElementById("resetModalBg").classList.remove("open"); });
     document.getElementById("resetModalBg").addEventListener("click", function (e) { if (e.target === this) this.classList.remove("open"); });
     document.getElementById("resetCancel").addEventListener("click", function () { document.getElementById("resetModalBg").classList.remove("open"); });
-    document.getElementById("resetConfirm").addEventListener("click", function () {
-      const chip = document.getElementById("resetChip");
-      const point = chip.dataset.point || "";
+    document.getElementById("resetConfirm").addEventListener("click", async function () {
       const p = state.project;
       if (!p) return;
+      const m = p.lastMetrics || {};
+      const rp = m.reset_proposal || {};
+      const point = rp.reset_point || "";
       const match = String(point).match(/#?(\d+)/);
       if (match) {
         const idx = parseInt(match[1], 10);
         if (idx >= 0 && idx < p.history.length) p.history = p.history.slice(0, idx);
       } else p.history = [];
       document.getElementById("chat").innerHTML = "";
-      p.history.forEach(function (m, idx) {
-        addRow(m.role === "user" ? "user" : "agent", m.content || "", null, { msgId: idx });
-      });
-      persistCurrentProject();
-      chip.classList.remove("show");
+      renderCurrentProject();
+      await persistCurrentProject();
+      updateMenu();
       document.getElementById("resetModalBg").classList.remove("open");
       toast("Контекст сброшен");
     });
 
+    // Проект
     document.getElementById("projectModalClose").addEventListener("click", closeProjectModal);
     document.getElementById("projectCancel").addEventListener("click", closeProjectModal);
     document.getElementById("projectModalBg").addEventListener("click", function (e) { if (e.target === this) closeProjectModal(); });
@@ -3808,7 +3657,7 @@
         document.getElementById("chat").innerHTML = "";
         renderCurrentProject();
       }
-      renderProjectsBar();
+      updateMenu();
       closeProjectModal();
       toast("Сохранено");
     });
@@ -3831,11 +3680,31 @@
       }
       document.getElementById("chat").innerHTML = "";
       renderCurrentProject();
-      renderProjectsBar();
+      updateMenu();
       closeProjectModal();
       toast("Проект удалён");
     });
 
+    // Блог
+    document.querySelectorAll(".blog-tab").forEach(function (t) {
+      t.addEventListener("click", function () { switchBlogTab(t.dataset.tab); });
+    });
+    document.getElementById("blogNewBtn").addEventListener("click", function () {
+      closeAllSheets();
+      setTimeout(function () { openEditor({ type: "blog_post", name: "", body: "", tags: [] }); }, 200);
+    });
+
+    // Редактор
+    document.getElementById("editorCopyBtn").addEventListener("click", function () {
+      const body = document.getElementById("editorBody").value || "";
+      if (navigator.clipboard) navigator.clipboard.writeText(body);
+      toast("Скопировано");
+    });
+    document.getElementById("editorDownloadBtn").addEventListener("click", downloadEditorFile);
+    document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToProject);
+    document.getElementById("editorPublishBtn").addEventListener("click", publishEditorToBlog);
+
+    // Настройки
     document.getElementById("settingsBtn").addEventListener("click", function () {
       document.getElementById("keyInput").value = state.apiKey || "";
       document.getElementById("authorKeyInput").value = state.authorKey || "";
@@ -3873,6 +3742,7 @@
       toast("Настройки сохранены");
     });
 
+    // Экспорт / импорт
     document.getElementById("exportData").addEventListener("click", function () {
       const blob = new Blob([JSON.stringify({ projects: state.projects, profile: state.profile }, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
@@ -3904,105 +3774,11 @@
       reader.readAsText(file);
     });
 
+    // Онбординг
     document.getElementById("obStart").addEventListener("click", function () {
-      const name = (document.getElementById("obName").value || "").trim();
-      const key = (document.getElementById("obKey").value || "").trim();
-      if (name) {
-        state.profile.userName = name;
-        const p = state.project;
-        if (p && (!p.name || p.name === "Мой проект")) p.name = name;
-      }
-      if (key) {
-        state.apiKey = key;
-        localStorage.setItem(LS_KEY, key);
-      }
-      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
       localStorage.setItem(LS_ONBOARDED, "true");
       document.getElementById("onboarding").classList.remove("open");
-      renderProjectsBar();
-      toast("Готово");
-      let tutorialShown = false;
-      try { tutorialShown = localStorage.getItem(LS_TUTORIAL) === "true"; } catch (e) {}
-      if (!tutorialShown) setTimeout(function () { openTutorial(); }, 500);
     });
-    document.getElementById("obSkip").addEventListener("click", function () {
-      localStorage.setItem(LS_ONBOARDED, "true");
-      document.getElementById("onboarding").classList.remove("open");
-      let tutorialShown = false;
-      try { tutorialShown = localStorage.getItem(LS_TUTORIAL) === "true"; } catch (e) {}
-      if (!tutorialShown) setTimeout(function () { openTutorial(); }, 500);
-    });
-
-    document.getElementById("tutorialSkip").addEventListener("click", function () {
-      localStorage.setItem(LS_TUTORIAL, "true");
-      document.getElementById("tutorial").classList.remove("open");
-    });
-    document.getElementById("tutorialNext").addEventListener("click", function () {
-      if (state.tutorialStep >= TUTORIAL_STEPS.length - 1) {
-        localStorage.setItem(LS_TUTORIAL, "true");
-        document.getElementById("tutorial").classList.remove("open");
-      } else {
-        state.tutorialStep++;
-        renderTutorialStep();
-      }
-    });
-  }
-
-  function generateReport() {
-    const lines = [];
-    const now = new Date();
-    const p = state.project || {};
-    const ps = p.passport || {}, c = p.cognitive || {}, m = p.lastMetrics || {};
-    lines.push("# Отчёт сессии — AI Monolog");
-    lines.push("");
-    lines.push("**Проект:** " + (p.name || "—"));
-    lines.push("**Дата:** " + now.toLocaleString("ru-RU"));
-    lines.push("**Запросов:** " + (p.sessionCount || 0));
-    lines.push("");
-    lines.push("## Метрики");
-    lines.push("");
-    lines.push("- Стабильность: " + (typeof m.stability_index === "number" ? m.stability_index.toFixed(2) : "—"));
-    lines.push("- Масштаб: " + (m.mind_scale || "—"));
-    lines.push("- Баланс: " + (m.lots_balance || "—"));
-    lines.push("");
-    if (c.somatic) {
-      lines.push("## Состояние");
-      lines.push("");
-      lines.push("- Темп: " + (c.somatic.energy != null ? c.somatic.energy.toFixed(2) : "—"));
-      lines.push("- Тон: " + (c.somatic.tension != null ? c.somatic.tension.toFixed(2) : "—"));
-      lines.push("- Фокус: " + (c.somatic.focus != null ? c.somatic.focus.toFixed(2) : "—"));
-      if (c.somatic.mood) lines.push("- Настроение: " + c.somatic.mood);
-      if (c.somatic.note) lines.push("- Наблюдение: " + c.somatic.note);
-      lines.push("");
-    }
-    if (p.artifacts && p.artifacts.length) {
-      lines.push("## Артефакты (" + p.artifacts.length + ")");
-      lines.push("");
-      p.artifacts.forEach(function (a) {
-        lines.push("- **" + (a.name || "Артефакт") + "** (" + (a.type || "документ") + ", " + (a.version || "v1.0") + ", " + (a.stage || "hypothesis") + ")");
-      });
-      lines.push("");
-    }
-    if (p.history && p.history.length) {
-      lines.push("## История диалога");
-      lines.push("");
-      p.history.forEach(function (h) {
-        lines.push("**" + (h.role === "user" ? "Вы" : "AI Monolog") + ":** " + (h.content || ""));
-        lines.push("");
-      });
-    }
-    return lines.join("\n");
-  }
-
-  function downloadReport() {
-    const md = generateReport();
-    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "monolog_report_" + Date.now() + ".md";
-    a.click();
-    URL.revokeObjectURL(a.href);
-    toast("Отчёт скачан");
   }
 
   if (document.readyState === "loading") {
