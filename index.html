@@ -2746,7 +2746,28 @@
       + '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
 
     const headers = { "Content-Type": "application/json" };
-    const carried = { passport: p.passport || {}, profile: p.cognitive || {}, artifacts: p.artifacts || [] };
+    // Определяем активный артефакт: последний открытый в редакторе
+    let artifactsForCarried = (p.artifacts || []).slice();
+    if (state.editorContext && state.editorContext.artifactId) {
+      const activeArt = artifactsForCarried.find(function (a) { return a.id === state.editorContext.artifactId; });
+      if (activeArt) {
+        // Помещаем активный артефакт в конец, чтобы модель обратила внимание
+        artifactsForCarried = artifactsForCarried.filter(function (a) { return a.id !== activeArt.id; });
+        artifactsForCarried.push(activeArt);
+      }
+    }
+    // Для редактирования — отправляем content активного артефакта
+    if (state.editorContext && state.editorContext.artifactId) {
+      const currentEditor = document.getElementById("editorBody");
+      if (currentEditor && currentEditor.value) {
+        const idx = artifactsForCarried.findIndex(function (a) { return a.id === state.editorContext.artifactId; });
+        if (idx !== -1) {
+          artifactsForCarried[idx] = Object.assign({}, artifactsForCarried[idx], { content: currentEditor.value });
+        }
+      }
+    }
+
+    const carried = { passport: p.passport || {}, profile: p.cognitive || {}, artifacts: artifactsForCarried };
 
     try {
       const r = await fetchWithRetry(API_BASE + "/chat", {
