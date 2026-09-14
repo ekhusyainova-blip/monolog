@@ -100,7 +100,6 @@ header {
   align-items: center;
   gap: 6px;
   flex-shrink: 0;
-  min-width: 80px;
 }
 .header-center { flex: 1; display: flex; justify-content: center; align-items: center; }
 .icon-btn {
@@ -114,15 +113,6 @@ header {
 .icon-btn:hover { background: var(--surface-2); border-color: var(--border); }
 .icon-btn:active { transform: scale(0.94); }
 .icon-btn svg { width: 16px; height: 16px; stroke-width: 1.6; }
-.icon-btn .dot {
-  position: absolute; top: 4px; right: 4px;
-  width: 8px; height: 8px; border-radius: 50%;
-  background: var(--accent);
-  border: 1.5px solid var(--surface);
-}
-.icon-btn .dot.warning { background: var(--warning); }
-.icon-btn .dot.critical { background: var(--critical); }
-.icon-btn .dot.hidden { display: none; }
 .metrics-btn {
   width: 34px; height: 34px; border-radius: 12px;
   background: var(--surface); border: 1px solid var(--border-soft);
@@ -175,42 +165,39 @@ header {
 }
 .orb-inner::before {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.85) 0%, transparent 42%);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.6) 0%, transparent 40%);
   pointer-events: none;
 }
 .orb-inner::after {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(circle at 68% 72%, rgba(255,255,255,0.25) 0%, transparent 45%);
+  background: radial-gradient(circle at 68% 72%, rgba(255,255,255,0.15) 0%, transparent 45%);
   pointer-events: none;
 }
 .orb.neutral .orb-inner {
   background:
-    radial-gradient(circle at 40% 40%, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, rgba(160,165,180,0.15) 100%);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
+    radial-gradient(circle at 40% 40%, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.08) 50%, rgba(160,165,180,0.08) 100%);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   box-shadow:
-    inset -3px -3px 8px rgba(0,0,0,0.06),
-    inset 3px 3px 8px rgba(255,255,255,0.7),
-    0 2px 10px rgba(0,0,0,0.06);
-  border: 1px solid rgba(255,255,255,0.5);
+    inset -2px -2px 6px rgba(0,0,0,0.03),
+    inset 2px 2px 6px rgba(255,255,255,0.4),
+    0 2px 8px rgba(0,0,0,0.04);
 }
 .orb.analyst .orb-inner {
   background:
-    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0%, rgba(255,225,235,0.7) 40%, rgba(240,200,215,0.4) 100%);
+    radial-gradient(circle at 35% 30%, rgba(255,255,255,0.75) 0%, rgba(255,235,242,0.5) 40%, rgba(245,215,228,0.28) 100%);
   box-shadow:
-    inset -3px -3px 10px rgba(200,160,180,0.2),
-    inset 3px 3px 12px rgba(255,255,255,0.95),
-    0 2px 12px rgba(220,170,190,0.25);
-  border: 1px solid rgba(255,255,255,0.7);
+    inset -2px -2px 8px rgba(200,160,180,0.12),
+    inset 2px 2px 10px rgba(255,255,255,0.7),
+    0 2px 10px rgba(220,170,190,0.15);
 }
 .orb.strategist .orb-inner {
   background:
-    radial-gradient(circle at 35% 30%, rgba(140,160,255,0.5) 0%, rgba(60,70,120,0.6) 35%, rgba(20,25,45,0.95) 100%);
+    radial-gradient(circle at 35% 30%, rgba(140,160,255,0.35) 0%, rgba(60,70,120,0.45) 35%, rgba(20,25,45,0.75) 100%);
   box-shadow:
-    inset -3px -3px 10px rgba(0,0,0,0.6),
-    inset 3px 3px 12px rgba(120,130,200,0.3),
-    0 2px 12px rgba(20,30,80,0.35);
-  border: 1px solid rgba(120,140,200,0.35);
+    inset -2px -2px 8px rgba(0,0,0,0.4),
+    inset 2px 2px 10px rgba(120,130,200,0.2),
+    0 2px 10px rgba(20,30,80,0.25);
 }
 .orb.thinking .orb-inner {
   animation: orbRotate 3s linear infinite, orbBreathe 1.6s ease-in-out infinite;
@@ -326,7 +313,6 @@ header {
   border: none; width: 100%; text-align: left;
   font-family: inherit; color: var(--text);
   margin-bottom: 2px; transition: background 0.15s;
-  border-bottom: 1px solid transparent;
 }
 .menu-item:last-child { margin-bottom: 0; }
 .menu-item:hover { background: var(--surface-2); }
@@ -346,38 +332,6 @@ header {
   font-weight: 500; flex-shrink: 0;
   font-variant-numeric: tabular-nums;
 }
-.menu-item .dot-badge {
-  width: 8px; height: 8px; border-radius: 50%;
-  flex-shrink: 0; background: var(--accent);
-}
-.menu-item .dot-badge.warning { background: var(--warning); }
-.menu-item .dot-badge.critical { background: var(--critical); }
-.menu-list { margin-left: 28px; margin-top: 4px; display: flex; flex-direction: column; gap: 2px; }
-.menu-list-item {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 10px; border-radius: 8px;
-  cursor: pointer; font-size: 13px; color: var(--text);
-  transition: background 0.15s; background: transparent;
-  border: none; font-family: inherit;
-  text-align: left; width: 100%;
-}
-.menu-list-item:hover { background: var(--surface-2); }
-.menu-list-item:active { background: var(--accent-soft); }
-.menu-list-item .project-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-.menu-list-item .name {
-  flex: 1; min-width: 0;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.menu-list-item .count {
-  font-size: 11px; color: var(--muted);
-  font-variant-numeric: tabular-nums; flex-shrink: 0;
-}
-.menu-list-item .del {
-  background: none; border: none; color: var(--muted);
-  font-size: 16px; cursor: pointer; padding: 0 2px;
-  flex-shrink: 0; line-height: 1;
-}
-.menu-list-item .del:hover { color: var(--critical); }
 .chat {
   flex: 1; overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -401,15 +355,6 @@ header {
   word-wrap: break-word; overflow-wrap: break-word;
   position: relative;
 }
-.row.agent .mode-badge {
-  display: inline-flex; align-items: center; gap: 4px;
-  font-size: 10px; text-transform: uppercase;
-  letter-spacing: 0.06em; color: var(--muted);
-  font-weight: 600; margin-bottom: 4px;
-}
-.row.agent .mode-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
-.row.agent .mode-badge.analyst .dot { background: #E8B5C8; }
-.row.agent .mode-badge.strategist .dot { background: #4A5BB5; }
 .msg-actions {
   display: flex; gap: 4px; margin-top: 8px;
   opacity: 0.5; transition: opacity 0.15s;
@@ -470,20 +415,6 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   color: #E8EAED; cursor: pointer;
 }
 .copy-code-btn:active { transform: scale(0.95); }
-.bubble table {
-  width: 100%; border-collapse: collapse;
-  margin: 10px 0; font-size: 13px;
-  display: block; overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-  border-radius: 8px;
-}
-.bubble table thead { background: var(--surface-2); }
-.bubble table th, .bubble table td {
-  text-align: left; padding: 7px 10px;
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-.bubble table th { font-weight: 600; font-size: 12.5px; }
 .typing { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
 .typing span {
   width: 5px; height: 5px; border-radius: 50%;
@@ -532,11 +463,9 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   font-family: inherit; color: var(--text);
   width: 100%; box-shadow: var(--shadow);
   transition: transform 0.15s, border-color 0.15s, background 0.15s;
-  position: relative;
 }
 .decision-card:hover { border-color: var(--accent); background: var(--accent-soft); }
 .decision-card:active { transform: scale(0.98); }
-.decision-card.selected { border-color: var(--accent); background: var(--accent-soft); }
 .decision-card.disabled { opacity: 0.5; cursor: not-allowed; }
 .decision-card-head {
   display: flex; justify-content: space-between;
@@ -549,74 +478,8 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   font-weight: 600; background: var(--accent-soft);
   padding: 2px 8px; border-radius: 999px;
 }
-.decision-card-tag.recommended { color: var(--success); background: rgba(79, 138, 107, 0.15); }
 .decision-card-text { font-size: 12.5px; color: var(--muted); line-height: 1.45; }
 .decision-card-text strong { color: var(--text); font-weight: 500; }
-.impulse-wrap { display: flex; flex-direction: column; align-items: flex-start; margin-top: 10px; gap: 0; }
-.impulse-notice {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 5px 10px; background: var(--warning-soft);
-  border: 1px solid rgba(198, 139, 63, 0.28);
-  border-radius: 8px;
-  font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 11px; color: var(--warning);
-  cursor: pointer; transition: transform 0.15s, border-color 0.2s;
-  user-select: none;
-}
-.impulse-notice:hover { border-color: rgba(198, 139, 63, 0.5); }
-.impulse-notice:active { transform: scale(0.98); }
-.impulse-notice svg { width: 12px; height: 12px; stroke-width: 2; }
-.impulse-notice.open { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
-.impulse-detail {
-  max-height: 0; overflow: hidden;
-  transition: max-height 0.3s ease, margin-top 0.2s ease;
-  margin-top: 0;
-  font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 11.5px; color: var(--text);
-  line-height: 1.55; width: 100%;
-}
-.impulse-notice.open + .impulse-detail { max-height: 400px; margin-top: 0; }
-.impulse-detail-inner {
-  padding: 10px 12px; background: var(--surface-2);
-  border: 1px solid rgba(198, 139, 63, 0.2);
-  border-top: none;
-  border-bottom-left-radius: 8px;
-  border-bottom-right-radius: 8px;
-}
-.impulse-row { display: block; margin: 3px 0; }
-.impulse-row strong { color: var(--muted); font-weight: 500; text-transform: lowercase; }
-.impulse-row .value { color: var(--text); margin-left: 4px; }
-.impulse-steps {
-  margin-top: 6px; padding-top: 6px;
-  border-top: 1px dashed var(--border);
-}
-.impulse-steps-title {
-  color: var(--muted); font-size: 10.5px;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  margin-bottom: 4px;
-}
-.impulse-step { display: block; padding: 2px 0 2px 12px; position: relative; color: var(--text); }
-.impulse-step::before {
-  content: "·"; position: absolute; left: 2px;
-  color: var(--warning); font-weight: 700;
-}
-.artifact-row {
-  display: flex; align-items: center; gap: 10px;
-  background: var(--surface); border: 1px solid var(--border-soft);
-  border-radius: 10px; padding: 10px 12px;
-  margin-top: 10px; cursor: pointer;
-  transition: transform 0.15s, border-color 0.15s;
-  font-family: inherit; color: var(--text);
-  font-size: 13px; box-shadow: var(--shadow);
-  width: 100%; text-align: left;
-}
-.artifact-row:hover { border-color: var(--accent); }
-.artifact-row:active { transform: scale(0.98); }
-.artifact-row svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
-.artifact-row .info { flex: 1; min-width: 0; }
-.artifact-row .name { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.artifact-row .meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.artifact-row .arrow { color: var(--muted); flex-shrink: 0; }
 .attach-preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 2px 4px; }
 .attach-chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -644,7 +507,6 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   display: flex; gap: 4px; align-items: flex-end;
   background: transparent; border: none;
   border-radius: 22px; padding: 5px 0;
-  transition: none; box-shadow: none;
 }
 .attach-btn {
   width: 32px; height: 32px; border-radius: 50%; border: none;
@@ -718,94 +580,6 @@ textarea.grows { overflow-y: auto; }
   color: var(--muted); margin-bottom: 6px;
 }
 .metric-card-expand p strong { color: var(--text); font-weight: 600; }
-.node-svg { width: 100%; max-width: 260px; height: 220px; margin: 0 auto; display: block; }
-.node-bg { fill: none; stroke: var(--border); stroke-width: 1; }
-.node-ring { fill: none; stroke: var(--border); stroke-width: 1; opacity: 0.5; }
-.node-core { fill: var(--accent); }
-.node-core-glow { fill: var(--accent); opacity: 0.15; }
-.node-spoke { stroke: var(--border); stroke-width: 1; }
-.node-spoke.active { stroke: var(--accent); stroke-width: 2; }
-.node-dot { fill: var(--muted); }
-.node-dot.active { fill: var(--accent); }
-.node-label {
-  font-size: 8px; fill: var(--muted); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.04em;
-}
-.passport-level {
-  display: inline-flex; align-items: center; gap: 6px;
-  background: var(--accent-soft); color: var(--accent);
-  padding: 4px 10px; border-radius: 999px;
-  font-size: 10.5px; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.06em; margin-bottom: 12px;
-}
-.passport-title {
-  font-size: 20px; font-weight: 600; letter-spacing: -0.02em;
-  line-height: 1.25; margin-bottom: 6px;
-}
-.passport-goal { font-size: 13.5px; color: var(--muted); margin-bottom: 18px; line-height: 1.45; }
-.passport-field { padding: 10px 0; border-bottom: 1px solid var(--border); }
-.passport-field:last-child { border-bottom: none; }
-.passport-field-label {
-  font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.08em;
-  color: var(--muted); font-weight: 600; margin-bottom: 5px;
-}
-.passport-field-value { font-size: 14px; line-height: 1.5; word-wrap: break-word; }
-.passport-field-value ul { list-style: none; padding: 0; margin: 0; }
-.passport-field-value li { padding: 3px 0 3px 14px; position: relative; font-size: 13.5px; }
-.passport-field-value li::before {
-  content: ""; position: absolute; left: 2px; top: 12px;
-  width: 4px; height: 4px; background: var(--accent); border-radius: 50%;
-}
-.compass-wrap { display: flex; justify-content: center; padding: 8px 0 14px; }
-.compass-svg { width: 220px; height: 220px; }
-.compass-axis { stroke: var(--border); stroke-width: 1; fill: none; }
-.compass-ring { stroke: var(--border); stroke-width: 1; fill: none; }
-.compass-fill { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 1.5; }
-.compass-label {
-  font-size: 9px; fill: var(--muted); font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.06em;
-}
-.compass-dot { fill: var(--accent); }
-.tag-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-.tag {
-  display: inline-flex; align-items: center;
-  padding: 4px 10px; background: var(--surface-2);
-  border-radius: 999px; font-size: 12px; color: var(--text);
-}
-.tag.warm { background: var(--warning-soft); color: var(--warning); }
-.tag.skill { background: var(--accent-soft); color: var(--accent); font-weight: 500; }
-.empty-note { font-size: 13px; color: var(--muted); font-style: italic; padding: 10px 0; }
-.skill-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 8px 0; border-bottom: 1px solid var(--border-soft);
-  font-size: 13px; gap: 10px;
-}
-.skill-row:last-child { border-bottom: none; }
-.skill-name { color: var(--text); }
-.skill-bar {
-  flex: 1; height: 4px; border-radius: 2px;
-  background: var(--border); overflow: hidden; max-width: 100px;
-}
-.skill-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s; }
-.skill-percent {
-  font-size: 11.5px; color: var(--muted);
-  font-variant-numeric: tabular-nums; min-width: 32px; text-align: right;
-}
-.somatic-item {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 9px 0; border-bottom: 1px solid var(--border-soft);
-  font-size: 13px; gap: 10px;
-}
-.somatic-item:last-child { border-bottom: none; }
-.somatic-label { color: var(--muted); }
-.somatic-value { font-weight: 500; color: var(--text); }
-.somatic-note {
-  margin-top: 10px; padding: 10px 12px;
-  background: var(--surface); border-radius: 8px;
-  border: 1px solid var(--border-soft);
-  font-size: 12.5px; color: var(--muted);
-  line-height: 1.5; font-style: italic;
-}
 .artifact-item {
   background: var(--surface-2); border: 1px solid var(--border-soft);
   border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
@@ -822,8 +596,6 @@ textarea.grows { overflow-y: auto; }
   font-weight: 600; padding: 2px 8px; border-radius: 999px;
   background: var(--accent-soft); color: var(--accent);
 }
-.artifact-item-stage.prototype { background: var(--warning-soft); color: var(--warning); }
-.artifact-item-stage.working { background: rgba(79, 138, 107, 0.12); color: var(--success); }
 .artifact-item-meta {
   font-size: 11.5px; color: var(--muted);
   display: flex; gap: 10px; flex-wrap: wrap;
@@ -909,12 +681,6 @@ textarea.grows { overflow-y: auto; }
   line-height: 1.5; overflow: hidden;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.blog-post-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
-.blog-post-tag {
-  font-size: 10.5px; color: var(--accent);
-  background: var(--accent-soft);
-  padding: 2px 8px; border-radius: 999px; font-weight: 500;
-}
 .blog-view-title {
   font-size: 22px; font-weight: 600; letter-spacing: -0.02em;
   line-height: 1.25; margin-bottom: 8px;
@@ -926,44 +692,16 @@ textarea.grows { overflow-y: auto; }
   border-bottom: 1px solid var(--border-soft);
 }
 .blog-view-body { font-size: 14px; line-height: 1.65; }
-.blog-view-body h1, .blog-view-body h2, .blog-view-body h3 {
-  margin: 20px 0 8px; font-weight: 600;
-  letter-spacing: -0.02em; line-height: 1.3;
-}
-.blog-view-body h1:first-child, .blog-view-body h2:first-child, .blog-view-body h3:first-child { margin-top: 0; }
-.blog-view-body h1 { font-size: 19px; }
-.blog-view-body h2 { font-size: 17px; }
-.blog-view-body h3 { font-size: 15px; }
-.blog-view-body p { margin: 10px 0; }
-.blog-view-body ul, .blog-view-body ol { margin: 10px 0 10px 20px; }
-.blog-view-body li { margin: 4px 0; }
-.blog-view-body blockquote {
-  border-left: 3px solid var(--accent);
-  padding-left: 14px; margin: 14px 0; color: var(--muted);
-  font-style: italic;
-}
-.blog-view-body code {
-  background: var(--surface-2); padding: 2px 6px;
-  border-radius: 5px; font-family: ui-monospace, monospace; font-size: 0.9em;
-}
-.blog-view-body pre {
-  background: #0A0B0D; color: #E8EAED; padding: 14px;
-  border-radius: 10px; overflow-x: auto; margin: 14px 0;
-  font-size: 12.5px; line-height: 1.55;
-}
-.blog-view-body pre code { background: none; padding: 0; color: inherit; }
 .idea-row {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 12px 14px; background: var(--surface-2);
   border-radius: 12px; margin-bottom: 8px;
   border: 1px solid var(--border-soft);
 }
-.idea-row:last-child { margin-bottom: 0; }
 .idea-status {
   width: 16px; height: 16px; border-radius: 50%;
   flex-shrink: 0; margin-top: 2px;
   border: 2px solid var(--border);
-  display: flex; align-items: center; justify-content: center;
 }
 .idea-status.new { border-color: var(--accent); }
 .idea-status.in_progress { border-color: var(--warning); background: var(--warning-soft); }
@@ -971,30 +709,6 @@ textarea.grows { overflow-y: auto; }
 .idea-status.archived { border-color: var(--muted); opacity: 0.5; }
 .idea-text { flex: 1; font-size: 13.5px; line-height: 1.5; color: var(--text); }
 .idea-text.done { text-decoration: line-through; color: var(--muted); }
-.wish-card {
-  background: var(--surface-2); border: 1px solid var(--border-soft);
-  border-radius: 12px; padding: 14px 16px; margin-bottom: 10px;
-}
-.wish-name { font-size: 15px; font-weight: 600; margin-bottom: 4px; letter-spacing: -0.01em; }
-.wish-desc { font-size: 12.5px; color: var(--muted); line-height: 1.5; margin-bottom: 10px; }
-.wish-price {
-  font-size: 16px; font-weight: 700; color: var(--accent);
-  font-variant-numeric: tabular-nums; margin-bottom: 10px;
-}
-.wish-actions { display: flex; gap: 8px; }
-.wish-actions a, .wish-actions button {
-  flex: 1; padding: 10px 14px; border-radius: 10px;
-  border: 1px solid var(--border-soft);
-  background: var(--surface); color: var(--text);
-  font-family: inherit; font-size: 13px; font-weight: 500;
-  cursor: pointer; text-align: center; text-decoration: none;
-  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
-  transition: transform 0.15s, border-color 0.15s;
-}
-.wish-actions .buy { background: var(--accent); color: var(--bg); border: none; }
-.wish-actions a:hover, .wish-actions button:hover { border-color: var(--accent); }
-.wish-actions .buy:hover { opacity: 0.9; }
-.wish-actions svg { width: 14px; height: 14px; }
 .settings-section { margin-bottom: 20px; }
 .settings-section:last-child { margin-bottom: 0; }
 .settings-section-title {
@@ -1108,25 +822,6 @@ textarea.grows { overflow-y: auto; }
 .modal .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
 .modal .danger { background: var(--critical); color: #fff; }
 .modal .success { background: var(--success); color: #fff; }
-.risk-level {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 4px 10px; border-radius: 999px;
-  font-size: 10.5px; font-weight: 600;
-  text-transform: uppercase; letter-spacing: 0.06em;
-  margin-bottom: 12px;
-}
-.risk-level.critical { background: var(--critical-soft); color: var(--critical); }
-.risk-level.warning { background: var(--warning-soft); color: var(--warning); }
-.risk-block {
-  background: var(--surface-2); border-radius: 12px;
-  padding: 12px 14px; margin-bottom: 10px;
-}
-.risk-block-label {
-  font-size: 10.5px; text-transform: uppercase;
-  letter-spacing: 0.08em; color: var(--muted);
-  font-weight: 600; margin-bottom: 5px;
-}
-.risk-block-value { font-size: 13.5px; line-height: 1.5; color: var(--text); }
 .color-picker { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
 .color-swatch {
   width: 34px; height: 34px; border-radius: 50%;
@@ -1198,8 +893,6 @@ textarea.grows { overflow-y: auto; }
   flex-shrink: 0;
 }
 .badge-mini.hidden { display: none; }
-.badge-mini.warning { color: var(--warning); background: var(--warning-soft); }
-.badge-mini.critical { color: var(--critical); background: var(--critical-soft); }
 .pulse-fast .orb-inner { animation: orbRotate 3s linear infinite, orbBreathe 1.2s ease-in-out infinite; }
 @media (min-width: 768px) {
   .sheet, .menu-sheet {
@@ -1220,7 +913,7 @@ textarea.grows { overflow-y: auto; }
 <div class="app">
   <header>
     <div class="header-left">
-      <button class="orb analyst" id="orbBtn" title="Профиль (долгий тап — сменить режим)" aria-label="Профиль" type="button"><div class="orb-inner"></div></button>
+      <button class="orb analyst" id="orbBtn" title="Меню (долгий тап — сменить режим)" aria-label="Меню" type="button"><div class="orb-inner"></div></button>
     </div>
     <div class="header-center"></div>
     <div class="header-right">
@@ -1233,6 +926,12 @@ textarea.grows { overflow-y: auto; }
         <span class="pulse"></span>
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 12h4l2-6 4 12 2-6h6"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="profileBtn" aria-label="Профиль" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="8" r="4"/>
+          <path d="M4 21c0-4 4-7 8-7s8 3 8 7"/>
         </svg>
       </button>
       <button class="icon-btn" id="settingsBtn" aria-label="Настройки" type="button">
@@ -1264,7 +963,6 @@ textarea.grows { overflow-y: auto; }
 </div>
 <div class="sheet-bg" id="sheetBg"></div>
 
-<!-- Меню -->
 <div class="menu-sheet" id="menuSheet">
   <div class="sheet-handle" id="menuHandle"></div>
   <h3>Меню</h3>
@@ -1348,23 +1046,8 @@ textarea.grows { overflow-y: auto; }
       <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
     </button>
   </div>
-
-  <div class="menu-section">
-    <div class="menu-section-title">Развитие</div>
-    <button class="menu-item" id="menuProfile" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
-      <div class="info"><div class="name">Мой профиль</div><div class="desc">Навыки, компас, состояние</div></div>
-      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-    <button class="menu-item" id="menuSettings" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6M4.22 4.22l4.24 4.24m7.08 7.08l4.24 4.24M1 12h6m10 0h6M4.22 19.78l4.24-4.24m7.08-7.08l4.24-4.24"/></svg>
-      <div class="info"><div class="name">Настройки</div><div class="desc">Ключи, провайдер, тема</div></div>
-      <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" width="16" height="16"><polyline points="9 18 15 12 9 6"/></svg>
-    </button>
-  </div>
 </div>
 
-<!-- Лоты -->
 <div class="sheet" id="lotsSheet">
   <div class="sheet-handle" id="lotsHandle"></div>
   <h3>Лоты</h3>
@@ -1381,13 +1064,11 @@ textarea.grows { overflow-y: auto; }
   </button>
 </div>
 
-<!-- Карточка Лота -->
 <div class="sheet" id="lotCardSheet">
   <div class="sheet-handle" id="lotCardHandle"></div>
   <div id="lotCardContent"></div>
 </div>
 
-<!-- Блокнот идей -->
 <div class="sheet" id="notebookSheet">
   <div class="sheet-handle" id="notebookHandle"></div>
   <h3>Блокнот идей</h3>
@@ -1395,7 +1076,6 @@ textarea.grows { overflow-y: auto; }
   <div id="notebookList"></div>
 </div>
 
-<!-- Облако важных -->
 <div class="sheet" id="importantSheet">
   <div class="sheet-handle" id="importantHandle"></div>
   <h3>Облако важных</h3>
@@ -1403,7 +1083,6 @@ textarea.grows { overflow-y: auto; }
   <div id="importantList"></div>
 </div>
 
-<!-- Уведомления -->
 <div class="sheet" id="notificationsSheet">
   <div class="sheet-handle" id="notificationsHandle"></div>
   <h3>Уведомления</h3>
@@ -1411,7 +1090,6 @@ textarea.grows { overflow-y: auto; }
   <div id="notificationsList"></div>
 </div>
 
-<!-- Дэшборд -->
 <div class="sheet" id="dashboardSheet">
   <div class="sheet-handle" id="dashboardHandle"></div>
   <h3>Дэшборд</h3>
@@ -1419,7 +1097,6 @@ textarea.grows { overflow-y: auto; }
   <div id="dashboardList"></div>
 </div>
 
-<!-- Релиз -->
 <div class="sheet" id="releaseSheet">
   <div class="sheet-handle" id="releaseHandle"></div>
   <h3>Релиз</h3>
@@ -1427,7 +1104,6 @@ textarea.grows { overflow-y: auto; }
   <div id="releaseList"></div>
 </div>
 
-<!-- Отчёт разработчика -->
 <div class="sheet" id="devReportSheet">
   <div class="sheet-handle" id="devReportHandle"></div>
   <h3>Отчёт разработчика</h3>
@@ -1435,7 +1111,6 @@ textarea.grows { overflow-y: auto; }
   <div id="devReportList"></div>
 </div>
 
-<!-- Документы -->
 <div class="sheet" id="documentsSheet">
   <div class="sheet-handle" id="documentsHandle"></div>
   <h3>Документы</h3>
@@ -1447,7 +1122,6 @@ textarea.grows { overflow-y: auto; }
   <div id="documentsList"></div>
 </div>
 
-<!-- Чаты -->
 <div class="sheet" id="chatsSheet">
   <div class="sheet-handle" id="chatsHandle"></div>
   <h3>Чаты</h3>
@@ -1455,13 +1129,11 @@ textarea.grows { overflow-y: auto; }
   <div id="chatsList"></div>
 </div>
 
-<!-- Профиль -->
 <div class="sheet" id="profileSheet">
   <div class="sheet-handle" id="profileHandle"></div>
   <div id="profileContent"></div>
 </div>
 
-<!-- Пульс сессии (метрики) -->
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="metricsHandle"></div>
   <h3>Пульс сессии</h3>
@@ -1549,15 +1221,6 @@ textarea.grows { overflow-y: auto; }
     </div>
   </div>
 
-  <div style="margin-top:16px;">
-    <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin-bottom:10px;">Узел связи</div>
-    <div id="nodeWrap"></div>
-    <div style="margin-top:12px;">
-      <div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin-bottom:6px;">Стабильность за сессию</div>
-      <div id="sparkline" style="display:flex;align-items:flex-end;justify-content:center;gap:4px;height:40px;"></div>
-    </div>
-  </div>
-
   <div class="metric-card" data-metric="session" style="margin-top:16px;">
     <div class="metric-card-head">
       <span class="metric-card-label">Сессия</span>
@@ -1581,7 +1244,6 @@ textarea.grows { overflow-y: auto; }
   </div>
 </div>
 
-<!-- Редактор -->
 <div class="sheet" id="editorSheet">
   <div class="sheet-handle" id="editorHandle"></div>
   <h3 id="editorTitle">Редактор</h3>
@@ -1633,7 +1295,6 @@ textarea.grows { overflow-y: auto; }
   </div>
 </div>
 
-<!-- Блог -->
 <div class="sheet" id="blogSheet">
   <div class="sheet-handle" id="blogHandle"></div>
   <h3>Блог автора</h3>
@@ -1651,13 +1312,11 @@ textarea.grows { overflow-y: auto; }
   </div>
 </div>
 
-<!-- Просмотр статьи -->
 <div class="sheet" id="blogViewSheet">
   <div class="sheet-handle" id="blogViewHandle"></div>
   <div id="blogViewContent"></div>
 </div>
 
-<!-- Настройки -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <button class="modal-close" id="modalClose" aria-label="Закрыть" type="button">
@@ -1714,7 +1373,6 @@ textarea.grows { overflow-y: auto; }
   </div>
 </div>
 
-<!-- Модалка пути кода -->
 <div class="modal-bg" id="codePathModalBg">
   <div class="modal">
     <button class="modal-close" id="codePathClose" aria-label="Закрыть" type="button">
@@ -1732,7 +1390,6 @@ textarea.grows { overflow-y: auto; }
   </div>
 </div>
 
-<!-- Модалка "Новый Лот" -->
 <div class="modal-bg" id="lotModalBg">
   <div class="modal">
     <button class="modal-close" id="lotModalClose" aria-label="Закрыть" type="button">
@@ -1758,7 +1415,6 @@ textarea.grows { overflow-y: auto; }
   </div>
 </div>
 
-<!-- Модалка "Действия с чатом" -->
 <div class="modal-bg" id="chatActionModalBg">
   <div class="modal">
     <button class="modal-close" id="chatActionClose" aria-label="Закрыть" type="button">
@@ -1775,7 +1431,6 @@ textarea.grows { overflow-y: auto; }
   </div>
 </div>
 
-<!-- Онбординг -->
 <div class="onboarding" id="onboarding">
   <div class="onboarding-inner">
     <div class="onboarding-orb"></div>
@@ -2098,70 +1753,6 @@ function fmtDuration(ms) {
   return s + " с";
 }
 
-function renderImpulseNotice(dt) {
-  if (!dt || !dt.detected) return null;
-  const wrap = document.createElement("div");
-  wrap.className = "impulse-wrap";
-  const btn = document.createElement("button");
-  btn.className = "impulse-notice";
-  btn.type = "button";
-  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg><span>импульсивность</span>';
-  btn.addEventListener("click", (e) => { e.stopPropagation(); btn.classList.toggle("open"); });
-  wrap.appendChild(btn);
-  const detail = document.createElement("div");
-  detail.className = "impulse-detail";
-  let inner = '<div class="impulse-detail-inner">';
-  if (dt.influence) inner += '<div class="impulse-row"><strong>преобладает:</strong><span class="value">' + escHtml(dt.influence) + '</span></div>';
-  if (dt.risk) inner += '<div class="impulse-row"><strong>риск:</strong><span class="value">' + escHtml(dt.risk) + '</span></div>';
-  if (dt.hint) inner += '<div class="impulse-row">' + escHtml(dt.hint) + '</div>';
-  if (Array.isArray(dt.steps) && dt.steps.length) {
-    inner += '<div class="impulse-steps"><div class="impulse-steps-title">шаги стабилизации</div>' +
-      dt.steps.map(s => '<span class="impulse-step">' + escHtml(s) + '</span>').join("") + '</div>';
-  }
-  inner += '</div>';
-  detail.innerHTML = inner;
-  wrap.appendChild(detail);
-  return wrap;
-}
-
-function renderDecisionCards(choices) {
-  if (!choices || !choices.length) return null;
-  const wrap = document.createElement("div");
-  wrap.className = "decision-cards";
-  const title = document.createElement("div");
-  title.className = "decision-title";
-  title.textContent = "Варианты";
-  wrap.appendChild(title);
-  choices.forEach(choice => {
-    if (!choice || !choice.options) return;
-    choice.options.forEach((opt, idx) => {
-      const btn = document.createElement("button");
-      btn.className = "decision-card";
-      btn.type = "button";
-      const label = opt.label || String.fromCharCode(65 + idx);
-      const shortTerm = (opt.consequences && opt.consequences.short_term) || "";
-      const longTerm = (opt.consequences && opt.consequences.long_term) || "";
-      let text = "";
-      if (shortTerm) text += "<strong>Сейчас:</strong> " + escHtml(shortTerm) + " ";
-      if (longTerm) text += "<strong>Потом:</strong> " + escHtml(longTerm);
-      btn.innerHTML = '<div class="decision-card-head">' +
-        '<span class="decision-card-label">' + escHtml(label) + '</span>' +
-        '<span class="decision-card-tag">Вариант</span>' +
-        '</div>' +
-        '<div class="decision-card-text">' + (text || escHtml(opt.text || "")) + '</div>';
-      btn.addEventListener("click", () => {
-        if (btn.classList.contains("disabled")) return;
-        document.querySelectorAll(".decision-card").forEach(c => c.classList.add("disabled"));
-        const input = document.getElementById("input");
-        input.value = label + ": " + (opt.text || shortTerm || label);
-        send();
-      });
-      wrap.appendChild(btn);
-    });
-  });
-  return wrap;
-}
-
 function addRow(role, content, metrics, options) {
   options = options || {};
   const chat = document.getElementById("chat");
@@ -2181,14 +1772,6 @@ function addRow(role, content, metrics, options) {
   bubble.className = "bubble";
   if (role === "agent") {
     bubble.innerHTML = renderMarkdown(content);
-    if (metrics && metrics.value_choices && metrics.value_choices.length) {
-      const cards = renderDecisionCards(metrics.value_choices);
-      if (cards) bubble.appendChild(cards);
-    }
-    if (metrics && metrics.dominant_trait && metrics.dominant_trait.detected) {
-      const notice = renderImpulseNotice(metrics.dominant_trait);
-      if (notice) bubble.appendChild(notice);
-    }
     const actions = document.createElement("div");
     actions.className = "msg-actions";
     const copyBtn = document.createElement("button");
@@ -2252,7 +1835,6 @@ function describeStability(si) {
 }
 
 function updateMenu() {
-  const c = currentChat();
   const lotList = state.lots.filter(l => !l.archived);
   const lotsDesc = document.getElementById("menuLotsDesc");
   if (lotsDesc) lotsDesc.textContent = lotList.length + " " + pluralize(lotList.length, ["Лот", "Лота", "Лотов"]);
@@ -2271,28 +1853,27 @@ function updateMenu() {
   const docsCount = document.getElementById("menuDocumentsCount");
   if (docsCount) docsCount.textContent = docsTotal;
 
-  const notebookDesc = document.getElementById("menuNotebookDesc");
   const newIdeas = state.lots.reduce((sum, l) => sum + ((l.ideas || []).filter(i => i.status === "new").length), 0);
   const notebookCount = document.getElementById("menuNotebookCount");
-  if (newIdeas > 0) {
-    notebookCount.classList.remove("hidden");
-    notebookCount.textContent = newIdeas;
-    if (notebookDesc) notebookDesc.textContent = newIdeas + " новых";
-  } else {
-    notebookCount.classList.add("hidden");
-    if (notebookDesc) notebookDesc.textContent = "Автопополнение из диалога";
+  if (notebookCount) {
+    if (newIdeas > 0) {
+      notebookCount.classList.remove("hidden");
+      notebookCount.textContent = newIdeas;
+    } else {
+      notebookCount.classList.add("hidden");
+    }
   }
 
+  const c = currentChat();
   const importantCount = c && c.important ? Object.keys(c.important).length : 0;
   const menuImportantCount = document.getElementById("menuImportantCount");
-  const menuImportantDesc = document.getElementById("menuImportantDesc");
-  if (importantCount > 0) {
-    menuImportantCount.classList.remove("hidden");
-    menuImportantCount.textContent = importantCount;
-    if (menuImportantDesc) menuImportantDesc.textContent = importantCount + " " + pluralize(importantCount, ["сообщение", "сообщения", "сообщений"]);
-  } else {
-    menuImportantCount.classList.add("hidden");
-    if (menuImportantDesc) menuImportantDesc.textContent = "Важные сообщения";
+  if (menuImportantCount) {
+    if (importantCount > 0) {
+      menuImportantCount.classList.remove("hidden");
+      menuImportantCount.textContent = importantCount;
+    } else {
+      menuImportantCount.classList.add("hidden");
+    }
   }
 }
 
@@ -2310,197 +1891,37 @@ function updateMetrics(metrics) {
 
   const si = typeof m.stability_index === "number" ? m.stability_index : 0;
   const d = describeStability(si);
-  document.getElementById("mcStabilityValue").textContent = si.toFixed(2);
-  document.getElementById("mcStabilityBar").style.width = (si * 100) + "%";
-  document.getElementById("mcStabilityBar").className = "metric-card-bar-fill";
-  if (si < 0.5) document.getElementById("mcStabilityBar").classList.add("critical");
-  else if (si < 0.75) document.getElementById("mcStabilityBar").classList.add("warning");
-  document.getElementById("mcStabilityDesc").textContent = d.meaning;
-  document.getElementById("mcStabilityMeaning").textContent = d.meaning;
-  document.getElementById("mcStabilityAction").textContent = d.action;
+  const elStab = document.getElementById("mcStabilityValue");
+  if (elStab) {
+    elStab.textContent = si.toFixed(2);
+    document.getElementById("mcStabilityBar").style.width = (si * 100) + "%";
+    document.getElementById("mcStabilityBar").className = "metric-card-bar-fill";
+    if (si < 0.5) document.getElementById("mcStabilityBar").classList.add("critical");
+    else if (si < 0.75) document.getElementById("mcStabilityBar").classList.add("warning");
+    document.getElementById("mcStabilityDesc").textContent = d.meaning;
+    document.getElementById("mcStabilityMeaning").textContent = d.meaning;
+    document.getElementById("mcStabilityAction").textContent = d.action;
+  }
 
   const scaleLabels = { micro: "Микро", tactical: "Тактический", strategic: "Стратегический", systemic: "Системный" };
-  const scaleDescriptions = {
-    micro: "Задача на 1-2 параметра. Ответ краткий.",
-    tactical: "Задача на 3-5 параметров. Удерживайте фокус на цели.",
-    strategic: "Долгосрочная задача с миссией и рисками. Откройте карточку Лота.",
-    systemic: "Задача влияет на смежные системы. Учитывайте последствия.",
-  };
   const scale = m.mind_scale || "micro";
-  document.getElementById("mcMindValue").textContent = scaleLabels[scale] || "—";
-  document.getElementById("mcMindDesc").textContent = scaleDescriptions[scale] || "—";
-  document.getElementById("mcMindMeaning").textContent = scaleDescriptions[scale] || "—";
-  document.getElementById("mcMindAction").textContent = (scale === "strategic" || scale === "systemic") ? "Откройте карточку Лота." : "Продолжайте работу.";
+  const elMind = document.getElementById("mcMindValue");
+  if (elMind) {
+    elMind.textContent = scaleLabels[scale] || "—";
+    document.getElementById("mcMindDesc").textContent = scaleLabels[scale] || "—";
+  }
 
   const lots = m.lots_balance || "+0.0";
-  document.getElementById("mcLotsValue").textContent = lots;
-  const n = parseFloat(String(lots).replace(/[^\d.-]/g, ""));
-  let lotsMeaning = "Пока нет накоплений.", lotsAction = "Продолжайте — индекс начнёт расти.";
-  if (!isNaN(n) && n > 0) { lotsMeaning = "Есть полезные выводы и пройденные препятствия."; lotsAction = "Продолжайте в том же духе."; }
-  else if (!isNaN(n) && n < 0) { lotsMeaning = "Накопились списания — были тупики или ошибки."; lotsAction = "Пересмотрите последние решения."; }
-  document.getElementById("mcLotsDesc").textContent = lotsMeaning;
-  document.getElementById("mcLotsMeaning").textContent = lotsMeaning;
-  document.getElementById("mcLotsAction").textContent = lotsAction;
-
-  const hc = typeof m.human_contribution === "number" ? m.human_contribution : null;
-  document.getElementById("mcHumanValue").textContent = hc != null ? (Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%") : "—";
-  document.getElementById("mcHumanBar").style.width = (hc != null ? hc * 100 : 0) + "%";
-  let humanMeaning = "—", humanAction = "—";
-  if (hc != null) {
-    if (hc >= 0.7) { humanMeaning = "Ваш вклад высокий (" + Math.round(hc * 100) + "%)."; humanAction = "Это ваше решение."; }
-    else if (hc >= 0.4) { humanMeaning = "Баланс между вами и алгоритмом."; humanAction = "Работаете вместе."; }
-    else { humanMeaning = "Алгоритм внёс больше."; humanAction = "Уточните — может, чего-то не хватает."; }
-  }
-  document.getElementById("mcHumanDesc").textContent = humanMeaning;
-  document.getElementById("mcHumanMeaning").textContent = humanMeaning;
-  document.getElementById("mcHumanAction").textContent = humanAction;
-
-  const pulse = m.cognitive_pulse || "stable";
-  const pulseLabels = { slow: "Спокойный", stable: "Ровный", fast: "Быстрый" };
-  const pulseDescriptions = {
-    slow: "Медленный темп, обдумывание.",
-    stable: "Ровный темп, без спешки.",
-    fast: "Быстрый темп, много деталей.",
-  };
-  document.getElementById("mcPulseValue").textContent = pulseLabels[pulse] || "—";
-  document.getElementById("mcPulseDesc").textContent = pulseDescriptions[pulse] || "—";
-  document.getElementById("mcPulseMeaning").textContent = pulseDescriptions[pulse] || "—";
-  document.getElementById("mcPulseAction").textContent = pulse === "fast" ? "Проверьте, все ли детали учтены." : "Продолжайте.";
-
-  const sa = m.social_adaptation || {};
-  const socialLabels = { inactive: "Не активна", low: "Низкая", medium: "Средняя", high: "Высокая" };
-  document.getElementById("mcSocialValue").textContent = socialLabels[sa.level || "inactive"] || "—";
-  document.getElementById("mcSocialDesc").textContent = sa.reason || (sa.active ? "Учитывается контекст публикации." : "Ответ личный, без учёта окружающих.");
-  document.getElementById("mcSocialMeaning").textContent = sa.active ? "Учитывается реакция окружающих." : "Ответ личный, без учёта окружающих.";
-  document.getElementById("mcSocialAction").textContent = sa.active ? "Перечитайте перед отправкой." : "Ничего не нужно.";
-
-  const lotsHist = document.getElementById("mcLotsHistory");
-  lotsHist.innerHTML = "";
-  const hist = (c.indexHistory || []).slice(-5).reverse();
-  if (!hist.length) {
-    lotsHist.innerHTML = '<div style="font-size:12px;color:var(--muted);font-style:italic;">Пока нет начислений.</div>';
-  } else {
-    hist.forEach(h => {
-      const row = document.createElement("div");
-      row.style.cssText = "display:flex;justify-content:space-between;padding:4px 0;font-size:12.5px;";
-      const deltaColor = h.delta > 0 ? "var(--success)" : "var(--critical)";
-      const time = new Date(h.at).toLocaleTimeString("ru-RU", { hour: "2-digit", minute: "2-digit" });
-      row.innerHTML = '<span style="color:var(--muted);">' + time + '</span>' +
-        '<span style="color:' + deltaColor + ';font-weight:500;">' + (h.delta > 0 ? "+" : "") + h.delta.toFixed(1) + '</span>';
-      lotsHist.appendChild(row);
-    });
-  }
-
-  document.getElementById("mcSessionCount").textContent = c.sessionCount || 0;
-  document.getElementById("mcSessionTime").textContent = fmtDuration(Date.now() - state.sessionStart);
-  document.getElementById("mcKeySource").textContent = state.lastKeySource === "user" ? "свой" : "сервисный";
-  document.getElementById("mcProvider").textContent = (_providersCache.find(pr => pr.id === state.lastProvider) || {}).name || "—";
-  document.getElementById("mcSessionValue").textContent = (c.sessionCount || 0) + " запросов";
-  document.getElementById("mcSessionDesc").textContent = "Активная сессия";
-
-  renderSparkline();
-  renderNodeConnection();
-  updateMenu();
-
-  const orb = document.getElementById("orbBtn");
-  orb.classList.remove("pulse-fast");
-  if (m.cognitive_pulse === "fast") orb.classList.add("pulse-fast");
+  const elLots = document.getElementById("mcLotsValue");
+  if (elLots) elLots.textContent = lots;
 
   const metricsBtn = document.getElementById("metricsBtn");
-  metricsBtn.classList.remove("warning", "critical", "fast");
-  if (si < 0.5) metricsBtn.classList.add("critical");
-  else if (si < 0.75) metricsBtn.classList.add("warning");
-  if (m.cognitive_pulse === "fast") metricsBtn.classList.add("fast");
-}
-
-function renderSparkline() {
-  const box = document.getElementById("sparkline");
-  if (!box) return;
-  box.innerHTML = "";
-  const c = currentChat();
-  const hist = ((c && c.stabilityHistory) ? c.stabilityHistory : []).slice(-10);
-  for (let i = 0; i < 10; i++) {
-    const bar = document.createElement("div");
-    bar.style.cssText = "width:10px;background:var(--accent);border-radius:3px;min-height:4px;opacity:0.75;transition:height 0.3s;";
-    const v = hist[i];
-    if (v == null) {
-      bar.style.background = "var(--border)";
-      bar.style.opacity = "0.5";
-      bar.style.height = "6px";
-    } else {
-      if (v < 0.5) bar.style.background = "var(--critical)";
-      else if (v < 0.75) bar.style.background = "var(--warning)";
-      bar.style.height = (4 + v * 32) + "px";
-    }
-    box.appendChild(bar);
+  if (metricsBtn) {
+    metricsBtn.classList.remove("warning", "critical", "fast");
+    if (si < 0.5) metricsBtn.classList.add("critical");
+    else if (si < 0.75) metricsBtn.classList.add("warning");
+    if (m.cognitive_pulse === "fast") metricsBtn.classList.add("fast");
   }
-}
-
-function renderNodeConnection() {
-  const wrap = document.getElementById("nodeWrap");
-  if (!wrap) return;
-  const c = currentChat();
-  const m = (c && c.lastMetrics) || {};
-  const si = typeof m.stability_index === "number" ? m.stability_index : 0;
-  const size = 220, cx = size / 2, cy = size / 2;
-  const lot = currentLot();
-  const points = [
-    { x: cx, y: 30, label: "Цель", active: !!lot && !!lot.goal },
-    { x: size - 30, y: cy, label: "Метрики", active: si > 0.7 },
-    { x: cx, y: size - 30, label: "Действия", active: (c && c.sessionCount > 0) || false },
-    { x: 30, y: cy, label: "Знания", active: !!(c && c.history && c.history.length > 3) },
-  ];
-  let svg = '<svg class="node-svg" viewBox="0 0 ' + size + ' ' + size + '">';
-  [30, 55, 80].forEach(r => {
-    svg += '<circle class="node-ring" cx="' + cx + '" cy="' + cy + '" r="' + r + '"/>';
-  });
-  points.forEach(pt => {
-    svg += '<line class="node-spoke' + (pt.active ? " active" : "") + '" x1="' + cx + '" y1="' + cy + '" x2="' + pt.x + '" y2="' + pt.y + '"/>';
-  });
-  svg += '<circle class="node-core-glow" cx="' + cx + '" cy="' + cy + '" r="' + (10 + si * 12) + '"/>';
-  svg += '<circle class="node-core" cx="' + cx + '" cy="' + cy + '" r="6"/>';
-  points.forEach(pt => {
-    svg += '<circle class="node-dot' + (pt.active ? " active" : "") + '" cx="' + pt.x + '" cy="' + pt.y + '" r="4"/>';
-    svg += '<text class="node-label" x="' + pt.x + '" y="' + (pt.y + (pt.y < cy ? -8 : 14)) + '" text-anchor="middle">' + pt.label + '</text>';
-  });
-  svg += '</svg>';
-  wrap.innerHTML = svg;
-}
-
-function fileIcon(type) {
-  if (type && type.startsWith("image/")) {
-    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="M21 15l-5-5L5 21"/></svg>';
-  }
-  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>';
-}
-
-async function extractTextFromFile(file) {
-  const name = file.name || "", type = file.type || "";
-  const ext = name.split(".").pop().toLowerCase();
-  if (type.startsWith("image/")) return "[Изображение: " + name + "]";
-  if (ext === "txt" || type === "text/plain") return await file.text();
-  if (ext === "docx" && window.mammoth) {
-    try {
-      const buf = await file.arrayBuffer();
-      const r = await window.mammoth.extractRawText({ arrayBuffer: buf });
-      return r.value || "";
-    } catch (e) { return "[Не удалось прочитать DOCX]"; }
-  }
-  if (ext === "pdf" && window.pdfjsLib) {
-    try {
-      const buf = await file.arrayBuffer();
-      const pdf = await window.pdfjsLib.getDocument({ data: buf }).promise;
-      let out = "";
-      const pages = Math.min(pdf.numPages, 10);
-      for (let i = 1; i <= pages; i++) {
-        const page = await pdf.getPage(i);
-        const cc = await page.getTextContent();
-        out += cc.items.map(it => it.str).join(" ") + "\n";
-      }
-      return out;
-    } catch (e) { return "[Не удалось прочитать PDF]"; }
-  }
-  return "[Формат не поддерживается: " + name + "]";
 }
 
 function renderAttachPreview() {
@@ -2509,7 +1930,7 @@ function renderAttachPreview() {
   state.attachments.forEach((a, idx) => {
     const chip = document.createElement("div");
     chip.className = "attach-chip";
-    chip.innerHTML = fileIcon(a.type) +
+    chip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>' +
       '<span class="name">' + escHtml(a.name) + '</span>' +
       '<button class="remove" title="Удалить" type="button">×</button>';
     chip.querySelector(".remove").addEventListener("click", () => {
@@ -2525,7 +1946,8 @@ async function handleFiles(files) {
   for (const f of list) {
     if (state.attachments.length >= MAX_FILES) { alert("Максимум " + MAX_FILES + " файла"); break; }
     if (f.size > MAX_FILE_SIZE) { alert("Файл " + f.name + " больше 5 МБ"); continue; }
-    let text = await extractTextFromFile(f);
+    let text = "";
+    try { text = await f.text(); } catch (e) { text = "[Не удалось прочитать]"; }
     if (text.length > MAX_TEXT_CHARS) text = text.slice(0, MAX_TEXT_CHARS) + "\n...[обрезано]";
     state.attachments.push({ name: f.name, type: f.type, text: text });
   }
@@ -2596,10 +2018,11 @@ async function send() {
   bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>' +
     '<span class="thinking-text">' + THINKING_PHRASES[Math.floor(Math.random() * THINKING_PHRASES.length)] + '</span>';
 
+  const lot = currentLot();
   const carried = {
-    passport: (currentLot() && currentLot().goal) ? { level: "micro", title: currentLot().name, goal: currentLot().goal } : {},
+    passport: lot && lot.goal ? { level: "micro", title: lot.name, goal: lot.goal } : {},
     profile: {},
-    artifacts: currentLot() ? (currentLot().documents || []).slice(-3) : [],
+    artifacts: lot ? (lot.documents || []).slice(-3) : [],
   };
 
   try {
@@ -2623,16 +2046,7 @@ async function send() {
 
     if (!r.ok) {
       const errText = (data && data.detail) || r.statusText;
-      const errRow = addRow("agent", "⚠ " + errText);
-      if (r.status === 429) {
-        const btn2 = document.createElement("button");
-        btn2.className = "open-editor-btn";
-        btn2.type = "button";
-        btn2.style.marginTop = "10px";
-        btn2.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg> Ввести свой ключ';
-        btn2.addEventListener("click", () => { document.getElementById("settingsBtn").click(); });
-        errRow.bubble.appendChild(btn2);
-      }
+      addRow("agent", "⚠ " + errText);
     } else if (data) {
       state.lastKeySource = data.key_source || null;
       state.lastProvider = data.provider_used || state.provider;
@@ -2652,9 +2066,9 @@ async function send() {
     if (thinking && thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
     orb.classList.remove("thinking");
     let msg = "Не удалось связаться с сервером. ";
-    if (e && e.name === "AbortError") msg += "Превышено время ожидания. Попробуйте ещё раз.";
-    else if (e && e.name === "TypeError") msg += "Проверьте соединение и попробуйте снова.";
-    else msg += (e && e.message ? e.message : "Неизвестная ошибка") + ". Попробуйте ещё раз.";
+    if (e && e.name === "AbortError") msg += "Превышено время ожидания.";
+    else if (e && e.name === "TypeError") msg += "Проверьте соединение.";
+    else msg += (e && e.message ? e.message : "Неизвестная ошибка") + ".";
     addRow("agent", msg);
   } finally {
     btn.disabled = false;
@@ -2673,10 +2087,10 @@ function closeAllSheets() {
   document.querySelectorAll(".modal-bg").forEach(m => m.classList.remove("open"));
 }
 
-/* --- Лоты --- */
 function renderLotsList() {
   const activeBox = document.getElementById("lotsActiveList");
   const archiveBox = document.getElementById("lotsArchiveList");
+  if (!activeBox || !archiveBox) return;
   activeBox.innerHTML = "";
   archiveBox.innerHTML = "";
   const active = state.lots.filter(l => !l.archived);
@@ -2732,7 +2146,7 @@ function openLotCard(lotId) {
   html += '<div class="passport-level">Стоимость: ' + escHtml(String(l.price || "—")) + '</div>';
   html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:14px 0 8px;">Чаты по Лоту</div>';
   if (!chats.length) {
-    html += '<div class="empty-note">Пока нет чатов. Создайте новый или переместите существующий.</div>';
+    html += '<div class="empty-note">Пока нет чатов.</div>';
   } else {
     html += '<div id="lotChatsList"></div>';
   }
@@ -2770,7 +2184,10 @@ function openLotCard(lotId) {
       row.style.cursor = "pointer";
       row.innerHTML = '<div class="artifact-item-name">' + escHtml(d.name || "Документ") + '</div>' +
         '<div class="artifact-item-meta"><span>' + escHtml(d.type || "документ") + '</span></div>';
-      row.addEventListener("click", () => { closeAllSheets(); setTimeout(() => openEditor({ type: "document", lotId: l.id, docIndex: idx, name: d.name || "", body: d.content || "" }), 200); });
+      row.addEventListener("click", () => {
+        closeAllSheets();
+        setTimeout(() => openEditor({ type: "document", lotId: l.id, docIndex: idx, name: d.name || "", body: d.content || "" }), 200);
+      });
       docsList.appendChild(row);
     });
   }
@@ -2872,9 +2289,9 @@ async function deleteLot() {
   toast("Лот удалён");
 }
 
-/* --- Чаты --- */
 function renderChatsList() {
   const box = document.getElementById("chatsList");
+  if (!box) return;
   box.innerHTML = "";
   const unattached = state.chats.filter(c => !c.lotId);
   if (!unattached.length) {
@@ -2912,18 +2329,12 @@ async function moveChatToLot() {
   const c = state.chats.find(x => x.id === state.actionChatId);
   if (!c) return;
   const available = state.lots.filter(l => !l.archived);
-  if (!available.length) {
-    toast("Нет активных Лотов");
-    return;
-  }
+  if (!available.length) { toast("Нет активных Лотов"); return; }
   const names = available.map((l, i) => (i + 1) + ". " + l.name).join("\n");
   const input = prompt("К какому Лоту переместить?\n\n" + names + "\n\nВведите номер:");
   if (!input) return;
   const idx = parseInt(input, 10) - 1;
-  if (isNaN(idx) || idx < 0 || idx >= available.length) {
-    toast("Неверный номер");
-    return;
-  }
+  if (isNaN(idx) || idx < 0 || idx >= available.length) { toast("Неверный номер"); return; }
   const targetLot = available[idx];
   c.lotId = targetLot.id;
   targetLot.chatIds = targetLot.chatIds || [];
@@ -3018,9 +2429,9 @@ function renderDemo() {
   });
 }
 
-/* --- Документы --- */
 function renderDocumentsList() {
   const box = document.getElementById("documentsList");
+  if (!box) return;
   box.innerHTML = "";
   const all = [];
   state.lots.forEach(l => {
@@ -3048,9 +2459,9 @@ function renderDocumentsList() {
   });
 }
 
-/* --- Блокнот идей --- */
 function renderNotebookList() {
   const box = document.getElementById("notebookList");
+  if (!box) return;
   box.innerHTML = "";
   const all = [];
   state.lots.forEach(l => {
@@ -3080,9 +2491,9 @@ function renderNotebookList() {
   });
 }
 
-/* --- Облако важных --- */
 function renderImportantList() {
   const box = document.getElementById("importantList");
+  if (!box) return;
   box.innerHTML = "";
   const c = currentChat();
   if (!c || !c.important || !Object.keys(c.important).length) {
@@ -3104,27 +2515,26 @@ function renderImportantList() {
   });
 }
 
-/* --- Уведомления / Дэшборд / Релиз / Отчёт разработчика (заглушки) --- */
 function renderNotifications() {
   const box = document.getElementById("notificationsList");
-  box.innerHTML = '<div class="empty-note">Пока нет уведомлений.</div>';
+  if (box) box.innerHTML = '<div class="empty-note">Пока нет уведомлений.</div>';
 }
 function renderDashboard() {
   const box = document.getElementById("dashboardList");
-  box.innerHTML = '<div class="empty-note">Дэшборд в разработке.</div>';
+  if (box) box.innerHTML = '<div class="empty-note">Дэшборд в разработке.</div>';
 }
 function renderRelease() {
   const box = document.getElementById("releaseList");
-  box.innerHTML = '<div class="empty-note">Список доработок пуст.</div>';
+  if (box) box.innerHTML = '<div class="empty-note">Список доработок пуст.</div>';
 }
 function renderDevReport() {
   const box = document.getElementById("devReportList");
-  box.innerHTML = '<div class="empty-note">Отчёт появится после нескольких сессий.</div>';
+  if (box) box.innerHTML = '<div class="empty-note">Отчёт появится после нескольких сессий.</div>';
 }
 
-/* --- Профиль --- */
 function renderProfile() {
   const box = document.getElementById("profileContent");
+  if (!box) return;
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта</div>';
@@ -3159,7 +2569,6 @@ function renderProfile() {
   box.innerHTML = html;
 }
 
-/* --- Редактор --- */
 function openEditor(context) {
   state.editorContext = context || {};
   const name = context.name || "Документ";
@@ -3228,7 +2637,7 @@ async function saveEditorToLot() {
   if (!name || !body) { status.textContent = "Нужны название и текст"; return; }
   const ctx = state.editorContext || {};
   const lotId = ctx.lotId || (currentLot() ? currentLot().id : null);
-  if (!lotId) { status.textContent = "Нет активного Лота. Создайте Лот или откройте его карточку."; return; }
+  if (!lotId) { status.textContent = "Нет активного Лота."; return; }
   const l = state.lots.find(x => x.id === lotId);
   if (!l) return;
   l.documents = l.documents || [];
@@ -3245,7 +2654,6 @@ async function saveEditorToLot() {
   setTimeout(() => closeAllSheets(), 700);
 }
 
-/* --- Настройки --- */
 async function loadProviders() {
   try {
     const r = await fetch(API_BASE + "/providers");
@@ -3260,6 +2668,7 @@ async function loadProviders() {
 
 function renderProviderRow() {
   const row = document.getElementById("providerRow");
+  if (!row) return;
   row.innerHTML = "";
   _providersCache.forEach(pr => {
     const btn = document.createElement("button");
@@ -3278,6 +2687,7 @@ function renderProviderRow() {
 
 function renderKeyInstructions() {
   const box = document.getElementById("keyInstructions");
+  if (!box) return;
   box.innerHTML = "";
   const pr = _providersCache.find(p => p.id === state.provider);
   if (!pr) return;
@@ -3293,7 +2703,6 @@ function renderKeyInstructions() {
   }
 }
 
-/* --- Табы Лотов --- */
 function switchLotsTab(tab) {
   document.querySelectorAll("#lotsTabs .blog-tab").forEach(t => {
     t.classList.toggle("active", t.dataset.tab === tab);
@@ -3303,7 +2712,7 @@ function switchLotsTab(tab) {
 }
 
 function switchBlogTab(tab) {
-  document.querySelectorAll(".blog-tab").forEach(t => {
+  document.querySelectorAll("#blogTabs .blog-tab").forEach(t => {
     t.classList.toggle("active", t.dataset.tab === tab);
   });
   document.getElementById("blogListPane").style.display = tab === "list" ? "block" : "none";
@@ -3312,6 +2721,7 @@ function switchBlogTab(tab) {
 
 async function loadBlogList() {
   const box = document.getElementById("blogList");
+  if (!box) return;
   box.innerHTML = '<div class="empty-note">Загружаю...</div>';
   try {
     const r = await fetch(API_BASE + "/blog");
@@ -3340,6 +2750,7 @@ async function loadBlogList() {
 
 async function openBlogView(id) {
   const box = document.getElementById("blogViewContent");
+  if (!box) return;
   box.innerHTML = '<div class="empty-note">Загружаю...</div>';
   openSheet("blogViewSheet");
   try {
@@ -3393,148 +2804,156 @@ function maybeShowOnboarding() {
 }
 
 async function init() {
-  applyProfile();
-  setupViewport();
-  setupTextarea();
+  // Скрываем splash сразу после старта — до любых долгих операций
+  setTimeout(() => {
+    const sp = document.getElementById("splash");
+    if (sp) sp.classList.add("hide");
+  }, 600);
 
   try {
-    const m = localStorage.getItem("monolog_mode");
-    if (m === "analyst" || m === "strategist") state.mode = m;
-  } catch (e) {}
-  renderOrb();
-  document.documentElement.setAttribute("data-mode", state.mode);
+    applyProfile();
+    setupViewport();
+    setupTextarea();
 
-  try {
-    const prof = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
-    if (prof) state.profile = Object.assign(state.profile, prof);
-    state.apiKey = localStorage.getItem(LS_KEY) || "";
-    state.authorKey = localStorage.getItem(LS_AUTHOR) || "";
-    state.provider = localStorage.getItem(LS_PROVIDER) || "groq";
-  } catch (e) {}
-  applyProfile();
+    try {
+      const m = localStorage.getItem("monolog_mode");
+      if (m === "analyst" || m === "strategist") state.mode = m;
+    } catch (e) {}
+    renderOrb();
+    document.documentElement.setAttribute("data-mode", state.mode);
 
-  await loadData();
-  renderCurrentChat();
-  updateMenu();
+    try {
+      const prof = JSON.parse(localStorage.getItem(LS_PROFILE) || "null");
+      if (prof) state.profile = Object.assign(state.profile, prof);
+      state.apiKey = localStorage.getItem(LS_KEY) || "";
+      state.authorKey = localStorage.getItem(LS_AUTHOR) || "";
+      state.provider = localStorage.getItem(LS_PROVIDER) || "groq";
+    } catch (e) {}
+    applyProfile();
 
-  ["menuSheet", "lotsSheet", "lotCardSheet", "notebookSheet", "importantSheet",
-   "notificationsSheet", "dashboardSheet", "releaseSheet", "devReportSheet",
-   "documentsSheet", "chatsSheet", "profileSheet", "metricsSheet",
-   "editorSheet", "blogSheet", "blogViewSheet"
-  ].forEach(id => {
-    const sheet = document.getElementById(id);
-    const handle = sheet ? sheet.querySelector(".sheet-handle") : null;
-    if (sheet && handle) setupSwipeToClose(sheet, handle);
-  });
+    await loadData();
+    renderCurrentChat();
+    updateMenu();
 
-  setTimeout(() => document.getElementById("splash").classList.add("hide"), 1100);
+    ["menuSheet", "lotsSheet", "lotCardSheet", "notebookSheet", "importantSheet",
+     "notificationsSheet", "dashboardSheet", "releaseSheet", "devReportSheet",
+     "documentsSheet", "chatsSheet", "profileSheet", "metricsSheet",
+     "editorSheet", "blogSheet", "blogViewSheet"
+    ].forEach(id => {
+      const sheet = document.getElementById(id);
+      const handle = sheet ? sheet.querySelector(".sheet-handle") : null;
+      if (sheet && handle) setupSwipeToClose(sheet, handle);
+    });
 
-  await loadProviders();
-  renderProviderRow();
-  maybeShowOnboarding();
+    await loadProviders();
+    renderProviderRow();
+    maybeShowOnboarding();
 
-  const sendBtn = document.getElementById("sendBtn");
-  const input = document.getElementById("input");
-  const fileInput = document.getElementById("fileInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const input = document.getElementById("input");
+    const fileInput = document.getElementById("fileInput");
 
-  sendBtn.addEventListener("click", send);
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-  });
-  document.getElementById("attachBtn").addEventListener("click", () => fileInput.click());
-  fileInput.addEventListener("change", (e) => { handleFiles(e.target.files); fileInput.value = ""; });
+    sendBtn.addEventListener("click", send);
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+    });
+    document.getElementById("attachBtn").addEventListener("click", () => fileInput.click());
+    fileInput.addEventListener("change", (e) => { handleFiles(e.target.files); fileInput.value = ""; });
 
-  const orbBtn = document.getElementById("orbBtn");
-  let orbPressTimer = null;
-  let orbMoved = false;
-  orbBtn.addEventListener("pointerdown", () => {
-    orbMoved = false;
-    orbPressTimer = setTimeout(() => { orbPressTimer = null; switchMode(); }, 550);
-  });
-  orbBtn.addEventListener("pointermove", () => {
-    orbMoved = true;
-    if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
-  });
-  ["pointerup", "pointerleave", "pointercancel"].forEach(ev => {
-    orbBtn.addEventListener(ev, () => {
+    const orbBtn = document.getElementById("orbBtn");
+    let orbPressTimer = null;
+    let orbMoved = false;
+    orbBtn.addEventListener("pointerdown", () => {
+      orbMoved = false;
+      orbPressTimer = setTimeout(() => { orbPressTimer = null; switchMode(); }, 550);
+    });
+    orbBtn.addEventListener("pointermove", () => {
+      orbMoved = true;
       if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
-      if (!orbMoved && ev === "pointerup") { renderProfile(); openSheet("profileSheet"); }
     });
-  });
-
-  document.getElementById("menuBtn").addEventListener("click", () => { updateMenu(); openSheet("menuSheet"); });
-  document.getElementById("menuSearch").addEventListener("input", (e) => {
-    const q = (e.target.value || "").toLowerCase();
-    document.querySelectorAll("#menuSheet .menu-item").forEach(el => {
-      const name = (el.querySelector(".name") || {}).textContent || "";
-      el.style.display = !q || name.toLowerCase().includes(q) ? "" : "none";
+    ["pointerup", "pointerleave", "pointercancel"].forEach(ev => {
+      orbBtn.addEventListener(ev, () => {
+        if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
+        if (!orbMoved && ev === "pointerup") {
+          updateMenu();
+          openSheet("menuSheet");
+        }
+      });
     });
-  });
 
-  document.getElementById("menuNewChat").addEventListener("click", async () => {
-    closeAllSheets();
-    const fresh = createChatObj("Новый чат");
-    await dbPut(STORE_CHATS, fresh);
-    state.chats.push(fresh);
-    await switchChat(fresh.id);
-  });
+    document.getElementById("menuBtn").addEventListener("click", () => { updateMenu(); openSheet("menuSheet"); });
+    document.getElementById("menuSearch").addEventListener("input", (e) => {
+      const q = (e.target.value || "").toLowerCase();
+      document.querySelectorAll("#menuSheet .menu-item").forEach(el => {
+        const name = (el.querySelector(".name") || {}).textContent || "";
+        el.style.display = !q || name.toLowerCase().includes(q) ? "" : "none";
+      });
+    });
 
-  document.getElementById("menuLots").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderLotsList(); openSheet("lotsSheet"); }, 200);
-  });
-  document.getElementById("menuNotebook").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderNotebookList(); openSheet("notebookSheet"); }, 200);
-  });
-  document.getElementById("menuImportant").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderImportantList(); openSheet("importantSheet"); }, 200);
-  });
-  document.getElementById("menuNotifications").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderNotifications(); openSheet("notificationsSheet"); }, 200);
-  });
-  document.getElementById("menuDashboard").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderDashboard(); openSheet("dashboardSheet"); }, 200);
-  });
-  document.getElementById("menuCode").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => {
-      document.getElementById("codePathInput").value = "";
-      document.getElementById("codePathStatus").textContent = "";
-      document.getElementById("codePathModalBg").classList.add("open");
-    }, 200);
-  });
-  document.getElementById("menuRelease").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderRelease(); openSheet("releaseSheet"); }, 200);
-  });
-  document.getElementById("menuDevReport").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderDevReport(); openSheet("devReportSheet"); }, 200);
-  });
-  document.getElementById("menuDocuments").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { state.searchQuery = ""; document.getElementById("documentsSearch").value = ""; renderDocumentsList(); openSheet("documentsSheet"); }, 200);
-  });
-  document.getElementById("documentsSearch").addEventListener("input", (e) => { state.searchQuery = e.target.value || ""; renderDocumentsList(); });
-  document.getElementById("menuChats").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderChatsList(); openSheet("chatsSheet"); }, 200);
-  });
-  document.getElementById("menuBlog").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { switchBlogTab("list"); loadBlogList(); openSheet("blogSheet"); }, 200);
-  });
-  document.getElementById("menuProfile").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderProfile(); openSheet("profileSheet"); }, 200);
-  });
-  document.getElementById("menuSettings").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => {
+    document.getElementById("menuNewChat").addEventListener("click", async () => {
+      closeAllSheets();
+      const fresh = createChatObj("Новый чат");
+      await dbPut(STORE_CHATS, fresh);
+      state.chats.push(fresh);
+      await switchChat(fresh.id);
+    });
+
+    document.getElementById("menuLots").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderLotsList(); openSheet("lotsSheet"); }, 200);
+    });
+    document.getElementById("menuNotebook").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderNotebookList(); openSheet("notebookSheet"); }, 200);
+    });
+    document.getElementById("menuImportant").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderImportantList(); openSheet("importantSheet"); }, 200);
+    });
+    document.getElementById("menuNotifications").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderNotifications(); openSheet("notificationsSheet"); }, 200);
+    });
+    document.getElementById("menuDashboard").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderDashboard(); openSheet("dashboardSheet"); }, 200);
+    });
+    document.getElementById("menuCode").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => {
+        document.getElementById("codePathInput").value = "";
+        document.getElementById("codePathStatus").textContent = "";
+        document.getElementById("codePathModalBg").classList.add("open");
+      }, 200);
+    });
+    document.getElementById("menuRelease").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderRelease(); openSheet("releaseSheet"); }, 200);
+    });
+    document.getElementById("menuDevReport").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderDevReport(); openSheet("devReportSheet"); }, 200);
+    });
+    document.getElementById("menuDocuments").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { state.searchQuery = ""; document.getElementById("documentsSearch").value = ""; renderDocumentsList(); openSheet("documentsSheet"); }, 200);
+    });
+    document.getElementById("documentsSearch").addEventListener("input", (e) => { state.searchQuery = e.target.value || ""; renderDocumentsList(); });
+    document.getElementById("menuChats").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { renderChatsList(); openSheet("chatsSheet"); }, 200);
+    });
+    document.getElementById("menuBlog").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => { switchBlogTab("list"); loadBlogList(); openSheet("blogSheet"); }, 200);
+    });
+
+    document.getElementById("metricsBtn").addEventListener("click", () => openSheet("metricsSheet"));
+    document.getElementById("profileBtn").addEventListener("click", () => {
+      renderProfile();
+      openSheet("profileSheet");
+    });
+    document.getElementById("settingsBtn").addEventListener("click", () => {
       document.getElementById("keyInput").value = state.apiKey || "";
       document.getElementById("authorKeyInput").value = state.authorKey || "";
       document.getElementById("rememberKey").checked = !!localStorage.getItem(LS_KEY);
@@ -3543,162 +2962,160 @@ async function init() {
       renderProviderRow();
       renderKeyInstructions();
       document.getElementById("modalBg").classList.add("open");
-    }, 200);
-  });
+    });
 
-  document.getElementById("metricsBtn").addEventListener("click", () => openSheet("metricsSheet"));
+    document.getElementById("lotsAddBtn").addEventListener("click", () => { closeAllSheets(); setTimeout(() => openLotModal(null), 200); });
+    document.querySelectorAll("#lotsTabs .blog-tab").forEach(t => {
+      t.addEventListener("click", () => switchLotsTab(t.dataset.tab));
+    });
 
-  document.getElementById("lotsAddBtn").addEventListener("click", () => { closeAllSheets(); setTimeout(() => openLotModal(null), 200); });
-  document.querySelectorAll("#lotsTabs .blog-tab").forEach(t => {
-    t.addEventListener("click", () => switchLotsTab(t.dataset.tab));
-  });
+    document.getElementById("lotModalClose").addEventListener("click", closeAllSheets);
+    document.getElementById("lotCancel").addEventListener("click", closeAllSheets);
+    document.getElementById("lotModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
+    document.getElementById("lotSave").addEventListener("click", saveLot);
+    document.getElementById("lotDelete").addEventListener("click", deleteLot);
 
-  document.getElementById("lotModalClose").addEventListener("click", closeAllSheets);
-  document.getElementById("lotCancel").addEventListener("click", closeAllSheets);
-  document.getElementById("lotModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
-  document.getElementById("lotSave").addEventListener("click", saveLot);
-  document.getElementById("lotDelete").addEventListener("click", deleteLot);
+    document.getElementById("chatActionClose").addEventListener("click", closeAllSheets);
+    document.getElementById("chatActionModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
+    document.getElementById("chatMove").addEventListener("click", () => { closeAllSheets(); setTimeout(moveChatToLot, 200); });
+    document.getElementById("chatDelete").addEventListener("click", () => { closeAllSheets(); setTimeout(deleteChat, 200); });
 
-  document.getElementById("chatActionClose").addEventListener("click", closeAllSheets);
-  document.getElementById("chatActionModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
-  document.getElementById("chatMove").addEventListener("click", () => { closeAllSheets(); setTimeout(moveChatToLot, 200); });
-  document.getElementById("chatDelete").addEventListener("click", () => { closeAllSheets(); setTimeout(deleteChat, 200); });
+    document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
 
-  document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
+    document.querySelectorAll(".metric-card").forEach(card => {
+      card.addEventListener("click", () => card.classList.toggle("open"));
+    });
 
-  document.querySelectorAll(".metric-card").forEach(card => {
-    card.addEventListener("click", () => card.classList.toggle("open"));
-  });
-
-  // Редактор
-  document.getElementById("editorCopyBtn").addEventListener("click", () => {
-    const body = document.getElementById("editorBody").value || "";
-    if (navigator.clipboard) navigator.clipboard.writeText(body);
-    toast("Скопировано");
-  });
-  document.getElementById("editorDownloadBtn").addEventListener("click", downloadEditorFile);
-  document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToLot);
-  document.getElementById("editorPublishBtn").addEventListener("click", () => {
-    document.getElementById("editorStatus").textContent = "Публикация доступна только с ключом автора.";
-  });
-  document.getElementById("editorCodeSave").addEventListener("click", async () => {
-    const ctx = state.editorContext || {};
-    const path = ctx.path || (document.getElementById("editorName").value || "").trim();
-    const body = document.getElementById("editorBody").value || "";
-    const status = document.getElementById("editorStatus");
-    if (!path) { status.textContent = "Не указан путь файла"; return; }
-    if (!body) { status.textContent = "Файл пустой"; return; }
-    if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
-    status.textContent = "Сохраняю в dev...";
-    try {
-      const r = await fetch(API_BASE + "/code/save", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
-        body: JSON.stringify({ path: path, content: body, message: "Update " + path + " via Monolog" }),
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
-      status.textContent = "Сохранено в ветку dev";
-      toast("Сохранено в dev");
-    } catch (e) {
-      status.textContent = "Ошибка: " + e.message;
-    }
-  });
-
-  // Настройки: сохранение / экспорт / импорт / тема
-  document.getElementById("modalClose").addEventListener("click", () => document.getElementById("modalBg").classList.remove("open"));
-  document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) document.getElementById("modalBg").classList.remove("open"); });
-  document.querySelectorAll("#depthSeg button").forEach(el => {
-    el.addEventListener("click", () => { state.profile.depth = el.dataset.depth; applyProfile(); });
-  });
-  document.getElementById("saveSettings").addEventListener("click", () => {
-    const key = (document.getElementById("keyInput").value || "").trim();
-    const remember = document.getElementById("rememberKey").checked;
-    state.apiKey = key;
-    if (remember && key) localStorage.setItem(LS_KEY, key);
-    else localStorage.removeItem(LS_KEY);
-    const authorKey = (document.getElementById("authorKeyInput").value || "").trim();
-    const rememberAuthor = document.getElementById("rememberAuthorKey").checked;
-    state.authorKey = authorKey;
-    if (rememberAuthor && authorKey) localStorage.setItem(LS_AUTHOR, authorKey);
-    else localStorage.removeItem(LS_AUTHOR);
-    localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
-    localStorage.setItem(LS_PROVIDER, state.provider);
-    updateMenu();
-    document.getElementById("modalBg").classList.remove("open");
-    toast("Настройки сохранены");
-  });
-  document.getElementById("exportData").addEventListener("click", () => {
-    const blob = new Blob([JSON.stringify({ lots: state.lots, chats: state.chats, profile: state.profile }, null, 2)], { type: "application/json" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "monolog_export_" + Date.now() + ".json";
-    a.click();
-    URL.revokeObjectURL(a.href);
-  });
-  document.getElementById("importData").addEventListener("click", () => document.getElementById("importFile").click());
-  document.getElementById("importFile").addEventListener("change", (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async () => {
+    document.getElementById("editorCopyBtn").addEventListener("click", () => {
+      const body = document.getElementById("editorBody").value || "";
+      if (navigator.clipboard) navigator.clipboard.writeText(body);
+      toast("Скопировано");
+    });
+    document.getElementById("editorDownloadBtn").addEventListener("click", downloadEditorFile);
+    document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToLot);
+    document.getElementById("editorPublishBtn").addEventListener("click", () => {
+      document.getElementById("editorStatus").textContent = "Публикация доступна только с ключом автора.";
+    });
+    document.getElementById("editorCodeSave").addEventListener("click", async () => {
+      const ctx = state.editorContext || {};
+      const path = ctx.path || (document.getElementById("editorName").value || "").trim();
+      const body = document.getElementById("editorBody").value || "";
+      const status = document.getElementById("editorStatus");
+      if (!path) { status.textContent = "Не указан путь файла"; return; }
+      if (!body) { status.textContent = "Файл пустой"; return; }
+      if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
+      status.textContent = "Сохраняю в dev...";
       try {
-        const data = JSON.parse(reader.result);
-        if (data.lots && Array.isArray(data.lots)) for (const l of data.lots) await dbPut(STORE_LOTS, l);
-        if (data.chats && Array.isArray(data.chats)) for (const c of data.chats) await dbPut(STORE_CHATS, c);
-        if (data.profile) {
-          state.profile = Object.assign(state.profile, data.profile);
-          localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
-        }
-        location.reload();
-      } catch (err) { alert("Некорректный файл"); }
-    };
-    reader.readAsText(file);
-  });
-
-  // Модалка кода
-  document.getElementById("codePathClose").addEventListener("click", () => document.getElementById("codePathModalBg").classList.remove("open"));
-  document.getElementById("codePathCancel").addEventListener("click", () => document.getElementById("codePathModalBg").classList.remove("open"));
-  document.getElementById("codePathModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) document.getElementById("codePathModalBg").classList.remove("open"); });
-  document.getElementById("codePathOpen").addEventListener("click", async () => {
-    const path = (document.getElementById("codePathInput").value || "").trim();
-    const status = document.getElementById("codePathStatus");
-    if (!path) { status.textContent = "Введите путь"; return; }
-    if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
-    status.textContent = "Загружаю...";
-    try {
-      const r = await fetch(API_BASE + "/code/read?path=" + encodeURIComponent(path), {
-        headers: { "X-Author-Key": state.authorKey },
-      });
-      const data = await r.json();
-      if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
-      if (!data.exists) {
-        status.textContent = "Файл не найден. Можно создать новый.";
-      } else {
-        document.getElementById("codePathModalBg").classList.remove("open");
-        openEditor({ type: "code", name: path, body: data.content || "", path: path });
+        const r = await fetch(API_BASE + "/code/save", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+          body: JSON.stringify({ path: path, content: body, message: "Update " + path + " via Monolog" }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+        status.textContent = "Сохранено в ветку dev";
+        toast("Сохранено в dev");
+      } catch (e) {
+        status.textContent = "Ошибка: " + e.message;
       }
-    } catch (e) {
-      status.textContent = "Ошибка: " + e.message;
-    }
-  });
+    });
 
-  // Онбординг
-  document.getElementById("obStart").addEventListener("click", () => {
-    localStorage.setItem(LS_ONBOARDED, "true");
-    document.getElementById("onboarding").classList.remove("open");
-  });
+    document.getElementById("modalClose").addEventListener("click", () => document.getElementById("modalBg").classList.remove("open"));
+    document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) document.getElementById("modalBg").classList.remove("open"); });
+    document.querySelectorAll("#depthSeg button").forEach(el => {
+      el.addEventListener("click", () => { state.profile.depth = el.dataset.depth; applyProfile(); });
+    });
+    document.getElementById("saveSettings").addEventListener("click", () => {
+      const key = (document.getElementById("keyInput").value || "").trim();
+      const remember = document.getElementById("rememberKey").checked;
+      state.apiKey = key;
+      if (remember && key) localStorage.setItem(LS_KEY, key);
+      else localStorage.removeItem(LS_KEY);
+      const authorKey = (document.getElementById("authorKeyInput").value || "").trim();
+      const rememberAuthor = document.getElementById("rememberAuthorKey").checked;
+      state.authorKey = authorKey;
+      if (rememberAuthor && authorKey) localStorage.setItem(LS_AUTHOR, authorKey);
+      else localStorage.removeItem(LS_AUTHOR);
+      localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+      localStorage.setItem(LS_PROVIDER, state.provider);
+      updateMenu();
+      document.getElementById("modalBg").classList.remove("open");
+      toast("Настройки сохранены");
+    });
+    document.getElementById("exportData").addEventListener("click", () => {
+      const blob = new Blob([JSON.stringify({ lots: state.lots, chats: state.chats, profile: state.profile }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "monolog_export_" + Date.now() + ".json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    document.getElementById("importData").addEventListener("click", () => document.getElementById("importFile").click());
+    document.getElementById("importFile").addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = async () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (data.lots && Array.isArray(data.lots)) for (const l of data.lots) await dbPut(STORE_LOTS, l);
+          if (data.chats && Array.isArray(data.chats)) for (const c of data.chats) await dbPut(STORE_CHATS, c);
+          if (data.profile) {
+            state.profile = Object.assign(state.profile, data.profile);
+            localStorage.setItem(LS_PROFILE, JSON.stringify(state.profile));
+          }
+          location.reload();
+        } catch (err) { alert("Некорректный файл"); }
+      };
+      reader.readAsText(file);
+    });
 
-  // Табы блога
-  document.querySelectorAll(".blog-tab").forEach(t => {
-    if (t.closest("#blogTabs")) {
+    document.getElementById("codePathClose").addEventListener("click", () => document.getElementById("codePathModalBg").classList.remove("open"));
+    document.getElementById("codePathCancel").addEventListener("click", () => document.getElementById("codePathModalBg").classList.remove("open"));
+    document.getElementById("codePathModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) document.getElementById("codePathModalBg").classList.remove("open"); });
+    document.getElementById("codePathOpen").addEventListener("click", async () => {
+      const path = (document.getElementById("codePathInput").value || "").trim();
+      const status = document.getElementById("codePathStatus");
+      if (!path) { status.textContent = "Введите путь"; return; }
+      if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
+      status.textContent = "Загружаю...";
+      try {
+        const r = await fetch(API_BASE + "/code/read?path=" + encodeURIComponent(path), {
+          headers: { "X-Author-Key": state.authorKey },
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+        if (!data.exists) {
+          status.textContent = "Файл не найден. Можно создать новый.";
+        } else {
+          document.getElementById("codePathModalBg").classList.remove("open");
+          openEditor({ type: "code", name: path, body: data.content || "", path: path });
+        }
+      } catch (e) {
+        status.textContent = "Ошибка: " + e.message;
+      }
+    });
+
+    document.getElementById("obStart").addEventListener("click", () => {
+      localStorage.setItem(LS_ONBOARDED, "true");
+      document.getElementById("onboarding").classList.remove("open");
+    });
+
+    document.querySelectorAll("#blogTabs .blog-tab").forEach(t => {
       t.addEventListener("click", () => switchBlogTab(t.dataset.tab));
-    }
-  });
-  document.getElementById("blogNewBtn").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => openEditor({ type: "blog_post", name: "", body: "", tags: [] }), 200);
-  });
+    });
+    document.getElementById("blogNewBtn").addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => openEditor({ type: "blog_post", name: "", body: "", tags: [] }), 200);
+    });
+
+  } catch (e) {
+    console.error("init failed:", e);
+    const chat = document.getElementById("chat");
+    if (chat) chat.innerHTML = '<div class="empty-note" style="padding:20px;">Ошибка запуска: ' + escHtml(e.message || String(e)) + '</div>';
+    const sp = document.getElementById("splash");
+    if (sp) sp.classList.add("hide");
+  }
 }
 
 if (document.readyState === "loading") {
