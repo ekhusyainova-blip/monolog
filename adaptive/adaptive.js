@@ -53,13 +53,18 @@ Monolog.adaptive = {
     const el = document.createElement('button');
     el.className = `header-item header-item-${item.type}`;
     el.dataset.id = item.id;
-    el.setAttribute('aria-label', this.text(item.labelKey) || item.id);
 
     const label = this.text(item.labelKey) || item.id;
+    el.setAttribute('aria-label', label);
     el.title = label;
 
     if (item.type === 'orb') el.classList.add('orb');
-    if (item.type === 'index') el.classList.add('index');
+    if (item.type === 'index') {
+      el.classList.add('index');
+      el.textContent = '0';
+    }
+    if (item.type === 'button') el.textContent = label;
+
     if (item.badge) {
       const badge = document.createElement('span');
       badge.className = 'badge';
@@ -135,7 +140,6 @@ Monolog.adaptive = {
     if (!Monolog.core) return;
 
     Monolog.core.on('core:state', (d) => {
-      // TODO: обновлять index, orb, badges
       console.log('[adaptive] state:', d);
     });
 
