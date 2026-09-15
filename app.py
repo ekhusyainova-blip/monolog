@@ -17,6 +17,7 @@ import httpx
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -581,6 +582,11 @@ async def github_put_json(path: str, content_obj, message: str):
 
 # --- FastAPI ---
 app = FastAPI(title="Monolog")
+
+app.mount("/core", StaticFiles(directory="core"), name="core")
+app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
+app.mount("/public", StaticFiles(directory="public"), name="public")
+app.mount("/blog", StaticFiles(directory="blog"), name="blog")
 
 app.add_middleware(
     CORSMiddleware,
