@@ -1,5 +1,6 @@
 // core/core.js
 // Ядро Monolog: состояние, IndexedDB, API, экономика, чат, init.
+// В конце файла — событие monolog-ready для adaptive.js.
 
 "use strict";
 
@@ -65,7 +66,7 @@ const state = {
   providersCache: PROVIDERS_FALLBACK,
 };
 
-// --- Глобальные хелперы ---
+// --- Хелперы ---
 let _bc = null;
 try { _bc = new BroadcastChannel("monolog_sync"); } catch (e) {}
 let _db = null;
@@ -211,7 +212,7 @@ function applyTheme() {
 function applyFontSize() {
   document.documentElement.style.setProperty("--font-size", state.fontSize + "px");
 }
-function applyProfile() {
+function applyProfileGlobal() {
   document.querySelectorAll("#depthSeg button").forEach(el => {
     el.classList.toggle("active", el.dataset.depth === state.depthMode);
   });
@@ -285,6 +286,7 @@ function renderCurrentChat() {
   if (!c) return;
   c.history = c.history || [];
   const chat = document.getElementById("chat");
+  if (!chat) return;
   chat.innerHTML = "";
   if (!c.history.length) {
     if (typeof renderDemo === "function") renderDemo();
@@ -519,15 +521,6 @@ async function loadData() {
   if (typeof bal === "number") state.balance = bal;
 }
 
-// --- Применение темы/шрифта ---
-function applyProfileGlobal() {
-  document.querySelectorAll("#depthSeg button").forEach(el => {
-    el.classList.toggle("active", el.dataset.depth === state.depthMode);
-  });
-  applyTheme();
-  applyFontSize();
-}
-
 // --- Char counter ---
 function updateCharCounter() {
   const input = document.getElementById("input");
@@ -605,7 +598,7 @@ function setupEyeButtons() {
   });
 }
 
-// --- Шторки и модалки ---
+// --- Шторки ---
 function openSheet(id) {
   const bg = document.getElementById("sheetBg");
   if (bg) bg.classList.add("open");
@@ -638,6 +631,66 @@ function setupSwipeToClose(sheetEl, handleEl) {
   window.addEventListener("mouseup", onEnd);
 }
 
+// --- Экспорт ядра ДО init, чтобы adaptive.js всегда нашёл ---
+window.MonologCore = {
+  state,
+  API_BASE,
+  uid,
+  escHtml,
+  pluralize,
+  toast,
+  renderMarkdown,
+  softenText,
+  broadcast,
+  openDB,
+  dbGetAll,
+  dbPut,
+  dbDel,
+  dbGetMeta,
+  dbSetMeta,
+  applyTheme,
+  applyFontSize,
+  applyProfile: applyProfileGlobal,
+  currentChat,
+  currentLot,
+  addRow,
+  renderCurrentChat,
+  send,
+  createChatObj,
+  createLotObj,
+  persistChat,
+  persistLot,
+  loadData,
+  updateCharCounter,
+  renderAttachPreview,
+  handleFiles,
+  renderProviderGrid,
+  setupEyeButtons,
+  openSheet,
+  closeAllSheets,
+  setupSwipeToClose,
+  STORE_LOTS,
+  STORE_CHATS,
+  STORE_RELEASES,
+  STORE_ANALYTICS,
+  STORE_NOTIFICATIONS,
+  STORE_PUBLIC,
+  STORE_META,
+  LS_KEY,
+  LS_AUTHOR,
+  LS_MANAGE,
+  LS_PROVIDER,
+  LS_FONT,
+  LS_DEPTH,
+  LS_MODE,
+  LS_UID,
+  LS_NOTIF_SEEN,
+  SOFT_LIMIT,
+  HARD_LIMIT,
+  MODE_LABELS,
+  PROVIDERS_FALLBACK,
+};
+
 // --- Init ---
 async function init() {
   setTimeout(() => {
@@ -661,16 +714,10 @@ async function init() {
     } catch (e) {}
 
     applyProfileGlobal();
-    if (typeof renderOrb === "function") renderOrb();
     document.documentElement.setAttribute("data-mode", state.mode);
 
     await loadData();
     renderCurrentChat();
-    if (typeof updateMenu === "function") updateMenu();
-    if (typeof updateIndexBtn === "function") updateIndexBtn();
-    if (typeof updateHeaderDynamic === "function") updateHeaderDynamic();
-    if (typeof renderAiNote === "function") renderAiNote();
-    if (typeof regenerateMapForCurrent === "function") regenerateMapForCurrent();
 
     // Sheets — swipe
     [
@@ -694,7 +741,7 @@ async function init() {
         orbMoved = false;
         orbPressTimer = setTimeout(() => {
           orbPressTimer = null;
-          if (typeof switchMode === "function") switchMode();
+          if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.switchMode) window.MonologAdaptive.switchMode();
         }, 550);
       });
       orbBtn.addEventListener("pointermove", () => {
@@ -705,44 +752,44 @@ async function init() {
         orbBtn.addEventListener(ev, () => {
           if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
           if (!orbMoved && ev === "pointerup") {
-            if (typeof renderOrbSheet === "function") renderOrbSheet();
+            if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderOrbSheet) window.MonologAdaptive.renderOrbSheet();
             openSheet("orbSheet");
           }
         });
       });
     }
 
-    // Header buttons — только те, что в core
+    // Header buttons
     const indexBtn = document.getElementById("indexBtn");
     if (indexBtn) indexBtn.addEventListener("click", () => {
-      if (typeof renderIndexSheet === "function") renderIndexSheet("all");
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderIndexSheet) window.MonologAdaptive.renderIndexSheet("all");
       openSheet("indexSheet");
     });
     const metricsBtn = document.getElementById("metricsBtn");
     if (metricsBtn) metricsBtn.addEventListener("click", () => {
-      if (typeof renderMetricsSheet === "function") renderMetricsSheet();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderMetricsSheet) window.MonologAdaptive.renderMetricsSheet();
       openSheet("metricsSheet");
     });
     const exchangeBtn = document.getElementById("exchangeBtn");
     if (exchangeBtn) exchangeBtn.addEventListener("click", async () => {
-      if (typeof loadExchange === "function") await loadExchange();
-      if (typeof renderExchange === "function") renderExchange();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.loadExchange) await window.MonologAdaptive.loadExchange();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderExchange) window.MonologAdaptive.renderExchange();
       openSheet("exchangeSheet");
     });
     const notifBtn = document.getElementById("notifBtn");
     if (notifBtn) notifBtn.addEventListener("click", () => {
-      if (typeof renderNotificationsList === "function") renderNotificationsList();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderNotificationsList) window.MonologAdaptive.renderNotificationsList();
       openSheet("notificationsSheet");
-      setTimeout(() => { if (typeof markNotificationsSeen === "function") markNotificationsSeen(); }, 800);
+      setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.markNotificationsSeen) window.MonologAdaptive.markNotificationsSeen(); }, 800);
     });
     const profileBtn = document.getElementById("profileBtn");
     if (profileBtn) profileBtn.addEventListener("click", () => {
-      if (typeof renderProfile === "function") renderProfile();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderProfile) window.MonologAdaptive.renderProfile();
       openSheet("profileSheet");
     });
     const menuBtn = document.getElementById("menuBtn");
     if (menuBtn) menuBtn.addEventListener("click", () => {
-      if (typeof updateMenu === "function") updateMenu();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateMenu) window.MonologAdaptive.updateMenu();
       openSheet("menuSheet");
     });
     const settingsBtn = document.getElementById("settingsBtn");
@@ -766,7 +813,7 @@ async function init() {
       t.addEventListener("click", () => {
         document.querySelectorAll("#indexTabs .tab").forEach(x => x.classList.remove("active"));
         t.classList.add("active");
-        if (typeof renderIndexSheet === "function") renderIndexSheet(t.dataset.indexTab);
+        if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderIndexSheet) window.MonologAdaptive.renderIndexSheet(t.dataset.indexTab);
       });
     });
     document.querySelectorAll("#exchangeTabs .tab").forEach(t => {
@@ -774,7 +821,7 @@ async function init() {
         document.querySelectorAll("#exchangeTabs .tab").forEach(x => x.classList.remove("active"));
         t.classList.add("active");
         state.exchangeTab = t.dataset.exchangeTab;
-        if (typeof renderExchange === "function") renderExchange();
+        if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderExchange) window.MonologAdaptive.renderExchange();
       });
     });
 
@@ -785,26 +832,26 @@ async function init() {
       const fresh = createChatObj("Новый чат");
       await dbPut(STORE_CHATS, fresh);
       state.chats.push(fresh);
-      if (typeof switchChat === "function") await switchChat(fresh.id);
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.switchChat) await window.MonologAdaptive.switchChat(fresh.id);
     });
-    on("menuLots", () => { closeAllSheets(); setTimeout(() => { if (typeof renderLotsList === "function") renderLotsList(); openSheet("lotsSheet"); }, 200); });
-    on("menuIdeas", () => { closeAllSheets(); setTimeout(() => { if (typeof renderIdeasList === "function") renderIdeasList(); openSheet("ideasSheet"); }, 200); });
-    on("menuDocuments", () => { closeAllSheets(); setTimeout(() => { if (typeof renderDocumentsList === "function") renderDocumentsList(); openSheet("documentsSheet"); }, 200); });
-    on("menuChats", () => { closeAllSheets(); setTimeout(() => { if (typeof renderChatsList === "function") renderChatsList(); openSheet("chatsSheet"); }, 200); });
-    on("menuImportant", () => { closeAllSheets(); setTimeout(() => { if (typeof renderImportantList === "function") renderImportantList(); openSheet("importantSheet"); }, 200); });
-    on("menuExchange", async () => { closeAllSheets(); if (typeof loadExchange === "function") await loadExchange(); setTimeout(() => { if (typeof renderExchange === "function") renderExchange(); openSheet("exchangeSheet"); }, 200); });
-    on("menuMyTemplates", () => { closeAllSheets(); setTimeout(() => { if (typeof renderMyTemplates === "function") renderMyTemplates(); openSheet("myTemplatesSheet"); }, 200); });
-    on("menuMyPublic", async () => { closeAllSheets(); if (typeof loadExchange === "function") await loadExchange(); setTimeout(() => { if (typeof renderMyPublic === "function") renderMyPublic(); openSheet("myPublicSheet"); }, 200); });
-    on("menuDashboard", () => { closeAllSheets(); setTimeout(async () => { if (typeof renderDashboard === "function") await renderDashboard(); openSheet("dashboardSheet"); }, 200); });
-    on("menuManagement", () => { closeAllSheets(); setTimeout(async () => { if (typeof renderManagement === "function") await renderManagement(); openSheet("managementSheet"); }, 200); });
+    on("menuLots", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderLotsList) window.MonologAdaptive.renderLotsList(); openSheet("lotsSheet"); }, 200); });
+    on("menuIdeas", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderIdeasList) window.MonologAdaptive.renderIdeasList(); openSheet("ideasSheet"); }, 200); });
+    on("menuDocuments", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderDocumentsList) window.MonologAdaptive.renderDocumentsList(); openSheet("documentsSheet"); }, 200); });
+    on("menuChats", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderChatsList) window.MonologAdaptive.renderChatsList(); openSheet("chatsSheet"); }, 200); });
+    on("menuImportant", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderImportantList) window.MonologAdaptive.renderImportantList(); openSheet("importantSheet"); }, 200); });
+    on("menuExchange", async () => { closeAllSheets(); if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.loadExchange) await window.MonologAdaptive.loadExchange(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderExchange) window.MonologAdaptive.renderExchange(); openSheet("exchangeSheet"); }, 200); });
+    on("menuMyTemplates", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderMyTemplates) window.MonologAdaptive.renderMyTemplates(); openSheet("myTemplatesSheet"); }, 200); });
+    on("menuMyPublic", async () => { closeAllSheets(); if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.loadExchange) await window.MonologAdaptive.loadExchange(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderMyPublic) window.MonologAdaptive.renderMyPublic(); openSheet("myPublicSheet"); }, 200); });
+    on("menuDashboard", () => { closeAllSheets(); setTimeout(async () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderDashboard) await window.MonologAdaptive.renderDashboard(); openSheet("dashboardSheet"); }, 200); });
+    on("menuManagement", () => { closeAllSheets(); setTimeout(async () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderManagement) await window.MonologAdaptive.renderManagement(); openSheet("managementSheet"); }, 200); });
     on("menuBlog", () => { closeAllSheets(); setTimeout(() => {
-      if (typeof updateMenu === "function") updateMenu();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateMenu) window.MonologAdaptive.updateMenu();
       const box = document.getElementById("blogList");
       if (box) box.innerHTML = '<div class="empty-note">Блог появится здесь. Публикация доступна с ключом автора.</div>';
       openSheet("blogSheet");
     }, 200); });
-    on("menuAbout", () => { closeAllSheets(); setTimeout(() => { if (typeof renderAbout === "function") renderAbout(); openSheet("aboutSheet"); }, 200); });
-    on("menuBusiness", () => { closeAllSheets(); setTimeout(() => { if (typeof renderBusiness === "function") renderBusiness(); openSheet("businessSheet"); }, 200); });
+    on("menuAbout", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderAbout) window.MonologAdaptive.renderAbout(); openSheet("aboutSheet"); }, 200); });
+    on("menuBusiness", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderBusiness) window.MonologAdaptive.renderBusiness(); openSheet("businessSheet"); }, 200); });
 
     // Управление из сферы
     on("orbManageCode", () => {
@@ -817,11 +864,11 @@ async function init() {
     });
     on("orbManageRelease", () => {
       closeAllSheets();
-      setTimeout(() => { if (typeof renderReleasesList === "function") renderReleasesList(); openSheet("releasesSheet"); }, 200);
+      setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderReleasesList) window.MonologAdaptive.renderReleasesList(); openSheet("releasesSheet"); }, 200);
     });
     on("orbManageDevReport", () => {
       closeAllSheets();
-      setTimeout(async () => { if (typeof renderDevReport === "function") await renderDevReport(); openSheet("devReportSheet"); }, 200);
+      setTimeout(async () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderDevReport) await window.MonologAdaptive.renderDevReport(); openSheet("devReportSheet"); }, 200);
     });
 
     // Lots tabs
@@ -835,27 +882,28 @@ async function init() {
         if (rp) rp.style.display = t.dataset.tab === "archive" ? "block" : "none";
       });
     });
-    on("lotsAddBtn", () => { closeAllSheets(); setTimeout(() => { if (typeof openLotModal === "function") openLotModal(null); }, 200); });
+    on("lotsAddBtn", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openLotModal) window.MonologAdaptive.openLotModal(null); }, 200); });
 
     // Модалка лота
     on("lotModalClose", closeAllSheets);
     on("lotCancel", closeAllSheets);
     const lotMb = document.getElementById("lotModalBg");
     if (lotMb) lotMb.addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
-    on("lotSave", () => { if (typeof saveLot === "function") saveLot(); });
-    on("lotDelete", () => { if (typeof deleteLot === "function") deleteLot(); });
+    on("lotSave", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.saveLot) window.MonologAdaptive.saveLot(); });
+    on("lotDelete", () => { if (typeof window.MonologAdaptive;
+ !== "undefined" && window.M     onologAdaptive.deleteLot) window.Mon constologAdaptive.deleteLot(); });
 
     // Релиз
-    on("releaseNewBtn", () => { if (typeof openReleaseModal === "function") openReleaseModal(); });
+    on("releaseNewBtn", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openReleaseModal) window.MonologAdaptive.openReleaseModal(); });
     on("releaseModalCancel", closeAllSheets);
-    on("releasePublishBtn", () => { if (typeof publishRelease === "function") publishRelease(); });
+    on("releasePublishBtn", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.publishRelease) window.MonologAdaptive.publishRelease(); });
 
     // Публикация
     on("publishModalClose", closeAllSheets);
     on("publishCancel", closeAllSheets);
     const pmb = document.getElementById("publishModalBg");
     if (pmb) pmb.addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
-    on("publishConfirm", () => { if (typeof confirmPublish === "function") confirmPublish(); });
+    on("publishConfirm", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.confirmPublish) window.MonologAdaptive.confirmPublish(); });
 
     // Код
     on("codePathClose", closeAllSheets);
@@ -875,7 +923,7 @@ async function init() {
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
         if (!data.exists) status.textContent = "Файл не найден.";
-        else { closeAllSheets(); if (typeof openEditor === "function") openEditor({ type: "code", name: path, body: data.content || "", path: path }); }
+        else { closeAllSheets(); if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openEditor) window.MonologAdaptive.openEditor({ type: "code", name: path, body: data.content || "", path: path }); }
       } catch (e) { status.textContent = "Ошибка: " + e.message; }
     });
 
@@ -889,8 +937,7 @@ async function init() {
     const fsr = document.getElementById("fontSizeRange");
     if (fsr) fsr.addEventListener("input", (e) => {
       const size = parseInt(e.target.value, 10);
-      state.fontSize = size;
-      const fsv = document.getElementById("fontSizeValue");
+      state.fontSize = size fsv = document.getElementById("fontSizeValue");
       if (fsv) fsv.textContent = size;
       applyFontSize();
     });
@@ -909,7 +956,7 @@ async function init() {
         localStorage.setItem(LS_FONT, String(state.fontSize));
         localStorage.setItem(LS_DEPTH, state.depthMode);
       } catch (e) {}
-      if (typeof updateMenu === "function") updateMenu();
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateMenu) window.MonologAdaptive.updateMenu();
       closeAllSheets();
       broadcast("settings_updated", {});
       toast("Настройки сохранены");
@@ -958,12 +1005,12 @@ async function init() {
       a.click();
       URL.revokeObjectURL(a.href);
     });
-    on("editorSaveBtn", () => { if (typeof saveEditorToLot === "function") saveEditorToLot(); });
+    on("editorSaveBtn", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.saveEditorToLot) window.MonologAdaptive.saveEditorToLot(); });
     on("editorPublishPublicBtn", () => {
       const name = (document.getElementById("editorName").value || "").trim();
       const body = (document.getElementById("editorBody").value || "").trim();
       if (!name || !body) { toast("Нужны название и текст"); return; }
-      if (typeof openPublishModal === "function") openPublishModal("template", { name, content: body, tags: [] });
+      if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openPublishModal) window.MonologAdaptive.openPublishModal("template", { name, content: body, tags: [] });
     });
     on("editorPublishBlogBtn", async () => {
       const title = (document.getElementById("editorName").value || "").trim();
@@ -1010,7 +1057,7 @@ async function init() {
       closeAllSheets();
       setTimeout(() => {
         const c = currentChat();
-        if (typeof openEditor === "function") openEditor({ type: "document", lotId: c && c.lotId, name: "", body: "" });
+        if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openEditor) window.MonologAdaptive.openEditor({ type: "document", lotId: c && c.lotId, name: "", body: "" });
       }, 200);
     });
 
@@ -1064,10 +1111,10 @@ async function init() {
           const bal = await dbGetMeta("balance");
           if (typeof bal === "number") state.balance = bal;
           renderCurrentChat();
-          if (typeof updateMenu === "function") updateMenu();
-          if (typeof updateIndexBtn === "function") updateIndexBtn();
-          if (typeof updateHeaderDynamic === "function") updateHeaderDynamic();
-          if (document.getElementById("notificationsSheet").classList.contains("open") && typeof renderNotificationsList === "function") renderNotificationsList();
+          if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateMenu) window.MonologAdaptive.updateMenu();
+          if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateIndexBtn) window.MonologAdaptive.updateIndexBtn();
+          if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateHeaderDynamic) window.MonologAdaptive.updateHeaderDynamic();
+          if (document.getElementById("notificationsSheet").classList.contains("open") && typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderNotificationsList) window.MonologAdaptive.renderNotificationsList();
         }
       });
     }
@@ -1086,9 +1133,9 @@ async function init() {
         state.notifications = notifs;
         if (typeof bal === "number") state.balance = bal;
         renderCurrentChat();
-        if (typeof updateMenu === "function") updateMenu();
-        if (typeof updateIndexBtn === "function") updateIndexBtn();
-        if (typeof updateHeaderDynamic === "function") updateHeaderDynamic();
+        if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateMenu) window.MonologAdaptive.updateMenu();
+        if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateIndexBtn) window.MonologAdaptive.updateIndexBtn();
+        if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.updateHeaderDynamic) window.MonologAdaptive.updateHeaderDynamic();
       }
     }, 4000);
 
@@ -1100,68 +1147,10 @@ async function init() {
       }
     } catch (e) {}
 
-    if (typeof loadExchange === "function") loadExchange();
+    if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.loadExchange) window.MonologAdaptive.loadExchange();
 
-    // Экспорт ядра
-    window.MonologCore = {
-      state,
-      API_BASE,
-      uid,
-      escHtml,
-      pluralize,
-      toast,
-      renderMarkdown,
-      softenText,
-      broadcast,
-      openDB,
-      dbGetAll,
-      dbPut,
-      dbDel,
-      dbGetMeta,
-      dbSetMeta,
-      applyTheme,
-      applyFontSize,
-      applyProfile: applyProfileGlobal,
-      currentChat,
-      currentLot,
-      addRow,
-      renderCurrentChat,
-      send,
-      createChatObj,
-      createLotObj,
-      persistChat,
-      persistLot,
-      loadData,
-      updateCharCounter,
-      renderAttachPreview,
-      handleFiles,
-      renderProviderGrid,
-      setupEyeButtons,
-      openSheet,
-      closeAllSheets,
-      setupSwipeToClose,
-      init,
-      STORE_LOTS,
-      STORE_CHATS,
-      STORE_RELEASES,
-      STORE_ANALYTICS,
-      STORE_NOTIFICATIONS,
-      STORE_PUBLIC,
-      STORE_META,
-      LS_KEY,
-      LS_AUTHOR,
-      LS_MANAGE,
-      LS_PROVIDER,
-      LS_FONT,
-      LS_DEPTH,
-      LS_MODE,
-      LS_UID,
-      LS_NOTIF_SEEN,
-      SOFT_LIMIT,
-      HARD_LIMIT,
-      MODE_LABELS,
-      PROVIDERS_FALLBACK,
-    };
+    // Сообщаем adaptive.js, что ядро готово
+    window.dispatchEvent(new Event("monolog-ready"));
 
   } catch (e) {
     console.error("core init error", e);
