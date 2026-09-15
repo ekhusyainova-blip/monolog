@@ -7,9 +7,9 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="Monolog" />
-<link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23f3e0e8'/%3E%3Cstop offset='100%25' stop-color='%23c8b8c8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='%23F7F8FA'/%3E%3Ccircle cx='96' cy='96' r='64' fill='url(%23g)'/%3E%3C/svg%3E" />
-<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23f3e0e8'/%3E%3Cstop offset='100%25' stop-color='%23c8b8c8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='180' height='180' fill='%23F7F8FA'/%3E%3Ccircle cx='90' cy='90' r='60' fill='url(%23g)'/%3E%3C/svg%3E" />
-<title>AI Monolog</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23f3e0e8'/%3E%3Cstop offset='100%25' stop-color='%23c8b8c8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='%23F7F8FA'/%3E%3Ccircle cx='96' cy='96' r='64' fill='url(%23g)'/%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23f3e0e8'/%3E%3Cstop offset='100%25' stop-color='%23c8b8c8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='180' height='180' fill='%23F7F8FA'/%3E%3Ccircle cx='90' cy='90' r='60' fill='url(%23g)'/%3E%3C/svg%3E" />
+<title>AI Monolog 2.0</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 :root {
@@ -28,6 +28,8 @@
   --critical-soft: rgba(184, 84, 80, 0.12);
   --success: #4F8A6B;
   --success-soft: rgba(79, 138, 107, 0.12);
+  --public: #6B7CE8;
+  --public-soft: rgba(107, 124, 232, 0.12);
   --shadow: 0 1px 2px rgba(10, 11, 13, 0.03);
   --shadow-soft: 0 2px 12px rgba(10, 11, 13, 0.04);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -51,6 +53,8 @@ html[data-theme="dark"] {
   --critical-soft: rgba(224, 123, 123, 0.15);
   --success: #6BB88E;
   --success-soft: rgba(107, 184, 142, 0.15);
+  --public: #A8B5FF;
+  --public-soft: rgba(168, 181, 255, 0.15);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
@@ -63,7 +67,6 @@ html, body {
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
   -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
 }
 body::before {
   content: ""; position: fixed; inset: 0;
@@ -75,8 +78,7 @@ body::before {
 .app {
   position: relative; z-index: 1;
   display: flex; flex-direction: column;
-  height: 100dvh;
-  max-width: 700px;
+  height: 100dvh; max-width: 700px;
   margin: 0 auto; padding: 0 12px;
   overflow: hidden;
 }
@@ -90,35 +92,22 @@ header {
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   flex-shrink: 0;
 }
-.header-left, .header-right {
-  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
-}
+.header-left, .header-right { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
 .index-label {
   height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
   padding: 0 6px;
-  font-family: inherit;
-  font-size: 14px;
-  font-weight: 600;
+  font-family: inherit; font-size: 14px; font-weight: 600;
   font-variant-numeric: tabular-nums;
-  color: var(--text);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: transform 0.15s, color 0.3s;
-  text-shadow: var(--shadow-soft);
+  color: var(--text); background: transparent;
+  border: none; cursor: pointer;
+  transition: transform 0.15s;
 }
 .index-label:active { transform: scale(0.94); }
 .index-label.positive { color: var(--success); }
 .index-label.negative { color: var(--critical); }
 .index-label.pulse { animation: idxPulse 0.9s ease; }
-@keyframes idxPulse {
-  0% { transform: scale(1); }
-  40% { transform: scale(1.18); }
-  100% { transform: scale(1); }
-}
+@keyframes idxPulse { 0% {transform:scale(1);} 40% {transform:scale(1.18);} 100% {transform:scale(1);} }
 .icon-btn {
   width: 34px; height: 34px; border-radius: 12px;
   background: var(--surface); border: 1px solid var(--border-soft);
@@ -139,18 +128,11 @@ header {
   display: none;
 }
 .icon-btn.has-badge .badge-dot { display: block; }
-.icon-btn.warning { color: var(--warning); }
-.icon-btn.critical { color: var(--critical); }
-.icon-btn.dynamic { animation: slideIn 0.3s ease; }
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-20px); }
-  to { opacity: 1; transform: translateX(0); }
-}
+.icon-btn.public-badge .badge-dot { background: var(--public); }
 .orb {
   width: 38px; height: 38px; border-radius: 50%;
   flex-shrink: 0; cursor: pointer;
-  position: relative; padding: 0;
-  border: none; background: transparent;
+  padding: 0; border: none; background: transparent;
   transition: transform 0.2s;
   display: flex; align-items: center; justify-content: center;
 }
@@ -161,10 +143,7 @@ header {
   transition: background 0.6s ease, box-shadow 0.6s ease;
   animation: orbRotate 12s linear infinite;
 }
-@keyframes orbRotate {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
+@keyframes orbRotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 .orb-inner::before {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
   background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55) 0%, transparent 40%);
@@ -188,15 +167,11 @@ header {
   border: 1px solid rgba(255,255,255,0.65);
 }
 .orb.thinking .orb-inner { animation: orbRotate 3s linear infinite, orbBreathe 1.6s ease-in-out infinite; }
-@keyframes orbBreathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.08); }
-}
+@keyframes orbBreathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 .orb.status-doubt .orb-inner { animation: orbRotate 18s linear infinite; }
 .orb.status-active .orb-inner { animation: orbRotate 8s linear infinite; }
 .orb.status-calm .orb-inner { animation: orbRotate 22s linear infinite; }
 .orb.status-need .orb-inner { animation: orbRotate 14s linear infinite, orbBreathe 3s ease-in-out infinite; }
-.orb.status-abundance .orb-inner { animation: orbRotate 10s linear infinite; }
 .splash {
   position: fixed; inset: 0; z-index: 999;
   background: var(--bg);
@@ -238,9 +213,7 @@ header {
 .sheet.open { transform: translateY(0); }
 .sheet.fullscreen {
   top: 0; bottom: 0; left: 0; right: 0;
-  max-height: 100dvh;
-  border-radius: 0;
-  max-width: 100%;
+  max-height: 100dvh; border-radius: 0; max-width: 100%;
   padding: calc(var(--safe-top) + 12px) 16px calc(20px + var(--safe-bottom));
 }
 .sheet-handle {
@@ -270,6 +243,7 @@ header {
 .menu-item:hover { background: var(--surface-2); }
 .menu-item:active { background: var(--accent-soft); }
 .menu-item svg { width: 18px; height: 18px; color: var(--accent); flex-shrink: 0; stroke-width: 1.7; }
+.menu-item.public-item svg { color: var(--public); }
 .menu-item .info { flex: 1; min-width: 0; }
 .menu-item .name { font-size: 14px; font-weight: 500; }
 .menu-item .desc {
@@ -283,6 +257,7 @@ header {
   flex-shrink: 0;
 }
 .badge-mini.hidden { display: none; }
+.badge-mini.public { background: var(--public-soft); color: var(--public); }
 .chat {
   flex: 1; overflow-y: auto;
   -webkit-overflow-scrolling: touch;
@@ -297,19 +272,14 @@ header {
   background: var(--accent-soft);
   border-left: 3px solid var(--accent);
   border-radius: 10px;
-  font-size: 13px;
-  line-height: 1.5;
-  color: var(--text);
+  font-size: 13px; line-height: 1.5; color: var(--text);
   display: none;
 }
 .ai-note.show { display: block; }
 .ai-note .ai-note-title {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted);
+  font-weight: 600; margin-bottom: 4px;
 }
 .row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .row.user { align-items: flex-end; }
@@ -327,24 +297,14 @@ header {
 }
 .mode-badge {
   display: inline-flex; align-items: center; gap: 5px;
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--muted);
-  font-weight: 600;
-  margin-bottom: 6px;
+  font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted);
+  font-weight: 600; margin-bottom: 6px;
 }
-.mode-badge .dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--accent);
-}
+.mode-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
 .mode-badge.analyst .dot { background: #E8B5C8; }
 .mode-badge.strategist .dot { background: #4A5BB5; }
-.mode-badge.neutral .dot { background: var(--muted); }
-.msg-actions {
-  display: flex; gap: 4px; margin-top: 8px;
-  opacity: 0.5; transition: opacity 0.15s;
-}
+.msg-actions { display: flex; gap: 4px; margin-top: 8px; opacity: 0.5; transition: opacity 0.15s; }
 .row.agent:hover .msg-actions { opacity: 1; }
 .msg-action {
   width: 26px; height: 26px; border-radius: 8px;
@@ -358,10 +318,7 @@ header {
 .msg-action.active { color: var(--warning); }
 .msg-action.active svg { fill: var(--warning); }
 .msg-action svg { width: 13px; height: 13px; stroke-width: 1.8; }
-.bubble h1, .bubble h2, .bubble h3 {
-  margin: 14px 0 5px; line-height: 1.3;
-  font-weight: 600; letter-spacing: -0.02em;
-}
+.bubble h1, .bubble h2, .bubble h3 { margin: 14px 0 5px; line-height: 1.3; font-weight: 600; letter-spacing: -0.02em; }
 .bubble h1 { font-size: 1.15em; }
 .bubble h2 { font-size: 1.05em; }
 .bubble h3 { font-size: 1em; }
@@ -386,7 +343,6 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   width: 100%; border-collapse: collapse;
   margin: 10px 0; font-size: 13px;
   display: block; overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
   border-radius: 8px;
 }
 .bubble table thead { background: var(--surface-2); }
@@ -404,21 +360,11 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   color: #E8EAED; cursor: pointer;
 }
 .typing { display: inline-flex; gap: 3px; align-items: center; padding: 2px 0; }
-.typing span {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--muted); animation: pulse 1.3s infinite;
-}
+.typing span { width: 5px; height: 5px; border-radius: 50%; background: var(--muted); animation: pulse 1.3s infinite; }
 .typing span:nth-child(2) { animation-delay: 0.15s; }
 .typing span:nth-child(3) { animation-delay: 0.3s; }
-@keyframes pulse {
-  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
-  40% { opacity: 1; transform: scale(1); }
-}
-.demo-block {
-  background: var(--surface); border: 1px solid var(--border-soft);
-  border-radius: 16px; padding: 18px;
-  margin-top: 16px;
-}
+@keyframes pulse { 0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); } 40% { opacity: 1; transform: scale(1); } }
+.demo-block { background: var(--surface); border: 1px solid var(--border-soft); border-radius: 16px; padding: 18px; margin-top: 16px; }
 .demo-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; }
 .demo-suggestion {
   display: block; padding: 12px 14px;
@@ -446,10 +392,7 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   position: relative;
   background: linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--bg) 85%, transparent) 40%, var(--bg) 100%);
 }
-.input-inner {
-  display: flex; gap: 4px; align-items: flex-end;
-  padding: 5px 0;
-}
+.input-inner { display: flex; gap: 4px; align-items: flex-end; padding: 5px 0; }
 .attach-btn {
   width: 32px; height: 32px; border-radius: 50%; border: none;
   background: transparent; color: var(--muted); cursor: pointer;
@@ -461,10 +404,7 @@ textarea#input {
   flex: 1; border: none; outline: none; resize: none;
   background: var(--surface-2); padding: 10px 14px;
   font-family: inherit; font-size: var(--font-size); line-height: 1.4;
-  color: var(--text);
-  min-height: 40px;
-  max-height: 120px;
-  overflow-y: auto;
+  color: var(--text); min-height: 40px; max-height: 120px; overflow-y: auto;
   border-radius: 20px;
 }
 textarea#input::placeholder { color: var(--muted); }
@@ -478,12 +418,8 @@ textarea#input::placeholder { color: var(--muted); }
 .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .send-btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
 .char-counter {
-  font-size: 11px;
-  color: var(--muted);
-  text-align: right;
-  padding: 0 8px 4px 0;
-  min-height: 14px;
-  transition: color 0.2s;
+  font-size: 11px; color: var(--muted); text-align: right;
+  padding: 0 8px 4px 0; min-height: 14px;
 }
 .char-counter.warn { color: var(--warning); }
 .char-counter.critical { color: var(--critical); }
@@ -503,11 +439,14 @@ textarea#input::placeholder { color: var(--muted); }
   font-weight: 600; padding: 2px 8px; border-radius: 999px;
   background: var(--accent-soft); color: var(--accent);
 }
+.artifact-item-stage.public { background: var(--public-soft); color: var(--public); }
 .artifact-item-meta {
   font-size: 11.5px; color: var(--muted);
   display: flex; gap: 10px; flex-wrap: wrap;
 }
 .empty-note { font-size: 13px; color: var(--muted); font-style: italic; padding: 10px 0; }
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-actions button { flex: 1; min-width: 120px; }
 .metric-card {
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
@@ -518,14 +457,11 @@ textarea#input::placeholder { color: var(--muted); }
 }
 .metric-card .metric-head {
   display: flex; justify-content: space-between; align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
+  gap: 10px; margin-bottom: 8px;
 }
 .metric-card .metric-name {
-  font-size: 12px; font-weight: 600;
-  color: var(--muted);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
+  font-size: 12px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.06em;
 }
 .metric-card .metric-value {
   font-size: 22px; font-weight: 600;
@@ -534,106 +470,36 @@ textarea#input::placeholder { color: var(--muted); }
 }
 .metric-card .metric-bar {
   height: 6px; border-radius: 3px;
-  background: var(--border);
-  overflow: hidden;
-  margin-top: 8px;
+  background: var(--border); overflow: hidden; margin-top: 8px;
 }
 .metric-card .metric-bar-fill {
-  height: 100%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+  height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-soft));
   transition: width 0.5s ease;
 }
 .metric-card .metric-desc {
-  font-size: 12.5px;
-  color: var(--muted);
-  margin-top: 8px;
-  line-height: 1.45;
+  font-size: 12.5px; color: var(--muted);
+  margin-top: 8px; line-height: 1.45;
 }
 .metric-card .metric-alert {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 999px;
-  margin-top: 8px;
-  font-weight: 500;
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 11px; padding: 3px 8px; border-radius: 999px;
+  margin-top: 8px; font-weight: 500;
 }
 .metric-card .metric-alert.warn { background: var(--warning-soft); color: var(--warning); }
 .metric-card .metric-alert.crit { background: var(--critical-soft); color: var(--critical); }
 .metric-card .metric-alert.ok { background: var(--success-soft); color: var(--success); }
 .metric-card .metric-alert .dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: currentColor;
+  width: 6px; height: 6px; border-radius: 50%; background: currentColor;
   animation: alertBlink 1.6s infinite;
 }
-@keyframes alertBlink {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
+@keyframes alertBlink { 0%, 100% { opacity: 0.6; } 50% { opacity: 1; } }
 .metric-card.warn { border-color: rgba(198, 139, 63, 0.35); }
 .metric-card.crit { border-color: rgba(184, 84, 80, 0.35); }
-.metric-actions {
-  display: flex; justify-content: space-between; align-items: center;
-  gap: 8px; margin-top: 10px;
-  font-size: 11px; color: var(--muted);
-}
-.dash-toggle {
-  margin-top: 14px;
-}
-.dash-toggle-btn {
-  width: 100%;
-  padding: 10px 14px;
-  background: var(--surface-2);
-  border: 1px solid var(--border-soft);
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 13px;
-  color: var(--text);
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-.dash-toggle-btn .arrow {
-  transition: transform 0.2s;
-  width: 14px; height: 14px;
-}
-.dash-toggle-btn.open .arrow { transform: rotate(90deg); }
-.dash-dropdown {
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.3s ease;
-  margin-top: 0;
-}
-.dash-dropdown.open {
-  max-height: 400px;
-  margin-top: 8px;
-}
-.dash-metric-opt {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 13px;
-  background: transparent;
-}
-.dash-metric-opt:hover { background: var(--surface-2); }
-.dash-metric-opt input {
-  width: 16px; height: 16px;
-  accent-color: var(--accent);
-}
 .human-bar {
-  display: flex;
-  height: 34px;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-top: 8px;
+  display: flex; height: 34px; border-radius: 12px;
+  overflow: hidden; margin-top: 8px;
   background: var(--border);
-  font-size: 11px;
-  font-weight: 600;
-  color: white;
+  font-size: 11px; font-weight: 600; color: white;
 }
 .human-bar .human {
   background: linear-gradient(135deg, #6B7CE8, #4A5BB5);
@@ -647,70 +513,35 @@ textarea#input::placeholder { color: var(--muted); }
   transition: width 0.6s;
 }
 .map-card {
-  background: var(--surface-2);
-  border: 1px solid var(--border-soft);
-  border-radius: 14px;
-  padding: 14px 16px;
-  margin-bottom: 10px;
+  background: var(--surface-2); border: 1px solid var(--border-soft);
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 10px;
 }
 .map-card .map-where {
-  font-size: 10.5px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--muted);
-  font-weight: 600;
-  margin-bottom: 4px;
+  font-size: 10.5px; text-transform: uppercase;
+  letter-spacing: 0.08em; color: var(--muted);
+  font-weight: 600; margin-bottom: 4px;
 }
 .map-card .map-title {
-  font-size: 15px;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  margin-bottom: 12px;
+  font-size: 15px; font-weight: 600;
+  letter-spacing: -0.01em; margin-bottom: 12px;
 }
-.map-steps {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
+.map-steps { display: flex; flex-direction: column; gap: 8px; }
 .map-step {
-  display: flex;
-  gap: 10px;
-  align-items: flex-start;
-  padding: 8px 0;
-  border-bottom: 1px solid var(--border-soft);
+  display: flex; gap: 10px; align-items: flex-start;
+  padding: 8px 0; border-bottom: 1px solid var(--border-soft);
 }
 .map-step:last-child { border-bottom: none; }
 .map-step .dot {
   width: 10px; height: 10px; border-radius: 50%;
-  background: var(--border);
-  flex-shrink: 0;
-  margin-top: 5px;
+  background: var(--border); flex-shrink: 0; margin-top: 5px;
 }
 .map-step.done .dot { background: var(--success); }
-.map-step.current .dot {
-  background: var(--accent);
-  box-shadow: 0 0 0 4px var(--accent-soft);
-}
-.map-step.dynamic .dot {
-  background: transparent;
-  border: 2px dashed var(--accent);
-  box-sizing: border-box;
-}
-.map-step-text {
-  flex: 1;
-  font-size: 13.5px;
-  line-height: 1.5;
-}
+.map-step.current .dot { background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.map-step.dynamic .dot { background: transparent; border: 2px dashed var(--accent); box-sizing: border-box; }
+.map-step-text { flex: 1; font-size: 13.5px; line-height: 1.5; }
 .map-step.done .map-step-text { color: var(--muted); text-decoration: line-through; }
-.map-step-meta {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 2px;
-}
-.map-step-meta .dynamic-label {
-  font-style: italic;
-  color: var(--accent);
-}
+.map-step-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+.map-step-meta .dynamic-label { font-style: italic; color: var(--accent); }
 .doc-editor { display: flex; flex-direction: column; gap: 12px; }
 .doc-editor-field label {
   display: block; font-size: 12px; color: var(--muted);
@@ -723,10 +554,8 @@ textarea#input::placeholder { color: var(--muted); }
 }
 .doc-editor-field textarea.code {
   font-family: ui-monospace, SFMono-Regular, monospace;
-  font-size: 13px;
-  min-height: 60vh;
-  white-space: pre;
-  overflow-x: auto;
+  font-size: 13px; min-height: 60vh;
+  white-space: pre; overflow-x: auto;
 }
 .doc-editor-field textarea { min-height: 40vh; resize: vertical; line-height: 1.6; font-size: 13.5px; }
 .doc-editor-field input:focus, .doc-editor-field textarea:focus {
@@ -740,6 +569,7 @@ textarea#input::placeholder { color: var(--muted); }
   display: inline-flex; align-items: center; justify-content: center; gap: 6px;
 }
 .doc-editor-actions .primary { background: var(--accent); color: var(--bg); }
+.doc-editor-actions .public { background: var(--public); color: #fff; }
 .doc-editor-actions .ghost {
   background: var(--surface-2); color: var(--text);
   border: 1px solid var(--border-soft);
@@ -753,6 +583,7 @@ textarea#input::placeholder { color: var(--muted); }
   font-family: inherit; font-size: 13px; font-weight: 500;
   cursor: pointer;
 }
+.open-editor-btn.public { background: var(--public); color: #fff; }
 .open-editor-btn svg { width: 14px; height: 14px; }
 .settings-section { margin-bottom: 18px; }
 .settings-section:last-child { margin-bottom: 0; }
@@ -767,26 +598,14 @@ textarea#input::placeholder { color: var(--muted); }
   border-radius: 10px; margin-bottom: 12px;
 }
 .settings-hint strong { color: var(--text); font-weight: 600; }
-.provider-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-}
+.provider-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .provider-btn {
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 12px 14px; border-radius: 12px;
   border: 1px solid var(--border-soft);
-  background: var(--surface-2);
-  color: var(--text);
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  text-align: left;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-height: 56px;
+  background: var(--surface-2); color: var(--text);
+  font-family: inherit; font-size: 13px; font-weight: 500;
+  cursor: pointer; text-align: left;
+  display: flex; flex-direction: column; gap: 2px; min-height: 56px;
 }
 .provider-btn.active { border-color: var(--accent); background: var(--accent-soft); }
 .provider-btn .name { font-weight: 600; }
@@ -794,16 +613,13 @@ textarea#input::placeholder { color: var(--muted); }
 .input-with-eye { position: relative; }
 .input-with-eye input { padding-right: 46px; }
 .eye-btn {
-  position: absolute;
-  top: 50%; right: 6px;
+  position: absolute; top: 50%; right: 6px;
   transform: translateY(-50%);
   width: 32px; height: 32px;
   border: none; background: transparent;
-  color: var(--muted);
-  cursor: pointer;
+  color: var(--muted); cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 8px;
-  z-index: 2;
+  border-radius: 8px; z-index: 2;
 }
 .eye-btn:hover { color: var(--text); background: var(--surface-2); }
 .eye-btn svg { width: 16px; height: 16px; stroke-width: 1.7; }
@@ -848,12 +664,12 @@ textarea#input::placeholder { color: var(--muted); }
 .modal .row { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
 .modal button.action {
   flex: 1; min-width: 120px; padding: 12px; border-radius: 11px; border: none;
-  cursor: pointer; font-weight: 500; font-size: var(--font-size);
-  font-family: inherit;
+  cursor: pointer; font-weight: 500; font-size: var(--font-size); font-family: inherit;
 }
 .modal .primary { background: var(--accent); color: var(--bg); }
 .modal .ghost { background: var(--surface-2); color: var(--text); border: 1px solid var(--border-soft); }
 .modal .danger { background: var(--critical); color: #fff; }
+.modal .public { background: var(--public); color: #fff; }
 .segmented {
   display: flex; background: var(--surface-2);
   border: 1px solid var(--border-soft); border-radius: 10px;
@@ -867,17 +683,12 @@ textarea#input::placeholder { color: var(--muted); }
 }
 .segmented button.active { background: var(--surface); color: var(--text); }
 input[type="range"] {
-  width: 100%; height: 4px;
-  background: var(--border);
-  border-radius: 2px;
-  outline: none;
-  margin-top: 10px;
+  width: 100%; height: 4px; background: var(--border);
+  border-radius: 2px; outline: none; margin-top: 10px;
   -webkit-appearance: none;
-  appearance: none;
 }
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  appearance: none;
   width: 20px; height: 20px; border-radius: 50%;
   background: var(--accent); cursor: pointer;
 }
@@ -888,12 +699,12 @@ input[type="range"]::-moz-range-thumb {
 .toast {
   position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
   transform: translateX(-50%) translateY(20px);
-  background: var(--accent); color: var(--bg); padding: 8px 16px;
-  border-radius: 999px; font-size: 13px; font-weight: 500;
+  background: var(--accent); color: var(--bg);
+  padding: 8px 16px; border-radius: 999px;
+  font-size: 13px; font-weight: 500;
   opacity: 0; pointer-events: none;
   transition: opacity 0.25s, transform 0.25s; z-index: 100;
-  max-width: 90vw;
-  text-align: center;
+  max-width: 90vw; text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .tabs {
@@ -911,8 +722,7 @@ input[type="range"]::-moz-range-thumb {
   display: flex; align-items: flex-start; gap: 10px;
   padding: 12px 14px; background: var(--surface-2);
   border-radius: 12px; margin-bottom: 8px;
-  border: 1px solid var(--border-soft);
-  cursor: pointer;
+  border: 1px solid var(--border-soft); cursor: pointer;
 }
 .idea-status {
   width: 16px; height: 16px; border-radius: 50%;
@@ -925,53 +735,40 @@ input[type="range"]::-moz-range-thumb {
 .idea-text { flex: 1; font-size: 13.5px; color: var(--text); }
 .idea-text.done { text-decoration: line-through; color: var(--muted); }
 .release-item {
-  background: var(--surface-2);
-  border: 1px solid var(--border-soft);
-  border-radius: 12px;
-  padding: 12px 14px;
-  margin-bottom: 8px;
-  cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border-soft);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; cursor: pointer;
 }
 .release-item-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 8px;
-  margin-bottom: 6px;
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 8px; margin-bottom: 6px;
 }
 .release-item-name { font-size: 13.5px; font-weight: 600; }
 .release-status {
   font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em;
   font-weight: 600; padding: 2px 8px; border-radius: 999px;
-  background: var(--accent-soft); color: var(--accent);
-  white-space: nowrap;
+  background: var(--accent-soft); color: var(--accent); white-space: nowrap;
 }
-.release-status.idea { background: var(--surface-2); color: var(--muted); }
-.release-status.in_progress { background: var(--warning-soft); color: var(--warning); }
-.release-status.done { background: var(--success-soft); color: var(--success); }
-.release-status.rejected { background: var(--critical-soft); color: var(--critical); }
+.release-status.auto { background: var(--warning-soft); color: var(--warning); }
+.release-status.manual { background: var(--accent-soft); color: var(--accent); }
+.release-status.crit { background: var(--critical-soft); color: var(--critical); }
 .release-comment { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
 .info-block {
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border-radius: 12px;
-  margin-bottom: 10px;
-  font-size: 13px;
-  line-height: 1.6;
+  padding: 12px 14px; background: var(--surface-2);
+  border-radius: 12px; margin-bottom: 10px;
+  font-size: 13px; line-height: 1.6;
 }
 .info-block strong { color: var(--text); font-weight: 600; }
 .notif-item {
   display: flex; gap: 12px;
-  padding: 12px 14px;
-  background: var(--surface-2);
-  border-radius: 12px;
-  margin-bottom: 8px;
+  padding: 12px 14px; background: var(--surface-2);
+  border-radius: 12px; margin-bottom: 8px;
   border-left: 3px solid var(--muted);
 }
 .notif-item.warn { border-left-color: var(--warning); }
 .notif-item.crit { border-left-color: var(--critical); }
 .notif-item.info { border-left-color: var(--accent); }
 .notif-item.ok { border-left-color: var(--success); }
+.notif-item.public { border-left-color: var(--public); }
 .notif-item .notif-body { flex: 1; }
 .notif-item .notif-text { font-size: 13px; line-height: 1.5; }
 .notif-item .notif-meta {
@@ -980,45 +777,71 @@ input[type="range"]::-moz-range-thumb {
 }
 .notif-item .notif-action {
   margin-top: 8px;
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  color: var(--text);
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-family: inherit;
-  font-size: 12px;
-  cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border-soft);
+  color: var(--text); border-radius: 8px;
+  padding: 6px 12px; font-family: inherit;
+  font-size: 12px; cursor: pointer;
 }
-.row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.row-actions button { flex: 1; min-width: 120px; }
-.fmt-toolbar {
-  display: flex; gap: 4px; flex-wrap: wrap;
-  padding: 6px;
+.public-item {
   background: var(--surface-2);
   border: 1px solid var(--border-soft);
-  border-radius: 10px;
+  border-left: 3px solid var(--public);
+  border-radius: 12px;
+  padding: 12px 14px;
   margin-bottom: 8px;
 }
-.fmt-btn {
-  width: 32px; height: 32px;
-  border: 1px solid transparent;
-  background: transparent;
-  color: var(--muted);
-  border-radius: 8px;
-  cursor: pointer;
-  font-family: inherit;
-  font-size: 13px;
-  display: inline-flex; align-items: center; justify-content: center;
+.public-item-head {
+  display: flex; justify-content: space-between;
+  align-items: flex-start; gap: 8px; margin-bottom: 6px;
 }
-.fmt-btn:hover { background: var(--surface); color: var(--text); border-color: var(--border-soft); }
-.management-note {
-  padding: 10px 12px;
-  background: var(--accent-soft);
-  border-radius: 10px;
-  font-size: 12.5px;
-  color: var(--text);
+.public-item-name { font-size: 13.5px; font-weight: 600; }
+.public-item-tags {
+  display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px;
+}
+.public-item-tag {
+  font-size: 10.5px; padding: 2px 8px; border-radius: 999px;
+  background: var(--public-soft); color: var(--public);
+  font-weight: 500;
+}
+.public-item-meta {
+  font-size: 11.5px; color: var(--muted);
+  display: flex; gap: 10px; flex-wrap: wrap; margin-top: 6px;
+}
+.public-actions {
+  display: flex; gap: 6px; margin-top: 10px; flex-wrap: wrap;
+}
+.public-actions button {
+  padding: 8px 14px; border-radius: 8px;
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
+  font-family: inherit; font-size: 12.5px;
+  cursor: pointer; color: var(--text);
+  display: inline-flex; align-items: center; gap: 6px;
+}
+.public-actions .take { background: var(--public); color: #fff; border: none; }
+.public-actions .help { color: var(--success); }
+.public-actions .nohelp { color: var(--muted); }
+.reputation-card {
+  background: linear-gradient(135deg, var(--public-soft), transparent);
+  border: 1px solid var(--public-soft);
+  border-radius: 14px;
+  padding: 16px 18px;
   margin-bottom: 12px;
 }
+.reputation-value {
+  font-size: 32px; font-weight: 600;
+  color: var(--public);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.reputation-row {
+  display: flex; justify-content: space-between;
+  padding: 6px 0; font-size: 13px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.reputation-row:last-child { border-bottom: none; }
+.reputation-row .label { color: var(--muted); }
+.reputation-row .value { font-weight: 600; }
 @media (min-width: 768px) {
   .sheet {
     left: 50%; right: auto;
@@ -1030,10 +853,8 @@ input[type="range"]::-moz-range-thumb {
     left: 50%; right: auto;
     transform: translate(-50%, 100%);
     width: 900px; max-width: 90vw;
-    border-radius: 20px;
-    bottom: 24px;
-    max-height: 90dvh;
-    padding: 24px;
+    border-radius: 20px; bottom: 24px;
+    max-height: 90dvh; padding: 24px;
   }
   .sheet.fullscreen.open { transform: translate(-50%, 0); }
   .modal { border-radius: 20px; margin-bottom: 24px; width: 500px; }
@@ -1043,7 +864,7 @@ input[type="range"]::-moz-range-thumb {
 <body>
 <div class="splash" id="splash">
   <div class="splash-orb"></div>
-  <div class="splash-text">AI Monolog</div>
+  <div class="splash-text">AI Monolog 2.0</div>
 </div>
 <div class="app">
   <header>
@@ -1054,6 +875,9 @@ input[type="range"]::-moz-range-thumb {
     <div class="header-right" id="headerRight">
       <button class="icon-btn" id="metricsBtn" aria-label="Пульс сессии" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
+      </button>
+      <button class="icon-btn public-badge" id="exchangeBtn" aria-label="Обмен" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l-4-4 4-4M17 7l4 4-4 4"/><path d="M3 13h18M21 11H3"/></svg>
       </button>
       <button class="icon-btn" id="notifBtn" aria-label="Уведомления" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -1143,6 +967,20 @@ input[type="range"]::-moz-range-thumb {
   </div>
 
   <div class="menu-section">
+    <div class="menu-section-title">Обмен</div>
+    <button class="menu-item public-item" id="menuExchange" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17l-4-4 4-4M17 7l4 4-4 4"/><path d="M3 13h18M21 11H3"/></svg>
+      <div class="info"><div class="name">Витрина</div><div class="desc">Публичные шаблоны и Лоты</div></div>
+      <span class="badge-mini public hidden" id="menuExchangeCount">0</span>
+    </button>
+    <button class="menu-item public-item" id="menuMyPublic" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21l2-7.5L2 9h7z"/></svg>
+      <div class="info"><div class="name">Мои публикации</div><div class="desc">Что я отдал</div></div>
+      <span class="badge-mini public hidden" id="menuMyPublicCount">0</span>
+    </button>
+  </div>
+
+  <div class="menu-section">
     <div class="menu-section-title">Сортировать</div>
     <button class="menu-item" id="menuDocuments" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg>
@@ -1227,6 +1065,24 @@ input[type="range"]::-moz-range-thumb {
   <h3>Уведомления</h3>
   <div class="sheet-sub">Что происходит и что делать</div>
   <div id="notificationsList"></div>
+</div>
+
+<div class="sheet" id="exchangeSheet">
+  <div class="sheet-handle" id="exchangeHandle"></div>
+  <h3>Обмен</h3>
+  <div class="sheet-sub">Публичные шаблоны и Лоты</div>
+  <div class="tabs" id="exchangeTabs">
+    <button class="tab active" data-exchange-tab="templates" type="button">Шаблоны</button>
+    <button class="tab" data-exchange-tab="lots" type="button">Лоты</button>
+  </div>
+  <div id="exchangeContent"></div>
+</div>
+
+<div class="sheet" id="myPublicSheet">
+  <div class="sheet-handle" id="myPublicHandle"></div>
+  <h3>Мои публикации</h3>
+  <div class="sheet-sub">Что я отдал</div>
+  <div id="myPublicContent"></div>
 </div>
 
 <div class="sheet" id="lotsSheet">
@@ -1374,14 +1230,6 @@ input[type="range"]::-moz-range-thumb {
       <label for="editorName">Название</label>
       <input type="text" id="editorName" placeholder="Название" />
     </div>
-    <div class="fmt-toolbar" id="editorToolbar" style="display:none;">
-      <button class="fmt-btn" data-fmt="bold" type="button" title="Жирный"><b>B</b></button>
-      <button class="fmt-btn" data-fmt="italic" type="button" title="Курсив"><i>I</i></button>
-      <button class="fmt-btn" data-fmt="h2" type="button" title="Заголовок">H</button>
-      <button class="fmt-btn" data-fmt="list" type="button" title="Список">•</button>
-      <button class="fmt-btn" data-fmt="table" type="button" title="Таблица">▦</button>
-      <button class="fmt-btn" data-fmt="image" type="button" title="Изображение">🖼</button>
-    </div>
     <div class="doc-editor-field">
       <label for="editorBody">Содержимое</label>
       <textarea id="editorBody" placeholder="Текст..."></textarea>
@@ -1395,7 +1243,10 @@ input[type="range"]::-moz-range-thumb {
     </div>
     <div class="doc-editor-actions" id="editorPublishRow">
       <button class="ghost" id="editorSaveBtn" type="button">Сохранить</button>
-      <button class="primary" id="editorPublishBtn" type="button">Опубликовать</button>
+      <button class="public" id="editorPublishPublicBtn" type="button">Опубликовать в Обмен</button>
+    </div>
+    <div class="doc-editor-actions" id="editorBlogRow" style="display:none;">
+      <button class="primary" id="editorPublishBlogBtn" type="button">Опубликовать в блог</button>
     </div>
     <div class="doc-status" id="editorStatus"></div>
   </div>
@@ -1530,6 +1381,25 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
+<div class="modal-bg" id="publishModalBg">
+  <div class="modal">
+    <button class="modal-close" id="publishModalClose" aria-label="Закрыть" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <h2 id="publishModalTitle">Публикация</h2>
+    <div class="sub">Что отдать в Обмен</div>
+    <label for="publishNameInput">Название</label>
+    <input type="text" id="publishNameInput" placeholder="Название" />
+    <label for="publishTagsInput">Теги (через запятую)</label>
+    <input type="text" id="publishTagsInput" placeholder="развитие, стратегия" />
+    <div class="doc-status" id="publishStatus"></div>
+    <div class="row">
+      <button class="action ghost" id="publishCancel" type="button">Отмена</button>
+      <button class="action public" id="publishConfirm" type="button">Опубликовать</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1544,6 +1414,7 @@ const LS_PROVIDER = "monolog_provider";
 const LS_FONT = "monolog_font_size";
 const LS_DEPTH = "monolog_depth_mode";
 const LS_MODE = "monolog_mode";
+const LS_UID = "monolog_uid";
 const LS_NOTIF_SEEN = "monolog_notif_seen_at";
 const DB_NAME = "monolog_db_v5";
 const DB_VERSION = 1;
@@ -1552,11 +1423,11 @@ const STORE_CHATS = "chats";
 const STORE_RELEASES = "releases";
 const STORE_ANALYTICS = "analytics";
 const STORE_NOTIFICATIONS = "notifications";
+const STORE_PUBLIC = "public_cache";
 const STORE_META = "meta";
 
 const SOFT_LIMIT = 4000;
 const HARD_LIMIT = 8000;
-const METRIC_HISTORY_MAX = 5;
 
 const PROVIDERS_FALLBACK = [
   { id: "groq", name: "Groq" },
@@ -1567,9 +1438,9 @@ const PROVIDERS_FALLBACK = [
 
 const DEMO_SUGGESTIONS = [
   "Помоги выбрать: быстро запустить MVP или доделать архитектуру?",
-  "Напиши статью про когнитивные искажения",
   "Разбери задачу: хочу запустить продукт за месяц",
-  "Помоги решить: стоит ли менять подход к Лоту"
+  "Какие скрытые возможности я сейчас не вижу?",
+  "Помоги сформулировать цель одного шага"
 ];
 
 const PLACEHOLDERS = [
@@ -1590,17 +1461,8 @@ const ORB_TINTS = [
 
 const MODE_LABELS = { analyst: "Аналитик", strategist: "Стратег", neutral: "Симбиоз" };
 
-const TRIGGER_WORDS_FORBID = [
-  /\bнельзя\b/gi,
-  /\bзапрещено\b/gi,
-  /\bникогда\b/gi,
-  /\bне\s+смей\b/gi,
-];
-const TRIGGER_WORDS_OBLIGE = [
-  /\bвсегда\b/gi,
-  /\bобязательно\b/gi,
-  /\bдолжен\s+всегда\b/gi,
-];
+const TRIGGER_WORDS_FORBID = [/\bнельзя\b/gi, /\bзапрещено\b/gi, /\bникогда\b/gi, /\bне\s+смей\b/gi];
+const TRIGGER_WORDS_OBLIGE = [/\bвсегда\b/gi, /\bобязательно\b/gi, /\bдолжен\s+всегда\b/gi];
 
 let _providersCache = PROVIDERS_FALLBACK;
 let _bc = null;
@@ -1613,10 +1475,14 @@ const state = {
   provider: "groq",
   depthMode: "auto",
   fontSize: 14,
+  uid: "",
   lots: [],
   chats: [],
   releases: [],
   notifications: [],
+  publicTemplates: [],
+  publicLots: [],
+  myPublicIds: [],
   currentChatId: null,
   attachments: [],
   sessionStart: Date.now(),
@@ -1627,11 +1493,11 @@ const state = {
   dashboardMetrics: null,
   lastNotifSeenAt: 0,
   mapSteps: [],
+  exchangeTab: "templates",
+  publishContext: null,
 };
 
-function currentChat() {
-  return state.chats.find(c => c.id === state.currentChatId);
-}
+function currentChat() { return state.chats.find(c => c.id === state.currentChatId); }
 function currentLot() {
   const c = currentChat();
   if (!c || !c.lotId) return null;
@@ -1652,11 +1518,11 @@ function openDB() {
         if (!db.objectStoreNames.contains(STORE_RELEASES)) db.createObjectStore(STORE_RELEASES, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_ANALYTICS)) db.createObjectStore(STORE_ANALYTICS, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_NOTIFICATIONS)) db.createObjectStore(STORE_NOTIFICATIONS, { keyPath: "id" });
+        if (!db.objectStoreNames.contains(STORE_PUBLIC)) db.createObjectStore(STORE_PUBLIC, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_META)) db.createObjectStore(STORE_META);
       };
       req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
       req.onerror = () => reject(req.error);
-      req.onblocked = () => console.warn("IDB blocked");
     } catch (e) { reject(e); }
   });
 }
@@ -1748,7 +1614,7 @@ function broadcast(type, payload) {
   try { if (_bc) _bc.postMessage({ type, payload, at: Date.now() }); } catch (e) {}
 }
 
-// --- Тема и шрифт ---
+// --- Тема ---
 function applyTheme() {
   let theme;
   if (state.depthMode === "auto") {
@@ -1761,15 +1627,12 @@ function applyTheme() {
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", theme === "dark" ? "#0F1115" : "#F7F8FA");
 }
-function applyFontSize() {
-  document.documentElement.style.setProperty("--font-size", state.fontSize + "px");
-}
+function applyFontSize() { document.documentElement.style.setProperty("--font-size", state.fontSize + "px"); }
 function applyProfile() {
   document.querySelectorAll("#depthSeg button").forEach(el => {
     el.classList.toggle("active", el.dataset.depth === state.depthMode);
   });
-  applyTheme();
-  applyFontSize();
+  applyTheme(); applyFontSize();
 }
 
 // --- Сфера ---
@@ -1786,19 +1649,13 @@ function getUserStatus() {
 function renderOrb() {
   const orb = document.getElementById("orbBtn");
   const status = getUserStatus();
-  const statusClass = "status-" + status.key;
-  orb.className = "orb " + state.mode + " " + statusClass;
+  orb.className = "orb " + state.mode + " status-" + status.key;
   const tint = ORB_TINTS[Math.floor(Math.random() * ORB_TINTS.length)];
   orb.style.setProperty("--orb-tint", tint);
 }
-function canSwitchMode() {
-  return !!state.manageKey;
-}
+function canSwitchMode() { return !!state.manageKey; }
 function switchMode() {
-  if (!canSwitchMode()) {
-    toast("Переключение режима доступно только с ключом Управления");
-    return;
-  }
+  if (!canSwitchMode()) { toast("Переключение режима доступно только с ключом Управления"); return; }
   const modes = ["analyst", "strategist", "neutral"];
   const idx = modes.indexOf(state.mode);
   state.mode = modes[(idx + 1) % modes.length];
@@ -1811,38 +1668,22 @@ function renderOrbSheet() {
   const sub = document.getElementById("orbSub");
   const title = document.getElementById("orbTitle");
   const status = getUserStatus();
-  if (canSwitchMode()) {
-    title.textContent = "Состояние";
-    sub.textContent = "Что нужно сейчас";
-  } else {
-    title.textContent = "Что нужно сейчас";
-    sub.textContent = "Текущий статус";
-  }
+  if (canSwitchMode()) { title.textContent = "Состояние"; sub.textContent = "Что нужно сейчас"; }
+  else { title.textContent = "Что нужно сейчас"; sub.textContent = "Текущий статус"; }
   let html = "";
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
-  if (m.ai_note) {
-    html += '<div class="info-block">' + escHtml(softenText(m.ai_note)) + '</div>';
-  }
+  if (m.ai_note) html += '<div class="info-block">' + escHtml(softenText(m.ai_note)) + '</div>';
   html += '<div class="artifact-item" style="cursor:default;">';
   html += '<div class="artifact-item-head"><span class="artifact-item-name">' + (canSwitchMode() ? "Режим" : "Статус") + '</span><span class="artifact-item-stage">' + escHtml(canSwitchMode() ? MODE_LABELS[state.mode] : status.label) + '</span></div>';
-  if (canSwitchMode()) {
-    html += '<div class="artifact-item-meta"><span>Долгий тап — переключить режим</span></div>';
-  }
+  if (canSwitchMode()) html += '<div class="artifact-item-meta"><span>Долгий тап — переключить режим</span></div>';
   html += '</div>';
-  if (m.stability_index != null) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + Number(m.stability_index).toFixed(2) + '</span></div></div>';
-  }
-  if (m.mind_scale) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Глубина</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
-  }
-  if (m.lots_balance) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Индекс</span><span class="artifact-item-stage">' + escHtml(m.lots_balance) + '</span></div></div>';
-  }
+  if (m.stability_index != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + Number(m.stability_index).toFixed(2) + '</span></div></div>';
+  if (m.mind_scale) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Глубина</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
+  if (m.lots_balance) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Индекс</span><span class="artifact-item-stage">' + escHtml(m.lots_balance) + '</span></div></div>';
   box.innerHTML = html;
   const manage = document.getElementById("orbManageSection");
-  if (state.manageKey) manage.style.display = "block";
-  else manage.style.display = "none";
+  manage.style.display = state.manageKey ? "block" : "none";
 }
 
 // --- AI note ---
@@ -1852,12 +1693,8 @@ function renderAiNote() {
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   const text = m.ai_note || (m.reminder && m.reminder.text) || null;
-  if (text) {
-    body.textContent = softenText(text);
-    note.classList.add("show");
-  } else {
-    note.classList.remove("show");
-  }
+  if (text) { body.textContent = softenText(text); note.classList.add("show"); }
+  else note.classList.remove("show");
 }
 
 // --- Header ---
@@ -1872,9 +1709,7 @@ function updateIndexBtn(delta) {
   if (!isNaN(n) && n > 0) btn.classList.add("positive");
   else if (!isNaN(n) && n < 0) btn.classList.add("negative");
   if (typeof delta === "number" && delta !== 0) {
-    btn.classList.remove("pulse");
-    void btn.offsetWidth;
-    btn.classList.add("pulse");
+    btn.classList.remove("pulse"); void btn.offsetWidth; btn.classList.add("pulse");
   }
 }
 function updateHeaderDynamic() {
@@ -1886,15 +1721,11 @@ function updateHeaderDynamic() {
   if (rp && rp.recommended && !existing) {
     const btn = document.createElement("button");
     btn.className = "icon-btn dynamic reset-btn";
-    btn.id = "resetBtn";
-    btn.type = "button";
-    btn.title = "Сбросить контекст";
+    btn.id = "resetBtn"; btn.type = "button"; btn.title = "Сбросить контекст";
     btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
     btn.addEventListener("click", () => confirmReset(rp));
     header.appendChild(btn);
-  } else if (!rp && existing) {
-    existing.remove();
-  }
+  } else if (!rp && existing) existing.remove();
   updateNotifBadge();
   updateProfileBadge();
 }
@@ -1925,9 +1756,7 @@ function confirmReset(rp) {
     if (match) {
       const idx = parseInt(match[1], 10);
       if (idx >= 0 && idx < c.history.length) c.history = c.history.slice(0, idx);
-    } else {
-      c.history = [];
-    }
+    } else c.history = [];
     document.getElementById("chat").innerHTML = "";
     renderCurrentChat();
     persistChat(c);
@@ -1938,14 +1767,7 @@ function confirmReset(rp) {
 
 // --- Notifications ---
 async function addNotification({ level, text, action, actionLabel }) {
-  const n = {
-    id: uid("notif"),
-    at: new Date().toISOString(),
-    level: level || "info",
-    text: softenText(text),
-    action: action || null,
-    actionLabel: actionLabel || null,
-  };
+  const n = { id: uid("notif"), at: new Date().toISOString(), level: level || "info", text: softenText(text), action: action || null, actionLabel: actionLabel || null };
   state.notifications.push(n);
   if (state.notifications.length > 200) state.notifications = state.notifications.slice(-200);
   await dbPut(STORE_NOTIFICATIONS, n);
@@ -1956,10 +1778,7 @@ function renderNotificationsList() {
   const box = document.getElementById("notificationsList");
   if (!box) return;
   box.innerHTML = "";
-  if (!state.notifications.length) {
-    box.innerHTML = '<div class="empty-note">Уведомлений нет. Всё спокойно.</div>';
-    return;
-  }
+  if (!state.notifications.length) { box.innerHTML = '<div class="empty-note">Уведомлений нет. Всё спокойно.</div>'; return; }
   const sorted = state.notifications.slice().sort((a, b) => (b.at || "").localeCompare(a.at || ""));
   sorted.forEach(n => {
     const el = document.createElement("div");
@@ -1972,87 +1791,21 @@ function renderNotificationsList() {
     box.appendChild(el);
   });
   box.querySelectorAll(".notif-action").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const action = btn.dataset.action;
-      handleNotifAction(action);
-    });
+    btn.addEventListener("click", () => handleNotifAction(btn.dataset.action));
   });
 }
 function handleNotifAction(action) {
   if (action === "open_settings") { closeAllSheets(); setTimeout(() => document.getElementById("settingsBtn").click(), 200); }
-  else if (action === "open_chat") { closeAllSheets(); }
+  else if (action === "open_chat") closeAllSheets();
   else if (action === "open_lots") { closeAllSheets(); setTimeout(() => { renderLotsList(); openSheet("lotsSheet"); }, 200); }
   else if (action === "open_map") { closeAllSheets(); setTimeout(() => { renderMap(); openSheet("mapSheet"); }, 200); }
-  else if (action === "mark_seen") { markNotificationsSeen(); }
+  else if (action === "open_exchange") { closeAllSheets(); setTimeout(() => { renderExchange(); openSheet("exchangeSheet"); }, 200); }
+  else if (action === "mark_seen") markNotificationsSeen();
 }
 function markNotificationsSeen() {
   state.lastNotifSeenAt = new Date().toISOString();
   try { localStorage.setItem(LS_NOTIF_SEEN, state.lastNotifSeenAt); } catch (e) {}
   updateNotifBadge();
-}
-function scanForAlerts(metrics) {
-  const m = metrics || {};
-  const c = currentChat();
-  if (!c) return;
-  // Падение в нужду
-  if (typeof m.index_delta === "number" && m.index_delta < 0) {
-    const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
-    if (balance < 0) {
-      addNotification({
-        level: "crit",
-        text: "Индекс ушёл в минус. Лоты временно недоступны. Что делать: приложить усилие — получить навык или разработать шаблон.",
-        action: "open_map", actionLabel: "Открыть карту",
-      });
-    } else if (balance < 10) {
-      addNotification({
-        level: "warn",
-        text: "Индекс приближается к нулю. Мы на грани падения в нужду. Рекомендация: сделайте вклад — навык или шаблон.",
-        action: "open_chat", actionLabel: "К диалогу",
-      });
-    }
-  }
-  // Ошибки
-  const analytics = state._lastAnalytics || [];
-  const errorCount = analytics.slice(-5).filter(a => a.success === false).length;
-  if (errorCount >= 2) {
-    addNotification({
-      level: "warn",
-      text: "Несколько последних запросов не прошли. Возможно, ключ исчерпал лимит. Что делать: проверьте ключ в настройках или введите свой.",
-      action: "open_settings", actionLabel: "Открыть настройки",
-    });
-  }
-  // Сброс
-  if (m.reset_proposal && m.reset_proposal.recommended) {
-    addNotification({
-      level: "info",
-      text: "Monolog рекомендует сбросить контекст этой ветки. Причина: " + (m.reset_proposal.reason || "накопление помех"),
-      action: "open_chat", actionLabel: "К диалогу",
-    });
-  }
-  // Шаблон
-  if (m.learning_template && m.learning_template.active) {
-    addNotification({
-      level: "info",
-      text: "Шаблон по этой задаче пока не готов. Monolog записывает шаблон. Ожидаемое время: " + (m.learning_template.eta || "несколько шагов") + ". Что получите: " + (m.learning_template.benefit || "готовое решение для следующего раза"),
-      action: "open_chat", actionLabel: "К диалогу",
-    });
-    if (c) c.learningTemplate = true;
-    persistChat(c);
-    updateProfileBadge();
-  } else if (c && c.learningTemplate) {
-    c.learningTemplate = false;
-    persistChat(c);
-    updateProfileBadge();
-    addNotification({
-      level: "ok",
-      text: "Шаблон записан. Теперь в следующий раз решение будет быстрее.",
-    });
-  }
-  // Таблицы в ответе
-  if (m.reply_has_table) {
-    // условно, если модель это сигнализирует
-    addNotification({ level: "info", text: "В ответе появилась таблица. Если она разъезжается — сообщите, мы улучшим отображение." });
-  }
 }
 
 // --- Меню ---
@@ -2090,11 +1843,22 @@ function updateMenu() {
     else impBadge.classList.add("hidden");
   }
 
-  const blogTabNew = document.getElementById("blogTabNew");
-  if (blogTabNew) {
-    if (state.authorKey) blogTabNew.style.display = "";
-    else blogTabNew.style.display = "none";
+  const myCount = state.myPublicIds.length;
+  const myBadge = document.getElementById("menuMyPublicCount");
+  if (myBadge) {
+    if (myCount > 0) { myBadge.classList.remove("hidden"); myBadge.textContent = myCount; }
+    else myBadge.classList.add("hidden");
   }
+
+  const exCount = state.publicTemplates.length + state.publicLots.length;
+  const exBadge = document.getElementById("menuExchangeCount");
+  if (exBadge) {
+    if (exCount > 0) { exBadge.classList.remove("hidden"); exBadge.textContent = exCount; }
+    else exBadge.classList.add("hidden");
+  }
+
+  const blogTabNew = document.getElementById("blogTabNew");
+  if (blogTabNew) blogTabNew.style.display = state.authorKey ? "" : "none";
 }
 
 // --- Чат ---
@@ -2109,11 +1873,9 @@ function addRow(role, content, options) {
   if (role === "agent") {
     const badge = document.createElement("div");
     badge.className = "mode-badge " + state.mode;
-    const dot = document.createElement("span");
-    dot.className = "dot";
+    const dot = document.createElement("span"); dot.className = "dot";
     badge.appendChild(dot);
-    const label = document.createElement("span");
-    label.textContent = MODE_LABELS[state.mode];
+    const label = document.createElement("span"); label.textContent = MODE_LABELS[state.mode];
     badge.appendChild(label);
     bubble.appendChild(badge);
     const body = document.createElement("div");
@@ -2122,19 +1884,12 @@ function addRow(role, content, options) {
     const actions = document.createElement("div");
     actions.className = "msg-actions";
     const copyBtn = document.createElement("button");
-    copyBtn.className = "msg-action";
-    copyBtn.type = "button";
-    copyBtn.title = "Копировать";
+    copyBtn.className = "msg-action"; copyBtn.type = "button"; copyBtn.title = "Копировать";
     copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    copyBtn.addEventListener("click", () => {
-      if (navigator.clipboard) navigator.clipboard.writeText(content || "");
-      toast("Скопировано");
-    });
+    copyBtn.addEventListener("click", () => { if (navigator.clipboard) navigator.clipboard.writeText(content || ""); toast("Скопировано"); });
     actions.appendChild(copyBtn);
     const impBtn = document.createElement("button");
-    impBtn.className = "msg-action";
-    impBtn.type = "button";
-    impBtn.title = "Важное";
+    impBtn.className = "msg-action"; impBtn.type = "button"; impBtn.title = "Важное";
     impBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 16.8 5.8 21.3l2.4-7.4L2 9.4h7.6z"/></svg>';
     const c = currentChat();
     const msgId = options.msgId != null ? options.msgId : (c ? c.history.length : 0);
@@ -2149,21 +1904,6 @@ function addRow(role, content, options) {
     });
     actions.appendChild(impBtn);
     bubble.appendChild(actions);
-
-    bubble.querySelectorAll("pre").forEach(pre => {
-      const btn = document.createElement("button");
-      btn.className = "copy-code-btn";
-      btn.type = "button";
-      btn.textContent = "Копировать";
-      btn.addEventListener("click", () => {
-        const code = pre.querySelector("code");
-        const text = code ? code.innerText : pre.innerText;
-        if (navigator.clipboard) navigator.clipboard.writeText(text);
-        btn.textContent = "Готово";
-        setTimeout(() => { btn.textContent = "Копировать"; }, 1200);
-      });
-      pre.appendChild(btn);
-    });
   } else {
     bubble.textContent = content;
   }
@@ -2178,19 +1918,12 @@ function renderCurrentChat() {
   c.history = c.history || [];
   const chat = document.getElementById("chat");
   chat.innerHTML = "";
-  if (!c.history.length) {
-    renderDemo();
-  } else {
-    c.history.forEach((m, idx) => {
-      addRow(m.role === "user" ? "user" : "agent", m.content || "", { msgId: idx });
-    });
+  if (!c.history.length) renderDemo();
+  else {
+    c.history.forEach((m, idx) => addRow(m.role === "user" ? "user" : "agent", m.content || "", { msgId: idx }));
     chat.scrollTop = chat.scrollHeight;
   }
-  if (c.lastMetrics) {
-    updateIndexBtn();
-    updateHeaderDynamic();
-    renderAiNote();
-  }
+  if (c.lastMetrics) { updateIndexBtn(); updateHeaderDynamic(); renderAiNote(); }
 }
 function renderDemo() {
   const chat = document.getElementById("chat");
@@ -2203,8 +1936,7 @@ function renderDemo() {
   block.querySelectorAll(".demo-suggestion").forEach(btn => {
     btn.addEventListener("click", () => {
       document.getElementById("input").value = btn.dataset.text;
-      document.getElementById("input").focus();
-      updateCharCounter();
+      document.getElementById("input").focus(); updateCharCounter();
     });
   });
 }
@@ -2216,13 +1948,10 @@ async function sendWithRetry(payload, tries) {
   const timeoutId = setTimeout(() => controller.abort(), 120000);
   try {
     const r = await fetch(API_BASE + "/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload), signal: controller.signal,
     });
-    clearTimeout(timeoutId);
-    return r;
+    clearTimeout(timeoutId); return r;
   } catch (e) {
     clearTimeout(timeoutId);
     if (tries > 0 && (e.name === "TypeError" || e.name === "AbortError")) {
@@ -2238,80 +1967,47 @@ async function send() {
   const text = (input.value || "").trim();
   const c = currentChat();
   if (!c || (!text && !state.attachments.length)) return;
-
-  if (text.length > HARD_LIMIT) {
-    toast("Слишком длинный запрос. Сократите или прикрепите файл.");
-    return;
-  }
-
+  if (text.length > HARD_LIMIT) { toast("Слишком длинный запрос. Сократите или прикрепите файл."); return; }
   const demoBlock = document.querySelector(".demo-block");
   if (demoBlock) demoBlock.remove();
-
   const userDisplay = text || ("[Вложение: " + state.attachments.map(a => a.name).join(", ") + "]");
-  input.value = "";
-  input.style.height = "auto";
-  updateCharCounter();
+  input.value = ""; input.style.height = "auto"; updateCharCounter();
   addRow("user", userDisplay);
-
   const attachmentsPayload = state.attachments.slice();
-  state.attachments = [];
-  renderAttachPreview();
-  btn.disabled = true;
-
+  state.attachments = []; renderAttachPreview(); btn.disabled = true;
   const thinking = addRow("agent", "");
   const orb = document.getElementById("orbBtn");
   orb.classList.add("thinking");
   const thinkingBody = thinking.bubble.querySelector("div:not(.mode-badge):not(.msg-actions)");
   if (thinkingBody) thinkingBody.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
-
   const lot = currentLot();
   const carried = {
     passport: lot && lot.goal ? { level: "micro", title: lot.name, goal: lot.goal } : {},
-    profile: {},
-    artifacts: lot ? (lot.documents || []).slice(-3) : [],
+    profile: {}, artifacts: lot ? (lot.documents || []).slice(-3) : [],
   };
-
   const startedAt = Date.now();
-  let success = false;
-  let errorCode = null;
-  let lastProviderUsed = state.provider;
-  let lastModelUsed = null;
-  let lastKeySource = state.apiKey ? "user" : "developer";
-
+  let success = false, errorCode = null;
   try {
     const r = await sendWithRetry({
       message: text || "Проанализируй вложения.",
-      attachments: attachmentsPayload,
-      carried_metrics: carried,
-      api_key: state.apiKey || null,
-      provider: state.provider || "groq",
+      attachments: attachmentsPayload, carried_metrics: carried,
+      api_key: state.apiKey || null, provider: state.provider || "groq",
       management_key: state.manageKey || null,
     });
-    let data = null;
-    try { data = await r.json(); } catch (e) {}
-
+    let data = null; try { data = await r.json(); } catch (e) {}
     const chat = document.getElementById("chat");
     if (thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
     orb.classList.remove("thinking");
-
     if (!r.ok) {
       errorCode = r.status;
       let msg = (data && data.detail) || r.statusText;
       addRow("agent", "⚠ " + softenText(msg));
-      if (r.status === 429) {
-        await addNotification({ level: "warn", text: msg, action: "open_settings", actionLabel: "Проверить ключ" });
-      } else if (r.status === 403 || r.status === 401) {
-        await addNotification({ level: "warn", text: "Ключ не принят. Откройте настройки → Ключ API и проверьте.", action: "open_settings", actionLabel: "Открыть настройки" });
-      } else if (r.status === 413) {
-        await addNotification({ level: "warn", text: "Запрос слишком длинный. Разбейте на части или прикрепите файл." });
-      } else if (r.status >= 500) {
-        await addNotification({ level: "warn", text: "Сервер провайдера не ответил. Попробуйте ещё раз через минуту." });
-      }
+      if (r.status === 429) await addNotification({ level: "warn", text: msg, action: "open_settings", actionLabel: "Проверить ключ" });
+      else if (r.status === 403 || r.status === 401) await addNotification({ level: "warn", text: "Ключ не принят. Проверьте ключ в настройках.", action: "open_settings", actionLabel: "Открыть настройки" });
+      else if (r.status === 413) await addNotification({ level: "warn", text: "Запрос слишком длинный. Сократите или прикрепите файл." });
+      else if (r.status >= 500) await addNotification({ level: "warn", text: "Сервер провайдера не ответил. Попробуйте ещё раз через минуту." });
     } else if (data) {
       success = true;
-      lastProviderUsed = data.provider_used || state.provider;
-      lastModelUsed = data.model_used || null;
-      lastKeySource = data.key_source || "developer";
       c.sessionCount = (c.sessionCount || 0) + 1;
       const newMsgId = c.history.length;
       addRow("agent", data.reply_text || "", { msgId: newMsgId });
@@ -2324,23 +2020,16 @@ async function send() {
         c.indexHistory = c.indexHistory || [];
         c.indexHistory.push({ at: new Date().toISOString(), delta, kind: "meta", name: "изменение" });
         if (c.indexHistory.length > 200) c.indexHistory.shift();
-        if (delta > 0) {
-          await addNotification({ level: "ok", text: "Индекс пополнен: +" + delta.toFixed(1) + "." });
-        } else if (delta < 0) {
-          await addNotification({ level: "info", text: "Списание индекса: " + delta.toFixed(1) + "." });
-        }
+        if (delta > 0) await addNotification({ level: "ok", text: "Индекс пополнен: +" + delta.toFixed(1) + "." });
+        else await addNotification({ level: "info", text: "Списание индекса: " + delta.toFixed(1) + "." });
       }
       persistChat(c);
       updateIndexBtn(typeof delta === "number" ? delta : 0);
-      updateHeaderDynamic();
-      renderAiNote();
+      updateHeaderDynamic(); renderAiNote();
       scanForAlerts(data.metrics || {});
       broadcast("chat_updated", { chatId: c.id });
-      // Обновляем карту динамически
       regenerateMapForCurrent();
-    } else {
-      addRow("agent", "Пустой ответ сервера.");
-    }
+    } else addRow("agent", "Пустой ответ сервера.");
   } catch (e) {
     const chat = document.getElementById("chat");
     if (thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
@@ -2352,67 +2041,36 @@ async function send() {
     errorCode = "network";
     await addNotification({ level: "warn", text: msg });
   } finally {
-    btn.disabled = false;
-    input.focus();
+    btn.disabled = false; input.focus();
     const duration = Date.now() - startedAt;
-    const an = {
-      id: uid("an"),
-      at: new Date().toISOString(),
-      provider: lastProviderUsed,
-      model: lastModelUsed,
-      key_source: lastKeySource,
-      msg_len: (text || "").length,
-      lot_id: c.lotId || null,
-      duration_ms: duration,
-      success,
-      error: errorCode,
-    };
+    const an = { id: uid("an"), at: new Date().toISOString(), provider: state.provider, model: null, key_source: state.apiKey ? "user" : "developer", msg_len: (text || "").length, lot_id: c.lotId || null, duration_ms: duration, success, error: errorCode };
     await dbPut(STORE_ANALYTICS, an);
     state._lastAnalytics = (state._lastAnalytics || []).slice(-20).concat([an]);
-    // Автоматизация автоматизации релиза
-    maybeAutoRelease();
   }
 }
 
-// --- Автоматизация релиза ---
-async function maybeAutoRelease() {
-  const analytics = state._lastAnalytics || [];
-  const last5 = analytics.slice(-5);
-  const failCount = last5.filter(a => a.success === false).length;
+// --- Scan ---
+function scanForAlerts(metrics) {
+  const m = metrics || {};
   const c = currentChat();
-  const m = (c && c.lastMetrics) || {};
-  const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
-
-  const needDrop = balance < 0;
-  const needThreat = failCount >= 2 || (typeof m.index_delta === "number" && m.index_delta < 0);
-
-  if (needDrop) {
-    await releaseAuto("Падение в нужду: индекс в минус. Автоматический релиз: поддержка изобилия.", "crit");
-  } else if (needThreat) {
-    await releaseAuto("Угроза падения: серия ошибок или падение индекса. Автоматический релиз упреждения.", "warn");
+  if (!c) return;
+  if (typeof m.index_delta === "number" && m.index_delta < 0) {
+    const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
+    if (balance < 0) addNotification({ level: "crit", text: "Индекс ушёл в минус. Лоты временно недоступны. Приложите усилие — получите навык или создайте шаблон.", action: "open_map", actionLabel: "Открыть карту" });
+    else if (balance < 10) addNotification({ level: "warn", text: "Индекс приближается к нулю. Мы на грани. Сделайте вклад — навык или шаблон.", action: "open_chat", actionLabel: "К диалогу" });
   }
-}
-async function releaseAuto(reason, level) {
-  const releaseId = uid("rel");
-  const release = {
-    id: releaseId,
-    at: new Date().toISOString(),
-    description: reason,
-    type: "auto",
-    level: level || "info",
-    patches: [
-      { type: "state", find: "auto", replace: reason },
-    ],
-    applied: true,
-  };
-  state.releases.push(release);
-  await dbPut(STORE_RELEASES, release);
-  await addNotification({
-    level: level === "crit" ? "crit" : "warn",
-    text: "Автоматический релиз выпущен. " + reason,
-    action: "open_chat", actionLabel: "К диалогу",
-  });
-  broadcast("releases_updated", {});
+  const analytics = state._lastAnalytics || [];
+  const errorCount = analytics.slice(-5).filter(a => a.success === false).length;
+  if (errorCount >= 2) addNotification({ level: "warn", text: "Несколько запросов не прошли. Проверьте ключ.", action: "open_settings", actionLabel: "Настройки" });
+  if (m.reset_proposal && m.reset_proposal.recommended) addNotification({ level: "info", text: "Monolog рекомендует сбросить контекст этой ветки. Причина: " + (m.reset_proposal.reason || "накопление помех"), action: "open_chat", actionLabel: "К диалогу" });
+  if (m.learning_template && m.learning_template.active) {
+    addNotification({ level: "info", text: "Шаблона нет. Записываем шаблон. Время: " + (m.learning_template.eta || "несколько шагов") + ". Что получите: " + (m.learning_template.benefit || "готовое решение") });
+    if (c) c.learningTemplate = true;
+    persistChat(c); updateProfileBadge();
+  } else if (c && c.learningTemplate) {
+    c.learningTemplate = false; persistChat(c); updateProfileBadge();
+    addNotification({ level: "ok", text: "Шаблон записан. Теперь решение будет быстрее." });
+  }
 }
 
 // --- Шторки ---
@@ -2431,13 +2089,7 @@ function setupSwipeToClose(sheetEl, handleEl) {
   let startY = 0, currentY = 0, dragging = false;
   function onStart(e) { dragging = true; startY = (e.touches ? e.touches[0].clientY : e.clientY); sheetEl.style.transition = "none"; }
   function onMove(e) { if (!dragging) return; currentY = (e.touches ? e.touches[0].clientY : e.clientY); const dy = Math.max(0, currentY - startY); sheetEl.style.transform = "translateY(" + dy + "px)"; }
-  function onEnd() {
-    if (!dragging) return;
-    dragging = false;
-    sheetEl.style.transition = "";
-    sheetEl.style.transform = "";
-    if (currentY - startY > 70) closeAllSheets();
-  }
+  function onEnd() { if (!dragging) return; dragging = false; sheetEl.style.transition = ""; sheetEl.style.transform = ""; if (currentY - startY > 70) closeAllSheets(); }
   handleEl.addEventListener("touchstart", onStart, { passive: true });
   handleEl.addEventListener("touchmove", onMove, { passive: true });
   handleEl.addEventListener("touchend", onEnd);
@@ -2457,15 +2109,11 @@ function renderIndexSheet(tab) {
   let filtered = history;
   if (tab === "income") filtered = history.filter(h => (h.delta || 0) > 0);
   else if (tab === "expense") filtered = history.filter(h => (h.delta || 0) < 0);
-  if (!filtered.length) {
-    list.innerHTML = '<div class="empty-note">История пуста.</div>';
-    return;
-  }
+  if (!filtered.length) { list.innerHTML = '<div class="empty-note">История пуста.</div>'; return; }
   list.innerHTML = "";
   filtered.slice().reverse().forEach(h => {
     const el = document.createElement("div");
-    el.className = "artifact-item";
-    el.style.cursor = "default";
+    el.className = "artifact-item"; el.style.cursor = "default";
     const color = (h.delta || 0) > 0 ? "var(--success)" : "var(--critical)";
     el.innerHTML = '<div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(h.name || "—") + '</span>' +
       '<span style="color:' + color + ';font-weight:600;">' + ((h.delta || 0) > 0 ? "+" : "") + (h.delta || 0).toFixed(1) + '</span></div>' +
@@ -2483,25 +2131,15 @@ function metricCard(name, value, opts) {
   let html = '<div class="metric-card' + cardClass + '">';
   html += '<div class="metric-head"><div class="metric-name">' + escHtml(name) + '</div>';
   html += '<div class="metric-value">' + escHtml(String(value)) + '</div></div>';
-  if (opts.bar != null) {
-    html += '<div class="metric-bar"><div class="metric-bar-fill" style="width:' + Math.max(0, Math.min(100, opts.bar * 100)) + '%"></div></div>';
-  }
-  if (opts.desc) {
-    html += '<div class="metric-desc">' + escHtml(opts.desc) + '</div>';
-  }
-  if (opts.alert) {
-    html += '<div class="metric-alert ' + alertClass + '"><span class="dot"></span>' + escHtml(opts.alert) + '</div>';
-  }
+  if (opts.bar != null) html += '<div class="metric-bar"><div class="metric-bar-fill" style="width:' + Math.max(0, Math.min(100, opts.bar * 100)) + '%"></div></div>';
+  if (opts.desc) html += '<div class="metric-desc">' + escHtml(opts.desc) + '</div>';
+  if (opts.alert) html += '<div class="metric-alert ' + alertClass + '"><span class="dot"></span>' + escHtml(opts.alert) + '</div>';
   html += '</div>';
   return html;
 }
 function humanBar(hc) {
-  const humanPct = Math.round(hc * 100);
-  const aiPct = 100 - humanPct;
-  return '<div class="human-bar">' +
-    '<div class="human" style="width:' + humanPct + '%">' + humanPct + '%</div>' +
-    '<div class="ai" style="width:' + aiPct + '%">' + aiPct + '%</div>' +
-    '</div>';
+  const humanPct = Math.round(hc * 100), aiPct = 100 - humanPct;
+  return '<div class="human-bar"><div class="human" style="width:' + humanPct + '%">' + humanPct + '%</div><div class="ai" style="width:' + aiPct + '%">' + aiPct + '%</div></div>';
 }
 function buildMetricById(id, m) {
   const si = typeof m.stability_index === "number" ? m.stability_index : null;
@@ -2509,47 +2147,31 @@ function buildMetricById(id, m) {
   switch (id) {
     case "stability":
       return metricCard("Стабильность", si != null ? si.toFixed(2) : "—", {
-        bar: si,
-        level: si != null && si < 0.5 ? "crit" : si != null && si < 0.75 ? "warn" : "ok",
+        bar: si, level: si != null && si < 0.5 ? "crit" : si != null && si < 0.75 ? "warn" : "ok",
         desc: si != null ? (si >= 0.75 ? "Решение устойчиво." : si >= 0.5 ? "Есть нерешённые коллизии." : "Неустойчивое решение.") : "Появится после первого диалога.",
         alert: si != null && si < 0.5 ? "Обратить внимание" : null,
       });
-    case "mind":
-      return metricCard("Глубина", escHtml(m.mind_scale || "—"), {
-        desc: "Уровень задачи, под который адаптируется глубина.",
-      });
-    case "pulse":
-      return metricCard("Пульс", escHtml(m.cognitive_pulse || "—"), {
-        desc: m.cognitive_pulse === "fast" ? "Быстрый темп — проверьте детали." : "Ровный темп.",
-      });
+    case "mind": return metricCard("Глубина", escHtml(m.mind_scale || "—"), { desc: "Уровень задачи." });
+    case "pulse": return metricCard("Пульс", escHtml(m.cognitive_pulse || "—"), { desc: m.cognitive_pulse === "fast" ? "Быстрый темп." : "Ровный темп." });
     case "human":
-      let extra = "";
-      if (hc != null) extra = humanBar(hc);
-      return metricCard("Вклад человек / ИИ", hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—", {
-        desc: "Соотношение вашего вклада и работы алгоритма.",
-      }) + extra;
+      let extra = ""; if (hc != null) extra = humanBar(hc);
+      return metricCard("Вклад человек / ИИ", hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—", { desc: "Соотношение вкладов." }) + extra;
     case "balance":
+      const bal = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
       return metricCard("Индекс полезности", escHtml(m.lots_balance || "+0.0"), {
-        level: parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) < 0 ? "crit" : "ok",
-        desc: "Накопленный вклад.",
-        alert: parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) < 0 ? "Индекс в минусе" : null,
+        level: bal < 0 ? "crit" : "ok", desc: "Накопленный вклад.",
+        alert: bal < 0 ? "Индекс в минусе" : null,
       });
     case "dominant":
-      if (m.dominant_trait && m.dominant_trait.detected) {
-        return metricCard("Импульс", escHtml(m.dominant_trait.influence || "—"), {
-          level: "warn",
-          desc: m.dominant_trait.hint || "",
-          alert: "Обратить внимание",
-        });
-      }
+      if (m.dominant_trait && m.dominant_trait.detected) return metricCard("Импульс", escHtml(m.dominant_trait.influence || "—"), { level: "warn", desc: m.dominant_trait.hint || "", alert: "Обратить внимание" });
       return "";
     case "social":
       const sa = m.social_adaptation || {};
-      return metricCard("Социальная адаптация", escHtml(sa.level || "inactive"), {
-        desc: sa.reason || "",
-      });
-    default:
-      return "";
+      return metricCard("Социальная адаптация", escHtml(sa.level || "inactive"), { desc: sa.reason || "" });
+    case "public":
+      const pi = m.public_index || {};
+      return metricCard("Публичный индекс", String(pi.reputation || 0), { desc: "Отдал: " + (pi.given || 0) + " · Взял: " + (pi.taken || 0) });
+    default: return "";
   }
 }
 function renderMetricsSheet() {
@@ -2558,9 +2180,7 @@ function renderMetricsSheet() {
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   let html = "";
-  ["stability", "mind", "pulse", "human", "balance", "dominant", "social"].forEach(id => {
-    html += buildMetricById(id, m);
-  });
+  ["stability", "mind", "pulse", "human", "balance", "public", "dominant", "social"].forEach(id => { html += buildMetricById(id, m); });
   html += '<div style="margin-top:16px;font-size:11px;color:var(--muted);">Запросов в сессии: ' + ((c && c.sessionCount) || 0) + '</div>';
   box.innerHTML = html;
 }
@@ -2571,9 +2191,16 @@ function renderProfile() {
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта</div>';
+  const pi = m.public_index || {};
+  html += '<div class="reputation-card">';
+  html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin-bottom:6px;">Публичный индекс</div>';
+  html += '<div class="reputation-value">' + (pi.reputation || 0) + '</div>';
+  html += '<div class="reputation-row"><span class="label">Отдал</span><span class="value">' + (pi.given || 0) + '</span></div>';
+  html += '<div class="reputation-row"><span class="label">Взял</span><span class="value">' + (pi.taken || 0) + '</span></div>';
+  html += '<div class="reputation-row"><span class="label">Оценка</span><span class="value">' + (pi.help_score || 0) + '</span></div>';
+  html += '</div>';
   const si = typeof m.stability_index === "number" ? m.stability_index : null;
   if (si != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + si.toFixed(2) + '</span></div></div>';
-  if (m.mind_scale) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Глубина</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
   const profile = m.profile || {};
   const patterns = profile.patterns || [];
   if (patterns.length) {
@@ -2584,11 +2211,6 @@ function renderProfile() {
   if (distortions.length) {
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Искажения</div>';
     html += '<div style="display:flex;flex-wrap:wrap;gap:6px;">' + distortions.map(p => '<span style="padding:4px 10px;background:var(--warning-soft);color:var(--warning);border-radius:999px;font-size:12px;">' + escHtml(p) + '</span>').join("") + '</div>';
-  }
-  const insights = profile.insights || [];
-  if (insights.length) {
-    html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Наблюдения</div>';
-    html += '<div style="display:flex;flex-direction:column;gap:8px;">' + insights.map(i => '<div style="font-size:13px;line-height:1.5;">' + escHtml(i) + '</div>').join("") + '</div>';
   }
   html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Карта</div>';
   html += '<button class="open-editor-btn" id="profileMapBtn" type="button" style="width:100%;justify-content:center;margin-top:0;">Открыть карту местности</button>';
@@ -2606,7 +2228,6 @@ function renderMap() {
   const m = (c && c.lastMetrics) || {};
   const lotName = lot ? lot.name : "Без Лота";
   const task = (c && c.history && c.history.length) ? (c.history[c.history.length - 2] && c.history[c.history.length - 2].content || "—") : "Начало";
-  const steps = state.mapSteps || [];
   let html = "";
   html += '<div class="map-card">';
   html += '<div class="map-where">Лот</div>';
@@ -2620,37 +2241,23 @@ function renderMap() {
     const pct = Math.max(0, Math.min(100, Math.round(balance / price * 100)));
     html += '<div style="font-size:13px;margin-bottom:6px;">' + pct + '% до Лота — индекс ' + balance.toFixed(1) + ' из ' + price + '</div>';
     html += '<div class="metric-bar"><div class="metric-bar-fill" style="width:' + pct + '%"></div></div>';
-  } else {
-    html += '<div style="font-size:13px;color:var(--muted);">Цена Лота не задана.</div>';
-  }
+  } else html += '<div style="font-size:13px;color:var(--muted);">Цена Лота не задана.</div>';
   html += '</div>';
+  const steps = state.mapSteps || [];
   if (steps.length) {
-    html += '<div class="map-card">';
-    html += '<div class="map-where">План действий</div>';
-    html += '<div class="map-steps">';
+    html += '<div class="map-card"><div class="map-where">План действий</div><div class="map-steps">';
     steps.forEach(s => {
       const cls = (s.state || "todo") + (s.dynamic ? " dynamic" : "");
-      html += '<div class="map-step ' + cls + '">';
-      html += '<div class="dot"></div>';
-      html += '<div><div class="map-step-text">' + escHtml(s.text || "") + '</div>';
-      if (s.eta || s.dynamic) {
-        html += '<div class="map-step-meta">' +
-          (s.eta ? escHtml(s.eta) : "") +
-          (s.dynamic ? ' <span class="dynamic-label">· динамический</span>' : "") +
-          '</div>';
-      }
+      html += '<div class="map-step ' + cls + '"><div class="dot"></div><div><div class="map-step-text">' + escHtml(s.text || "") + '</div>';
+      if (s.eta || s.dynamic) html += '<div class="map-step-meta">' + (s.eta ? escHtml(s.eta) : "") + (s.dynamic ? ' <span class="dynamic-label">· динамический</span>' : "") + '</div>';
       html += '</div></div>';
     });
     html += '</div></div>';
-  } else {
-    html += '<div class="map-card"><div class="empty-note">План появится после первых шагов.</div></div>';
-  }
+  } else html += '<div class="map-card"><div class="empty-note">План появится после первых шагов.</div></div>';
   box.innerHTML = html;
 }
-async function regenerateMapForCurrent() {
-  const c = currentChat();
+function regenerateMapForCurrent() {
   const lot = currentLot();
-  const m = (c && c.lastMetrics) || {};
   const steps = [];
   steps.push({ text: "Определить Лот", state: lot ? "done" : "current", eta: lot ? null : "сейчас" });
   if (lot) {
@@ -2666,14 +2273,13 @@ async function regenerateMapForCurrent() {
 
 // --- Лоты ---
 function createLotObj(name, goal, price) {
-  return { id: uid("lot"), name, goal: goal || null, price: price || null, createdAt: new Date().toISOString(), archived: false, documents: [], ideas: [], chatIds: [], indexHistory: [], indexTotal: 0 };
+  return { id: uid("lot"), name, goal: goal || null, price: price || null, createdAt: new Date().toISOString(), archived: false, documents: [], ideas: [], chatIds: [], indexHistory: [], indexTotal: 0, publicId: null };
 }
 function renderLotsList() {
   const activeBox = document.getElementById("lotsActiveList");
   const archiveBox = document.getElementById("lotsArchiveList");
   if (!activeBox || !archiveBox) return;
-  activeBox.innerHTML = "";
-  archiveBox.innerHTML = "";
+  activeBox.innerHTML = ""; archiveBox.innerHTML = "";
   const active = state.lots.filter(l => !l.archived);
   const archived = state.lots.filter(l => l.archived);
   if (!active.length) activeBox.innerHTML = '<div class="empty-note">Пока нет активных Лотов.</div>';
@@ -2686,18 +2292,14 @@ function renderLotItem(l) {
   item.className = "artifact-item";
   const chatsCount = (l.chatIds || []).length;
   const docsCount = (l.documents || []).length;
-  item.innerHTML = '<div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(l.name) + '</span>' +
-    '<span class="artifact-item-stage">' + (l.price ? escHtml(String(l.price)) : "—") + '</span></div>' +
-    '<div class="artifact-item-meta">' +
-    (l.goal ? '<span>' + escHtml(l.goal.slice(0, 60)) + '</span>' : '') +
+  const publicBadge = l.publicId ? '<span class="artifact-item-stage public">Опубликован</span>' : '<span class="artifact-item-stage">' + (l.price ? escHtml(String(l.price)) : "—") + '</span>';
+  item.innerHTML = '<div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(l.name) + '</span>' + publicBadge + '</div>' +
+    '<div class="artifact-item-meta">' + (l.goal ? '<span>' + escHtml(l.goal.slice(0, 60)) + '</span>' : '') +
     '<span>' + chatsCount + ' ' + pluralize(chatsCount, ["чат", "чата", "чатов"]) + '</span>' +
-    '<span>' + docsCount + ' ' + pluralize(docsCount, ["документ", "документа", "документов"]) + '</span>' +
-    '</div>';
+    '<span>' + docsCount + ' ' + pluralize(docsCount, ["документ", "документа", "документов"]) + '</span></div>';
   item.addEventListener("click", () => openLotCard(l.id));
   let pressTimer = null;
-  item.addEventListener("pointerdown", () => {
-    pressTimer = setTimeout(() => { pressTimer = null; openLotModal(l.id); }, 550);
-  });
+  item.addEventListener("pointerdown", () => { pressTimer = setTimeout(() => { pressTimer = null; openLotModal(l.id); }, 550); });
   ["pointerup", "pointerleave", "pointercancel"].forEach(ev => {
     item.addEventListener(ev, () => { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } });
   });
@@ -2713,7 +2315,9 @@ function openLotCard(lotId) {
   let html = '<h3>' + escHtml(l.name) + '</h3>';
   html += '<div class="sheet-sub">' + (l.goal ? escHtml(l.goal) : "Цель не задана") + '</div>';
   if (l.price) html += '<div class="artifact-item-stage" style="margin-bottom:14px;">Стоимость: ' + escHtml(String(l.price)) + '</div>';
+  if (l.publicId) html += '<div class="artifact-item-stage public" style="margin-bottom:14px;">Опубликован в Обмене</div>';
   html += '<button class="open-editor-btn" id="lotMapBtn" type="button" style="width:100%;justify-content:center;margin-top:0;margin-bottom:14px;">Открыть карту Лота</button>';
+  if (!l.publicId) html += '<button class="open-editor-btn public" id="lotPublishBtn" type="button" style="width:100%;justify-content:center;margin-top:0;margin-bottom:14px;">Опубликовать в Обмен</button>';
   html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:14px 0 8px;">Чаты</div>';
   if (!chats.length) html += '<div class="empty-note">Пока нет чатов.</div>';
   else html += '<div id="lotChatsList"></div>';
@@ -2725,10 +2329,9 @@ function openLotCard(lotId) {
   else html += '<div id="lotIdeasList"></div>';
   box.innerHTML = html;
 
-  document.getElementById("lotMapBtn").addEventListener("click", () => {
-    closeAllSheets();
-    setTimeout(() => { renderMap(); openSheet("mapSheet"); }, 200);
-  });
+  document.getElementById("lotMapBtn").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderMap(); openSheet("mapSheet"); }, 200); });
+  const pubBtn = document.getElementById("lotPublishBtn");
+  if (pubBtn) pubBtn.addEventListener("click", () => openPublishModal("lot", l));
 
   const chatsList = document.getElementById("lotChatsList");
   if (chatsList) chats.forEach(c => {
@@ -2758,8 +2361,7 @@ function openLotCard(lotId) {
     row.addEventListener("click", () => {
       const next = { new: "in_progress", in_progress: "done", done: "new", archived: "new" };
       it.status = next[status] || "new";
-      persistLot(l);
-      openLotCard(l.id);
+      persistLot(l); openLotCard(l.id);
     });
     ideasList.appendChild(row);
   });
@@ -2785,13 +2387,9 @@ async function saveLot() {
     if (l) { l.name = name; l.goal = goal || null; l.price = price || null; await persistLot(l); }
   } else {
     const fresh = createLotObj(name, goal, price);
-    await dbPut(STORE_LOTS, fresh);
-    state.lots.push(fresh);
+    await dbPut(STORE_LOTS, fresh); state.lots.push(fresh);
   }
-  updateMenu();
-  closeAllSheets();
-  broadcast("lots_updated", {});
-  toast("Сохранено");
+  updateMenu(); closeAllSheets(); broadcast("lots_updated", {}); toast("Сохранено");
 }
 async function deleteLot() {
   if (!state.editingLotId) return;
@@ -2805,37 +2403,23 @@ async function deleteLot() {
   state.lots = state.lots.filter(x => x.id !== l.id);
   if (!state.chats.length) {
     const fresh = createChatObj("Новый чат");
-    await dbPut(STORE_CHATS, fresh);
-    state.chats.push(fresh);
-    state.currentChatId = fresh.id;
+    await dbPut(STORE_CHATS, fresh); state.chats.push(fresh); state.currentChatId = fresh.id;
     await dbSetMeta("currentChatId", fresh.id);
   }
   document.getElementById("chat").innerHTML = "";
-  renderCurrentChat();
-  updateMenu();
-  closeAllSheets();
-  broadcast("lots_updated", {});
-  toast("Лот удалён");
+  renderCurrentChat(); updateMenu(); closeAllSheets(); broadcast("lots_updated", {}); toast("Лот удалён");
 }
 
 // --- Чаты ---
 function createChatObj(title, lotId) {
   return { id: uid("chat"), title: title || "Новый чат", lotId: lotId || null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), history: [], lastMetrics: null, sessionCount: 0, important: {}, indexHistory: [], priorities: [], documents: [] };
 }
-async function persistChat(c) {
-  if (!c) return;
-  await dbPut(STORE_CHATS, c);
-  await dbSetMeta("currentChatId", c.id);
-}
+async function persistChat(c) { if (!c) return; await dbPut(STORE_CHATS, c); await dbSetMeta("currentChatId", c.id); }
 async function persistLot(l) { if (!l) return; await dbPut(STORE_LOTS, l); }
 async function switchChat(chatId) {
   if (chatId === state.currentChatId) return;
-  state.currentChatId = chatId;
-  await dbSetMeta("currentChatId", chatId);
-  document.getElementById("chat").innerHTML = "";
-  renderCurrentChat();
-  updateMenu();
-  regenerateMapForCurrent();
+  state.currentChatId = chatId; await dbSetMeta("currentChatId", chatId);
+  document.getElementById("chat").innerHTML = ""; renderCurrentChat(); updateMenu(); regenerateMapForCurrent();
 }
 function renderChatsList() {
   const box = document.getElementById("chatsList");
@@ -2853,7 +2437,7 @@ function renderChatsList() {
   });
 }
 
-// --- Идеи ---
+// --- Идеи / Документы / Важное ---
 function renderIdeasList() {
   const box = document.getElementById("ideasList");
   if (!box) return;
@@ -2869,18 +2453,11 @@ function renderIdeasList() {
     row.addEventListener("click", async () => {
       const next = { new: "in_progress", in_progress: "done", done: "new", archived: "new" };
       const l = state.lots.find(x => x.id === item.lotId);
-      if (l) {
-        l.ideas[item.idx].status = next[status] || "new";
-        await persistLot(l);
-        renderIdeasList();
-        updateMenu();
-      }
+      if (l) { l.ideas[item.idx].status = next[status] || "new"; await persistLot(l); renderIdeasList(); updateMenu(); }
     });
     box.appendChild(row);
   });
 }
-
-// --- Документы ---
 function renderDocumentsList() {
   const box = document.getElementById("documentsList");
   if (!box) return;
@@ -2889,35 +2466,22 @@ function renderDocumentsList() {
   state.lots.forEach(l => (l.documents || []).forEach((d, idx) => all.push({ lotId: l.id, lotName: l.name, idx, doc: d })));
   const c = currentChat();
   const freeDocs = (c && c.documents) || [];
-  if (!all.length && !freeDocs.length) {
-    box.innerHTML = '<div class="empty-note">Пока нет документов. Создайте первый — кнопка вверху.</div>';
-    return;
-  }
+  if (!all.length && !freeDocs.length) { box.innerHTML = '<div class="empty-note">Пока нет документов.</div>'; return; }
   all.forEach(item => {
     const el = document.createElement("div");
     el.className = "artifact-item";
-    el.innerHTML = '<div class="artifact-item-name">' + escHtml(item.doc.name || "Документ") + '</div>' +
-      '<div class="artifact-item-meta"><span>' + escHtml(item.lotName) + '</span></div>';
-    el.addEventListener("click", () => {
-      closeAllSheets();
-      setTimeout(() => openEditor({ type: "document", lotId: item.lotId, docIndex: item.idx, name: item.doc.name || "", body: item.doc.content || "" }), 200);
-    });
+    el.innerHTML = '<div class="artifact-item-name">' + escHtml(item.doc.name || "Документ") + '</div><div class="artifact-item-meta"><span>' + escHtml(item.lotName) + '</span></div>';
+    el.addEventListener("click", () => { closeAllSheets(); setTimeout(() => openEditor({ type: "document", lotId: item.lotId, docIndex: item.idx, name: item.doc.name || "", body: item.doc.content || "" }), 200); });
     box.appendChild(el);
   });
   freeDocs.forEach((d, idx) => {
     const el = document.createElement("div");
     el.className = "artifact-item";
-    el.innerHTML = '<div class="artifact-item-name">' + escHtml(d.name || "Документ") + '</div>' +
-      '<div class="artifact-item-meta"><span>Без Лота</span></div>';
-    el.addEventListener("click", () => {
-      closeAllSheets();
-      setTimeout(() => openEditor({ type: "document", docIndex: idx, name: d.name || "", body: d.content || "" }), 200);
-    });
+    el.innerHTML = '<div class="artifact-item-name">' + escHtml(d.name || "Документ") + '</div><div class="artifact-item-meta"><span>Без Лота</span></div>';
+    el.addEventListener("click", () => { closeAllSheets(); setTimeout(() => openEditor({ type: "document", docIndex: idx, name: d.name || "", body: d.content || "" }), 200); });
     box.appendChild(el);
   });
 }
-
-// --- Важное ---
 function renderImportantList() {
   const box = document.getElementById("importantList");
   if (!box) return;
@@ -2936,6 +2500,173 @@ function renderImportantList() {
   });
 }
 
+// --- Обмен ---
+async function loadExchange(sort) {
+  sort = sort || "new";
+  try {
+    const [tRes, lRes] = await Promise.all([
+      fetch(API_BASE + "/public/templates?sort=" + sort + "&limit=100"),
+      fetch(API_BASE + "/public/lots?sort=" + sort + "&limit=100"),
+    ]);
+    if (tRes.ok) { const d = await tRes.json(); state.publicTemplates = d.templates || []; }
+    if (lRes.ok) { const d = await lRes.json(); state.publicLots = d.lots || []; }
+    state.myPublicIds = state.publicTemplates.filter(t => t.uid === state.uid).map(t => t.id)
+      .concat(state.publicLots.filter(l => l.uid === state.uid).map(l => l.id));
+    updateMenu();
+  } catch (e) {
+    console.warn("exchange load failed", e);
+  }
+}
+function renderExchange() {
+  const box = document.getElementById("exchangeContent");
+  if (!box) return;
+  box.innerHTML = "";
+  if (state.exchangeTab === "templates") {
+    if (!state.publicTemplates.length) { box.innerHTML = '<div class="empty-note">Публичных шаблонов пока нет. Станьте первым.</div>'; return; }
+    state.publicTemplates.forEach(t => box.appendChild(renderPublicTemplate(t)));
+  } else {
+    if (!state.publicLots.length) { box.innerHTML = '<div class="empty-note">Публичных Лотов пока нет.</div>'; return; }
+    state.publicLots.forEach(l => box.appendChild(renderPublicLot(l)));
+  }
+}
+function renderPublicTemplate(t) {
+  const el = document.createElement("div");
+  el.className = "public-item";
+  const isMine = t.uid === state.uid;
+  el.innerHTML = '<div class="public-item-head"><span class="public-item-name">' + escHtml(t.name) + '</span><span class="artifact-item-stage public">' + (isMine ? "Мой" : "Чужой") + '</span></div>' +
+    (t.content ? '<div class="public-item-meta"><span>' + escHtml(String(t.content).slice(0, 120)) + '</span></div>' : '') +
+    '<div class="public-item-meta"><span>Взяли: ' + (t.taken_count || 0) + '</span><span>Помогло: ' + Math.round((t.help_score || 0) * 100) + '%</span></div>' +
+    ((t.tags && t.tags.length) ? '<div class="public-item-tags">' + t.tags.map(tg => '<span class="public-item-tag">' + escHtml(tg) + '</span>').join("") + '</div>' : '') +
+    '<div class="public-actions">' +
+    (isMine ? '' : '<button class="take" data-id="' + t.id + '" data-type="template">Взять</button>') +
+    '<button class="help" data-id="' + t.id + '" data-type="template" data-verdict="help">Помогло</button>' +
+    '<button class="nohelp" data-id="' + t.id + '" data-type="template" data-verdict="nohelp">Не помогло</button>' +
+    '</div>';
+  el.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      if (b.dataset.take) {}
+      if (b.classList.contains("take")) takePublic(t.id, "template");
+      else if (b.classList.contains("help")) reviewPublic(t.id, "template", "help");
+      else if (b.classList.contains("nohelp")) reviewPublic(t.id, "template", "nohelp");
+    });
+  });
+  return el;
+}
+function renderPublicLot(l) {
+  const el = document.createElement("div");
+  el.className = "public-item";
+  const isMine = l.uid === state.uid;
+  el.innerHTML = '<div class="public-item-head"><span class="public-item-name">' + escHtml(l.name) + '</span><span class="artifact-item-stage public">' + (isMine ? "Мой" : "Чужой") + '</span></div>' +
+    (l.goal ? '<div class="public-item-meta"><span>' + escHtml(String(l.goal).slice(0, 120)) + '</span></div>' : '') +
+    (l.price ? '<div class="public-item-meta"><span>Стоимость: ' + escHtml(String(l.price)) + '</span></div>' : '') +
+    '<div class="public-item-meta"><span>Взяли: ' + (l.taken_count || 0) + '</span></div>' +
+    '<div class="public-actions">' +
+    (isMine ? '' : '<button class="take" data-id="' + l.id + '" data-type="lot">Взять как образец</button>') +
+    '<button class="help" data-id="' + l.id + '" data-type="lot" data-verdict="help">Помогло</button>' +
+    '<button class="nohelp" data-id="' + l.id + '" data-type="lot" data-verdict="nohelp">Не помогло</button>' +
+    '</div>';
+  el.querySelectorAll("button").forEach(b => {
+    b.addEventListener("click", () => {
+      if (b.classList.contains("take")) takePublic(l.id, "lot");
+      else if (b.classList.contains("help")) reviewPublic(l.id, "lot", "help");
+      else if (b.classList.contains("nohelp")) reviewPublic(l.id, "lot", "nohelp");
+    });
+  });
+  return el;
+}
+async function takePublic(targetId, targetType) {
+  if (!state.uid) { toast("Нужен идентификатор"); return; }
+  try {
+    const r = await fetch(API_BASE + "/public/take", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target_id: targetId, target_type: targetType, uid: state.uid }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+    if (data.self) { toast("Это ваша публикация"); return; }
+    const c = currentChat();
+    if (c) {
+      c.indexHistory = c.indexHistory || [];
+      c.indexHistory.push({ at: new Date().toISOString(), delta: data.index_delta, kind: "public_take", name: "взятие из Обмена" });
+      persistChat(c);
+    }
+    toast("Взято. Индекс: " + (data.index_delta > 0 ? "+" : "") + data.index_delta);
+    await addNotification({ level: "info", text: "Вы взяли публичный " + (targetType === "template" ? "шаблон" : "Лот") + ". Списание индекса: " + data.index_delta });
+    await loadExchange();
+    renderExchange();
+  } catch (e) { toast("Ошибка: " + e.message); }
+}
+async function reviewPublic(targetId, targetType, verdict) {
+  if (!state.uid) { toast("Нужен идентификатор"); return; }
+  try {
+    const r = await fetch(API_BASE + "/public/review", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ target_id: targetId, target_type: targetType, verdict, uid: state.uid }),
+    });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+    toast("Спасибо");
+    await loadExchange();
+    renderExchange();
+  } catch (e) { toast("Ошибка: " + e.message); }
+}
+function openPublishModal(kind, obj) {
+  state.publishContext = { kind, obj };
+  const title = document.getElementById("publishModalTitle");
+  const nameInput = document.getElementById("publishNameInput");
+  const tagsInput = document.getElementById("publishTagsInput");
+  const status = document.getElementById("publishStatus");
+  if (kind === "template") { title.textContent = "Публикация шаблона"; nameInput.value = obj.name || ""; tagsInput.value = (obj.tags || []).join(", "); }
+  else { title.textContent = "Публикация Лота"; nameInput.value = obj.name || ""; tagsInput.value = ""; }
+  status.textContent = "";
+  document.getElementById("publishModalBg").classList.add("open");
+}
+async function confirmPublish() {
+  const ctx = state.publishContext;
+  if (!ctx) return;
+  const name = (document.getElementById("publishNameInput").value || "").trim();
+  const tags = (document.getElementById("publishTagsInput").value || "").split(",").map(s => s.trim()).filter(Boolean);
+  const status = document.getElementById("publishStatus");
+  if (!name) { status.textContent = "Нужно название"; return; }
+  status.textContent = "Публикую...";
+  try {
+    let url, body;
+    if (ctx.kind === "template") {
+      url = API_BASE + "/public/templates";
+      body = { uid: state.uid, template: { name, content: ctx.obj.content || ctx.obj.body || "", kind: "pattern", tags } };
+    } else {
+      url = API_BASE + "/public/lots";
+      body = { uid: state.uid, lot: { name, goal: ctx.obj.goal || "", price: ctx.obj.price || "" } };
+    }
+    const r = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+    if (ctx.kind === "lot") {
+      ctx.obj.publicId = (data.lot && data.lot.id) || null;
+      await persistLot(ctx.obj);
+    }
+    status.textContent = "Опубликовано";
+    toast("Опубликовано");
+    await addNotification({ level: "public", text: "Публикация успешна: " + name });
+    closeAllSheets();
+    await loadExchange();
+  } catch (e) { status.textContent = "Ошибка: " + e.message; }
+}
+function renderMyPublic() {
+  const box = document.getElementById("myPublicContent");
+  if (!box) return;
+  box.innerHTML = "";
+  const mine = state.publicTemplates.filter(t => t.uid === state.uid).concat(state.publicLots.filter(l => l.uid === state.uid));
+  if (!mine.length) { box.innerHTML = '<div class="empty-note">Пока ничего не опубликовано.</div>'; return; }
+  mine.forEach(m => {
+    const el = document.createElement("div");
+    el.className = "public-item";
+    el.innerHTML = '<div class="public-item-head"><span class="public-item-name">' + escHtml(m.name) + '</span><span class="artifact-item-stage public">Публикация</span></div>' +
+      '<div class="public-item-meta"><span>Взяли: ' + (m.taken_count || 0) + '</span><span>Помогло: ' + Math.round((m.help_score || 0) * 100) + '%</span></div>';
+    box.appendChild(el);
+  });
+}
+
 // --- Дэшборд ---
 const ALL_METRICS = [
   { id: "stability", name: "Стабильность" },
@@ -2943,13 +2674,14 @@ const ALL_METRICS = [
   { id: "pulse", name: "Пульс" },
   { id: "human", name: "Вклад человек / ИИ" },
   { id: "balance", name: "Индекс полезности" },
+  { id: "public", name: "Публичный индекс" },
   { id: "dominant", name: "Импульс" },
   { id: "social", name: "Социальная адаптация" },
 ];
 async function renderDashboard() {
   const box = document.getElementById("dashboardContent");
   if (!box) return;
-  if (!state.dashboardMetrics) state.dashboardMetrics = ["stability", "mind", "pulse", "human", "balance"];
+  if (!state.dashboardMetrics) state.dashboardMetrics = ["stability", "mind", "pulse", "human", "balance", "public"];
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   let html = "";
@@ -2963,7 +2695,6 @@ async function renderDashboard() {
   });
   html += '</div></div>';
   box.innerHTML = html;
-
   const toggle = document.getElementById("dashToggleBtn");
   if (toggle) toggle.addEventListener("click", () => {
     document.getElementById("dashDropdown").classList.toggle("open");
@@ -2972,11 +2703,8 @@ async function renderDashboard() {
   box.querySelectorAll(".dash-metric-opt input").forEach(inp => {
     inp.addEventListener("change", () => {
       const id = inp.dataset.metric;
-      if (inp.checked) {
-        if (state.dashboardMetrics.indexOf(id) === -1) state.dashboardMetrics.push(id);
-      } else {
-        state.dashboardMetrics = state.dashboardMetrics.filter(x => x !== id);
-      }
+      if (inp.checked) { if (state.dashboardMetrics.indexOf(id) === -1) state.dashboardMetrics.push(id); }
+      else state.dashboardMetrics = state.dashboardMetrics.filter(x => x !== id);
       renderDashboard();
     });
   });
@@ -2986,67 +2714,40 @@ async function renderDashboard() {
 async function renderManagement() {
   const box = document.getElementById("managementContent");
   if (!box) return;
-  if (!state.manageKey) {
-    box.innerHTML = '<div class="management-note">Введите ключ Управления в настройках, чтобы открыть расширенные возможности.</div>';
-    return;
-  }
-  let html = "";
-  html += '<div class="management-note">Расширенное управление доступно с валидным ключом Управления.</div>';
-  html += '<div class="row-actions" style="margin-top:10px;">';
-  html += '<button class="open-editor-btn" id="mgmtCheckBtn" type="button" style="margin-top:0;width:100%;justify-content:center;">Проверить ключ на сервере</button>';
-  html += '</div>';
+  if (!state.manageKey) { box.innerHTML = '<div class="management-note">Введите ключ Управления в настройках, чтобы открыть расширенные возможности.</div>'; return; }
+  let html = '<div class="management-note">Расширенное управление доступно с валидным ключом Управления.</div>';
+  html += '<div class="row-actions" style="margin-top:10px;"><button class="open-editor-btn" id="mgmtCheckBtn" type="button" style="margin-top:0;width:100%;justify-content:center;">Проверить ключ на сервере</button></div>';
   html += '<div class="doc-status" id="mgmtStatus"></div>';
-  html += '<div class="row-actions" style="margin-top:10px;">';
-  html += '<button class="open-editor-btn" id="mgmtCodeBtn" type="button" style="margin-top:0;">Открыть код</button>';
-  html += '<button class="open-editor-btn" id="mgmtReleaseBtn" type="button" style="margin-top:0;">Релизы</button>';
-  html += '</div>';
   box.innerHTML = html;
   const btn = document.getElementById("mgmtCheckBtn");
   const status = document.getElementById("mgmtStatus");
   if (btn) btn.addEventListener("click", async () => {
-    if (!state.manageKey) { status.textContent = "Ключ не задан"; return; }
     status.textContent = "Проверяю...";
     try {
-      const r = await fetch(API_BASE + "/management/check", {
-        method: "POST",
-        headers: { "X-Management-Key": state.manageKey },
-      });
+      const r = await fetch(API_BASE + "/management/check", { method: "POST", headers: { "X-Management-Key": state.manageKey } });
       const data = await r.json();
       if (r.ok && data.ok) status.textContent = "Ключ валиден. Расширенное управление активно.";
       else status.textContent = "Ключ не принят сервером: " + (data.detail || r.status);
     } catch (e) { status.textContent = "Ошибка: " + e.message; }
   });
-  const codeBtn = document.getElementById("mgmtCodeBtn");
-  if (codeBtn) codeBtn.addEventListener("click", () => { closeAllSheets(); setTimeout(() => document.getElementById("orbManageCode").click(), 200); });
-  const relBtn = document.getElementById("mgmtReleaseBtn");
-  if (relBtn) relBtn.addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderReleasesList(); openSheet("releasesSheet"); }, 200); });
 }
 
 // --- Релизы ---
-function createReleaseObj(description, type) {
-  return { id: uid("rel"), at: new Date().toISOString(), description: description || "Ручной релиз", type: type || "manual", level: "info", patches: [], applied: true };
-}
+function createReleaseObj(description, type) { return { id: uid("rel"), at: new Date().toISOString(), description: description || "Ручной релиз", type: type || "manual", level: "info", patches: [], applied: true }; }
 function renderReleasesList() {
   const box = document.getElementById("releasesList");
   if (!box) return;
   box.innerHTML = "";
-  if (!state.releases.length) {
-    box.innerHTML = '<div class="empty-note">Релизов пока нет.</div>';
-    return;
-  }
+  if (!state.releases.length) { box.innerHTML = '<div class="empty-note">Релизов пока нет.</div>'; return; }
   const sorted = state.releases.slice().sort((a, b) => (b.at || "").localeCompare(a.at || ""));
   sorted.forEach(r => {
     const el = document.createElement("div");
     el.className = "release-item";
-    const level = r.level === "crit" ? "crit" : r.level === "warn" ? "warn" : "info";
+    const level = r.level === "crit" ? "crit" : r.type === "auto" ? "auto" : "manual";
     el.innerHTML = '<div class="release-item-head"><span class="release-item-name">' + escHtml(r.description || "Релиз") + '</span>' +
       '<span class="release-status ' + level + '">' + escHtml((r.type || "manual") === "auto" ? "Авто" : "Ручной") + '</span></div>' +
       '<div class="release-comment">' + (r.at ? new Date(r.at).toLocaleString("ru-RU") : "") + '</div>';
-    el.addEventListener("click", () => {
-      if (confirm("Откатить к релизу от " + new Date(r.at).toLocaleString("ru-RU") + "?\n\n" + (r.description || ""))) {
-        toast("Откат инициирован. В этой версии — только пометка.");
-      }
-    });
+    el.addEventListener("click", () => { if (confirm("Откатить к релизу?\n\n" + (r.description || ""))) toast("Откат помечен"); });
     box.appendChild(el);
   });
 }
@@ -3061,17 +2762,9 @@ async function publishRelease() {
   const status = document.getElementById("releasePublishStatus");
   status.textContent = "Готовлю релиз...";
   const release = createReleaseObj(comment || "Ручной релиз по запросу автора", "manual");
-  release.level = "info";
-  release.patches = [
-    { type: "state", find: "auto", replace: comment || "manual release" },
-  ];
   state.releases.push(release);
   await dbPut(STORE_RELEASES, release);
-  await addNotification({
-    level: "ok",
-    text: "Релиз выпущен. " + (comment || "Без комментария"),
-    action: "open_chat", actionLabel: "К диалогу",
-  });
+  await addNotification({ level: "ok", text: "Релиз выпущен. " + (comment || "Без комментария"), action: "open_chat", actionLabel: "К диалогу" });
   renderReleasesList();
   status.textContent = "Готово";
   setTimeout(() => closeAllSheets(), 600);
@@ -3080,20 +2773,18 @@ async function publishRelease() {
 
 // --- О продукте ---
 function renderAbout() {
-  const box = document.getElementById("aboutContent");
-  box.innerHTML =
-    '<div class="info-block"><strong>Ядро (не меняется)</strong><br>Человек в центре. Отражаю, не веду. Прямота. Наличие Ядра, Адаптивной части и Инфраструктуры. Лоты — единица обмена. Ошибка → данные → класс → шаблон.</div>' +
-    '<div class="info-block"><strong>Адаптивная часть (меняется)</strong><br>Интерфейс. Метрики. Тон. Модели. Правила показа. Форматы выбора. Содержание Ядра.</div>' +
-    '<div class="info-block"><strong>Инфраструктура</strong><br>Автоматически адаптирует содержание Ядра и Адаптивной части. Работает через правила и метрики.</div>' +
+  document.getElementById("aboutContent").innerHTML =
+    '<div class="info-block"><strong>Ядро (не меняется)</strong><br>Человек в центре. Отражаю, не веду. Прямота. Лоты — единица обмена. Ошибка → данные → класс → шаблон.</div>' +
+    '<div class="info-block"><strong>Адаптивная часть (меняется)</strong><br>Интерфейс. Метрики. Тон. Модели. Правила показа. Форматы выбора.</div>' +
+    '<div class="info-block"><strong>Обмен (2.0)</strong><br>Публичные шаблоны и Лоты. Взял — плати индексом. Отдал — получай. Публичный индекс — репутация: сколько отдал, сколько взял, как оценили.</div>' +
     '<div class="info-block"><strong>Слои A/B/C/D</strong><br>A — факты. B — интерпретации. C — решения. D — мета.</div>';
 }
 function renderBusiness() {
-  const box = document.getElementById("businessContent");
-  box.innerHTML =
-    '<div class="info-block"><strong>API Monolog</strong><br>Встраивание когнитивного партнёра в корпоративные системы. Сотрудники получают поддержку в принятии решений, руководители — метрики прогресса команды.</div>' +
-    '<div class="info-block"><strong>Что даёт бизнесу</strong><br>• Единый когнитивный интерфейс для команды<br>• Корпоративные Лоты — цели компании<br>• Обучение сотрудников шаблонам мышления<br>• Аналитика принятий решений<br>• Интеграция через API</div>' +
-    '<div class="info-block"><strong>Модель монетизации</strong><br>• Pay-per-call<br>• Pay-per-user<br>• Enterprise-лицензия</div>' +
-    '<div class="info-block" style="color:var(--muted);font-style:italic;">Раздел в разработке. Свяжитесь с автором для пилотной интеграции.</div>';
+  document.getElementById("businessContent").innerHTML =
+    '<div class="info-block"><strong>API Monolog</strong><br>Встраивание когнитивного партнёра в корпоративные системы.</div>' +
+    '<div class="info-block"><strong>Что даёт бизнесу</strong><br>• Единый когнитивный интерфейс для команды<br>• Корпоративные Лоты — цели компании<br>• Обучение сотрудников шаблонам<br>• Аналитика принятий решений</div>' +
+    '<div class="info-block"><strong>Модель монетизации</strong><br>• Pay-per-call · Pay-per-user · Enterprise</div>' +
+    '<div class="info-block" style="color:var(--muted);font-style:italic;">Раздел в разработке.</div>';
 }
 
 // --- Редактор ---
@@ -3102,45 +2793,17 @@ function openEditor(context) {
   const name = context.name || "";
   const body = context.body || "";
   const isCode = context.type === "code";
-  const isDoc = !isCode;
   document.getElementById("editorName").value = name;
   const ta = document.getElementById("editorBody");
   ta.value = body;
-  if (isCode) ta.classList.add("code");
-  else ta.classList.remove("code");
+  if (isCode) ta.classList.add("code"); else ta.classList.remove("code");
   document.getElementById("editorStatus").textContent = "";
   document.getElementById("editorTitle").textContent = isCode ? "Редактор кода" : "Редактор документа";
-  document.getElementById("editorSub").textContent = isCode ? "Правьте код и сохраните в dev" : "Правьте текст и сохраните";
-  document.getElementById("editorToolbar").style.display = isDoc ? "flex" : "none";
+  document.getElementById("editorSub").textContent = isCode ? "Правьте код и сохраните в dev" : "Правьте текст";
   document.getElementById("editorCodeRow").style.display = isCode ? "flex" : "none";
   document.getElementById("editorPublishRow").style.display = isCode ? "none" : "flex";
+  document.getElementById("editorBlogRow").style.display = (context.type === "blog_post") ? "flex" : "none";
   openSheet("editorSheet");
-}
-function insertAtCursor(ta, text) {
-  const start = ta.selectionStart || 0;
-  const end = ta.selectionEnd || 0;
-  const before = ta.value.substring(0, start);
-  const after = ta.value.substring(end);
-  ta.value = before + text + after;
-  ta.selectionStart = ta.selectionEnd = start + text.length;
-  ta.focus();
-}
-function setupEditorToolbar() {
-  document.querySelectorAll("#editorToolbar .fmt-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const ta = document.getElementById("editorBody");
-      const fmt = btn.dataset.fmt;
-      if (fmt === "bold") insertAtCursor(ta, "**жирный**");
-      else if (fmt === "italic") insertAtCursor(ta, "*курсив*");
-      else if (fmt === "h2") insertAtCursor(ta, "\n## Заголовок\n");
-      else if (fmt === "list") insertAtCursor(ta, "\n- пункт\n- пункт\n");
-      else if (fmt === "table") insertAtCursor(ta, "\n| Колонка 1 | Колонка 2 |\n|---|---|\n| — | — |\n");
-      else if (fmt === "image") {
-        const url = prompt("URL изображения:");
-        if (url) insertAtCursor(ta, "![изображение](" + url + ")");
-      }
-    });
-  });
 }
 async function saveEditorToLot() {
   const name = (document.getElementById("editorName").value || "").trim();
@@ -3154,8 +2817,7 @@ async function saveEditorToLot() {
     if (!l) return;
     l.documents = l.documents || [];
     if (typeof ctx.docIndex === "number" && l.documents[ctx.docIndex]) {
-      l.documents[ctx.docIndex].name = name;
-      l.documents[ctx.docIndex].content = body;
+      l.documents[ctx.docIndex].name = name; l.documents[ctx.docIndex].content = body;
     } else {
       l.documents.push({ id: uid("doc"), name, type: "документ", content: body, createdAt: new Date().toISOString() });
     }
@@ -3165,16 +2827,13 @@ async function saveEditorToLot() {
     if (!c) { status.textContent = "Нет чата"; return; }
     c.documents = c.documents || [];
     if (typeof ctx.docIndex === "number" && c.documents[ctx.docIndex]) {
-      c.documents[ctx.docIndex].name = name;
-      c.documents[ctx.docIndex].content = body;
+      c.documents[ctx.docIndex].name = name; c.documents[ctx.docIndex].content = body;
     } else {
       c.documents.push({ id: uid("doc"), name, type: "документ", content: body, createdAt: new Date().toISOString() });
     }
     await persistChat(c);
   }
-  updateMenu();
-  status.textContent = "Сохранено";
-  toast("Сохранено");
+  updateMenu(); status.textContent = "Сохранено"; toast("Сохранено");
   setTimeout(() => closeAllSheets(), 600);
 }
 
@@ -3186,10 +2845,7 @@ function renderAttachPreview() {
     const chip = document.createElement("div");
     chip.className = "attach-chip";
     chip.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/></svg><span class="name">' + escHtml(a.name) + '</span><button class="remove" type="button">×</button>';
-    chip.querySelector(".remove").addEventListener("click", () => {
-      state.attachments.splice(idx, 1);
-      renderAttachPreview();
-    });
+    chip.querySelector(".remove").addEventListener("click", () => { state.attachments.splice(idx, 1); renderAttachPreview(); });
     box.appendChild(chip);
   });
 }
@@ -3216,11 +2872,7 @@ function renderProviderGrid() {
     btn.className = "provider-btn" + (state.provider === pr.id ? " active" : "");
     btn.type = "button";
     btn.innerHTML = '<span class="name">' + escHtml(pr.name) + '</span>';
-    btn.addEventListener("click", () => {
-      state.provider = pr.id;
-      try { localStorage.setItem(LS_PROVIDER, pr.id); } catch (e) {}
-      renderProviderGrid();
-    });
+    btn.addEventListener("click", () => { state.provider = pr.id; try { localStorage.setItem(LS_PROVIDER, pr.id); } catch (e) {} renderProviderGrid(); });
     grid.appendChild(btn);
   });
 }
@@ -3241,22 +2893,18 @@ function setupEyeButtons() {
   });
 }
 
-// --- Загрузка ---
+// --- Load ---
 async function loadData() {
   state.lots = await dbGetAll(STORE_LOTS);
   state.chats = await dbGetAll(STORE_CHATS);
   state.releases = await dbGetAll(STORE_RELEASES);
   state.notifications = await dbGetAll(STORE_NOTIFICATIONS);
   const currentId = await dbGetMeta("currentChatId");
-  if (currentId && state.chats.find(c => c.id === currentId)) {
-    state.currentChatId = currentId;
-  } else if (state.chats.length) {
-    state.currentChatId = state.chats[0].id;
-  } else {
+  if (currentId && state.chats.find(c => c.id === currentId)) state.currentChatId = currentId;
+  else if (state.chats.length) state.currentChatId = state.chats[0].id;
+  else {
     const fresh = createChatObj("Новый чат");
-    await dbPut(STORE_CHATS, fresh);
-    state.chats.push(fresh);
-    state.currentChatId = fresh.id;
+    await dbPut(STORE_CHATS, fresh); state.chats.push(fresh); state.currentChatId = fresh.id;
     await dbSetMeta("currentChatId", fresh.id);
   }
   const seen = await dbGetMeta("lastNotifSeenAt");
@@ -3277,13 +2925,9 @@ function updateCharCounter() {
   else if (len > SOFT_LIMIT) counter.classList.add("warn");
 }
 
-// --- Инициализация ---
+// --- Init ---
 async function init() {
-  setTimeout(() => {
-    const sp = document.getElementById("splash");
-    if (sp) sp.classList.add("hide");
-  }, 500);
-
+  setTimeout(() => { const sp = document.getElementById("splash"); if (sp) sp.classList.add("hide"); }, 500);
   try {
     try {
       state.apiKey = localStorage.getItem(LS_KEY) || "";
@@ -3295,23 +2939,18 @@ async function init() {
       state.fontSize = isNaN(fs) ? 14 : fs;
       const mode = localStorage.getItem(LS_MODE);
       if (mode === "analyst" || mode === "strategist" || mode === "neutral") state.mode = mode;
+      state.uid = localStorage.getItem(LS_UID) || "";
+      if (!state.uid) { state.uid = "u_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8); localStorage.setItem(LS_UID, state.uid); }
     } catch (e) {}
 
-    applyProfile();
-    applyFontSize();
-    renderOrb();
+    applyProfile(); applyFontSize(); renderOrb();
     document.documentElement.setAttribute("data-mode", state.mode);
 
     await loadData();
-    renderCurrentChat();
-    updateMenu();
-    updateIndexBtn();
-    updateHeaderDynamic();
-    renderAiNote();
-    regenerateMapForCurrent();
+    renderCurrentChat(); updateMenu(); updateIndexBtn(); updateHeaderDynamic(); renderAiNote(); regenerateMapForCurrent();
 
     ["orbSheet", "menuSheet", "indexSheet", "profileSheet", "metricsSheet",
-     "notificationsSheet", "lotsSheet", "lotCardSheet", "mapSheet",
+     "notificationsSheet", "exchangeSheet", "myPublicSheet", "lotsSheet", "lotCardSheet", "mapSheet",
      "ideasSheet", "importantSheet", "dashboardSheet", "managementSheet",
      "releasesSheet", "releaseModalSheet", "devReportSheet",
      "documentsSheet", "chatsSheet", "blogSheet", "aboutSheet", "businessSheet",
@@ -3324,14 +2963,8 @@ async function init() {
 
     const orbBtn = document.getElementById("orbBtn");
     let orbPressTimer = null, orbMoved = false;
-    orbBtn.addEventListener("pointerdown", () => {
-      orbMoved = false;
-      orbPressTimer = setTimeout(() => { orbPressTimer = null; switchMode(); }, 550);
-    });
-    orbBtn.addEventListener("pointermove", () => {
-      orbMoved = true;
-      if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
-    });
+    orbBtn.addEventListener("pointerdown", () => { orbMoved = false; orbPressTimer = setTimeout(() => { orbPressTimer = null; switchMode(); }, 550); });
+    orbBtn.addEventListener("pointermove", () => { orbMoved = true; if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; } });
     ["pointerup", "pointerleave", "pointercancel"].forEach(ev => {
       orbBtn.addEventListener(ev, () => {
         if (orbPressTimer) { clearTimeout(orbPressTimer); orbPressTimer = null; }
@@ -3341,11 +2974,8 @@ async function init() {
 
     document.getElementById("indexBtn").addEventListener("click", () => { renderIndexSheet("all"); openSheet("indexSheet"); });
     document.getElementById("metricsBtn").addEventListener("click", () => { renderMetricsSheet(); openSheet("metricsSheet"); });
-    document.getElementById("notifBtn").addEventListener("click", () => {
-      renderNotificationsList();
-      openSheet("notificationsSheet");
-      setTimeout(markNotificationsSeen, 800);
-    });
+    document.getElementById("exchangeBtn").addEventListener("click", async () => { await loadExchange(); renderExchange(); openSheet("exchangeSheet"); });
+    document.getElementById("notifBtn").addEventListener("click", () => { renderNotificationsList(); openSheet("notificationsSheet"); setTimeout(markNotificationsSeen, 800); });
     document.getElementById("profileBtn").addEventListener("click", () => { renderProfile(); openSheet("profileSheet"); });
     document.getElementById("menuBtn").addEventListener("click", () => { updateMenu(); openSheet("menuSheet"); });
     document.getElementById("settingsBtn").addEventListener("click", () => {
@@ -3358,31 +2988,37 @@ async function init() {
       document.getElementById("fontSizeRange").value = state.fontSize;
       document.getElementById("fontSizeValue").textContent = state.fontSize;
       document.getElementById("manageKeyStatus").textContent = "";
-      applyProfile();
-      renderProviderGrid();
+      applyProfile(); renderProviderGrid();
       document.getElementById("modalBg").classList.add("open");
     });
 
     document.querySelectorAll("#indexTabs .tab").forEach(t => {
       t.addEventListener("click", () => {
         document.querySelectorAll("#indexTabs .tab").forEach(x => x.classList.remove("active"));
+        t.classList.add("active"); renderIndexSheet(t.dataset.indexTab);
+      });
+    });
+    document.querySelectorAll("#exchangeTabs .tab").forEach(t => {
+      t.addEventListener("click", () => {
+        document.querySelectorAll("#exchangeTabs .tab").forEach(x => x.classList.remove("active"));
         t.classList.add("active");
-        renderIndexSheet(t.dataset.indexTab);
+        state.exchangeTab = t.dataset.exchangeTab;
+        renderExchange();
       });
     });
 
     document.getElementById("menuNewChat").addEventListener("click", async () => {
       closeAllSheets();
       const fresh = createChatObj("Новый чат");
-      await dbPut(STORE_CHATS, fresh);
-      state.chats.push(fresh);
-      await switchChat(fresh.id);
+      await dbPut(STORE_CHATS, fresh); state.chats.push(fresh); await switchChat(fresh.id);
     });
     document.getElementById("menuLots").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderLotsList(); openSheet("lotsSheet"); }, 200); });
     document.getElementById("menuIdeas").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderIdeasList(); openSheet("ideasSheet"); }, 200); });
     document.getElementById("menuDocuments").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderDocumentsList(); openSheet("documentsSheet"); }, 200); });
     document.getElementById("menuChats").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderChatsList(); openSheet("chatsSheet"); }, 200); });
     document.getElementById("menuImportant").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderImportantList(); openSheet("importantSheet"); }, 200); });
+    document.getElementById("menuExchange").addEventListener("click", async () => { closeAllSheets(); await loadExchange(); setTimeout(() => { renderExchange(); openSheet("exchangeSheet"); }, 200); });
+    document.getElementById("menuMyPublic").addEventListener("click", async () => { closeAllSheets(); await loadExchange(); setTimeout(() => { renderMyPublic(); openSheet("myPublicSheet"); }, 200); });
     document.getElementById("menuDashboard").addEventListener("click", () => { closeAllSheets(); setTimeout(async () => { await renderDashboard(); openSheet("dashboardSheet"); }, 200); });
     document.getElementById("menuManagement").addEventListener("click", () => { closeAllSheets(); setTimeout(async () => { await renderManagement(); openSheet("managementSheet"); }, 200); });
     document.getElementById("menuBlog").addEventListener("click", () => { closeAllSheets(); setTimeout(() => {
@@ -3395,21 +3031,14 @@ async function init() {
     document.getElementById("menuBusiness").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderBusiness(); openSheet("businessSheet"); }, 200); });
 
     document.getElementById("orbManageCode").addEventListener("click", () => {
-      closeAllSheets();
-      setTimeout(() => {
+      closeAllSheets(); setTimeout(() => {
         document.getElementById("codePathInput").value = "";
         document.getElementById("codePathStatus").textContent = "";
         document.getElementById("codePathModalBg").classList.add("open");
       }, 200);
     });
-    document.getElementById("orbManageRelease").addEventListener("click", () => {
-      closeAllSheets();
-      setTimeout(() => { renderReleasesList(); openSheet("releasesSheet"); }, 200);
-    });
-    document.getElementById("orbManageDevReport").addEventListener("click", () => {
-      closeAllSheets();
-      setTimeout(async () => { await renderDevReport(); openSheet("devReportSheet"); }, 200);
-    });
+    document.getElementById("orbManageRelease").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderReleasesList(); openSheet("releasesSheet"); }, 200); });
+    document.getElementById("orbManageDevReport").addEventListener("click", () => { closeAllSheets(); setTimeout(async () => { await renderDevReport(); openSheet("devReportSheet"); }, 200); });
 
     document.querySelectorAll("#lotsTabs .tab").forEach(t => {
       t.addEventListener("click", () => {
@@ -3427,9 +3056,14 @@ async function init() {
     document.getElementById("lotSave").addEventListener("click", saveLot);
     document.getElementById("lotDelete").addEventListener("click", deleteLot);
 
-    document.getElementById("releaseNewBtn").addEventListener("click", () => { openReleaseModal(); });
+    document.getElementById("releaseNewBtn").addEventListener("click", openReleaseModal);
     document.getElementById("releaseModalCancel").addEventListener("click", closeAllSheets);
     document.getElementById("releasePublishBtn").addEventListener("click", publishRelease);
+
+    document.getElementById("publishModalClose").addEventListener("click", closeAllSheets);
+    document.getElementById("publishCancel").addEventListener("click", closeAllSheets);
+    document.getElementById("publishModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
+    document.getElementById("publishConfirm").addEventListener("click", confirmPublish);
 
     document.getElementById("codePathClose").addEventListener("click", closeAllSheets);
     document.getElementById("codePathCancel").addEventListener("click", closeAllSheets);
@@ -3441,9 +3075,7 @@ async function init() {
       if (!state.authorKey) { status.textContent = "Введите ключ автора"; return; }
       status.textContent = "Загружаю...";
       try {
-        const r = await fetch(API_BASE + "/code/read?path=" + encodeURIComponent(path), {
-          headers: { "X-Author-Key": state.authorKey },
-        });
+        const r = await fetch(API_BASE + "/code/read?path=" + encodeURIComponent(path), { headers: { "X-Author-Key": state.authorKey } });
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
         if (!data.exists) status.textContent = "Файл не найден.";
@@ -3454,16 +3086,11 @@ async function init() {
     document.getElementById("modalClose").addEventListener("click", closeAllSheets);
     document.getElementById("modalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
     document.querySelectorAll("#depthSeg button").forEach(el => {
-      el.addEventListener("click", () => {
-        state.depthMode = el.dataset.depth;
-        applyProfile();
-      });
+      el.addEventListener("click", () => { state.depthMode = el.dataset.depth; applyProfile(); });
     });
     document.getElementById("fontSizeRange").addEventListener("input", (e) => {
       const size = parseInt(e.target.value, 10);
-      state.fontSize = size;
-      document.getElementById("fontSizeValue").textContent = size;
-      applyFontSize();
+      state.fontSize = size; document.getElementById("fontSizeValue").textContent = size; applyFontSize();
     });
     document.getElementById("saveSettings").addEventListener("click", () => {
       state.apiKey = (document.getElementById("keyInput").value || "").trim();
@@ -3480,18 +3107,11 @@ async function init() {
         localStorage.setItem(LS_FONT, String(state.fontSize));
         localStorage.setItem(LS_DEPTH, state.depthMode);
       } catch (e) {}
-      updateMenu();
-      closeAllSheets();
-      broadcast("settings_updated", {});
-      toast("Настройки сохранены");
+      updateMenu(); closeAllSheets(); broadcast("settings_updated", {}); toast("Настройки сохранены");
     });
     document.getElementById("exportData").addEventListener("click", () => {
       const blob = new Blob([JSON.stringify({ lots: state.lots, chats: state.chats, releases: state.releases, notifications: state.notifications }, null, 2)], { type: "application/json" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "monolog_export_" + Date.now() + ".json";
-      a.click();
-      URL.revokeObjectURL(a.href);
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "monolog_export_" + Date.now() + ".json"; a.click(); URL.revokeObjectURL(a.href);
     });
     document.getElementById("importData").addEventListener("click", () => document.getElementById("importFile").click());
     document.getElementById("importFile").addEventListener("change", (e) => {
@@ -3520,24 +3140,25 @@ async function init() {
       const body = document.getElementById("editorBody").value || "";
       const safe = name.replace(/[^\w\-а-яА-Я]+/gi, "_") || "document";
       const blob = new Blob([body], { type: "text/markdown;charset=utf-8" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = safe + ".md";
-      a.click();
-      URL.revokeObjectURL(a.href);
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = safe + ".md"; a.click(); URL.revokeObjectURL(a.href);
     });
     document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToLot);
-    document.getElementById("editorPublishBtn").addEventListener("click", async () => {
+    document.getElementById("editorPublishPublicBtn").addEventListener("click", () => {
+      const name = (document.getElementById("editorName").value || "").trim();
+      const body = (document.getElementById("editorBody").value || "").trim();
+      if (!name || !body) { toast("Нужны название и текст"); return; }
+      openPublishModal("template", { name, content: body, tags: [] });
+    });
+    document.getElementById("editorPublishBlogBtn").addEventListener("click", async () => {
       const title = (document.getElementById("editorName").value || "").trim();
       const body = (document.getElementById("editorBody").value || "").trim();
       const status = document.getElementById("editorStatus");
       if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
-      if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
+      if (!state.authorKey) { status.textContent = "Введите ключ автора"; return; }
       status.textContent = "Публикую...";
       try {
         const r = await fetch(API_BASE + "/blog/publish", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+          method: "POST", headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
           body: JSON.stringify({ title, body, tags: [], author: "Автор" }),
         });
         const data = await r.json();
@@ -3557,8 +3178,7 @@ async function init() {
       status.textContent = "Сохраняю...";
       try {
         const r = await fetch(API_BASE + "/code/save", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+          method: "POST", headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
           body: JSON.stringify({ path, content: body, message: "Update " + path }),
         });
         const data = await r.json();
@@ -3579,9 +3199,7 @@ async function init() {
     const input = document.getElementById("input");
     const fileInput = document.getElementById("fileInput");
     sendBtn.addEventListener("click", send);
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
-    });
+    input.addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } });
     input.addEventListener("input", () => {
       input.style.height = "auto";
       const sh = input.scrollHeight;
@@ -3592,21 +3210,16 @@ async function init() {
     });
     document.getElementById("attachBtn").addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", (e) => { handleFiles(e.target.files); fileInput.value = ""; });
-
     setInterval(() => {
       state.placeholderIndex = (state.placeholderIndex + 1) % PLACEHOLDERS.length;
       if (!input.value) input.placeholder = PLACEHOLDERS[state.placeholderIndex];
     }, 8000);
-
     document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAllSheets(); });
     setupEyeButtons();
-    setupEditorToolbar();
 
     if (window.visualViewport) {
-      const setVh = () => {
-        document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px");
-      };
+      const setVh = () => { document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px"); };
       window.visualViewport.addEventListener("resize", setVh);
       window.visualViewport.addEventListener("scroll", setVh);
       setVh();
@@ -3615,48 +3228,37 @@ async function init() {
     if (_bc) {
       _bc.addEventListener("message", async (e) => {
         const msg = e.data || {};
-        if (msg.type === "chat_updated" || msg.type === "lots_updated" || msg.type === "settings_updated" || msg.type === "reset" || msg.type === "notif_added" || msg.type === "releases_updated") {
+        if (["chat_updated", "lots_updated", "settings_updated", "reset", "notif_added", "releases_updated"].indexOf(msg.type) !== -1) {
           state.lots = await dbGetAll(STORE_LOTS);
           state.chats = await dbGetAll(STORE_CHATS);
           state.releases = await dbGetAll(STORE_RELEASES);
           state.notifications = await dbGetAll(STORE_NOTIFICATIONS);
-          renderCurrentChat();
-          updateMenu();
-          updateIndexBtn();
-          updateHeaderDynamic();
+          renderCurrentChat(); updateMenu(); updateIndexBtn(); updateHeaderDynamic();
           if (document.getElementById("notificationsSheet").classList.contains("open")) renderNotificationsList();
         }
       });
     }
 
-    // Периодический refresh — на случай отставания вкладок
+    // Периодический refresh
     setInterval(async () => {
       const lots = await dbGetAll(STORE_LOTS);
       const chats = await dbGetAll(STORE_CHATS);
       const releases = await dbGetAll(STORE_RELEASES);
       const notifs = await dbGetAll(STORE_NOTIFICATIONS);
-      const changed = JSON.stringify(lots.length + ":" + chats.length + ":" + releases.length + ":" + notifs.length) !==
-                      JSON.stringify(state.lots.length + ":" + state.chats.length + ":" + state.releases.length + ":" + state.notifications.length);
+      const changed = JSON.stringify(lots.length + ":" + chats.length + ":" + releases.length + ":" + notifs.length) !== JSON.stringify(state.lots.length + ":" + state.chats.length + ":" + state.releases.length + ":" + state.notifications.length);
       if (changed) {
-        state.lots = lots;
-        state.chats = chats;
-        state.releases = releases;
-        state.notifications = notifs;
-        renderCurrentChat();
-        updateMenu();
-        updateIndexBtn();
-        updateHeaderDynamic();
+        state.lots = lots; state.chats = chats; state.releases = releases; state.notifications = notifs;
+        renderCurrentChat(); updateMenu(); updateIndexBtn(); updateHeaderDynamic();
       }
     }, 4000);
 
     try {
       const r = await fetch(API_BASE + "/providers");
-      if (r.ok) {
-        const data = await r.json();
-        if (data.providers && data.providers.length) _providersCache = data.providers;
-      }
+      if (r.ok) { const data = await r.json(); if (data.providers && data.providers.length) _providersCache = data.providers; }
     } catch (e) {}
 
+    // Заранее подгружаем публичное
+    loadExchange();
   } catch (e) {
     console.error("init error", e);
     const chat = document.getElementById("chat");
@@ -3686,11 +3288,8 @@ async function renderDevReport() {
   box.innerHTML = html;
 }
 
-if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
-} else {
-  init();
-}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
 })();
 </script>
 </body>
