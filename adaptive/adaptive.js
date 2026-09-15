@@ -53,7 +53,10 @@ Monolog.adaptive = {
     const el = document.createElement('button');
     el.className = `header-item header-item-${item.type}`;
     el.dataset.id = item.id;
-    el.setAttribute('aria-label', this.text(item.id) || item.id);
+    el.setAttribute('aria-label', this.text(item.labelKey) || item.id);
+
+    const label = this.text(item.labelKey) || item.id;
+    el.title = label;
 
     if (item.type === 'orb') el.classList.add('orb');
     if (item.type === 'index') el.classList.add('index');
@@ -102,7 +105,7 @@ Monolog.adaptive = {
 
       const head = document.createElement('div');
       head.className = 'sheet-head';
-      head.textContent = spec.title || '';
+      head.textContent = this.text(spec.titleKey) || spec.id;
       sheet.appendChild(head);
 
       const body = document.createElement('div');
@@ -143,6 +146,7 @@ Monolog.adaptive = {
 
   // --- утилиты ---
   text(key) {
+    if (!key) return '';
     return this.content?.[key] || '';
   },
 
