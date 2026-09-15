@@ -1,7 +1,7 @@
 # app.py
 # Monolog — когнитивный партнёр. Ядро 1.0.
 # Stateless. Ключи не сохраняются. История не отправляется.
-# Аудит: безопасность, устойчивость, метрики, экономика (базовая), интеграции.
+# Итерация 1: бэкенд с оптимизацией токенов, разными сообщениями об ошибках, эндпоинтом /management/check.
 
 import os
 import re
@@ -15,25 +15,22 @@ from io import BytesIO
 from typing import Optional, List, Dict, Any
 
 import httpx
-from fastapi import FastAPI, Request, HTTPException, Depends
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 load_dotenv()
 
-# --- Логирование без секретов ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("monolog")
 
 SECRET_PATTERN = re.compile(r"(sk_[A-Za-z0-9_\-]{8,}|gsk_[A-Za-z0-9_\-]{8,}|Bearer\s+[A-Za-z0-9_\-\.]{10,})")
 
 def safe_log(msg: str):
-    """Пишет лог, вырезая потенциальные секреты."""
     log.info(SECRET_PATTERN.sub("[SECRET]", str(msg)))
 
 
-# --- Конфигурация провайдеров ---
 PROVIDERS = {
     "groq": {
         "name": "Groq",
@@ -97,11 +94,14 @@ PROVIDERS = {
     },
 }
 
-MAX_TOKENS = 5000
-META_MAX_TOKENS = 1500
+# --- Лимиты (оптимизация токенов) ---
+MAX_TOKENS = 3500
+META_MAX_TOKENS = 800
 TIMEOUT = 120.0
 
-MAX_MESSAGE_LEN = 8000
+# Клиентские лимиты для сообщений
+MAX_MESSAGE_LEN = 8000           # жёсткий потолок на сервере
+SOFT_MESSAGE_LEN = 4000          # выше — предупреждение на клиенте
 MAX_ATTACH_LEN = 3000
 MAX_ATTACHMENTS = 3
 MAX_BODY_BYTES = 200_000
@@ -113,11 +113,9 @@ _DEV_KEYS_GROQ: List[str] = [
 _dev_key_cycle = itertools.cycle(_DEV_KEYS_GROQ) if _DEV_KEYS_GROQ else None
 
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
-
 MANAGEMENT_KEY = os.getenv("MANAGEMENT_KEY", "").strip()
 AUTHOR_SECRET = os.getenv("AUTHOR_SECRET", "").strip()
 
-# --- CORS через env ---
 CORS_ORIGINS_ENV = os.getenv("CORS_ORIGINS", "*").strip()
 CORS_ORIGINS = [o.strip() for o in CORS_ORIGINS_ENV.split(",") if o.strip()] or ["*"]
 
@@ -156,6 +154,7 @@ BASE_METRICS = {
     "cognitive_pulse": "stable",
     "mode_suggested": "analyst",
     "layer_marker": None,
+    "ai_note": None,
     "reasoning_trace": None,
     "breakthrough_marker": False,
     "reset_proposal": None,
@@ -202,18 +201,18 @@ def _safe_eq(a: str, b: str) -> bool:
 
 def check_author(request: Request):
     if not AUTHOR_SECRET:
-        raise HTTPException(status_code=503, detail="Ключ автора не настроен")
+        raise HTTPException(status_code=503, detail="Ключ автора не настроен на сервере")
     key = request.headers.get("X-Author-Key", "").strip()
     if not _safe_eq(key, AUTHOR_SECRET):
-        raise HTTPException(status_code=403, detail="Неверный ключ автора")
+        raise HTTPException(status_code=403, detail="Неверный ключ автора. Проверьте в настройках.")
 
 
 def check_management(request: Request):
     if not MANAGEMENT_KEY:
-        raise HTTPException(status_code=503, detail="Ключ Управления не настроен")
+        raise HTTPException(status_code=503, detail="Ключ Управления не настроен на сервере")
     key = request.headers.get("X-Management-Key", "").strip()
     if not _safe_eq(key, MANAGEMENT_KEY):
-        raise HTTPException(status_code=403, detail="Неверный ключ Управления")
+        raise HTTPException(status_code=403, detail="Неверный ключ Управления. Проверьте в настройках.")
 
 
 def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]], models: Dict[str, str]) -> str:
@@ -255,7 +254,7 @@ def pick_provider_and_model(body: Dict[str, Any], user_message: str, carried_met
 def strip_thinking(text: str) -> str:
     if not text:
         return text
-    text = re.sub(r" thinking.*? response", "", text, flags=re.DOTALL)
+    text = re.sub(r" thinking.*?", "", text, flags=re.DOTALL)
     text = re.sub(r"<reasoning>.*?</reasoning>", "", text, flags=re.DOTALL)
     return text.strip()
 
@@ -331,7 +330,7 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
                 "version": a.get("version"), "stage": a.get("stage"),
             }
             content = a.get("content") or ""
-            if content and len(content) < 8000:
+            if content and len(content) < 6000:
                 item["content"] = content
             compacted.append(item)
         out["artifacts"] = compacted
@@ -477,17 +476,22 @@ async def call_provider(messages, api_key, base_url, model, provider, max_tokens
         safe_log(f"Provider [{provider}/{model}] status={r.status_code} remaining={remaining}")
         if r.status_code == 429:
             retry_after = r.headers.get("retry-after")
-            detail = (f"Лимит исчерпан. Повторите через {retry_after} сек." if retry_after
-                      else "Дневной лимит исчерпан. Сбросится в полночь UTC.")
+            detail = (f"Лимит вашего ключа исчерпан. Повторите через {retry_after} сек."
+                      if retry_after else
+                      "Лимит ключа исчерпан. Он обновится автоматически. Или введите свой ключ в настройках → Ключ API.")
             raise HTTPException(status_code=429, detail=detail)
         if r.status_code == 402:
-            raise HTTPException(status_code=402, detail="Недостаточно кредитов на провайдере.")
+            raise HTTPException(status_code=402, detail="На провайдере закончились кредиты. Пополните баланс или смените провайдера.")
+        if r.status_code in (401, 403):
+            raise HTTPException(status_code=403, detail="Ключ не принят провайдером. Проверьте ключ в настройках → Ключ API.")
+        if r.status_code == 413:
+            raise HTTPException(status_code=413, detail="Запрос слишком длинный. Сократите или прикрепите файл.")
+        if r.status_code >= 500:
+            log.error(f"Provider error {r.status_code}")
+            raise HTTPException(status_code=502, detail=f"{PROVIDERS.get(provider, {}).get('name', provider)} недоступен. Попробуйте позже.")
         if r.status_code >= 400:
             log.error(f"Provider error {r.status_code}")
-            raise HTTPException(
-                status_code=r.status_code,
-                detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API",
-            )
+            raise HTTPException(status_code=r.status_code, detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API.")
         data = r.json()
         return strip_thinking(data["choices"][0]["message"]["content"])
 
@@ -628,7 +632,7 @@ async def limit_body(request: Request, call_next):
     if request.method in ("POST", "PUT"):
         cl = request.headers.get("content-length")
         if cl and cl.isdigit() and int(cl) > MAX_BODY_BYTES:
-            return JSONResponse({"detail": "Слишком большой запрос"}, status_code=413)
+            return JSONResponse({"detail": "Запрос слишком большой. Сократите или прикрепите файл."}, status_code=413)
     return await call_next(request)
 
 
@@ -648,6 +652,12 @@ async def health():
         "management_key_set": bool(MANAGEMENT_KEY),
         "providers": list(PROVIDERS.keys()),
         "cors": CORS_ORIGINS,
+        "limits": {
+            "max_message_len": MAX_MESSAGE_LEN,
+            "soft_message_len": SOFT_MESSAGE_LEN,
+            "max_tokens": MAX_TOKENS,
+            "meta_max_tokens": META_MAX_TOKENS,
+        },
         "prompts_loaded": {
             "layer_a": bool(LAYER_A),
             "layer_b": bool(LAYER_B),
@@ -680,17 +690,20 @@ async def chat(request: Request):
     try:
         body = await request.json()
     except Exception:
-        raise HTTPException(status_code=400, detail="Некорректный JSON")
+        raise HTTPException(status_code=400, detail="Некорректный формат запроса")
 
     if not isinstance(body, dict):
-        raise HTTPException(status_code=400, detail="Тело должно быть объектом")
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
 
-    user_message = (body.get("message") or "").strip()[:MAX_MESSAGE_LEN]
+    user_message = (body.get("message") or "").strip()
     attachments = body.get("attachments") or []
     carried_metrics = body.get("carried_metrics") or {}
 
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
+
+    if len(user_message) > MAX_MESSAGE_LEN:
+        user_message = user_message[:MAX_MESSAGE_LEN]
 
     if not isinstance(attachments, list):
         attachments = []
@@ -699,10 +712,10 @@ async def chat(request: Request):
 
     provider, base_url, model, api_key, source = pick_provider_and_model(body, user_message, carried_metrics)
     if not api_key:
-        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках.")
+        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках → Ключ API.")
 
     management_mode = _safe_eq((body.get("management_key") or "").strip(), MANAGEMENT_KEY)
-    safe_log(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode}")
+    safe_log(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode} | len={len(user_message)}")
 
     try:
         meta_delta = await call_meta(user_message, carried_metrics, api_key, base_url, model, provider)
@@ -712,7 +725,7 @@ async def chat(request: Request):
         content_result = await call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments)
         reply_text = content_result.get("reply_text", "")
         if not reply_text:
-            reply_text = "Извините, произошла ошибка обработки ответа. Попробуйте ещё раз."
+            reply_text = "Не получилось построить ответ. Попробуйте переформулировать запрос."
             full_metrics["protocol_integrity"] = False
             full_metrics["indicator_status"] = "warning"
 
@@ -734,7 +747,7 @@ async def chat(request: Request):
         fallback_metrics["indicator_status"] = "warning"
         fallback_metrics["management_mode"] = management_mode
         return JSONResponse({
-            "reply_text": "Извините, произошла ошибка. Попробуйте ещё раз.",
+            "reply_text": "Внутренняя ошибка сервера. Мы уже работаем над этим. Попробуйте ещё раз.",
             "metrics": fallback_metrics,
             "key_source": source,
             "provider_used": provider,
