@@ -42,4 +42,3 @@
     { "id": "businessSheet", "title": "Бизнес", "component": "business" },
     { "id": "editorSheet", "title": "Редактор", "component": "editor", "fullscreen": true }
   ]
-}
