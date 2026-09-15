@@ -1,7 +1,8 @@
 # app.py
 # Monolog — когнитивный партнёр.
 # Ядро 1.0. Три промпта: layer_a (system), layer_b (meta), layer_a_content_prompt (content).
-# Stateless. Слой B не отправляется. История не отправляется. Ключи не сохраняются.
+# Stateless. История не отправляется. Ключи не сохраняются.
+# Релиз 10+ итераций: согласованность ядра, расширенные модели, /releases, Управление, мета/контент разделены.
 
 import os
 import re
@@ -24,6 +25,8 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("monolog")
 
+# --- Конфигурация провайдеров ---
+# Каждый провайдер: base_url, три модели по уровню (light/medium/heavy), полный список моделей.
 PROVIDERS = {
     "groq": {
         "name": "Groq",
@@ -92,25 +95,34 @@ PROVIDERS = {
     },
 }
 
+# --- Лимиты ---
 MAX_TOKENS = 6000
+META_MAX_TOKENS = 2000
 TIMEOUT = 120.0
 
-_DEV_KEYS_GROQ: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
+# --- Ключи разработчика (Groq) ---
+_DEV_KEYS_GROQ: List[str] = [
+    k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()
+]
 _dev_key_cycle = itertools.cycle(_DEV_KEYS_GROQ) if _DEV_KEYS_GROQ else None
 
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
 
-MANAGEMENT_KEY = os.getenv("MANAGEMENT_KEY", "Эгида-Эльвира-7").strip()
+# --- Ключ Управления ---
+MANAGEMENT_KEY = os.getenv("MANAGEMENT_KEY", "").strip()
 
+# --- GitHub для блога и кода ---
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ekhusyainova-blip/monolog").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
 BLOG_PATH = "blog/posts.json"
+RELEASES_PATH = "releases.json"
 AUTHOR_SECRET = os.getenv("AUTHOR_SECRET", "").strip()
-CODE_BRANCH = "dev"
+CODE_BRANCH = os.getenv("CODE_BRANCH", "dev").strip()
 
 
 def _load(path: str) -> str:
+    """Загружает промпт из файла. Если файла нет — пустая строка."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             return f.read().strip()
@@ -119,12 +131,13 @@ def _load(path: str) -> str:
         return ""
 
 
-# Три промпта
-LAYER_A = _load("prompts/layer_a.txt")
-LAYER_B = _load("prompts/layer_b.txt")
-LAYER_A_CONTENT = _load("prompts/layer_a_content_prompt")
+# Три промпта ядра 1.0
+LAYER_A = _load("prompts/layer_a.txt")             # system — ядро 1.0
+LAYER_B = _load("prompts/layer_b.txt")             # meta — метрики (delta)
+LAYER_A_CONTENT = _load("prompts/layer_a_content_prompt")  # content — reply_text
 
 
+# --- Базовая схема метрик ---
 BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
@@ -143,8 +156,10 @@ BASE_METRICS = {
     "value_choices": [],
     "risk_intercept": None,
     "social_adaptation": {"active": False, "reason": None, "level": "inactive"},
-    "dominant_trait": {"detected": False, "influence": None, "risk": None,
-                       "stability_delta": 0.0, "hint": None, "steps": []},
+    "dominant_trait": {
+        "detected": False, "influence": None, "risk": None,
+        "stability_delta": 0.0, "hint": None, "steps": [],
+    },
     "passport": {
         "level": "micro", "title": None, "goal": None, "result": None,
         "mission": None, "values": [], "constraints": [], "stakeholders": [],
@@ -163,9 +178,6 @@ BASE_METRICS = {
     "artifacts": [],
     "protocol_integrity": True,
     "management_mode": False,
-    "patterns_applied": [],
-    "cognitive_distortions": [],
-    "autonomy_levels": [],
     "required_skills": [],
     "index_delta": None,
 }
@@ -187,11 +199,16 @@ def check_author(request: Request):
 
 def check_management(request: Request):
     key = request.headers.get("X-Management-Key", "").strip()
-    if key != MANAGEMENT_KEY:
+    if not key or key != MANAGEMENT_KEY:
         raise HTTPException(status_code=403, detail="Режим Управления не активен")
 
 
-def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]], models: Dict[str, str]) -> str:
+def _pick_model_tier(
+    user_message: str,
+    carried_metrics: Optional[Dict[str, Any]],
+    models: Dict[str, str],
+) -> str:
+    """Выбирает уровень модели (light/medium/heavy) по содержанию запроса."""
     text = (user_message or "").lower()
     heavy_keywords = [
         "статья", "лонгрид", "пост", "напиши",
@@ -210,45 +227,57 @@ def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]
     return models.get("light") or models.get("medium")
 
 
-def pick_provider_and_model(body: Dict[str, Any], user_message: str, carried_metrics: Optional[Dict[str, Any]] = None):
+def pick_provider_and_model(
+    body: Dict[str, Any],
+    user_message: str,
+    carried_metrics: Optional[Dict[str, Any]] = None,
+):
+    """Возвращает (provider, base_url, model, api_key, source)."""
     provider = (body.get("provider") or "groq").strip().lower()
     if provider not in PROVIDERS:
         provider = "groq"
+
     user_key = (body.get("api_key") or "").strip()
     if user_key and len(user_key) > 20:
         cfg = PROVIDERS[provider]
         model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
         return provider, cfg["base_url"], model, user_key, "user"
+
     dev_key = next_dev_key()
     if dev_key:
         cfg = PROVIDERS["groq"]
         model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
         return "groq", cfg["base_url"], model, dev_key, "developer"
+
     return None, None, None, None, "none"
 
 
 def strip_thinking(text: str) -> str:
     if not text:
         return text
-    text = re.sub(r" thinking.*?", "", text, flags=re.DOTALL)
+    text = re.sub(r" thinking.*? response", "", text, flags=re.DOTALL)
     text = re.sub(r"<reasoning>.*?</reasoning>", "", text, flags=re.DOTALL)
     return text.strip()
 
 
 def extract_json(text: str) -> Optional[Dict[str, Any]]:
+    """Извлекает JSON из ответа модели. Устойчив к мусору."""
     if not text:
         return None
     text = text.replace("\ufeff", "").replace("\u200b", "").replace("\u200c", "").replace("\u200d", "")
     text = strip_thinking(text)
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```\s*$", "", text)
+
     start = text.find("{")
     if start == -1:
         return None
+
     try:
         return json.loads(text[start:])
     except Exception:
         pass
+
     depth = 0
     in_string = False
     escape = False
@@ -274,7 +303,7 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
                 try:
                     return json.loads(chunk)
                 except Exception:
-                    fixed = re.sub(r'(?<!\\)\n', '\\\\n', chunk)
+                    fixed = re.sub(r"(?<!\\)\n", "\\\\n", chunk)
                     try:
                         return json.loads(fixed)
                     except Exception:
@@ -283,12 +312,17 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
 
 
 def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Сжимает carried_metrics до минимально нужного для meta/content."""
     if not carried:
         return {}
     out = {}
     p = carried.get("passport") or {}
     if p:
-        out["passport"] = {"level": p.get("level"), "title": p.get("title"), "goal": p.get("goal")}
+        out["passport"] = {
+            "level": p.get("level"),
+            "title": p.get("title"),
+            "goal": p.get("goal"),
+        }
     pr = carried.get("profile") or {}
     if pr:
         out["profile"] = {
@@ -301,8 +335,13 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         for a in arts[-3:]:
             if not isinstance(a, dict):
                 continue
-            item = {"id": a.get("id"), "name": a.get("name"), "type": a.get("type"),
-                    "version": a.get("version"), "stage": a.get("stage")}
+            item = {
+                "id": a.get("id"),
+                "name": a.get("name"),
+                "type": a.get("type"),
+                "version": a.get("version"),
+                "stage": a.get("stage"),
+            }
             content = a.get("content") or ""
             if content and len(content) < 12000:
                 item["content"] = content
@@ -311,16 +350,25 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     return out
 
 
-def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def merge_metrics(
+    incoming: Dict[str, Any],
+    carried: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
+    """Накладывает delta (incoming) на carried. Возвращает полное состояние."""
     carried = carried or {}
     result = {**BASE_METRICS, **carried}
-    skip_keys = ("passport", "profile", "reminder", "artifacts", "social_adaptation",
-                 "dominant_trait", "ideas", "dimension", "priority_drift", "mood_board")
+
+    skip_keys = (
+        "passport", "profile", "reminder", "artifacts", "social_adaptation",
+        "dominant_trait", "ideas", "dimension", "priority_drift", "mood_board",
+    )
     for k, v in (incoming or {}).items():
         if k in skip_keys:
             continue
         if v is not None:
             result[k] = v
+
+    # social_adaptation
     inc_sa = (incoming or {}).get("social_adaptation")
     if isinstance(inc_sa, dict):
         result["social_adaptation"] = {
@@ -329,7 +377,11 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
             "level": inc_sa.get("level", "inactive"),
         }
     else:
-        result["social_adaptation"] = carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
+        result["social_adaptation"] = (
+            carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
+        )
+
+    # dominant_trait
     inc_dt = (incoming or {}).get("dominant_trait")
     if isinstance(inc_dt, dict):
         result["dominant_trait"] = {
@@ -338,10 +390,15 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
             "risk": inc_dt.get("risk"),
             "stability_delta": float(inc_dt.get("stability_delta") or 0.0),
             "hint": inc_dt.get("hint"),
-            "steps": list(inc_dt.get("steps") or []) if isinstance(inc_dt.get("steps"), list) else [],
+            "steps": list(inc_dt.get("steps") or [])
+            if isinstance(inc_dt.get("steps"), list) else [],
         }
     else:
-        result["dominant_trait"] = carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
+        result["dominant_trait"] = (
+            carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
+        )
+
+    # ideas — добавление по id
     inc_ideas = (incoming or {}).get("ideas")
     if isinstance(inc_ideas, list):
         existing = list(carried.get("ideas") or [])
@@ -353,12 +410,20 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         result["ideas"] = existing
     else:
         result["ideas"] = carried.get("ideas") or []
+
+    # dimension
     inc_dim = (incoming or {}).get("dimension")
     result["dimension"] = inc_dim if inc_dim is not None else carried.get("dimension")
+
+    # priority_drift
     inc_pd = (incoming or {}).get("priority_drift")
     result["priority_drift"] = inc_pd if inc_pd is not None else carried.get("priority_drift")
+
+    # mood_board
     inc_mb = (incoming or {}).get("mood_board")
     result["mood_board"] = inc_mb if inc_mb is not None else carried.get("mood_board")
+
+    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -374,11 +439,17 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
             if v not in (None, "", [], {}):
                 merged_pass[k] = v
     result["passport"] = merged_pass
+
+    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
+
     if isinstance(inc_prof.get("values"), dict) and inc_prof["values"]:
-        merged_prof["values"] = {**merged_prof.get("values", {}), **inc_prof["values"]}
+        merged_prof["values"] = {
+            **merged_prof.get("values", {}),
+            **inc_prof["values"],
+        }
     for list_key in ("patterns", "distortions", "insights", "skills"):
         old = list(merged_prof.get(list_key) or [])
         new = inc_prof.get(list_key) or []
@@ -389,6 +460,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                     old.append(str(item))
                     seen.add(str(item))
             merged_prof[list_key] = old
+
     if isinstance(inc_prof.get("somatic"), dict):
         merged_som = {**(merged_prof.get("somatic") or {})}
         for k in ("energy", "tension", "focus"):
@@ -400,9 +472,14 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         if inc_prof["somatic"].get("note"):
             merged_som["note"] = inc_prof["somatic"]["note"]
         merged_prof["somatic"] = merged_som
+
     result["profile"] = merged_prof
+
+    # reminder
     inc_rem = (incoming or {}).get("reminder")
     result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
+
+    # artifacts — добавление по id
     inc_art = (incoming or {}).get("artifacts") or []
     car_art = list(carried.get("artifacts") or [])
     seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
@@ -414,11 +491,19 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
             car_art.append(a)
             seen_ids.add(aid)
     result["artifacts"] = car_art
+
     return result
 
 
-async def call_provider(messages: List[Dict[str, str]], api_key: str, base_url: str,
-                        model: str, provider: str, max_tokens: int = MAX_TOKENS) -> str:
+async def call_provider(
+    messages: List[Dict[str, str]],
+    api_key: str,
+    base_url: str,
+    model: str,
+    provider: str,
+    max_tokens: int = MAX_TOKENS,
+) -> str:
+    """Один вызов провайдера. Универсально для всех."""
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -426,42 +511,55 @@ async def call_provider(messages: List[Dict[str, str]], api_key: str, base_url: 
     if provider == "openrouter":
         headers["HTTP-Referer"] = "https://monolog.onrender.com"
         headers["X-Title"] = "AI Monolog"
+
     payload = {
         "model": model,
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": 0.6,
     }
+
     cfg = PROVIDERS.get(provider, {})
     if cfg.get("reasoning_effort"):
         if model.startswith("openai/gpt-oss") or model.startswith("gpt-oss"):
             payload["reasoning_effort"] = "low"
         elif model.startswith("qwen"):
             payload["reasoning_effort"] = "none"
+
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         r = await client.post(base_url, headers=headers, json=payload)
         remaining = r.headers.get("x-ratelimit-remaining-tokens", "?")
         log.info(f"Provider [{provider}/{model}] status={r.status_code} remaining={remaining}")
+
         if r.status_code == 429:
             retry_after = r.headers.get("retry-after")
             if retry_after:
-                detail = f"Лимит исчерпан. Повторите через {retry_after} сек."
+                detail = f"Лимит исчерпан. Повторите через {retry_after} сек. Или введите свой ключ в настройках."
             else:
-                detail = "Дневной лимит исчерпан. Сбросится в полночь UTC. Или введите свой ключ."
+                detail = "Дневной лимит исчерпан. Он сбросится в полночь UTC. Или введите свой ключ в настройках."
             raise HTTPException(status_code=429, detail=detail)
         if r.status_code == 402:
             raise HTTPException(status_code=402, detail="Недостаточно кредитов на провайдере.")
         if r.status_code >= 400:
             log.error(f"Provider error {r.status_code}: {r.text[:300]}")
-            raise HTTPException(status_code=r.status_code,
-                                detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API")
+            raise HTTPException(
+                status_code=r.status_code,
+                detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API",
+            )
         data = r.json()
         content = data["choices"][0]["message"]["content"]
         return strip_thinking(content)
 
 
-async def call_meta(user_message: str, carried_metrics: Dict[str, Any],
-                    api_key: str, base_url: str, model: str, provider: str) -> Dict[str, Any]:
+async def call_meta(
+    user_message: str,
+    carried_metrics: Dict[str, Any],
+    api_key: str,
+    base_url: str,
+    model: str,
+    provider: str,
+) -> Dict[str, Any]:
+    """Meta-вызов: только метрики. Только delta. Не падает при ошибке."""
     if not LAYER_B:
         return {}
     messages = [{"role": "system", "content": LAYER_B}]
@@ -469,9 +567,14 @@ async def call_meta(user_message: str, carried_metrics: Dict[str, Any],
         "prev": compact_carried(carried_metrics),
         "msg": (user_message or "")[:200],
     }
-    messages.append({"role": "user", "content": json.dumps(payload, ensure_ascii=False)})
+    messages.append({
+        "role": "user",
+        "content": json.dumps(payload, ensure_ascii=False),
+    })
     try:
-        raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=2000)
+        raw = await call_provider(
+            messages, api_key, base_url, model, provider, max_tokens=META_MAX_TOKENS
+        )
         return extract_json(raw) or {}
     except HTTPException:
         raise
@@ -480,9 +583,16 @@ async def call_meta(user_message: str, carried_metrics: Dict[str, Any],
         return {}
 
 
-async def call_content(user_message: str, full_metrics: Dict[str, Any],
-                       api_key: str, base_url: str, model: str, provider: str,
-                       attachments: Optional[List[Dict[str, Any]]] = None) -> Dict[str, Any]:
+async def call_content(
+    user_message: str,
+    full_metrics: Dict[str, Any],
+    api_key: str,
+    base_url: str,
+    model: str,
+    provider: str,
+    attachments: Optional[List[Dict[str, Any]]] = None,
+) -> Dict[str, Any]:
+    """Content-вызов: только reply_text."""
     system = LAYER_A + "\n\n" + LAYER_A_CONTENT
     user_content = user_message or "Проанализируй вложения."
     if attachments:
@@ -490,12 +600,16 @@ async def call_content(user_message: str, full_metrics: Dict[str, Any],
         for a in attachments[:3]:
             block += f"\n[Файл: {a.get('name', 'без имени')}]\n{a.get('text', '')}\n"
         user_content += block
-    user_content += "\n\n=== СОСТОЯНИЕ ===\n" + json.dumps(compact_carried(full_metrics), ensure_ascii=False)
+    user_content += "\n\n=== СОСТОЯНИЕ ===\n" + json.dumps(
+        compact_carried(full_metrics), ensure_ascii=False
+    )
     messages = [
         {"role": "system", "content": system},
         {"role": "user", "content": user_content},
     ]
-    raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS)
+    raw = await call_provider(
+        messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS
+    )
     parsed = extract_json(raw) or {}
     if "reply_text" not in parsed:
         parsed = {"reply_text": raw}
@@ -508,36 +622,63 @@ _blog_cache = {"posts": None, "sha": None, "fetched_at": 0}
 BLOG_CACHE_TTL = 300
 
 
-async def github_get_file():
-    now = time.time()
-    if _blog_cache["posts"] is not None and (now - _blog_cache["fetched_at"]) < BLOG_CACHE_TTL:
-        return _blog_cache["posts"], _blog_cache.get("sha")
-    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{BLOG_PATH}"
+async def github_get_file(path: str):
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
     headers = {"Accept": "application/vnd.github+json"}
     if GITHUB_TOKEN:
         headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
         if r.status_code == 404:
-            return [], None
+            return None, None
         if r.status_code >= 400:
-            raise HTTPException(status_code=502, detail="Не удалось прочитать блог")
+            raise HTTPException(status_code=502, detail=f"Не удалось прочитать {path}")
         data = r.json()
         try:
             raw = base64.b64decode(data.get("content", "")).decode("utf-8")
-            posts = json.loads(raw) if raw.strip() else []
+            parsed = json.loads(raw) if raw.strip() else None
         except Exception:
-            posts = []
-        _blog_cache["posts"] = posts
-        _blog_cache["sha"] = data.get("sha")
-        _blog_cache["fetched_at"] = now
-        return posts, data.get("sha")
+            parsed = None
+        return parsed, data.get("sha")
 
 
-async def github_put_file(posts: list, message: str):
+async def github_put_file(path: str, content_obj, message: str):
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
-    _, sha = await github_get_file()
+    _, sha = await github_get_file(path)
+    content = json.dumps(content_obj, ensure_ascii=False, indent=2)
+    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
+    body = {"message": message, "content": content_b64, "branch": GITHUB_BRANCH}
+    if sha:
+        body["sha"] = sha
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.put(url, headers=headers, json=body)
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"Не удалось сохранить {path}")
+        return True
+
+
+async def github_get_blog():
+    now = time.time()
+    if _blog_cache["posts"] is not None and (now - _blog_cache["fetched_at"]) < BLOG_CACHE_TTL:
+        return _blog_cache["posts"], _blog_cache.get("sha")
+    posts, sha = await github_get_file(BLOG_PATH)
+    posts = posts or []
+    _blog_cache["posts"] = posts
+    _blog_cache["sha"] = sha
+    _blog_cache["fetched_at"] = now
+    return posts, sha
+
+
+async def github_put_blog(posts: list, message: str):
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+    _, sha = await github_get_blog()
     content = json.dumps(posts, ensure_ascii=False, indent=2)
     content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{BLOG_PATH}"
@@ -558,8 +699,14 @@ async def github_put_file(posts: list, message: str):
         return True
 
 
+# --- FastAPI ---
 app = FastAPI(title="Monolog")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 @app.get("/")
@@ -613,19 +760,31 @@ async def chat(request: Request):
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
 
-    provider, base_url, model, api_key, source = pick_provider_and_model(body, user_message, carried_metrics)
+    provider, base_url, model, api_key, source = pick_provider_and_model(
+        body, user_message, carried_metrics
+    )
     if not api_key:
-        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках.")
+        raise HTTPException(
+            status_code=503,
+            detail="Нет доступных ключей. Введите свой ключ в настройках.",
+        )
 
     management_mode = (body.get("management_key") or "").strip() == MANAGEMENT_KEY
-    log.info(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode}")
+    log.info(
+        f"Chat | provider={provider} | source={source} | model={model} | "
+        f"management={management_mode}"
+    )
 
     try:
-        meta_delta = await call_meta(user_message, carried_metrics, api_key, base_url, model, provider)
+        meta_delta = await call_meta(
+            user_message, carried_metrics, api_key, base_url, model, provider
+        )
         full_metrics = merge_metrics(meta_delta, carried_metrics)
         full_metrics["management_mode"] = management_mode
 
-        content_result = await call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments)
+        content_result = await call_content(
+            user_message, full_metrics, api_key, base_url, model, provider, attachments
+        )
         reply_text = content_result.get("reply_text", "")
         if not reply_text:
             reply_text = "Извините, произошла ошибка обработки ответа. Попробуйте ещё раз."
@@ -641,6 +800,7 @@ async def chat(request: Request):
             "model_used": model,
             "management_mode": management_mode,
         })
+
     except HTTPException:
         raise
     except Exception as e:
@@ -666,11 +826,13 @@ async def export_docx(request: Request):
         from docx.shared import Pt
     except ImportError:
         raise HTTPException(status_code=503, detail="python-docx не установлен")
+
     body = await request.json()
     title = (body.get("title") or "Документ").strip()
     text = (body.get("body") or "").strip()
     if not text:
         raise HTTPException(status_code=400, detail="Пустой текст")
+
     doc = Document()
     if title:
         doc.add_heading(title, level=0)
@@ -692,6 +854,7 @@ async def export_docx(request: Request):
             p = doc.add_paragraph(s)
             for run in p.runs:
                 run.font.size = Pt(11)
+
     buf = BytesIO()
     doc.save(buf)
     buf.seek(0)
@@ -707,13 +870,16 @@ async def export_docx(request: Request):
 # --- Blog ---
 @app.get("/blog")
 async def blog_list():
-    posts, _ = await github_get_file()
+    posts, _ = await github_get_blog()
     metas = []
     for p in posts:
         metas.append({
-            "id": p.get("id"), "title": p.get("title"),
-            "tags": p.get("tags", []), "author": p.get("author", "Автор"),
-            "created_at": p.get("created_at"), "updated_at": p.get("updated_at"),
+            "id": p.get("id"),
+            "title": p.get("title"),
+            "tags": p.get("tags", []),
+            "author": p.get("author", "Автор"),
+            "created_at": p.get("created_at"),
+            "updated_at": p.get("updated_at"),
             "preview": (p.get("body") or "")[:180],
         })
     metas.sort(key=lambda x: x.get("created_at") or "", reverse=True)
@@ -722,7 +888,7 @@ async def blog_list():
 
 @app.get("/blog/{post_id}")
 async def blog_get(post_id: str):
-    posts, _ = await github_get_file()
+    posts, _ = await github_get_blog()
     for p in posts:
         if p.get("id") == post_id:
             return JSONResponse(p)
@@ -739,27 +905,32 @@ async def blog_publish(request: Request):
     author = (body.get("author") or "Автор").strip()
     if not title or not text:
         raise HTTPException(status_code=400, detail="Нужны заголовок и текст")
-    posts, _ = await github_get_file()
+
+    posts, _ = await github_get_blog()
     post_id = "post_" + str(int(time.time() * 1000))
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     new_post = {
-        "id": post_id, "title": title, "body": text,
+        "id": post_id,
+        "title": title,
+        "body": text,
         "tags": tags if isinstance(tags, list) else [],
-        "author": author, "created_at": now, "updated_at": now,
+        "author": author,
+        "created_at": now,
+        "updated_at": now,
     }
     posts.append(new_post)
-    await github_put_file(posts, f"Blog: publish '{title[:50]}'")
+    await github_put_blog(posts, f"Blog: publish '{title[:50]}'")
     return JSONResponse({"ok": True, "id": post_id})
 
 
 @app.delete("/blog/{post_id}")
 async def blog_delete(post_id: str, request: Request):
     check_author(request)
-    posts, _ = await github_get_file()
+    posts, _ = await github_get_blog()
     new_posts = [p for p in posts if p.get("id") != post_id]
     if len(new_posts) == len(posts):
         raise HTTPException(status_code=404, detail="Статья не найдена")
-    await github_put_file(new_posts, f"Blog: delete '{post_id}'")
+    await github_put_blog(new_posts, f"Blog: delete '{post_id}'")
     return JSONResponse({"ok": True})
 
 
@@ -770,8 +941,10 @@ async def code_read(request: Request, path: str):
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {"Accept": "application/vnd.github+json",
-               "Authorization": f"Bearer {GITHUB_TOKEN}"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
         branch_used = CODE_BRANCH
@@ -779,7 +952,10 @@ async def code_read(request: Request, path: str):
             r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
             branch_used = GITHUB_BRANCH
         if r.status_code == 404:
-            return JSONResponse({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
+            return JSONResponse({
+                "exists": False, "path": path,
+                "content": None, "sha": None, "branch": branch_used,
+            })
         if r.status_code >= 400:
             raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
         data = r.json()
@@ -787,8 +963,10 @@ async def code_read(request: Request, path: str):
             content = base64.b64decode(data.get("content", "")).decode("utf-8")
         except Exception:
             content = ""
-        return JSONResponse({"exists": True, "path": path, "content": content,
-                             "sha": data.get("sha"), "branch": branch_used})
+        return JSONResponse({
+            "exists": True, "path": path,
+            "content": content, "sha": data.get("sha"), "branch": branch_used,
+        })
 
 
 @app.post("/code/save")
@@ -802,9 +980,12 @@ async def code_save(request: Request):
     message = (body.get("message") or f"Update {path}").strip()
     if not path:
         raise HTTPException(status_code=400, detail="Не указан путь")
+
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {"Accept": "application/vnd.github+json",
-               "Authorization": f"Bearer {GITHUB_TOKEN}"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
     sha = None
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
@@ -825,29 +1006,13 @@ async def code_save(request: Request):
         })
 
 
-# --- Releases (архив релизов) ---
-RELEASES_PATH = "releases.json"
-
-
+# --- Releases (архив) ---
 @app.get("/releases")
 async def releases_list():
-    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{RELEASES_PATH}"
-    headers = {"Accept": "application/vnd.github+json"}
-    if GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
-        if r.status_code == 404:
-            return JSONResponse({"releases": []})
-        if r.status_code >= 400:
-            raise HTTPException(status_code=502, detail="Не удалось прочитать релизы")
-        data = r.json()
-        try:
-            raw = base64.b64decode(data.get("content", "")).decode("utf-8")
-            releases = json.loads(raw) if raw.strip() else []
-        except Exception:
-            releases = []
-        return JSONResponse({"releases": releases})
+    data, _ = await github_get_file(RELEASES_PATH)
+    if not isinstance(data, list):
+        data = []
+    return JSONResponse({"releases": data})
 
 
 @app.post("/releases/save")
@@ -857,22 +1022,17 @@ async def releases_save(request: Request):
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
     body = await request.json()
     releases = body.get("releases") or []
-    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{RELEASES_PATH}"
-    headers = {"Accept": "application/vnd.github+json",
-               "Authorization": f"Bearer {GITHUB_TOKEN}"}
-    sha = None
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
-        if r.status_code == 200:
-            sha = r.json().get("sha")
-        content_b64 = base64.b64encode(json.dumps(releases, ensure_ascii=False, indent=2).encode("utf-8")).decode("utf-8")
-        payload = {"message": "Update releases", "content": content_b64, "branch": GITHUB_BRANCH}
-        if sha:
-            payload["sha"] = sha
-        r = await client.put(url, headers=headers, json=payload)
-        if r.status_code >= 400:
-            raise HTTPException(status_code=502, detail="Не удалось сохранить релизы")
-        return JSONResponse({"ok": True})
+    if not isinstance(releases, list):
+        raise HTTPException(status_code=400, detail="releases должен быть списком")
+    await github_put_file(RELEASES_PATH, releases, "Update releases")
+    return JSONResponse({"ok": True, "count": len(releases)})
+
+
+# --- Управление (проверка ключа) ---
+@app.post("/management/check")
+async def management_check(request: Request):
+    check_management(request)
+    return JSONResponse({"ok": True, "management_mode": True})
 
 
 if __name__ == "__main__":
