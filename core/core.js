@@ -1,10 +1,8 @@
 // core/core.js
 // Ядро Monolog: состояние, IndexedDB, API, экономика, чат, init.
-// В конце файла — событие monolog-ready для adaptive.js.
 
 "use strict";
 
-// --- Константы ---
 const API_BASE = window.location.origin;
 const LS_KEY = "monolog_api_key";
 const LS_AUTHOR = "monolog_author_key";
@@ -34,7 +32,6 @@ const PROVIDERS_FALLBACK = [
   { id: "sambanova", name: "SambaNova" },
 ];
 
-// --- Глобальное состояние ---
 const state = {
   apiKey: "",
   authorKey: "",
@@ -66,7 +63,6 @@ const state = {
   providersCache: PROVIDERS_FALLBACK,
 };
 
-// --- Хелперы ---
 let _bc = null;
 try { _bc = new BroadcastChannel("monolog_sync"); } catch (e) {}
 let _db = null;
@@ -77,7 +73,6 @@ function currentLot() {
   if (!c || !c.lotId) return null;
   return state.lots.find(l => l.id === c.lotId);
 }
-
 function uid(prefix) {
   return (prefix || "id") + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 }
@@ -121,7 +116,6 @@ function softenText(text) {
   return s;
 }
 
-// --- IndexedDB ---
 function openDB() {
   return new Promise((resolve, reject) => {
     if (_db) return resolve(_db);
@@ -196,7 +190,6 @@ async function dbSetMeta(key, val) {
   } catch (e) { return false; }
 }
 
-// --- Тема и шрифт ---
 function applyTheme() {
   let theme;
   if (state.depthMode === "auto") {
@@ -220,7 +213,6 @@ function applyProfileGlobal() {
   applyFontSize();
 }
 
-// --- Чат ---
 function addRow(role, content, options) {
   options = options || {};
   const chat = document.getElementById("chat");
@@ -453,7 +445,6 @@ async function send() {
   }
 }
 
-// --- Чаты / Лоты ---
 function createChatObj(title, lotId) {
   return {
     id: uid("chat"),
@@ -496,7 +487,6 @@ async function persistLot(l) {
   await dbPut(STORE_LOTS, l);
 }
 
-// --- Загрузка данных ---
 async function loadData() {
   state.lots = await dbGetAll(STORE_LOTS);
   state.chats = await dbGetAll(STORE_CHATS);
@@ -521,7 +511,6 @@ async function loadData() {
   if (typeof bal === "number") state.balance = bal;
 }
 
-// --- Char counter ---
 function updateCharCounter() {
   const input = document.getElementById("input");
   const counter = document.getElementById("charCounter");
@@ -534,7 +523,6 @@ function updateCharCounter() {
   else if (len > SOFT_LIMIT) counter.classList.add("warn");
 }
 
-// --- Attach ---
 function renderAttachPreview() {
   const box = document.getElementById("attachPreview");
   if (!box) return;
@@ -563,7 +551,6 @@ async function handleFiles(files) {
   renderAttachPreview();
 }
 
-// --- Провайдеры ---
 function renderProviderGrid() {
   const grid = document.getElementById("providerGrid");
   if (!grid) return;
@@ -598,7 +585,6 @@ function setupEyeButtons() {
   });
 }
 
-// --- Шторки ---
 function openSheet(id) {
   const bg = document.getElementById("sheetBg");
   if (bg) bg.classList.add("open");
@@ -631,67 +617,20 @@ function setupSwipeToClose(sheetEl, handleEl) {
   window.addEventListener("mouseup", onEnd);
 }
 
-// --- Экспорт ядра ДО init, чтобы adaptive.js всегда нашёл ---
 window.MonologCore = {
-  state,
-  API_BASE,
-  uid,
-  escHtml,
-  pluralize,
-  toast,
-  renderMarkdown,
-  softenText,
-  broadcast,
-  openDB,
-  dbGetAll,
-  dbPut,
-  dbDel,
-  dbGetMeta,
-  dbSetMeta,
-  applyTheme,
-  applyFontSize,
-  applyProfile: applyProfileGlobal,
-  currentChat,
-  currentLot,
-  addRow,
-  renderCurrentChat,
-  send,
-  createChatObj,
-  createLotObj,
-  persistChat,
-  persistLot,
-  loadData,
-  updateCharCounter,
-  renderAttachPreview,
-  handleFiles,
-  renderProviderGrid,
-  setupEyeButtons,
-  openSheet,
-  closeAllSheets,
-  setupSwipeToClose,
-  STORE_LOTS,
-  STORE_CHATS,
-  STORE_RELEASES,
-  STORE_ANALYTICS,
-  STORE_NOTIFICATIONS,
-  STORE_PUBLIC,
-  STORE_META,
-  LS_KEY,
-  LS_AUTHOR,
-  LS_MANAGE,
-  LS_PROVIDER,
-  LS_FONT,
-  LS_DEPTH,
-  LS_MODE,
-  LS_UID,
-  LS_NOTIF_SEEN,
-  SOFT_LIMIT,
-  HARD_LIMIT,
-  MODE_LABELS,
-  PROVIDERS_FALLBACK,
+  state, API_BASE, uid, escHtml, pluralize, toast, renderMarkdown, softenText, broadcast,
+  openDB, dbGetAll, dbPut, dbDel, dbGetMeta, dbSetMeta,
+  applyTheme, applyFontSize, applyProfile: applyProfileGlobal,
+  currentChat, currentLot, addRow, renderCurrentChat, send,
+  createChatObj, createLotObj, persistChat, persistLot, loadData,
+  updateCharCounter, renderAttachPreview, handleFiles,
+  renderProviderGrid, setupEyeButtons,
+  openSheet, closeAllSheets, setupSwipeToClose,
+  STORE_LOTS, STORE_CHATS, STORE_RELEASES, STORE_ANALYTICS, STORE_NOTIFICATIONS, STORE_PUBLIC, STORE_META,
+  LS_KEY, LS_AUTHOR, LS_MANAGE, LS_PROVIDER, LS_FONT, LS_DEPTH, LS_MODE, LS_UID, LS_NOTIF_SEEN,
+  SOFT_LIMIT, HARD_LIMIT, MODE_LABELS, PROVIDERS_FALLBACK,
 };
 
-// --- Init ---
 async function init() {
   setTimeout(() => {
     const sp = document.getElementById("splash");
@@ -719,7 +658,6 @@ async function init() {
     await loadData();
     renderCurrentChat();
 
-    // Sheets — swipe
     [
       "orbSheet", "menuSheet", "indexSheet", "profileSheet", "metricsSheet",
       "notificationsSheet", "exchangeSheet", "myTemplatesSheet", "myPublicSheet",
@@ -733,7 +671,6 @@ async function init() {
       if (s && h) setupSwipeToClose(s, h);
     });
 
-    // Сфера — обработчики
     const orbBtn = document.getElementById("orbBtn");
     if (orbBtn) {
       let orbPressTimer = null, orbMoved = false;
@@ -759,7 +696,6 @@ async function init() {
       });
     }
 
-    // Header buttons
     const indexBtn = document.getElementById("indexBtn");
     if (indexBtn) indexBtn.addEventListener("click", () => {
       if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderIndexSheet) window.MonologAdaptive.renderIndexSheet("all");
@@ -808,7 +744,6 @@ async function init() {
       const mb = document.getElementById("modalBg"); if (mb) mb.classList.add("open");
     });
 
-    // Index tabs
     document.querySelectorAll("#indexTabs .tab").forEach(t => {
       t.addEventListener("click", () => {
         document.querySelectorAll("#indexTabs .tab").forEach(x => x.classList.remove("active"));
@@ -825,7 +760,6 @@ async function init() {
       });
     });
 
-    // Меню — переходы
     const on = (id, fn) => { const el = document.getElementById(id); if (el) el.addEventListener("click", fn); };
     on("menuNewChat", async () => {
       closeAllSheets();
@@ -853,7 +787,6 @@ async function init() {
     on("menuAbout", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderAbout) window.MonologAdaptive.renderAbout(); openSheet("aboutSheet"); }, 200); });
     on("menuBusiness", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderBusiness) window.MonologAdaptive.renderBusiness(); openSheet("businessSheet"); }, 200); });
 
-    // Управление из сферы
     on("orbManageCode", () => {
       closeAllSheets();
       setTimeout(() => {
@@ -871,7 +804,6 @@ async function init() {
       setTimeout(async () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.renderDevReport) await window.MonologAdaptive.renderDevReport(); openSheet("devReportSheet"); }, 200);
     });
 
-    // Lots tabs
     document.querySelectorAll("#lotsTabs .tab").forEach(t => {
       t.addEventListener("click", () => {
         document.querySelectorAll("#lotsTabs .tab").forEach(x => x.classList.remove("active"));
@@ -884,7 +816,6 @@ async function init() {
     });
     on("lotsAddBtn", () => { closeAllSheets(); setTimeout(() => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openLotModal) window.MonologAdaptive.openLotModal(null); }, 200); });
 
-    // Модалка лота
     on("lotModalClose", closeAllSheets);
     on("lotCancel", closeAllSheets);
     const lotMb = document.getElementById("lotModalBg");
@@ -892,19 +823,16 @@ async function init() {
     on("lotSave", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.saveLot) window.MonologAdaptive.saveLot(); });
     on("lotDelete", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.deleteLot) window.MonologAdaptive.deleteLot(); });
 
-    // Релиз
     on("releaseNewBtn", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openReleaseModal) window.MonologAdaptive.openReleaseModal(); });
     on("releaseModalCancel", closeAllSheets);
     on("releasePublishBtn", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.publishRelease) window.MonologAdaptive.publishRelease(); });
 
-    // Публикация
     on("publishModalClose", closeAllSheets);
     on("publishCancel", closeAllSheets);
     const pmb = document.getElementById("publishModalBg");
     if (pmb) pmb.addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
     on("publishConfirm", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.confirmPublish) window.MonologAdaptive.confirmPublish(); });
 
-    // Код
     on("codePathClose", closeAllSheets);
     on("codePathCancel", closeAllSheets);
     const cpm = document.getElementById("codePathModalBg");
@@ -926,7 +854,6 @@ async function init() {
       } catch (e) { status.textContent = "Ошибка: " + e.message; }
     });
 
-    // Настройки
     on("modalClose", closeAllSheets);
     const mbg = document.getElementById("modalBg");
     if (mbg) mbg.addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
@@ -988,7 +915,6 @@ async function init() {
       reader.readAsText(file);
     });
 
-    // Редактор
     on("editorCopyBtn", () => {
       const body = document.getElementById("editorBody").value || "";
       if (navigator.clipboard) navigator.clipboard.writeText(body);
@@ -1016,9 +942,9 @@ async function init() {
       const title = (document.getElementById("editorName").value || "").trim();
       const body = (document.getElementById("editorBody").value || "").trim();
       const status = document.getElementById("editorStatus");
-      if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
-      if (!state.authorKey) { status.textContent = "Введите ключ автора"; return; }
-      status.textContent = "Публикую...";
+      if (!title || = !body) { status.textContent = "Н awaitужны заголовок и текст"; return; db }
+      if (!state.authorKey) {Get status.textContent = "Введите ключAll автора"; return; }
+(ST      status.textContent = "Публикую...";
       try {
         const r = await fetch(API_BASE + "/blog/publish", {
           method: "POST",
@@ -1052,7 +978,6 @@ async function init() {
       } catch (e) { status.textContent = "Ошибка: " + e.message; }
     });
 
-    // Документы — создать
     on("documentsAddBtn", () => {
       closeAllSheets();
       setTimeout(() => {
@@ -1061,7 +986,6 @@ async function init() {
       }, 200);
     });
 
-    // Поле ввода
     const sendBtn = document.getElementById("sendBtn");
     const input = document.getElementById("input");
     const fileInput = document.getElementById("fileInput");
@@ -1087,7 +1011,6 @@ async function init() {
     if (attachBtn) attachBtn.addEventListener("click", () => { if (fileInput) fileInput.click(); });
     if (fileInput) fileInput.addEventListener("change", (e) => { handleFiles(e.target.files); fileInput.value = ""; });
 
-    // Закрытие шторок
     const sbg = document.getElementById("sheetBg");
     if (sbg) sbg.addEventListener("click", closeAllSheets);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAllSheets(); });
@@ -1106,7 +1029,7 @@ async function init() {
         if (["chat_updated", "lots_updated", "settings_updated", "reset", "notif_added", "releases_updated"].indexOf(msg.type) !== -1) {
           state.lots = await dbGetAll(STORE_LOTS);
           state.chats = await dbGetAll(STORE_CHATS);
-          state.releases = await dbGetAll(STORE_RELEASES);
+          state.releasesORE_RELEASES);
           state.notifications = await dbGetAll(STORE_NOTIFICATIONS);
           const bal = await dbGetMeta("balance");
           if (typeof bal === "number") state.balance = bal;
@@ -1149,7 +1072,6 @@ async function init() {
 
     if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.loadExchange) window.MonologAdaptive.loadExchange();
 
-    // Сообщаем adaptive.js, что ядро готово
     window.dispatchEvent(new Event("monolog-ready"));
 
   } catch (e) {
