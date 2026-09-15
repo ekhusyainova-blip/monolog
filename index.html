@@ -611,7 +611,7 @@ textarea#input::placeholder { color: var(--muted); }
 .provider-btn .name { font-weight: 600; }
 .provider-btn .free { font-size: 10.5px; color: var(--muted); font-weight: 400; }
 .input-with-eye { position: relative; }
-.input-with-eye input { padding-right: 46px; }
+.input-with-eye input { padding-right: 56px; }
 .eye-btn {
   position: absolute; top: 50%; right: 6px;
   transform: translateY(-50%);
@@ -842,6 +842,37 @@ input[type="range"]::-moz-range-thumb {
 .reputation-row:last-child { border-bottom: none; }
 .reputation-row .label { color: var(--muted); }
 .reputation-row .value { font-weight: 600; }
+.dash-toggle { margin-top: 14px; }
+.dash-toggle-btn {
+  width: 100%; padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  font-family: inherit; font-size: 13px; color: var(--text);
+  cursor: pointer; text-align: left;
+  display: flex; justify-content: space-between; align-items: center;
+}
+.dash-toggle-btn .arrow {
+  transition: transform 0.2s;
+  width: 14px; height: 14px;
+}
+.dash-toggle-btn.open .arrow { transform: rotate(90deg); }
+.dash-dropdown {
+  max-height: 0; overflow: hidden;
+  transition: max-height 0.3s ease; margin-top: 0;
+}
+.dash-dropdown.open { max-height: 500px; margin-top: 8px; }
+.dash-metric-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 8px;
+  cursor: pointer; font-size: 13px;
+  background: transparent;
+}
+.dash-metric-opt:hover { background: var(--surface-2); }
+.dash-metric-opt input {
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
+}
 @media (min-width: 768px) {
   .sheet {
     left: 50%; right: auto;
@@ -973,8 +1004,13 @@ input[type="range"]::-moz-range-thumb {
       <div class="info"><div class="name">Витрина</div><div class="desc">Публичные шаблоны и Лоты</div></div>
       <span class="badge-mini public hidden" id="menuExchangeCount">0</span>
     </button>
-    <button class="menu-item public-item" id="menuMyPublic" type="button">
+    <button class="menu-item public-item" id="menuMyTemplates" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21l2-7.5L2 9h7z"/></svg>
+      <div class="info"><div class="name">Мои шаблоны</div><div class="desc">Опубликовать свои</div></div>
+      <span class="badge-mini public hidden" id="menuMyTemplatesCount">0</span>
+    </button>
+    <button class="menu-item public-item" id="menuMyPublic" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>
       <div class="info"><div class="name">Мои публикации</div><div class="desc">Что я отдал</div></div>
       <span class="badge-mini public hidden" id="menuMyPublicCount">0</span>
     </button>
@@ -1076,6 +1112,13 @@ input[type="range"]::-moz-range-thumb {
     <button class="tab" data-exchange-tab="lots" type="button">Лоты</button>
   </div>
   <div id="exchangeContent"></div>
+</div>
+
+<div class="sheet" id="myTemplatesSheet">
+  <div class="sheet-handle" id="myTemplatesHandle"></div>
+  <h3>Мои шаблоны</h3>
+  <div class="sheet-sub">Что можно опубликовать</div>
+  <div id="myTemplatesContent"></div>
 </div>
 
 <div class="sheet" id="myPublicSheet">
@@ -1495,6 +1538,7 @@ const state = {
   mapSteps: [],
   exchangeTab: "templates",
   publishContext: null,
+  balance: 0,
 };
 
 function currentChat() { return state.chats.find(c => c.id === state.currentChatId); }
@@ -1680,7 +1724,8 @@ function renderOrbSheet() {
   html += '</div>';
   if (m.stability_index != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + Number(m.stability_index).toFixed(2) + '</span></div></div>';
   if (m.mind_scale) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Глубина</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
-  if (m.lots_balance) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Индекс</span><span class="artifact-item-stage">' + escHtml(m.lots_balance) + '</span></div></div>';
+  const n = typeof state.balance === "number" ? state.balance : 0;
+  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Индекс</span><span class="artifact-item-stage">' + (n >= 0 ? "+" : "") + n.toFixed(1) + '</span></div></div>';
   box.innerHTML = html;
   const manage = document.getElementById("orbManageSection");
   manage.style.display = state.manageKey ? "block" : "none";
@@ -1699,15 +1744,13 @@ function renderAiNote() {
 
 // --- Header ---
 function updateIndexBtn(delta) {
-  const c = currentChat();
-  const m = (c && c.lastMetrics) || {};
-  const lots = m.lots_balance || "+0.0";
+  const n = typeof state.balance === "number" ? state.balance : 0;
   const btn = document.getElementById("indexBtn");
-  btn.textContent = lots;
-  const n = parseFloat(String(lots).replace(/[^\d.-]/g, ""));
+  const sign = n >= 0 ? "+" : "";
+  btn.textContent = sign + n.toFixed(1);
   btn.classList.remove("positive", "negative");
-  if (!isNaN(n) && n > 0) btn.classList.add("positive");
-  else if (!isNaN(n) && n < 0) btn.classList.add("negative");
+  if (n > 0) btn.classList.add("positive");
+  else if (n < 0) btn.classList.add("negative");
   if (typeof delta === "number" && delta !== 0) {
     btn.classList.remove("pulse"); void btn.offsetWidth; btn.classList.add("pulse");
   }
@@ -1850,6 +1893,13 @@ function updateMenu() {
     else myBadge.classList.add("hidden");
   }
 
+  const myTemplates = collectMyTemplates();
+  const myTplBadge = document.getElementById("menuMyTemplatesCount");
+  if (myTplBadge) {
+    if (myTemplates.length > 0) { myTplBadge.classList.remove("hidden"); myTplBadge.textContent = myTemplates.length; }
+    else myTplBadge.classList.add("hidden");
+  }
+
   const exCount = state.publicTemplates.length + state.publicLots.length;
   const exBadge = document.getElementById("menuExchangeCount");
   if (exBadge) {
@@ -1859,6 +1909,50 @@ function updateMenu() {
 
   const blogTabNew = document.getElementById("blogTabNew");
   if (blogTabNew) blogTabNew.style.display = state.authorKey ? "" : "none";
+}
+
+// --- Мои шаблоны ---
+function collectMyTemplates() {
+  const result = [];
+  state.lots.forEach(l => {
+    (l.documents || []).forEach((d, idx) => {
+      result.push({ id: d.id || (l.id + "_" + idx), name: d.name || "Документ", content: d.content || "", lotId: l.id, lotName: l.name, idx, publicId: d.publicId || null, source: "lot" });
+    });
+  });
+  state.chats.forEach(c => {
+    (c.documents || []).forEach((d, idx) => {
+      result.push({ id: d.id || (c.id + "_" + idx), name: d.name || "Документ", content: d.content || "", chatId: c.id, chatTitle: c.title, idx, publicId: d.publicId || null, source: "chat" });
+    });
+  });
+  return result;
+}
+function renderMyTemplates() {
+  const box = document.getElementById("myTemplatesContent");
+  if (!box) return;
+  box.innerHTML = "";
+  const items = collectMyTemplates();
+  if (!items.length) {
+    box.innerHTML = '<div class="empty-note">Пока нет шаблонов. Создайте документ в Лоте или чате — и он появится здесь.</div>';
+    return;
+  }
+  items.forEach(item => {
+    const el = document.createElement("div");
+    el.className = "artifact-item";
+    const where = item.source === "lot" ? ("Лот: " + escHtml(item.lotName)) : ("Чат: " + escHtml(item.chatTitle || "—"));
+    const statusBadge = item.publicId ? '<span class="artifact-item-stage public">Опубликован</span>' : '<span class="artifact-item-stage">Черновик</span>';
+    el.innerHTML = '<div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(item.name) + '</span>' + statusBadge + '</div>' +
+      '<div class="artifact-item-meta"><span>' + where + '</span></div>' +
+      (item.publicId ? '' : '<div class="public-actions" style="margin-top:8px;"><button class="take" data-id="' + escHtml(item.id) + '">Опубликовать</button></div>');
+    box.appendChild(el);
+  });
+  box.querySelectorAll("button[data-id]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.id;
+      const item = items.find(x => x.id === id);
+      if (!item) return;
+      openPublishModal("template_from_doc", item);
+    });
+  });
 }
 
 // --- Чат ---
@@ -2020,8 +2114,13 @@ async function send() {
         c.indexHistory = c.indexHistory || [];
         c.indexHistory.push({ at: new Date().toISOString(), delta, kind: "meta", name: "изменение" });
         if (c.indexHistory.length > 200) c.indexHistory.shift();
-        if (delta > 0) await addNotification({ level: "ok", text: "Индекс пополнен: +" + delta.toFixed(1) + "." });
-        else await addNotification({ level: "info", text: "Списание индекса: " + delta.toFixed(1) + "." });
+        state.balance = (state.balance || 0) + delta;
+        await dbSetMeta("balance", state.balance);
+        if (delta > 0) {
+          await addNotification({ level: "ok", text: "Индекс пополнен: +" + delta.toFixed(1) + "." });
+        } else if (delta < 0) {
+          await addNotification({ level: "info", text: "Списание индекса: " + delta.toFixed(1) + "." });
+        }
       }
       persistChat(c);
       updateIndexBtn(typeof delta === "number" ? delta : 0);
@@ -2055,7 +2154,7 @@ function scanForAlerts(metrics) {
   const c = currentChat();
   if (!c) return;
   if (typeof m.index_delta === "number" && m.index_delta < 0) {
-    const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
+    const balance = state.balance || 0;
     if (balance < 0) addNotification({ level: "crit", text: "Индекс ушёл в минус. Лоты временно недоступны. Приложите усилие — получите навык или создайте шаблон.", action: "open_map", actionLabel: "Открыть карту" });
     else if (balance < 10) addNotification({ level: "warn", text: "Индекс приближается к нулю. Мы на грани. Сделайте вклад — навык или шаблон.", action: "open_chat", actionLabel: "К диалогу" });
   }
@@ -2102,8 +2201,9 @@ function setupSwipeToClose(sheetEl, handleEl) {
 function renderIndexSheet(tab) {
   tab = tab || "all";
   const c = currentChat();
-  const m = (c && c.lastMetrics) || {};
-  document.getElementById("indexBalance").textContent = m.lots_balance || "+0.0";
+  const n = typeof state.balance === "number" ? state.balance : 0;
+  const sign = n >= 0 ? "+" : "";
+  document.getElementById("indexBalance").textContent = sign + n.toFixed(1);
   const list = document.getElementById("indexList");
   const history = (c && c.indexHistory) || [];
   let filtered = history;
@@ -2157,8 +2257,8 @@ function buildMetricById(id, m) {
       let extra = ""; if (hc != null) extra = humanBar(hc);
       return metricCard("Вклад человек / ИИ", hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—", { desc: "Соотношение вкладов." }) + extra;
     case "balance":
-      const bal = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
-      return metricCard("Индекс полезности", escHtml(m.lots_balance || "+0.0"), {
+      const bal = state.balance || 0;
+      return metricCard("Индекс полезности", (bal >= 0 ? "+" : "") + bal.toFixed(1), {
         level: bal < 0 ? "crit" : "ok", desc: "Накопленный вклад.",
         alert: bal < 0 ? "Индекс в минусе" : null,
       });
@@ -2235,7 +2335,7 @@ function renderMap() {
   html += '<div class="map-where">Чем занимаемся</div>';
   html += '<div style="font-size:13.5px;margin-bottom:14px;line-height:1.5;">' + escHtml(String(task).slice(0, 140)) + '</div>';
   html += '<div class="map-where">Прогресс</div>';
-  const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
+  const balance = state.balance || 0;
   const price = lot && lot.price ? parseFloat(String(lot.price).replace(/[^\d.-]/g, "")) : 0;
   if (price > 0) {
     const pct = Math.max(0, Math.min(100, Math.round(balance / price * 100)));
@@ -2504,14 +2604,24 @@ function renderImportantList() {
 async function loadExchange(sort) {
   sort = sort || "new";
   try {
-    const [tRes, lRes] = await Promise.all([
+    const [tRes, lRes, pRes] = await Promise.all([
       fetch(API_BASE + "/public/templates?sort=" + sort + "&limit=100"),
       fetch(API_BASE + "/public/lots?sort=" + sort + "&limit=100"),
+      state.uid ? fetch(API_BASE + "/public/profile/" + state.uid) : Promise.resolve({ ok: false }),
     ]);
     if (tRes.ok) { const d = await tRes.json(); state.publicTemplates = d.templates || []; }
     if (lRes.ok) { const d = await lRes.json(); state.publicLots = d.lots || []; }
     state.myPublicIds = state.publicTemplates.filter(t => t.uid === state.uid).map(t => t.id)
       .concat(state.publicLots.filter(l => l.uid === state.uid).map(l => l.id));
+    if (pRes.ok) {
+      const p = await pRes.json();
+      const c = currentChat();
+      if (c) {
+        c.lastMetrics = c.lastMetrics || {};
+        c.lastMetrics.public_index = { given: p.given || 0, taken: p.taken || 0, help_score: p.help_score || 0, reputation: p.reputation || 0 };
+        persistChat(c);
+      }
+    }
     updateMenu();
   } catch (e) {
     console.warn("exchange load failed", e);
@@ -2538,13 +2648,12 @@ function renderPublicTemplate(t) {
     '<div class="public-item-meta"><span>Взяли: ' + (t.taken_count || 0) + '</span><span>Помогло: ' + Math.round((t.help_score || 0) * 100) + '%</span></div>' +
     ((t.tags && t.tags.length) ? '<div class="public-item-tags">' + t.tags.map(tg => '<span class="public-item-tag">' + escHtml(tg) + '</span>').join("") + '</div>' : '') +
     '<div class="public-actions">' +
-    (isMine ? '' : '<button class="take" data-id="' + t.id + '" data-type="template">Взять</button>') +
-    '<button class="help" data-id="' + t.id + '" data-type="template" data-verdict="help">Помогло</button>' +
-    '<button class="nohelp" data-id="' + t.id + '" data-type="template" data-verdict="nohelp">Не помогло</button>' +
+    (isMine ? '' : '<button class="take">Взять</button>') +
+    '<button class="help">Помогло</button>' +
+    '<button class="nohelp">Не помогло</button>' +
     '</div>';
   el.querySelectorAll("button").forEach(b => {
     b.addEventListener("click", () => {
-      if (b.dataset.take) {}
       if (b.classList.contains("take")) takePublic(t.id, "template");
       else if (b.classList.contains("help")) reviewPublic(t.id, "template", "help");
       else if (b.classList.contains("nohelp")) reviewPublic(t.id, "template", "nohelp");
@@ -2561,9 +2670,9 @@ function renderPublicLot(l) {
     (l.price ? '<div class="public-item-meta"><span>Стоимость: ' + escHtml(String(l.price)) + '</span></div>' : '') +
     '<div class="public-item-meta"><span>Взяли: ' + (l.taken_count || 0) + '</span></div>' +
     '<div class="public-actions">' +
-    (isMine ? '' : '<button class="take" data-id="' + l.id + '" data-type="lot">Взять как образец</button>') +
-    '<button class="help" data-id="' + l.id + '" data-type="lot" data-verdict="help">Помогло</button>' +
-    '<button class="nohelp" data-id="' + l.id + '" data-type="lot" data-verdict="nohelp">Не помогло</button>' +
+    (isMine ? '' : '<button class="take">Взять как образец</button>') +
+    '<button class="help">Помогло</button>' +
+    '<button class="nohelp">Не помогло</button>' +
     '</div>';
   el.querySelectorAll("button").forEach(b => {
     b.addEventListener("click", () => {
@@ -2584,14 +2693,18 @@ async function takePublic(targetId, targetType) {
     const data = await r.json();
     if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
     if (data.self) { toast("Это ваша публикация"); return; }
+    const delta = (typeof data.index_delta === "number") ? data.index_delta : (targetType === "template" ? -1 : -2);
     const c = currentChat();
     if (c) {
       c.indexHistory = c.indexHistory || [];
-      c.indexHistory.push({ at: new Date().toISOString(), delta: data.index_delta, kind: "public_take", name: "взятие из Обмена" });
+      c.indexHistory.push({ at: new Date().toISOString(), delta, kind: "public_take", name: "взятие из Обмена" });
       persistChat(c);
     }
-    toast("Взято. Индекс: " + (data.index_delta > 0 ? "+" : "") + data.index_delta);
-    await addNotification({ level: "info", text: "Вы взяли публичный " + (targetType === "template" ? "шаблон" : "Лот") + ". Списание индекса: " + data.index_delta });
+    state.balance = (state.balance || 0) + delta;
+    await dbSetMeta("balance", state.balance);
+    updateIndexBtn(delta);
+    toast("Взято. Индекс: " + (delta > 0 ? "+" : "") + delta);
+    await addNotification({ level: "info", text: "Вы взяли публичный " + (targetType === "template" ? "шаблон" : "Лот") + ". Списание индекса: " + delta });
     await loadExchange();
     renderExchange();
   } catch (e) { toast("Ошибка: " + e.message); }
@@ -2617,6 +2730,7 @@ function openPublishModal(kind, obj) {
   const tagsInput = document.getElementById("publishTagsInput");
   const status = document.getElementById("publishStatus");
   if (kind === "template") { title.textContent = "Публикация шаблона"; nameInput.value = obj.name || ""; tagsInput.value = (obj.tags || []).join(", "); }
+  else if (kind === "template_from_doc") { title.textContent = "Публикация шаблона"; nameInput.value = obj.name || ""; tagsInput.value = ""; }
   else { title.textContent = "Публикация Лота"; nameInput.value = obj.name || ""; tagsInput.value = ""; }
   status.textContent = "";
   document.getElementById("publishModalBg").classList.add("open");
@@ -2631,9 +2745,10 @@ async function confirmPublish() {
   status.textContent = "Публикую...";
   try {
     let url, body;
-    if (ctx.kind === "template") {
+    if (ctx.kind === "template" || ctx.kind === "template_from_doc") {
+      const content = ctx.obj.content || ctx.obj.body || "";
       url = API_BASE + "/public/templates";
-      body = { uid: state.uid, template: { name, content: ctx.obj.content || ctx.obj.body || "", kind: "pattern", tags } };
+      body = { uid: state.uid, template: { name, content, kind: "pattern", tags } };
     } else {
       url = API_BASE + "/public/lots";
       body = { uid: state.uid, lot: { name, goal: ctx.obj.goal || "", price: ctx.obj.price || "" } };
@@ -2644,6 +2759,15 @@ async function confirmPublish() {
     if (ctx.kind === "lot") {
       ctx.obj.publicId = (data.lot && data.lot.id) || null;
       await persistLot(ctx.obj);
+    } else if (ctx.kind === "template_from_doc") {
+      const item = ctx.obj;
+      if (item.source === "lot") {
+        const l = state.lots.find(x => x.id === item.lotId);
+        if (l && l.documents && l.documents[item.idx]) { l.documents[item.idx].publicId = (data.template && data.template.id) || null; await persistLot(l); }
+      } else if (item.source === "chat") {
+        const cc = state.chats.find(x => x.id === item.chatId);
+        if (cc && cc.documents && cc.documents[item.idx]) { cc.documents[item.idx].publicId = (data.template && data.template.id) || null; await persistChat(cc); }
+      }
     }
     status.textContent = "Опубликовано";
     toast("Опубликовано");
@@ -2776,8 +2900,8 @@ function renderAbout() {
   document.getElementById("aboutContent").innerHTML =
     '<div class="info-block"><strong>Ядро (не меняется)</strong><br>Человек в центре. Отражаю, не веду. Прямота. Лоты — единица обмена. Ошибка → данные → класс → шаблон.</div>' +
     '<div class="info-block"><strong>Адаптивная часть (меняется)</strong><br>Интерфейс. Метрики. Тон. Модели. Правила показа. Форматы выбора.</div>' +
-    '<div class="info-block"><strong>Обмен (2.0)</strong><br>Публичные шаблоны и Лоты. Взял — плати индексом. Отдал — получай. Публичный индекс — репутация: сколько отдал, сколько взял, как оценили.</div>' +
-    '<div class="info-block"><strong>Слои A/B/C/D</strong><br>A — факты. B — интерпретации. C — решения. D — мета.</div>';
+    '<div class="info-block"><strong>Обмен (2.0)</strong><br>Публичные шаблоны и Лоты. Взял — плати индексом. Отдал — получай. Публичный индекс — репутация.</div>' +
+    '<div class="info-block"><strong>Слои A/B/C/D</strong><br>A · Факты — что известно. B · Интерпретации — что это значит. C · Решения — что делать. D · Мета — как мы думаем.</div>';
 }
 function renderBusiness() {
   document.getElementById("businessContent").innerHTML =
@@ -2793,16 +2917,18 @@ function openEditor(context) {
   const name = context.name || "";
   const body = context.body || "";
   const isCode = context.type === "code";
+  const isBlog = context.type === "blog_post";
   document.getElementById("editorName").value = name;
   const ta = document.getElementById("editorBody");
   ta.value = body;
   if (isCode) ta.classList.add("code"); else ta.classList.remove("code");
   document.getElementById("editorStatus").textContent = "";
-  document.getElementById("editorTitle").textContent = isCode ? "Редактор кода" : "Редактор документа";
+  document.getElementById("editorTitle").textContent = isCode ? "Редактор кода" : (isBlog ? "Редактор статьи" : "Редактор документа");
   document.getElementById("editorSub").textContent = isCode ? "Правьте код и сохраните в dev" : "Правьте текст";
   document.getElementById("editorCodeRow").style.display = isCode ? "flex" : "none";
   document.getElementById("editorPublishRow").style.display = isCode ? "none" : "flex";
-  document.getElementById("editorBlogRow").style.display = (context.type === "blog_post") ? "flex" : "none";
+  document.getElementById("editorPublishPublicBtn").style.display = isBlog ? "none" : "inline-flex";
+  document.getElementById("editorBlogRow").style.display = isBlog ? "flex" : "none";
   openSheet("editorSheet");
 }
 async function saveEditorToLot() {
@@ -2819,7 +2945,7 @@ async function saveEditorToLot() {
     if (typeof ctx.docIndex === "number" && l.documents[ctx.docIndex]) {
       l.documents[ctx.docIndex].name = name; l.documents[ctx.docIndex].content = body;
     } else {
-      l.documents.push({ id: uid("doc"), name, type: "документ", content: body, createdAt: new Date().toISOString() });
+      l.documents.push({ id: uid("doc"), name, type: "документ", content: body, createdAt: new Date().toISOString(), publicId: null });
     }
     await persistLot(l);
   } else {
@@ -2829,7 +2955,7 @@ async function saveEditorToLot() {
     if (typeof ctx.docIndex === "number" && c.documents[ctx.docIndex]) {
       c.documents[ctx.docIndex].name = name; c.documents[ctx.docIndex].content = body;
     } else {
-      c.documents.push({ id: uid("doc"), name, type: "документ", content: body, createdAt: new Date().toISOString() });
+      c.documents.push({ id: uid("doc"), name, type: "документ", content: body, createdAt: new Date().toISOString(), publicId: null });
     }
     await persistChat(c);
   }
@@ -2910,6 +3036,8 @@ async function loadData() {
   const seen = await dbGetMeta("lastNotifSeenAt");
   if (seen) state.lastNotifSeenAt = seen;
   try { const ls = localStorage.getItem(LS_NOTIF_SEEN); if (ls) state.lastNotifSeenAt = ls; } catch (e) {}
+  const bal = await dbGetMeta("balance");
+  if (typeof bal === "number") state.balance = bal;
 }
 
 // --- Char counter ---
@@ -2950,7 +3078,7 @@ async function init() {
     renderCurrentChat(); updateMenu(); updateIndexBtn(); updateHeaderDynamic(); renderAiNote(); regenerateMapForCurrent();
 
     ["orbSheet", "menuSheet", "indexSheet", "profileSheet", "metricsSheet",
-     "notificationsSheet", "exchangeSheet", "myPublicSheet", "lotsSheet", "lotCardSheet", "mapSheet",
+     "notificationsSheet", "exchangeSheet", "myTemplatesSheet", "myPublicSheet", "lotsSheet", "lotCardSheet", "mapSheet",
      "ideasSheet", "importantSheet", "dashboardSheet", "managementSheet",
      "releasesSheet", "releaseModalSheet", "devReportSheet",
      "documentsSheet", "chatsSheet", "blogSheet", "aboutSheet", "businessSheet",
@@ -3018,6 +3146,7 @@ async function init() {
     document.getElementById("menuChats").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderChatsList(); openSheet("chatsSheet"); }, 200); });
     document.getElementById("menuImportant").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderImportantList(); openSheet("importantSheet"); }, 200); });
     document.getElementById("menuExchange").addEventListener("click", async () => { closeAllSheets(); await loadExchange(); setTimeout(() => { renderExchange(); openSheet("exchangeSheet"); }, 200); });
+    document.getElementById("menuMyTemplates").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderMyTemplates(); openSheet("myTemplatesSheet"); }, 200); });
     document.getElementById("menuMyPublic").addEventListener("click", async () => { closeAllSheets(); await loadExchange(); setTimeout(() => { renderMyPublic(); openSheet("myPublicSheet"); }, 200); });
     document.getElementById("menuDashboard").addEventListener("click", () => { closeAllSheets(); setTimeout(async () => { await renderDashboard(); openSheet("dashboardSheet"); }, 200); });
     document.getElementById("menuManagement").addEventListener("click", () => { closeAllSheets(); setTimeout(async () => { await renderManagement(); openSheet("managementSheet"); }, 200); });
@@ -3110,7 +3239,7 @@ async function init() {
       updateMenu(); closeAllSheets(); broadcast("settings_updated", {}); toast("Настройки сохранены");
     });
     document.getElementById("exportData").addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify({ lots: state.lots, chats: state.chats, releases: state.releases, notifications: state.notifications }, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify({ lots: state.lots, chats: state.chats, releases: state.releases, notifications: state.notifications, balance: state.balance }, null, 2)], { type: "application/json" });
       const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "monolog_export_" + Date.now() + ".json"; a.click(); URL.revokeObjectURL(a.href);
     });
     document.getElementById("importData").addEventListener("click", () => document.getElementById("importFile").click());
@@ -3124,6 +3253,7 @@ async function init() {
           if (Array.isArray(data.lots)) for (const l of data.lots) await dbPut(STORE_LOTS, l);
           if (Array.isArray(data.chats)) for (const c of data.chats) await dbPut(STORE_CHATS, c);
           if (Array.isArray(data.releases)) for (const r of data.releases) await dbPut(STORE_RELEASES, r);
+          if (typeof data.balance === "number") { state.balance = data.balance; await dbSetMeta("balance", state.balance); }
           location.reload();
         } catch (err) { alert("Некорректный файл"); }
       };
@@ -3233,21 +3363,24 @@ async function init() {
           state.chats = await dbGetAll(STORE_CHATS);
           state.releases = await dbGetAll(STORE_RELEASES);
           state.notifications = await dbGetAll(STORE_NOTIFICATIONS);
+          const bal = await dbGetMeta("balance");
+          if (typeof bal === "number") state.balance = bal;
           renderCurrentChat(); updateMenu(); updateIndexBtn(); updateHeaderDynamic();
           if (document.getElementById("notificationsSheet").classList.contains("open")) renderNotificationsList();
         }
       });
     }
 
-    // Периодический refresh
     setInterval(async () => {
       const lots = await dbGetAll(STORE_LOTS);
       const chats = await dbGetAll(STORE_CHATS);
       const releases = await dbGetAll(STORE_RELEASES);
       const notifs = await dbGetAll(STORE_NOTIFICATIONS);
-      const changed = JSON.stringify(lots.length + ":" + chats.length + ":" + releases.length + ":" + notifs.length) !== JSON.stringify(state.lots.length + ":" + state.chats.length + ":" + state.releases.length + ":" + state.notifications.length);
+      const bal = await dbGetMeta("balance");
+      const changed = JSON.stringify(lots.length + ":" + chats.length + ":" + releases.length + ":" + notifs.length + ":" + (bal || 0)) !== JSON.stringify(state.lots.length + ":" + state.chats.length + ":" + state.releases.length + ":" + state.notifications.length + ":" + (state.balance || 0));
       if (changed) {
         state.lots = lots; state.chats = chats; state.releases = releases; state.notifications = notifs;
+        if (typeof bal === "number") state.balance = bal;
         renderCurrentChat(); updateMenu(); updateIndexBtn(); updateHeaderDynamic();
       }
     }, 4000);
@@ -3257,7 +3390,6 @@ async function init() {
       if (r.ok) { const data = await r.json(); if (data.providers && data.providers.length) _providersCache = data.providers; }
     } catch (e) {}
 
-    // Заранее подгружаем публичное
     loadExchange();
   } catch (e) {
     console.error("init error", e);
