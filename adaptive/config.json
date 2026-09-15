@@ -1,68 +1,45 @@
 {
-  "version": "2.0",
-  "colors": {
-    "light": {
-      "bg": "#F7F8FA",
-      "surface": "#FFFFFF",
-      "surface_2": "#F1F3F6",
-      "text": "#0A0B0D",
-      "muted": "#6B7280",
-      "accent": "#1A1F36",
-      "warning": "#C68B3F",
-      "critical": "#B85450",
-      "success": "#4F8A6B",
-      "public": "#6B7CE8"
-    },
-    "dark": {
-      "bg": "#0F1115",
-      "surface": "#161A20",
-      "surface_2": "#1F232B",
-      "text": "#E8EAED",
-      "muted": "#8B92A0",
-      "accent": "#A8B5FF",
-      "warning": "#E0A84F",
-      "critical": "#E07B7B",
-      "success": "#6BB88E",
-      "public": "#A8B5FF"
-    }
-  },
-  "sizes": {
-    "font_default": 14,
-    "font_min": 13,
-    "font_max": 18,
-    "soft_message_limit": 4000,
-    "hard_message_limit": 8000
-  },
-  "dashboard_default": [
-    "stability",
-    "mind",
-    "pulse",
-    "human",
-    "balance",
-    "public"
-  ],
-  "alerts": {
-    "index_critical_below": 0,
-    "index_warning_below": 10,
-    "error_streak_threshold": 2,
-    "stability_warning_below": 0.75,
-    "stability_critical_below": 0.5
-  },
-  "modes": {
-    "default": "analyst",
-    "available": [
-      "analyst",
-      "strategist",
-      "neutral"
+  "version": "2.1",
+  "header": {
+    "items": [
+      { "id": "orb", "type": "orb", "side": "left" },
+      { "id": "index", "type": "index", "side": "left" },
+      { "id": "pulse", "type": "button", "side": "right", "sheet": "metricsSheet" },
+      { "id": "exchange", "type": "button", "side": "right", "sheet": "exchangeSheet" },
+      { "id": "notifications", "type": "button", "side": "right", "sheet": "notificationsSheet", "badge": true },
+      { "id": "profile", "type": "button", "side": "right", "sheet": "profileSheet", "badge": true },
+      { "id": "menu", "type": "button", "side": "right", "sheet": "menuSheet" },
+      { "id": "settings", "type": "button", "side": "right", "sheet": "settingsSheet" }
     ]
   },
-  "providers": {
-    "default": "groq",
-    "available": [
-      "groq",
-      "openrouter",
-      "cerebras",
-      "sambanova"
+  "main": {
+    "items": [
+      { "id": "ai-note", "type": "note" },
+      { "id": "chat", "type": "chat" }
     ]
-  }
+  },
+  "sheets": [
+    { "id": "orbSheet", "title": "Состояние", "component": "orb" },
+    { "id": "menuSheet", "title": "Меню", "component": "menu" },
+    { "id": "indexSheet", "title": "Индекс", "component": "index" },
+    { "id": "profileSheet", "title": "Профиль", "component": "profile" },
+    { "id": "metricsSheet", "title": "Пульс сессии", "component": "metrics" },
+    { "id": "notificationsSheet", "title": "Уведомления", "component": "notifications" },
+    { "id": "exchangeSheet", "title": "Обмен", "component": "exchange" },
+    { "id": "myPublicSheet", "title": "Мои публикации", "component": "myPublic" },
+    { "id": "lotsSheet", "title": "Лоты", "component": "lots" },
+    { "id": "lotCardSheet", "title": "Лот", "component": "lotCard" },
+    { "id": "mapSheet", "title": "Карта местности", "component": "map" },
+    { "id": "ideasSheet", "title": "Идеи", "component": "ideas" },
+    { "id": "importantSheet", "title": "Важное", "component": "important" },
+    { "id": "dashboardSheet", "title": "Дэшборд", "component": "dashboard" },
+    { "id": "managementSheet", "title": "Управление", "component": "management" },
+    { "id": "releasesSheet", "title": "Релизы", "component": "releases" },
+    { "id": "documentsSheet", "title": "Документы", "component": "documents" },
+    { "id": "chatsSheet", "title": "Чаты", "component": "chats" },
+    { "id": "blogSheet", "title": "Блог", "component": "blog" },
+    { "id": "aboutSheet", "title": "О продукте", "component": "about" },
+    { "id": "businessSheet", "title": "Бизнес", "component": "business" },
+    { "id": "editorSheet", "title": "Редактор", "component": "editor", "fullscreen": true }
+  ]
 }
