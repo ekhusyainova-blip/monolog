@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="default" />
 <meta name="apple-mobile-web-app-title" content="Monolog" />
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23e8d8e0'/%3E%3Cstop offset='100%25' stop-color='%23b8a8b8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='14' fill='%23F7F8FA'/%3E%3Ccircle cx='32' cy='32' r='22' fill='url(%23g)'/%3E%3C/svg%3E" />
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23e8d8e0'/%3E%3Cstop offset='100%25' stop-color='%23b8a8b8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='180' height='180' fill='%23F7F8FA'/%3E%3Ccircle cx='90' cy='90' r='60' fill='url(%23g)'/%3E%3C/svg%3E" />
+<link rel="icon" type="image/png" sizes="192x192" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23f3e0e8'/%3E%3Cstop offset='100%25' stop-color='%23c8b8c8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='192' height='192' rx='42' fill='%23F7F8FA'/%3E%3Ccircle cx='96' cy='96' r='64' fill='url(%23g)'/%3E%3C/svg%3E" />
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/svg+xml;utf8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Cdefs%3E%3CradialGradient id='g' cx='35%25' cy='30%25'%3E%3Cstop offset='0%25' stop-color='%23ffffff'/%3E%3Cstop offset='45%25' stop-color='%23f3e0e8'/%3E%3Cstop offset='100%25' stop-color='%23c8b8c8'/%3E%3C/radialGradient%3E%3C/defs%3E%3Crect width='180' height='180' fill='%23F7F8FA'/%3E%3Ccircle cx='90' cy='90' r='60' fill='url(%23g)'/%3E%3C/svg%3E" />
 <title>AI Monolog</title>
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
@@ -29,6 +29,7 @@
   --success: #4F8A6B;
   --success-soft: rgba(79, 138, 107, 0.12);
   --shadow: 0 1px 2px rgba(10, 11, 13, 0.03);
+  --shadow-soft: 0 2px 12px rgba(10, 11, 13, 0.04);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
   --font-size: 14px;
@@ -74,8 +75,10 @@ body::before {
 .app {
   position: relative; z-index: 1;
   display: flex; flex-direction: column;
-  height: 100dvh; max-width: 700px;
+  height: 100dvh;
+  max-width: 700px;
   margin: 0 auto; padding: 0 12px;
+  overflow: hidden;
 }
 header {
   position: sticky; top: 0; z-index: 20;
@@ -104,11 +107,18 @@ header {
   background: transparent;
   border: none;
   cursor: pointer;
-  transition: transform 0.15s;
+  transition: transform 0.15s, color 0.3s;
+  text-shadow: var(--shadow-soft);
 }
 .index-label:active { transform: scale(0.94); }
 .index-label.positive { color: var(--success); }
 .index-label.negative { color: var(--critical); }
+.index-label.pulse { animation: idxPulse 0.9s ease; }
+@keyframes idxPulse {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
 .icon-btn {
   width: 34px; height: 34px; border-radius: 12px;
   background: var(--surface); border: 1px solid var(--border-soft);
@@ -116,10 +126,19 @@ header {
   display: inline-flex; align-items: center; justify-content: center;
   transition: transform 0.15s, background 0.15s;
   box-shadow: var(--shadow); flex-shrink: 0;
+  position: relative;
 }
 .icon-btn:hover { background: var(--surface-2); }
 .icon-btn:active { transform: scale(0.94); }
 .icon-btn svg { width: 16px; height: 16px; stroke-width: 1.7; }
+.icon-btn .badge-dot {
+  position: absolute; top: 4px; right: 4px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--critical);
+  border: 1.5px solid var(--surface);
+  display: none;
+}
+.icon-btn.has-badge .badge-dot { display: block; }
 .icon-btn.warning { color: var(--warning); }
 .icon-btn.critical { color: var(--critical); }
 .icon-btn.dynamic { animation: slideIn 0.3s ease; }
@@ -148,28 +167,36 @@ header {
 }
 .orb-inner::before {
   content: ""; position: absolute; inset: 0; border-radius: 50%;
-  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.5) 0%, transparent 40%);
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,0.55) 0%, transparent 40%);
   pointer-events: none;
 }
 .orb.analyst .orb-inner {
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95) 0%, var(--orb-tint) 45%, rgba(255,255,255,0.2) 100%);
-  box-shadow: inset -2px -2px 8px rgba(200,160,180,0.1), inset 2px 2px 10px rgba(255,255,255,0.8), 0 2px 8px rgba(220,170,190,0.15);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.98) 0%, var(--orb-tint) 45%, rgba(255,255,255,0.35) 100%);
+  box-shadow: inset -2px -2px 8px rgba(200,160,180,0.14), inset 2px 2px 10px rgba(255,255,255,0.9), 0 3px 14px rgba(220,170,190,0.22);
+  border: 1px solid rgba(255,255,255,0.8);
 }
 .orb.strategist .orb-inner {
-  background: radial-gradient(circle at 35% 30%, var(--orb-tint) 0%, rgba(20,25,45,0.85) 60%, rgba(10,12,20,1) 100%);
-  box-shadow: inset -2px -2px 8px rgba(0,0,0,0.5), inset 2px 2px 10px rgba(120,130,200,0.15), 0 2px 10px rgba(20,30,80,0.3);
+  background: radial-gradient(circle at 35% 30%, var(--orb-tint) 0%, rgba(20,25,45,0.9) 60%, rgba(10,12,20,1) 100%);
+  box-shadow: inset -2px -2px 8px rgba(0,0,0,0.55), inset 2px 2px 10px rgba(120,130,200,0.2), 0 3px 14px rgba(20,30,80,0.35);
+  border: 1px solid rgba(120,140,200,0.35);
 }
 .orb.neutral .orb-inner {
-  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.35) 0%, var(--orb-tint) 50%, rgba(200,200,210,0.1) 100%);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.6) 0%, var(--orb-tint) 50%, rgba(220,220,230,0.35) 100%);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
-  box-shadow: inset -2px -2px 6px rgba(0,0,0,0.04), inset 2px 2px 6px rgba(255,255,255,0.4), 0 2px 8px rgba(0,0,0,0.04);
+  box-shadow: inset -2px -2px 6px rgba(0,0,0,0.06), inset 2px 2px 6px rgba(255,255,255,0.55), 0 3px 12px rgba(160,160,180,0.12);
+  border: 1px solid rgba(255,255,255,0.65);
 }
 .orb.thinking .orb-inner { animation: orbRotate 3s linear infinite, orbBreathe 1.6s ease-in-out infinite; }
 @keyframes orbBreathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.08); }
 }
+.orb.status-doubt .orb-inner { animation: orbRotate 18s linear infinite; }
+.orb.status-active .orb-inner { animation: orbRotate 8s linear infinite; }
+.orb.status-calm .orb-inner { animation: orbRotate 22s linear infinite; }
+.orb.status-need .orb-inner { animation: orbRotate 14s linear infinite, orbBreathe 3s ease-in-out infinite; }
+.orb.status-abundance .orb-inner { animation: orbRotate 10s linear infinite; }
 .splash {
   position: fixed; inset: 0; z-index: 999;
   background: var(--bg);
@@ -209,7 +236,13 @@ header {
   max-width: 700px; margin: 0 auto;
 }
 .sheet.open { transform: translateY(0); }
-.sheet.fullscreen { max-height: 100dvh; border-radius: 0; top: 0; bottom: 0; }
+.sheet.fullscreen {
+  top: 0; bottom: 0; left: 0; right: 0;
+  max-height: 100dvh;
+  border-radius: 0;
+  max-width: 100%;
+  padding: calc(var(--safe-top) + 12px) 16px calc(20px + var(--safe-bottom));
+}
 .sheet-handle {
   width: 32px; height: 3px;
   background: var(--border);
@@ -255,8 +288,29 @@ header {
   -webkit-overflow-scrolling: touch;
   display: flex; flex-direction: column;
   gap: 16px; padding: 8px 0 16px;
+  min-height: 0;
 }
 .chat::-webkit-scrollbar { width: 0; }
+.ai-note {
+  margin: 8px 0 4px;
+  padding: 10px 14px;
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+  border-radius: 10px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text);
+  display: none;
+}
+.ai-note.show { display: block; }
+.ai-note .ai-note-title {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
 .row { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
 .row.user { align-items: flex-end; }
 .row.user .bubble {
@@ -390,14 +444,7 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   flex-shrink: 0;
   padding: 6px 0 calc(10px + var(--safe-bottom));
   position: relative;
-}
-.input-wrap::before {
-  content: "";
-  position: absolute;
-  top: -20px; left: -12px; right: -12px;
-  height: 40px;
-  background: linear-gradient(to bottom, transparent, color-mix(in srgb, var(--bg) 70%, transparent));
-  pointer-events: none;
+  background: linear-gradient(to bottom, transparent 0%, color-mix(in srgb, var(--bg) 85%, transparent) 40%, var(--bg) 100%);
 }
 .input-inner {
   display: flex; gap: 4px; align-items: flex-end;
@@ -410,15 +457,17 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   flex-shrink: 0; align-self: flex-end; margin-bottom: 1px;
 }
 .attach-btn svg { width: 17px; height: 17px; stroke-width: 1.8; }
-textarea {
+textarea#input {
   flex: 1; border: none; outline: none; resize: none;
-  background: transparent; padding: 10px 14px;
+  background: var(--surface-2); padding: 10px 14px;
   font-family: inherit; font-size: var(--font-size); line-height: 1.4;
-  color: var(--text); max-height: 88px; min-height: 40px;
-  overflow-y: hidden;
+  color: var(--text);
+  min-height: 40px;
+  max-height: 120px;
+  overflow-y: auto;
   border-radius: 20px;
 }
-textarea::placeholder { color: var(--muted); }
+textarea#input::placeholder { color: var(--muted); }
 .send-btn {
   flex-shrink: 0; width: 32px; height: 32px;
   border-radius: 50%; border: none;
@@ -428,6 +477,16 @@ textarea::placeholder { color: var(--muted); }
 }
 .send-btn:disabled { opacity: 0.3; cursor: not-allowed; }
 .send-btn svg { width: 15px; height: 15px; stroke-width: 2.2; }
+.char-counter {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: right;
+  padding: 0 8px 4px 0;
+  min-height: 14px;
+  transition: color 0.2s;
+}
+.char-counter.warn { color: var(--warning); }
+.char-counter.critical { color: var(--critical); }
 .artifact-item {
   background: var(--surface-2); border: 1px solid var(--border-soft);
   border-radius: 12px; padding: 12px 14px; margin-bottom: 8px;
@@ -449,10 +508,209 @@ textarea::placeholder { color: var(--muted); }
   display: flex; gap: 10px; flex-wrap: wrap;
 }
 .empty-note { font-size: 13px; color: var(--muted); font-style: italic; padding: 10px 0; }
-.row-actions {
-  display: flex; gap: 8px; flex-wrap: wrap;
+.metric-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  position: relative;
 }
-.row-actions button { flex: 1; min-width: 120px; }
+.metric-card .metric-head {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.metric-card .metric-name {
+  font-size: 12px; font-weight: 600;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.metric-card .metric-value {
+  font-size: 22px; font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+.metric-card .metric-bar {
+  height: 6px; border-radius: 3px;
+  background: var(--border);
+  overflow: hidden;
+  margin-top: 8px;
+}
+.metric-card .metric-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent-soft));
+  transition: width 0.5s ease;
+}
+.metric-card .metric-desc {
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-top: 8px;
+  line-height: 1.45;
+}
+.metric-card .metric-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  margin-top: 8px;
+  font-weight: 500;
+}
+.metric-card .metric-alert.warn { background: var(--warning-soft); color: var(--warning); }
+.metric-card .metric-alert.crit { background: var(--critical-soft); color: var(--critical); }
+.metric-card .metric-alert.ok { background: var(--success-soft); color: var(--success); }
+.metric-card .metric-alert .dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: currentColor;
+  animation: alertBlink 1.6s infinite;
+}
+@keyframes alertBlink {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+.metric-card.warn { border-color: rgba(198, 139, 63, 0.35); }
+.metric-card.crit { border-color: rgba(184, 84, 80, 0.35); }
+.metric-actions {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; margin-top: 10px;
+  font-size: 11px; color: var(--muted);
+}
+.dash-toggle {
+  margin-top: 14px;
+}
+.dash-toggle-btn {
+  width: 100%;
+  padding: 10px 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.dash-toggle-btn .arrow {
+  transition: transform 0.2s;
+  width: 14px; height: 14px;
+}
+.dash-toggle-btn.open .arrow { transform: rotate(90deg); }
+.dash-dropdown {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+  margin-top: 0;
+}
+.dash-dropdown.open {
+  max-height: 400px;
+  margin-top: 8px;
+}
+.dash-metric-opt {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  background: transparent;
+}
+.dash-metric-opt:hover { background: var(--surface-2); }
+.dash-metric-opt input {
+  width: 16px; height: 16px;
+  accent-color: var(--accent);
+}
+.human-bar {
+  display: flex;
+  height: 34px;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-top: 8px;
+  background: var(--border);
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+}
+.human-bar .human {
+  background: linear-gradient(135deg, #6B7CE8, #4A5BB5);
+  display: flex; align-items: center; justify-content: center;
+  transition: width 0.6s;
+}
+.human-bar .ai {
+  background: linear-gradient(135deg, #E8B5C8, #C98FA5);
+  color: #4A2E3A;
+  display: flex; align-items: center; justify-content: center;
+  transition: width 0.6s;
+}
+.map-card {
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.map-card .map-where {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.map-card .map-title {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin-bottom: 12px;
+}
+.map-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.map-step {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border-soft);
+}
+.map-step:last-child { border-bottom: none; }
+.map-step .dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--border);
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+.map-step.done .dot { background: var(--success); }
+.map-step.current .dot {
+  background: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+}
+.map-step.dynamic .dot {
+  background: transparent;
+  border: 2px dashed var(--accent);
+  box-sizing: border-box;
+}
+.map-step-text {
+  flex: 1;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.map-step.done .map-step-text { color: var(--muted); text-decoration: line-through; }
+.map-step-meta {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.map-step-meta .dynamic-label {
+  font-style: italic;
+  color: var(--accent);
+}
 .doc-editor { display: flex; flex-direction: column; gap: 12px; }
 .doc-editor-field label {
   display: block; font-size: 12px; color: var(--muted);
@@ -466,11 +724,11 @@ textarea::placeholder { color: var(--muted); }
 .doc-editor-field textarea.code {
   font-family: ui-monospace, SFMono-Regular, monospace;
   font-size: 13px;
-  min-height: 400px;
+  min-height: 60vh;
   white-space: pre;
   overflow-x: auto;
 }
-.doc-editor-field textarea { min-height: 240px; resize: vertical; line-height: 1.6; font-size: 13.5px; }
+.doc-editor-field textarea { min-height: 40vh; resize: vertical; line-height: 1.6; font-size: 13.5px; }
 .doc-editor-field input:focus, .doc-editor-field textarea:focus {
   outline: none; border-color: var(--accent); background: var(--surface);
 }
@@ -534,19 +792,20 @@ textarea::placeholder { color: var(--muted); }
 .provider-btn .name { font-weight: 600; }
 .provider-btn .free { font-size: 10.5px; color: var(--muted); font-weight: 400; }
 .input-with-eye { position: relative; }
-.input-with-eye input { padding-right: 40px; }
+.input-with-eye input { padding-right: 46px; }
 .eye-btn {
   position: absolute;
-  top: 50%; right: 8px;
+  top: 50%; right: 6px;
   transform: translateY(-50%);
-  width: 28px; height: 28px;
+  width: 32px; height: 32px;
   border: none; background: transparent;
   color: var(--muted);
   cursor: pointer;
   display: inline-flex; align-items: center; justify-content: center;
-  border-radius: 6px;
+  border-radius: 8px;
+  z-index: 2;
 }
-.eye-btn:hover { color: var(--text); }
+.eye-btn:hover { color: var(--text); background: var(--surface-2); }
 .eye-btn svg { width: 16px; height: 16px; stroke-width: 1.7; }
 .modal-bg {
   position: fixed; inset: 0; background: rgba(10, 11, 13, 0.4);
@@ -633,6 +892,8 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 999px; font-size: 13px; font-weight: 500;
   opacity: 0; pointer-events: none;
   transition: opacity 0.25s, transform 0.25s; z-index: 100;
+  max-width: 90vw;
+  text-align: center;
 }
 .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 .tabs {
@@ -699,6 +960,65 @@ input[type="range"]::-moz-range-thumb {
   line-height: 1.6;
 }
 .info-block strong { color: var(--text); font-weight: 600; }
+.notif-item {
+  display: flex; gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  border-left: 3px solid var(--muted);
+}
+.notif-item.warn { border-left-color: var(--warning); }
+.notif-item.crit { border-left-color: var(--critical); }
+.notif-item.info { border-left-color: var(--accent); }
+.notif-item.ok { border-left-color: var(--success); }
+.notif-item .notif-body { flex: 1; }
+.notif-item .notif-text { font-size: 13px; line-height: 1.5; }
+.notif-item .notif-meta {
+  font-size: 11px; color: var(--muted); margin-top: 4px;
+  display: flex; gap: 8px; flex-wrap: wrap;
+}
+.notif-item .notif-action {
+  margin-top: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border-soft);
+  color: var(--text);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-family: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+.row-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.row-actions button { flex: 1; min-width: 120px; }
+.fmt-toolbar {
+  display: flex; gap: 4px; flex-wrap: wrap;
+  padding: 6px;
+  background: var(--surface-2);
+  border: 1px solid var(--border-soft);
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+.fmt-btn {
+  width: 32px; height: 32px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 13px;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.fmt-btn:hover { background: var(--surface); color: var(--text); border-color: var(--border-soft); }
+.management-note {
+  padding: 10px 12px;
+  background: var(--accent-soft);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: var(--text);
+  margin-bottom: 12px;
+}
 @media (min-width: 768px) {
   .sheet {
     left: 50%; right: auto;
@@ -707,11 +1027,15 @@ input[type="range"]::-moz-range-thumb {
   }
   .sheet.open { transform: translate(-50%, 0); }
   .sheet.fullscreen {
-    width: 100%; max-width: 900px;
+    left: 50%; right: auto;
+    transform: translate(-50%, 100%);
+    width: 900px; max-width: 90vw;
     border-radius: 20px;
-    top: auto; bottom: 24px;
+    bottom: 24px;
     max-height: 90dvh;
+    padding: 24px;
   }
+  .sheet.fullscreen.open { transform: translate(-50%, 0); }
   .modal { border-radius: 20px; margin-bottom: 24px; width: 500px; }
 }
 </style>
@@ -731,8 +1055,13 @@ input[type="range"]::-moz-range-thumb {
       <button class="icon-btn" id="metricsBtn" aria-label="Пульс сессии" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>
       </button>
+      <button class="icon-btn" id="notifBtn" aria-label="Уведомления" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="badge-dot" id="notifBadge"></span>
+      </button>
       <button class="icon-btn" id="profileBtn" aria-label="Профиль" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+        <span class="badge-dot" id="profileBadge"></span>
       </button>
       <button class="icon-btn" id="menuBtn" aria-label="Меню" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
@@ -742,14 +1071,22 @@ input[type="range"]::-moz-range-thumb {
       </button>
     </div>
   </header>
+
+  <div class="ai-note" id="aiNote">
+    <div class="ai-note-title">Что нужно от тебя</div>
+    <div id="aiNoteBody"></div>
+  </div>
+
   <div class="chat" id="chat"></div>
+
   <div class="input-wrap">
+    <div class="char-counter" id="charCounter"></div>
     <div class="attach-preview" id="attachPreview"></div>
     <div class="input-inner">
       <button class="attach-btn" id="attachBtn" aria-label="Прикрепить" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
       </button>
-      <textarea id="input" placeholder="Напишите запрос..." rows="1"></textarea>
+      <textarea id="input" placeholder="Коротко — Monolog достроит" rows="1"></textarea>
       <button class="send-btn" id="sendBtn" aria-label="Отправить" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
@@ -761,7 +1098,7 @@ input[type="range"]::-moz-range-thumb {
 
 <div class="sheet" id="orbSheet">
   <div class="sheet-handle" id="orbHandle"></div>
-  <h3>Состояние</h3>
+  <h3 id="orbTitle">Состояние</h3>
   <div class="sheet-sub" id="orbSub">Что нужно сейчас</div>
   <div id="orbContent"></div>
   <div class="menu-section" id="orbManageSection" style="display:none;">
@@ -772,7 +1109,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <button class="menu-item" id="orbManageRelease" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4.5L18.5 21 12 16.5 5.5 21l2-7.5L2 9h7z"/></svg>
-      <div class="info"><div class="name">Релиз</div><div class="desc">Список доработок и сверка</div></div>
+      <div class="info"><div class="name">Релизы</div><div class="desc">Список релизов и откат</div></div>
     </button>
     <button class="menu-item" id="orbManageDevReport" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -881,8 +1218,15 @@ input[type="range"]::-moz-range-thumb {
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="metricsHandle"></div>
   <h3>Пульс сессии</h3>
-  <div class="sheet-sub">Текущее состояние диалога</div>
+  <div class="sheet-sub">Текущее состояние</div>
   <div id="metricsContent"></div>
+</div>
+
+<div class="sheet" id="notificationsSheet">
+  <div class="sheet-handle" id="notificationsHandle"></div>
+  <h3>Уведомления</h3>
+  <div class="sheet-sub">Что происходит и что делать</div>
+  <div id="notificationsList"></div>
 </div>
 
 <div class="sheet" id="lotsSheet">
@@ -906,6 +1250,13 @@ input[type="range"]::-moz-range-thumb {
   <div id="lotCardContent"></div>
 </div>
 
+<div class="sheet" id="mapSheet">
+  <div class="sheet-handle" id="mapHandle"></div>
+  <h3>Карта местности</h3>
+  <div class="sheet-sub">Где мы и куда идём</div>
+  <div id="mapContent"></div>
+</div>
+
 <div class="sheet" id="ideasSheet">
   <div class="sheet-handle" id="ideasHandle"></div>
   <h3>Идеи</h3>
@@ -924,7 +1275,7 @@ input[type="range"]::-moz-range-thumb {
   <div class="sheet-handle" id="dashboardHandle"></div>
   <h3>Дэшборд</h3>
   <div class="sheet-sub">Своя сборка метрик</div>
-  <div id="dashboardList"></div>
+  <div id="dashboardContent"></div>
 </div>
 
 <div class="sheet" id="managementSheet">
@@ -934,19 +1285,32 @@ input[type="range"]::-moz-range-thumb {
   <div id="managementContent"></div>
 </div>
 
-<div class="sheet" id="releaseSheet">
-  <div class="sheet-handle" id="releaseHandle"></div>
-  <h3>Релиз</h3>
-  <div class="sheet-sub">Список доработок и сверка</div>
-  <div id="releaseList"></div>
-  <button class="open-editor-btn" id="releaseAddBtn" type="button" style="width:100%;justify-content:center;margin-top:12px;">
+<div class="sheet" id="releasesSheet">
+  <div class="sheet-handle" id="releasesHandle"></div>
+  <h3>Релизы</h3>
+  <div class="sheet-sub">История релизов и откат</div>
+  <div id="releasesList"></div>
+  <button class="open-editor-btn" id="releaseNewBtn" type="button" style="width:100%;justify-content:center;margin-top:12px;">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-    Добавить доработку
+    Новый релиз
   </button>
-  <button class="open-editor-btn" id="releaseExportBtn" type="button" style="width:100%;justify-content:center;margin-top:8px;background:var(--surface-2);color:var(--text);border:1px solid var(--border-soft);">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-    Выпустить Релиз (все файлы)
-  </button>
+</div>
+
+<div class="sheet" id="releaseModalSheet">
+  <div class="sheet-handle" id="releaseModalHandle"></div>
+  <h3 id="releaseModalTitle">Новый релиз</h3>
+  <div class="sheet-sub">Комментарий и публикация</div>
+  <div class="doc-editor">
+    <div class="doc-editor-field">
+      <label for="releaseCommentInput">Комментарий (пожелания)</label>
+      <textarea id="releaseCommentInput" placeholder="Что хотите добавить или изменить" style="min-height:120px;"></textarea>
+    </div>
+    <div class="doc-editor-actions">
+      <button class="ghost" id="releaseModalCancel" type="button">Отмена</button>
+      <button class="primary" id="releasePublishBtn" type="button">Опубликовать</button>
+    </div>
+    <div class="doc-status" id="releasePublishStatus"></div>
+  </div>
 </div>
 
 <div class="sheet" id="devReportSheet">
@@ -1010,6 +1374,14 @@ input[type="range"]::-moz-range-thumb {
       <label for="editorName">Название</label>
       <input type="text" id="editorName" placeholder="Название" />
     </div>
+    <div class="fmt-toolbar" id="editorToolbar" style="display:none;">
+      <button class="fmt-btn" data-fmt="bold" type="button" title="Жирный"><b>B</b></button>
+      <button class="fmt-btn" data-fmt="italic" type="button" title="Курсив"><i>I</i></button>
+      <button class="fmt-btn" data-fmt="h2" type="button" title="Заголовок">H</button>
+      <button class="fmt-btn" data-fmt="list" type="button" title="Список">•</button>
+      <button class="fmt-btn" data-fmt="table" type="button" title="Таблица">▦</button>
+      <button class="fmt-btn" data-fmt="image" type="button" title="Изображение">🖼</button>
+    </div>
     <div class="doc-editor-field">
       <label for="editorBody">Содержимое</label>
       <textarea id="editorBody" placeholder="Текст..."></textarea>
@@ -1044,7 +1416,7 @@ input[type="range"]::-moz-range-thumb {
     <div class="settings-section">
       <div class="settings-section-title">Ключ API</div>
       <div class="settings-hint">
-        Данные хранятся <strong>только на вашем устройстве</strong>. Ключ передаётся только для соединения с моделью. Лимит ключа не показываем — он меняется.
+        Данные хранятся <strong>только на вашем устройстве</strong>. Ключ передаётся только для соединения с моделью. Если ваш ключ исчерпал лимит — Monolog сообщит, через сколько секунд повторить.
       </div>
       <div class="input-with-eye">
         <input type="password" id="keyInput" placeholder="Вставьте ключ" autocomplete="off" />
@@ -1158,33 +1530,6 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<div class="modal-bg" id="releaseModalBg">
-  <div class="modal">
-    <button class="modal-close" id="releaseModalClose" aria-label="Закрыть" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
-    </button>
-    <h2 id="releaseModalTitle">Новая доработка</h2>
-    <label for="releaseNameInput">Название</label>
-    <input type="text" id="releaseNameInput" placeholder="Что улучшаем" />
-    <label for="releaseCommentInput">Комментарий</label>
-    <textarea id="releaseCommentInput" placeholder="Детали, гипотезы" style="min-height:100px;"></textarea>
-    <label>Статус</label>
-    <div class="segmented" id="releaseStatusSeg">
-      <button data-status="idea" type="button">Идея</button>
-      <button data-status="in_progress" type="button">В работе</button>
-      <button data-status="done" type="button">Сделано</button>
-      <button data-status="rejected" type="button">Отклонено</button>
-    </div>
-    <div class="row">
-      <button class="action ghost" id="releaseCancel" type="button">Отмена</button>
-      <button class="action primary" id="releaseSave" type="button">Сохранить</button>
-    </div>
-    <div class="row" id="releaseDangerRow" style="display:none;">
-      <button class="action danger" id="releaseDelete" type="button">Удалить</button>
-    </div>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
@@ -1199,13 +1544,19 @@ const LS_PROVIDER = "monolog_provider";
 const LS_FONT = "monolog_font_size";
 const LS_DEPTH = "monolog_depth_mode";
 const LS_MODE = "monolog_mode";
+const LS_NOTIF_SEEN = "monolog_notif_seen_at";
 const DB_NAME = "monolog_db_v4";
 const DB_VERSION = 1;
 const STORE_LOTS = "lots";
 const STORE_CHATS = "chats";
 const STORE_RELEASES = "releases";
 const STORE_ANALYTICS = "analytics";
+const STORE_NOTIFICATIONS = "notifications";
 const STORE_META = "meta";
+
+const SOFT_LIMIT = 4000;
+const HARD_LIMIT = 8000;
+const METRIC_HISTORY_MAX = 5;
 
 const PROVIDERS_FALLBACK = [
   { id: "groq", name: "Groq" },
@@ -1222,10 +1573,10 @@ const DEMO_SUGGESTIONS = [
 ];
 
 const PLACEHOLDERS = [
-  "Напишите запрос...",
+  "Коротко — Monolog достроит",
   "Что сейчас важнее всего?",
-  "Опишите задачу",
-  "Расскажите, над чем работаете"
+  "Опишите задачу — одним предложением",
+  "Над чем работаете?"
 ];
 
 const ORB_TINTS = [
@@ -1239,7 +1590,17 @@ const ORB_TINTS = [
 
 const MODE_LABELS = { analyst: "Аналитик", strategist: "Стратег", neutral: "Симбиоз" };
 
-const METRIC_HISTORY_MAX = 5;
+const TRIGGER_WORDS_FORBID = [
+  /\bнельзя\b/gi,
+  /\bзапрещено\b/gi,
+  /\bникогда\b/gi,
+  /\bне\s+смей\b/gi,
+];
+const TRIGGER_WORDS_OBLIGE = [
+  /\bвсегда\b/gi,
+  /\bобязательно\b/gi,
+  /\bдолжен\s+всегда\b/gi,
+];
 
 let _providersCache = PROVIDERS_FALLBACK;
 let _bc = null;
@@ -1255,17 +1616,17 @@ const state = {
   lots: [],
   chats: [],
   releases: [],
+  notifications: [],
   currentChatId: null,
   attachments: [],
   sessionStart: Date.now(),
   mode: "analyst",
   editingLotId: null,
-  editingReleaseId: null,
-  editingReleaseStatus: "idea",
   editorContext: null,
   placeholderIndex: 0,
   dashboardMetrics: null,
-  chatChangedAt: 0,
+  lastNotifSeenAt: 0,
+  mapSteps: [],
 };
 
 function currentChat() {
@@ -1290,6 +1651,7 @@ function openDB() {
         if (!db.objectStoreNames.contains(STORE_CHATS)) db.createObjectStore(STORE_CHATS, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_RELEASES)) db.createObjectStore(STORE_RELEASES, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_ANALYTICS)) db.createObjectStore(STORE_ANALYTICS, { keyPath: "id" });
+        if (!db.objectStoreNames.contains(STORE_NOTIFICATIONS)) db.createObjectStore(STORE_NOTIFICATIONS, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_META)) db.createObjectStore(STORE_META);
       };
       req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
@@ -1366,7 +1728,7 @@ function toast(text) {
   el.textContent = text;
   el.classList.add("show");
   clearTimeout(el._t);
-  el._t = setTimeout(() => el.classList.remove("show"), 1800);
+  el._t = setTimeout(() => el.classList.remove("show"), 2000);
 }
 function renderMarkdown(text) {
   const safe = text == null ? "" : String(text);
@@ -1375,6 +1737,12 @@ function renderMarkdown(text) {
   }
   const esc = safe.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
+}
+function softenText(text) {
+  let s = String(text || "");
+  TRIGGER_WORDS_FORBID.forEach(re => { s = s.replace(re, "возможно, стоит попробовать иначе"); });
+  TRIGGER_WORDS_OBLIGE.forEach(re => { s = s.replace(re, "а может быть, лучше так?"); });
+  return s;
 }
 function broadcast(type, payload) {
   try { if (_bc) _bc.postMessage({ type, payload, at: Date.now() }); } catch (e) {}
@@ -1405,9 +1773,21 @@ function applyProfile() {
 }
 
 // --- Сфера ---
+function getUserStatus() {
+  const c = currentChat();
+  const m = (c && c.lastMetrics) || {};
+  const si = typeof m.stability_index === "number" ? m.stability_index : null;
+  const pulse = m.cognitive_pulse || null;
+  if (pulse === "fast") return { key: "active", label: "активно думает" };
+  if (pulse === "slow") return { key: "calm", label: "спокойно" };
+  if (si != null && si < 0.5) return { key: "doubt", label: "сомневается" };
+  return { key: "ready", label: "готов" };
+}
 function renderOrb() {
   const orb = document.getElementById("orbBtn");
-  orb.className = "orb " + state.mode;
+  const status = getUserStatus();
+  const statusClass = "status-" + status.key;
+  orb.className = "orb " + state.mode + " " + statusClass;
   const tint = ORB_TINTS[Math.floor(Math.random() * ORB_TINTS.length)];
   orb.style.setProperty("--orb-tint", tint);
 }
@@ -1422,43 +1802,34 @@ function switchMode() {
   const modes = ["analyst", "strategist", "neutral"];
   const idx = modes.indexOf(state.mode);
   state.mode = modes[(idx + 1) % modes.length];
-  const orb = document.getElementById("orbBtn");
-  setTimeout(() => {
-    orb.className = "orb " + state.mode;
-    const tint = ORB_TINTS[Math.floor(Math.random() * ORB_TINTS.length)];
-    orb.style.setProperty("--orb-tint", tint);
-  }, 100);
+  renderOrb();
   try { localStorage.setItem(LS_MODE, state.mode); } catch (e) {}
   toast(MODE_LABELS[state.mode]);
-}
-function getUserStatus() {
-  const c = currentChat();
-  const m = (c && c.lastMetrics) || {};
-  const si = typeof m.stability_index === "number" ? m.stability_index : null;
-  const pulse = m.cognitive_pulse || null;
-  if (pulse === "fast") return "активно думает";
-  if (pulse === "slow") return "спокойно";
-  if (si != null && si < 0.5) return "сомневается";
-  return "готов";
 }
 function renderOrbSheet() {
   const box = document.getElementById("orbContent");
   const sub = document.getElementById("orbSub");
+  const title = document.getElementById("orbTitle");
+  const status = getUserStatus();
+  if (canSwitchMode()) {
+    title.textContent = "Состояние";
+    sub.textContent = "Что нужно сейчас";
+  } else {
+    title.textContent = "Что нужно сейчас";
+    sub.textContent = "Текущий статус";
+  }
+  let html = "";
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
-
-  sub.textContent = canSwitchMode() ? "Что нужно сейчас" : "Текущий статус";
-  let html = "";
-  if (canSwitchMode()) {
-    html += '<div class="artifact-item" style="cursor:default;">';
-    html += '<div class="artifact-item-head"><span class="artifact-item-name">Режим</span><span class="artifact-item-stage">' + escHtml(MODE_LABELS[state.mode]) + '</span></div>';
-    html += '<div class="artifact-item-meta"><span>Долгий тап — переключить</span></div>';
-    html += '</div>';
-  } else {
-    html += '<div class="artifact-item" style="cursor:default;">';
-    html += '<div class="artifact-item-head"><span class="artifact-item-name">Статус</span><span class="artifact-item-stage">' + escHtml(getUserStatus()) + '</span></div>';
-    html += '</div>';
+  if (m.ai_note) {
+    html += '<div class="info-block">' + escHtml(softenText(m.ai_note)) + '</div>';
   }
+  html += '<div class="artifact-item" style="cursor:default;">';
+  html += '<div class="artifact-item-head"><span class="artifact-item-name">' + (canSwitchMode() ? "Режим" : "Статус") + '</span><span class="artifact-item-stage">' + escHtml(canSwitchMode() ? MODE_LABELS[state.mode] : status.label) + '</span></div>';
+  if (canSwitchMode()) {
+    html += '<div class="artifact-item-meta"><span>Долгий тап — переключить режим</span></div>';
+  }
+  html += '</div>';
   if (m.stability_index != null) {
     html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + Number(m.stability_index).toFixed(2) + '</span></div></div>';
   }
@@ -1466,7 +1837,7 @@ function renderOrbSheet() {
     html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Глубина</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
   }
   if (m.lots_balance) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Баланс</span><span class="artifact-item-stage">' + escHtml(m.lots_balance) + '</span></div></div>';
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Индекс</span><span class="artifact-item-stage">' + escHtml(m.lots_balance) + '</span></div></div>';
   }
   box.innerHTML = html;
   const manage = document.getElementById("orbManageSection");
@@ -1474,8 +1845,23 @@ function renderOrbSheet() {
   else manage.style.display = "none";
 }
 
+// --- AI note ---
+function renderAiNote() {
+  const note = document.getElementById("aiNote");
+  const body = document.getElementById("aiNoteBody");
+  const c = currentChat();
+  const m = (c && c.lastMetrics) || {};
+  const text = m.ai_note || (m.reminder && m.reminder.text) || null;
+  if (text) {
+    body.textContent = softenText(text);
+    note.classList.add("show");
+  } else {
+    note.classList.remove("show");
+  }
+}
+
 // --- Header ---
-function updateIndexBtn() {
+function updateIndexBtn(delta) {
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   const lots = m.lots_balance || "+0.0";
@@ -1485,6 +1871,11 @@ function updateIndexBtn() {
   btn.classList.remove("positive", "negative");
   if (!isNaN(n) && n > 0) btn.classList.add("positive");
   else if (!isNaN(n) && n < 0) btn.classList.add("negative");
+  if (typeof delta === "number" && delta !== 0) {
+    btn.classList.remove("pulse");
+    void btn.offsetWidth;
+    btn.classList.add("pulse");
+  }
 }
 function updateHeaderDynamic() {
   const c = currentChat();
@@ -1504,6 +1895,26 @@ function updateHeaderDynamic() {
   } else if (!rp && existing) {
     existing.remove();
   }
+  updateNotifBadge();
+  updateProfileBadge();
+}
+function updateNotifBadge() {
+  const btn = document.getElementById("notifBtn");
+  if (!btn) return;
+  const unseen = state.notifications.filter(n => (n.at || "").localeCompare(state.lastNotifSeenAt) > 0);
+  if (unseen.length > 0) btn.classList.add("has-badge");
+  else btn.classList.remove("has-badge");
+  const hasCrit = unseen.some(n => n.level === "crit");
+  btn.classList.toggle("critical", hasCrit);
+}
+function updateProfileBadge() {
+  const badge = document.getElementById("profileBadge");
+  const btn = document.getElementById("profileBtn");
+  if (!badge || !btn) return;
+  const c = currentChat();
+  const learning = c && c.learningTemplate;
+  if (learning) btn.classList.add("has-badge");
+  else btn.classList.remove("has-badge");
 }
 function confirmReset(rp) {
   if (confirm((rp.reason || "Monolog рекомендует сбросить контекст") + "\n\nСбросить?")) {
@@ -1522,6 +1933,125 @@ function confirmReset(rp) {
     persistChat(c);
     broadcast("reset", { chatId: c.id });
     toast("Контекст сброшен");
+  }
+}
+
+// --- Notifications ---
+async function addNotification({ level, text, action, actionLabel }) {
+  const n = {
+    id: uid("notif"),
+    at: new Date().toISOString(),
+    level: level || "info",
+    text: softenText(text),
+    action: action || null,
+    actionLabel: actionLabel || null,
+  };
+  state.notifications.push(n);
+  if (state.notifications.length > 200) state.notifications = state.notifications.slice(-200);
+  await dbPut(STORE_NOTIFICATIONS, n);
+  updateNotifBadge();
+  broadcast("notif_added", n);
+}
+function renderNotificationsList() {
+  const box = document.getElementById("notificationsList");
+  if (!box) return;
+  box.innerHTML = "";
+  if (!state.notifications.length) {
+    box.innerHTML = '<div class="empty-note">Уведомлений нет. Всё спокойно.</div>';
+    return;
+  }
+  const sorted = state.notifications.slice().sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+  sorted.forEach(n => {
+    const el = document.createElement("div");
+    el.className = "notif-item " + (n.level || "info");
+    el.innerHTML = '<div class="notif-body">' +
+      '<div class="notif-text">' + escHtml(n.text) + '</div>' +
+      '<div class="notif-meta"><span>' + (n.at ? new Date(n.at).toLocaleString("ru-RU") : "") + '</span></div>' +
+      (n.action && n.actionLabel ? '<button class="notif-action" type="button" data-action="' + escHtml(n.action) + '">' + escHtml(n.actionLabel) + '</button>' : '') +
+      '</div>';
+    box.appendChild(el);
+  });
+  box.querySelectorAll(".notif-action").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const action = btn.dataset.action;
+      handleNotifAction(action);
+    });
+  });
+}
+function handleNotifAction(action) {
+  if (action === "open_settings") { closeAllSheets(); setTimeout(() => document.getElementById("settingsBtn").click(), 200); }
+  else if (action === "open_chat") { closeAllSheets(); }
+  else if (action === "open_lots") { closeAllSheets(); setTimeout(() => { renderLotsList(); openSheet("lotsSheet"); }, 200); }
+  else if (action === "open_map") { closeAllSheets(); setTimeout(() => { renderMap(); openSheet("mapSheet"); }, 200); }
+  else if (action === "mark_seen") { markNotificationsSeen(); }
+}
+function markNotificationsSeen() {
+  state.lastNotifSeenAt = new Date().toISOString();
+  try { localStorage.setItem(LS_NOTIF_SEEN, state.lastNotifSeenAt); } catch (e) {}
+  updateNotifBadge();
+}
+function scanForAlerts(metrics) {
+  const m = metrics || {};
+  const c = currentChat();
+  if (!c) return;
+  // Падение в нужду
+  if (typeof m.index_delta === "number" && m.index_delta < 0) {
+    const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
+    if (balance < 0) {
+      addNotification({
+        level: "crit",
+        text: "Индекс ушёл в минус. Лоты временно недоступны. Что делать: приложить усилие — получить навык или разработать шаблон.",
+        action: "open_map", actionLabel: "Открыть карту",
+      });
+    } else if (balance < 10) {
+      addNotification({
+        level: "warn",
+        text: "Индекс приближается к нулю. Мы на грани падения в нужду. Рекомендация: сделайте вклад — навык или шаблон.",
+        action: "open_chat", actionLabel: "К диалогу",
+      });
+    }
+  }
+  // Ошибки
+  const analytics = state._lastAnalytics || [];
+  const errorCount = analytics.slice(-5).filter(a => a.success === false).length;
+  if (errorCount >= 2) {
+    addNotification({
+      level: "warn",
+      text: "Несколько последних запросов не прошли. Возможно, ключ исчерпал лимит. Что делать: проверьте ключ в настройках или введите свой.",
+      action: "open_settings", actionLabel: "Открыть настройки",
+    });
+  }
+  // Сброс
+  if (m.reset_proposal && m.reset_proposal.recommended) {
+    addNotification({
+      level: "info",
+      text: "Monolog рекомендует сбросить контекст этой ветки. Причина: " + (m.reset_proposal.reason || "накопление помех"),
+      action: "open_chat", actionLabel: "К диалогу",
+    });
+  }
+  // Шаблон
+  if (m.learning_template && m.learning_template.active) {
+    addNotification({
+      level: "info",
+      text: "Шаблон по этой задаче пока не готов. Monolog записывает шаблон. Ожидаемое время: " + (m.learning_template.eta || "несколько шагов") + ". Что получите: " + (m.learning_template.benefit || "готовое решение для следующего раза"),
+      action: "open_chat", actionLabel: "К диалогу",
+    });
+    if (c) c.learningTemplate = true;
+    persistChat(c);
+    updateProfileBadge();
+  } else if (c && c.learningTemplate) {
+    c.learningTemplate = false;
+    persistChat(c);
+    updateProfileBadge();
+    addNotification({
+      level: "ok",
+      text: "Шаблон записан. Теперь в следующий раз решение будет быстрее.",
+    });
+  }
+  // Таблицы в ответе
+  if (m.reply_has_table) {
+    // условно, если модель это сигнализирует
+    addNotification({ level: "info", text: "В ответе появилась таблица. Если она разъезжается — сообщите, мы улучшим отображение." });
   }
 }
 
@@ -1587,7 +2117,7 @@ function addRow(role, content, options) {
     badge.appendChild(label);
     bubble.appendChild(badge);
     const body = document.createElement("div");
-    body.innerHTML = renderMarkdown(content);
+    body.innerHTML = renderMarkdown(softenText(content));
     bubble.appendChild(body);
     const actions = document.createElement("div");
     actions.className = "msg-actions";
@@ -1659,6 +2189,7 @@ function renderCurrentChat() {
   if (c.lastMetrics) {
     updateIndexBtn();
     updateHeaderDynamic();
+    renderAiNote();
   }
 }
 function renderDemo() {
@@ -1673,6 +2204,7 @@ function renderDemo() {
     btn.addEventListener("click", () => {
       document.getElementById("input").value = btn.dataset.text;
       document.getElementById("input").focus();
+      updateCharCounter();
     });
   });
 }
@@ -1707,12 +2239,18 @@ async function send() {
   const c = currentChat();
   if (!c || (!text && !state.attachments.length)) return;
 
+  if (text.length > HARD_LIMIT) {
+    toast("Слишком длинный запрос. Сократите или прикрепите файл.");
+    return;
+  }
+
   const demoBlock = document.querySelector(".demo-block");
   if (demoBlock) demoBlock.remove();
 
   const userDisplay = text || ("[Вложение: " + state.attachments.map(a => a.name).join(", ") + "]");
   input.value = "";
   input.style.height = "auto";
+  updateCharCounter();
   addRow("user", userDisplay);
 
   const attachmentsPayload = state.attachments.slice();
@@ -1736,6 +2274,9 @@ async function send() {
   const startedAt = Date.now();
   let success = false;
   let errorCode = null;
+  let lastProviderUsed = state.provider;
+  let lastModelUsed = null;
+  let lastKeySource = state.apiKey ? "user" : "developer";
 
   try {
     const r = await sendWithRetry({
@@ -1756,12 +2297,21 @@ async function send() {
     if (!r.ok) {
       errorCode = r.status;
       let msg = (data && data.detail) || r.statusText;
-      if (r.status === 429) msg = "Лимит ключа исчерпан. Попробуйте позже или введите свой ключ.";
-      else if (r.status === 402) msg = "На провайдере закончились кредиты.";
-      else if (r.status >= 500) msg = "Сервер не ответил. Попробуйте ещё раз.";
-      addRow("agent", "⚠ " + msg);
+      addRow("agent", "⚠ " + softenText(msg));
+      if (r.status === 429) {
+        await addNotification({ level: "warn", text: msg, action: "open_settings", actionLabel: "Проверить ключ" });
+      } else if (r.status === 403 || r.status === 401) {
+        await addNotification({ level: "warn", text: "Ключ не принят. Откройте настройки → Ключ API и проверьте.", action: "open_settings", actionLabel: "Открыть настройки" });
+      } else if (r.status === 413) {
+        await addNotification({ level: "warn", text: "Запрос слишком длинный. Разбейте на части или прикрепите файл." });
+      } else if (r.status >= 500) {
+        await addNotification({ level: "warn", text: "Сервер провайдера не ответил. Попробуйте ещё раз через минуту." });
+      }
     } else if (data) {
       success = true;
+      lastProviderUsed = data.provider_used || state.provider;
+      lastModelUsed = data.model_used || null;
+      lastKeySource = data.key_source || "developer";
       c.sessionCount = (c.sessionCount || 0) + 1;
       const newMsgId = c.history.length;
       addRow("agent", data.reply_text || "", { msgId: newMsgId });
@@ -1769,17 +2319,25 @@ async function send() {
       c.history.push({ role: "user", content: userDisplay });
       c.history.push({ role: "assistant", content: data.reply_text || "" });
       c.updatedAt = new Date().toISOString();
-      // экономика: накапливаем индекс
       const delta = (data.metrics && data.metrics.index_delta);
       if (typeof delta === "number" && delta !== 0) {
         c.indexHistory = c.indexHistory || [];
         c.indexHistory.push({ at: new Date().toISOString(), delta, kind: "meta", name: "изменение" });
         if (c.indexHistory.length > 200) c.indexHistory.shift();
+        if (delta > 0) {
+          await addNotification({ level: "ok", text: "Индекс пополнен: +" + delta.toFixed(1) + "." });
+        } else if (delta < 0) {
+          await addNotification({ level: "info", text: "Списание индекса: " + delta.toFixed(1) + "." });
+        }
       }
       persistChat(c);
-      updateIndexBtn();
+      updateIndexBtn(typeof delta === "number" ? delta : 0);
       updateHeaderDynamic();
+      renderAiNote();
+      scanForAlerts(data.metrics || {});
       broadcast("chat_updated", { chatId: c.id });
+      // Обновляем карту динамически
+      regenerateMapForCurrent();
     } else {
       addRow("agent", "Пустой ответ сервера.");
     }
@@ -1788,27 +2346,73 @@ async function send() {
     if (thinking.row && thinking.row.parentNode === chat) chat.removeChild(thinking.row);
     orb.classList.remove("thinking");
     let msg = "Не удалось связаться с сервером.";
-    if (e && e.name === "AbortError") msg = "Превышено время ожидания.";
+    if (e && e.name === "AbortError") msg = "Превышено время ожидания. Попробуйте ещё раз.";
     else if (e && e.name === "TypeError") msg = "Проверьте соединение.";
     addRow("agent", msg);
     errorCode = "network";
+    await addNotification({ level: "warn", text: msg });
   } finally {
     btn.disabled = false;
     input.focus();
     const duration = Date.now() - startedAt;
-    await dbPut(STORE_ANALYTICS, {
+    const an = {
       id: uid("an"),
       at: new Date().toISOString(),
-      provider: state.provider,
-      model: null,
-      key_source: state.apiKey ? "user" : "developer",
+      provider: lastProviderUsed,
+      model: lastModelUsed,
+      key_source: lastKeySource,
       msg_len: (text || "").length,
       lot_id: c.lotId || null,
       duration_ms: duration,
       success,
       error: errorCode,
-    });
+    };
+    await dbPut(STORE_ANALYTICS, an);
+    state._lastAnalytics = (state._lastAnalytics || []).slice(-20).concat([an]);
+    // Автоматизация автоматизации релиза
+    maybeAutoRelease();
   }
+}
+
+// --- Автоматизация релиза ---
+async function maybeAutoRelease() {
+  const analytics = state._lastAnalytics || [];
+  const last5 = analytics.slice(-5);
+  const failCount = last5.filter(a => a.success === false).length;
+  const c = currentChat();
+  const m = (c && c.lastMetrics) || {};
+  const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
+
+  const needDrop = balance < 0;
+  const needThreat = failCount >= 2 || (typeof m.index_delta === "number" && m.index_delta < 0);
+
+  if (needDrop) {
+    await releaseAuto("Падение в нужду: индекс в минус. Автоматический релиз: поддержка изобилия.", "crit");
+  } else if (needThreat) {
+    await releaseAuto("Угроза падения: серия ошибок или падение индекса. Автоматический релиз упреждения.", "warn");
+  }
+}
+async function releaseAuto(reason, level) {
+  const releaseId = uid("rel");
+  const release = {
+    id: releaseId,
+    at: new Date().toISOString(),
+    description: reason,
+    type: "auto",
+    level: level || "info",
+    patches: [
+      { type: "state", find: "auto", replace: reason },
+    ],
+    applied: true,
+  };
+  state.releases.push(release);
+  await dbPut(STORE_RELEASES, release);
+  await addNotification({
+    level: level === "crit" ? "crit" : "warn",
+    text: "Автоматический релиз выпущен. " + reason,
+    action: "open_chat", actionLabel: "К диалогу",
+  });
+  broadcast("releases_updated", {});
 }
 
 // --- Шторки ---
@@ -1854,7 +2458,7 @@ function renderIndexSheet(tab) {
   if (tab === "income") filtered = history.filter(h => (h.delta || 0) > 0);
   else if (tab === "expense") filtered = history.filter(h => (h.delta || 0) < 0);
   if (!filtered.length) {
-    list.innerHTML = '<div class="empty-note">История пуста. Пока не было начислений и списаний.</div>';
+    list.innerHTML = '<div class="empty-note">История пуста.</div>';
     return;
   }
   list.innerHTML = "";
@@ -1868,6 +2472,97 @@ function renderIndexSheet(tab) {
       '<div class="artifact-item-meta"><span>' + escHtml(h.kind || "—") + '</span><span>' + (h.at ? new Date(h.at).toLocaleString("ru-RU") : "") + '</span></div>';
     list.appendChild(el);
   });
+}
+
+// --- Метрики ---
+function metricCard(name, value, opts) {
+  opts = opts || {};
+  const level = opts.level || "ok";
+  const alertClass = level === "crit" ? "crit" : level === "warn" ? "warn" : "ok";
+  const cardClass = level === "crit" ? " crit" : level === "warn" ? " warn" : "";
+  let html = '<div class="metric-card' + cardClass + '">';
+  html += '<div class="metric-head"><div class="metric-name">' + escHtml(name) + '</div>';
+  html += '<div class="metric-value">' + escHtml(String(value)) + '</div></div>';
+  if (opts.bar != null) {
+    html += '<div class="metric-bar"><div class="metric-bar-fill" style="width:' + Math.max(0, Math.min(100, opts.bar * 100)) + '%"></div></div>';
+  }
+  if (opts.desc) {
+    html += '<div class="metric-desc">' + escHtml(opts.desc) + '</div>';
+  }
+  if (opts.alert) {
+    html += '<div class="metric-alert ' + alertClass + '"><span class="dot"></span>' + escHtml(opts.alert) + '</div>';
+  }
+  html += '</div>';
+  return html;
+}
+function humanBar(hc) {
+  const humanPct = Math.round(hc * 100);
+  const aiPct = 100 - humanPct;
+  return '<div class="human-bar">' +
+    '<div class="human" style="width:' + humanPct + '%">' + humanPct + '%</div>' +
+    '<div class="ai" style="width:' + aiPct + '%">' + aiPct + '%</div>' +
+    '</div>';
+}
+function buildMetricById(id, m) {
+  const si = typeof m.stability_index === "number" ? m.stability_index : null;
+  const hc = typeof m.human_contribution === "number" ? m.human_contribution : null;
+  switch (id) {
+    case "stability":
+      return metricCard("Стабильность", si != null ? si.toFixed(2) : "—", {
+        bar: si,
+        level: si != null && si < 0.5 ? "crit" : si != null && si < 0.75 ? "warn" : "ok",
+        desc: si != null ? (si >= 0.75 ? "Решение устойчиво." : si >= 0.5 ? "Есть нерешённые коллизии." : "Неустойчивое решение.") : "Появится после первого диалога.",
+        alert: si != null && si < 0.5 ? "Обратить внимание" : null,
+      });
+    case "mind":
+      return metricCard("Глубина", escHtml(m.mind_scale || "—"), {
+        desc: "Уровень задачи, под который адаптируется глубина.",
+      });
+    case "pulse":
+      return metricCard("Пульс", escHtml(m.cognitive_pulse || "—"), {
+        desc: m.cognitive_pulse === "fast" ? "Быстрый темп — проверьте детали." : "Ровный темп.",
+      });
+    case "human":
+      let extra = "";
+      if (hc != null) extra = humanBar(hc);
+      return metricCard("Вклад человек / ИИ", hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—", {
+        desc: "Соотношение вашего вклада и работы алгоритма.",
+      }) + extra;
+    case "balance":
+      return metricCard("Индекс полезности", escHtml(m.lots_balance || "+0.0"), {
+        level: parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) < 0 ? "crit" : "ok",
+        desc: "Накопленный вклад.",
+        alert: parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) < 0 ? "Индекс в минусе" : null,
+      });
+    case "dominant":
+      if (m.dominant_trait && m.dominant_trait.detected) {
+        return metricCard("Импульс", escHtml(m.dominant_trait.influence || "—"), {
+          level: "warn",
+          desc: m.dominant_trait.hint || "",
+          alert: "Обратить внимание",
+        });
+      }
+      return "";
+    case "social":
+      const sa = m.social_adaptation || {};
+      return metricCard("Социальная адаптация", escHtml(sa.level || "inactive"), {
+        desc: sa.reason || "",
+      });
+    default:
+      return "";
+  }
+}
+function renderMetricsSheet() {
+  const box = document.getElementById("metricsContent");
+  if (!box) return;
+  const c = currentChat();
+  const m = (c && c.lastMetrics) || {};
+  let html = "";
+  ["stability", "mind", "pulse", "human", "balance", "dominant", "social"].forEach(id => {
+    html += buildMetricById(id, m);
+  });
+  html += '<div style="margin-top:16px;font-size:11px;color:var(--muted);">Запросов в сессии: ' + ((c && c.sessionCount) || 0) + '</div>';
+  box.innerHTML = html;
 }
 
 // --- Профиль ---
@@ -1895,33 +2590,78 @@ function renderProfile() {
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Наблюдения</div>';
     html += '<div style="display:flex;flex-direction:column;gap:8px;">' + insights.map(i => '<div style="font-size:13px;line-height:1.5;">' + escHtml(i) + '</div>').join("") + '</div>';
   }
-  const priorities = (c && c.priorities) || [];
-  html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Приоритеты</div>';
-  if (!priorities.length) html += '<div class="empty-note">Пока нет. Продолжайте диалог — Monolog подсветит.</div>';
-  else html += '<div style="display:flex;flex-direction:column;gap:6px;">' + priorities.map(p => '<div style="padding:8px 12px;background:var(--surface-2);border-radius:10px;font-size:13px;">' + escHtml(p) + '</div>').join("") + '</div>';
-  if (!si && !m.mind_scale && !patterns.length && !distortions.length && !insights.length) {
-    html += '<div class="empty-note">Пока нет данных. Продолжайте диалог.</div>';
+  html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Карта</div>';
+  html += '<button class="open-editor-btn" id="profileMapBtn" type="button" style="width:100%;justify-content:center;margin-top:0;">Открыть карту местности</button>';
+  box.innerHTML = html;
+  const btn = document.getElementById("profileMapBtn");
+  if (btn) btn.addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderMap(); openSheet("mapSheet"); }, 200); });
+}
+
+// --- Карта ---
+function renderMap() {
+  const box = document.getElementById("mapContent");
+  if (!box) return;
+  const c = currentChat();
+  const lot = currentLot();
+  const m = (c && c.lastMetrics) || {};
+  const lotName = lot ? lot.name : "Без Лота";
+  const task = (c && c.history && c.history.length) ? (c.history[c.history.length - 2] && c.history[c.history.length - 2].content || "—") : "Начало";
+  const steps = state.mapSteps || [];
+  let html = "";
+  html += '<div class="map-card">';
+  html += '<div class="map-where">Лот</div>';
+  html += '<div class="map-title">' + escHtml(lotName) + '</div>';
+  html += '<div class="map-where">Чем занимаемся</div>';
+  html += '<div style="font-size:13.5px;margin-bottom:14px;line-height:1.5;">' + escHtml(String(task).slice(0, 140)) + '</div>';
+  html += '<div class="map-where">Прогресс</div>';
+  const balance = parseFloat(String(m.lots_balance || "0").replace(/[^\d.-]/g, "")) || 0;
+  const price = lot && lot.price ? parseFloat(String(lot.price).replace(/[^\d.-]/g, "")) : 0;
+  if (price > 0) {
+    const pct = Math.max(0, Math.min(100, Math.round(balance / price * 100)));
+    html += '<div style="font-size:13px;margin-bottom:6px;">' + pct + '% до Лота — индекс ' + balance.toFixed(1) + ' из ' + price + '</div>';
+    html += '<div class="metric-bar"><div class="metric-bar-fill" style="width:' + pct + '%"></div></div>';
+  } else {
+    html += '<div style="font-size:13px;color:var(--muted);">Цена Лота не задана.</div>';
+  }
+  html += '</div>';
+  if (steps.length) {
+    html += '<div class="map-card">';
+    html += '<div class="map-where">План действий</div>';
+    html += '<div class="map-steps">';
+    steps.forEach(s => {
+      const cls = (s.state || "todo") + (s.dynamic ? " dynamic" : "");
+      html += '<div class="map-step ' + cls + '">';
+      html += '<div class="dot"></div>';
+      html += '<div><div class="map-step-text">' + escHtml(s.text || "") + '</div>';
+      if (s.eta || s.dynamic) {
+        html += '<div class="map-step-meta">' +
+          (s.eta ? escHtml(s.eta) : "") +
+          (s.dynamic ? ' <span class="dynamic-label">· динамический</span>' : "") +
+          '</div>';
+      }
+      html += '</div></div>';
+    });
+    html += '</div></div>';
+  } else {
+    html += '<div class="map-card"><div class="empty-note">План появится после первых шагов.</div></div>';
   }
   box.innerHTML = html;
 }
-
-// --- Метрики ---
-function renderMetricsSheet() {
-  const box = document.getElementById("metricsContent");
+async function regenerateMapForCurrent() {
   const c = currentChat();
+  const lot = currentLot();
   const m = (c && c.lastMetrics) || {};
-  let html = "";
-  const si = typeof m.stability_index === "number" ? m.stability_index : null;
-  if (si != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + si.toFixed(2) + '</span></div></div>';
-  if (m.mind_scale) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Глубина</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
-  if (m.cognitive_pulse) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Пульс</span><span class="artifact-item-stage">' + escHtml(m.cognitive_pulse) + '</span></div></div>';
-  if (m.human_contribution != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Вклад человек / ИИ</span><span class="artifact-item-stage">' + Math.round(m.human_contribution * 100) + '%</span></div></div>';
-  if (m.dominant_trait && m.dominant_trait.detected) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Импульс</span><span class="artifact-item-stage">' + escHtml(m.dominant_trait.influence || "—") + '</span></div>' + (m.dominant_trait.hint ? '<div class="artifact-item-meta"><span>' + escHtml(m.dominant_trait.hint) + '</span></div>' : '') + '</div>';
+  const steps = [];
+  steps.push({ text: "Определить Лот", state: lot ? "done" : "current", eta: lot ? null : "сейчас" });
+  if (lot) {
+    steps.push({ text: "Собрать цель и план", state: "done", eta: null });
+    steps.push({ text: "Идти шагами к цели", state: "current", eta: "динамический" });
+    steps.push({ text: "Получить Лот", state: "todo", eta: "динамический" });
+  } else {
+    steps.push({ text: "Выбрать направление", state: "todo", eta: "динамический" });
+    steps.push({ text: "Получить первый Лот", state: "todo", eta: "динамический", dynamic: true });
   }
-  if (!html) html = '<div class="empty-note">Метрики появятся после первого диалога.</div>';
-  html += '<div style="margin-top:16px;font-size:11px;color:var(--muted);">Запросов в сессии: ' + ((c && c.sessionCount) || 0) + '</div>';
-  box.innerHTML = html;
+  state.mapSteps = steps;
 }
 
 // --- Лоты ---
@@ -1973,6 +2713,7 @@ function openLotCard(lotId) {
   let html = '<h3>' + escHtml(l.name) + '</h3>';
   html += '<div class="sheet-sub">' + (l.goal ? escHtml(l.goal) : "Цель не задана") + '</div>';
   if (l.price) html += '<div class="artifact-item-stage" style="margin-bottom:14px;">Стоимость: ' + escHtml(String(l.price)) + '</div>';
+  html += '<button class="open-editor-btn" id="lotMapBtn" type="button" style="width:100%;justify-content:center;margin-top:0;margin-bottom:14px;">Открыть карту Лота</button>';
   html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:14px 0 8px;">Чаты</div>';
   if (!chats.length) html += '<div class="empty-note">Пока нет чатов.</div>';
   else html += '<div id="lotChatsList"></div>';
@@ -1983,6 +2724,11 @@ function openLotCard(lotId) {
   if (!ideas.length) html += '<div class="empty-note">Пока нет идей.</div>';
   else html += '<div id="lotIdeasList"></div>';
   box.innerHTML = html;
+
+  document.getElementById("lotMapBtn").addEventListener("click", () => {
+    closeAllSheets();
+    setTimeout(() => { renderMap(); openSheet("mapSheet"); }, 200);
+  });
 
   const chatsList = document.getElementById("lotChatsList");
   if (chatsList) chats.forEach(c => {
@@ -2074,7 +2820,7 @@ async function deleteLot() {
 
 // --- Чаты ---
 function createChatObj(title, lotId) {
-  return { id: uid("chat"), title: title || "Новый чат", lotId: lotId || null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), history: [], lastMetrics: null, sessionCount: 0, important: {}, indexHistory: [], priorities: [] };
+  return { id: uid("chat"), title: title || "Новый чат", lotId: lotId || null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), history: [], lastMetrics: null, sessionCount: 0, important: {}, indexHistory: [], priorities: [], documents: [] };
 }
 async function persistChat(c) {
   if (!c) return;
@@ -2089,6 +2835,7 @@ async function switchChat(chatId) {
   document.getElementById("chat").innerHTML = "";
   renderCurrentChat();
   updateMenu();
+  regenerateMapForCurrent();
 }
 function renderChatsList() {
   const box = document.getElementById("chatsList");
@@ -2140,7 +2887,8 @@ function renderDocumentsList() {
   box.innerHTML = "";
   const all = [];
   state.lots.forEach(l => (l.documents || []).forEach((d, idx) => all.push({ lotId: l.id, lotName: l.name, idx, doc: d })));
-  const freeDocs = (state.chats.find(c => !c.lotId) || {}).documents || [];
+  const c = currentChat();
+  const freeDocs = (c && c.documents) || [];
   if (!all.length && !freeDocs.length) {
     box.innerHTML = '<div class="empty-note">Пока нет документов. Создайте первый — кнопка вверху.</div>';
     return;
@@ -2153,6 +2901,17 @@ function renderDocumentsList() {
     el.addEventListener("click", () => {
       closeAllSheets();
       setTimeout(() => openEditor({ type: "document", lotId: item.lotId, docIndex: item.idx, name: item.doc.name || "", body: item.doc.content || "" }), 200);
+    });
+    box.appendChild(el);
+  });
+  freeDocs.forEach((d, idx) => {
+    const el = document.createElement("div");
+    el.className = "artifact-item";
+    el.innerHTML = '<div class="artifact-item-name">' + escHtml(d.name || "Документ") + '</div>' +
+      '<div class="artifact-item-meta"><span>Без Лота</span></div>';
+    el.addEventListener("click", () => {
+      closeAllSheets();
+      setTimeout(() => openEditor({ type: "document", docIndex: idx, name: d.name || "", body: d.content || "" }), 200);
     });
     box.appendChild(el);
   });
@@ -2178,54 +2937,49 @@ function renderImportantList() {
 }
 
 // --- Дэшборд ---
+const ALL_METRICS = [
+  { id: "stability", name: "Стабильность" },
+  { id: "mind", name: "Глубина" },
+  { id: "pulse", name: "Пульс" },
+  { id: "human", name: "Вклад человек / ИИ" },
+  { id: "balance", name: "Индекс полезности" },
+  { id: "dominant", name: "Импульс" },
+  { id: "social", name: "Социальная адаптация" },
+];
 async function renderDashboard() {
-  const box = document.getElementById("dashboardList");
+  const box = document.getElementById("dashboardContent");
   if (!box) return;
-  const analytics = await dbGetAll(STORE_ANALYTICS);
-  const total = analytics.length;
-  const ok = analytics.filter(a => a.success).length;
-  const fail = total - ok;
-  const byProvider = {};
-  analytics.forEach(a => { byProvider[a.provider] = (byProvider[a.provider] || 0) + 1; });
-  const showAll = state.dashboardMetrics === "all";
+  if (!state.dashboardMetrics) state.dashboardMetrics = ["stability", "mind", "pulse", "human", "balance"];
+  const c = currentChat();
+  const m = (c && c.lastMetrics) || {};
   let html = "";
-  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Всего запросов</span><span class="artifact-item-stage">' + total + '</span></div></div>';
-  if (showAll) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Успешных</span><span class="artifact-item-stage">' + ok + '</span></div></div>';
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">С ошибкой</span><span class="artifact-item-stage">' + fail + '</span></div></div>';
-  }
-  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Лотов</span><span class="artifact-item-stage">' + state.lots.length + '</span></div></div>';
-  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Чатов</span><span class="artifact-item-stage">' + state.chats.length + '</span></div></div>';
-  if (showAll) {
-    Object.keys(byProvider).forEach(pid => {
-      html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(pid) + '</span><span class="artifact-item-stage">' + byProvider[pid] + '</span></div></div>';
-    });
-  }
-  html += '<div class="row-actions" style="margin-top:14px;">';
-  html += '<button class="open-editor-btn" id="dashboardToggleBtn" style="margin-top:0;background:var(--surface-2);color:var(--text);border:1px solid var(--border-soft);">' + (showAll ? "Скрыть детали" : "Показать все метрики") + '</button>';
-  html += '</div>';
-  box.innerHTML = html;
-  const tgl = document.getElementById("dashboardToggleBtn");
-  if (tgl) tgl.addEventListener("click", () => { state.dashboardMetrics = showAll ? "basic" : "all"; renderDashboard(); });
-}
-async function renderDevReport() {
-  const box = document.getElementById("devReportList");
-  if (!box) return;
-  const analytics = await dbGetAll(STORE_ANALYTICS);
-  const total = analytics.length;
-  const ok = analytics.filter(a => a.success).length;
-  const avgDuration = analytics.length ? Math.round(analytics.reduce((s, a) => s + (a.duration_ms || 0), 0) / analytics.length) : 0;
-  const byProvider = {};
-  analytics.forEach(a => { byProvider[a.provider] = (byProvider[a.provider] || 0) + 1; });
-  if (!total) { box.innerHTML = '<div class="empty-note">Отчёт появится после сессий.</div>'; return; }
-  let html = "";
-  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Всего</span><span class="artifact-item-stage">' + total + '</span></div></div>';
-  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Успех / Ошибка</span><span class="artifact-item-stage">' + ok + " / " + (total - ok) + '</span></div></div>';
-  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Среднее время</span><span class="artifact-item-stage">' + avgDuration + ' мс</span></div></div>';
-  Object.keys(byProvider).forEach(pid => {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(pid) + '</span><span class="artifact-item-stage">' + byProvider[pid] + '</span></div></div>';
+  state.dashboardMetrics.forEach(id => { html += buildMetricById(id, m); });
+  html += '<div class="dash-toggle">';
+  html += '<button class="dash-toggle-btn" id="dashToggleBtn" type="button">Показать список метрик<svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg></button>';
+  html += '<div class="dash-dropdown" id="dashDropdown">';
+  ALL_METRICS.forEach(metric => {
+    const checked = state.dashboardMetrics.indexOf(metric.id) !== -1 ? "checked" : "";
+    html += '<label class="dash-metric-opt"><input type="checkbox" data-metric="' + metric.id + '" ' + checked + ' /><span>' + escHtml(metric.name) + '</span></label>';
   });
+  html += '</div></div>';
   box.innerHTML = html;
+
+  const toggle = document.getElementById("dashToggleBtn");
+  if (toggle) toggle.addEventListener("click", () => {
+    document.getElementById("dashDropdown").classList.toggle("open");
+    toggle.classList.toggle("open");
+  });
+  box.querySelectorAll(".dash-metric-opt input").forEach(inp => {
+    inp.addEventListener("change", () => {
+      const id = inp.dataset.metric;
+      if (inp.checked) {
+        if (state.dashboardMetrics.indexOf(id) === -1) state.dashboardMetrics.push(id);
+      } else {
+        state.dashboardMetrics = state.dashboardMetrics.filter(x => x !== id);
+      }
+      renderDashboard();
+    });
+  });
 }
 
 // --- Management ---
@@ -2233,15 +2987,19 @@ async function renderManagement() {
   const box = document.getElementById("managementContent");
   if (!box) return;
   if (!state.manageKey) {
-    box.innerHTML = '<div class="empty-note">Введите ключ Управления в настройках.</div>';
+    box.innerHTML = '<div class="management-note">Введите ключ Управления в настройках, чтобы открыть расширенные возможности.</div>';
     return;
   }
   let html = "";
-  html += '<div class="info-block">Расширенное управление доступно с валидным ключом Управления. Проверьте ключ на сервере кнопкой ниже.</div>';
+  html += '<div class="management-note">Расширенное управление доступно с валидным ключом Управления.</div>';
   html += '<div class="row-actions" style="margin-top:10px;">';
   html += '<button class="open-editor-btn" id="mgmtCheckBtn" type="button" style="margin-top:0;width:100%;justify-content:center;">Проверить ключ на сервере</button>';
   html += '</div>';
   html += '<div class="doc-status" id="mgmtStatus"></div>';
+  html += '<div class="row-actions" style="margin-top:10px;">';
+  html += '<button class="open-editor-btn" id="mgmtCodeBtn" type="button" style="margin-top:0;">Открыть код</button>';
+  html += '<button class="open-editor-btn" id="mgmtReleaseBtn" type="button" style="margin-top:0;">Релизы</button>';
+  html += '</div>';
   box.innerHTML = html;
   const btn = document.getElementById("mgmtCheckBtn");
   const status = document.getElementById("mgmtStatus");
@@ -2258,93 +3016,66 @@ async function renderManagement() {
       else status.textContent = "Ключ не принят сервером: " + (data.detail || r.status);
     } catch (e) { status.textContent = "Ошибка: " + e.message; }
   });
+  const codeBtn = document.getElementById("mgmtCodeBtn");
+  if (codeBtn) codeBtn.addEventListener("click", () => { closeAllSheets(); setTimeout(() => document.getElementById("orbManageCode").click(), 200); });
+  const relBtn = document.getElementById("mgmtReleaseBtn");
+  if (relBtn) relBtn.addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderReleasesList(); openSheet("releasesSheet"); }, 200); });
 }
 
-// --- Релиз ---
-function createReleaseObj(name, comment, status) {
-  return { id: uid("rel"), name, comment: comment || "", status: status || "idea", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+// --- Релизы ---
+function createReleaseObj(description, type) {
+  return { id: uid("rel"), at: new Date().toISOString(), description: description || "Ручной релиз", type: type || "manual", level: "info", patches: [], applied: true };
 }
-function renderReleaseList() {
-  const box = document.getElementById("releaseList");
+function renderReleasesList() {
+  const box = document.getElementById("releasesList");
   if (!box) return;
   box.innerHTML = "";
-  if (!state.releases.length) { box.innerHTML = '<div class="empty-note">Список пуст. Добавьте первую доработку.</div>'; return; }
-  state.releases.forEach(r => {
+  if (!state.releases.length) {
+    box.innerHTML = '<div class="empty-note">Релизов пока нет.</div>';
+    return;
+  }
+  const sorted = state.releases.slice().sort((a, b) => (b.at || "").localeCompare(a.at || ""));
+  sorted.forEach(r => {
     const el = document.createElement("div");
     el.className = "release-item";
-    el.innerHTML = '<div class="release-item-head"><span class="release-item-name">' + escHtml(r.name) + '</span>' +
-      '<span class="release-status ' + (r.status || "idea") + '">' + escHtml(statusLabel(r.status)) + '</span></div>' +
-      (r.comment ? '<div class="release-comment">' + escHtml(r.comment) + '</div>' : '');
-    el.addEventListener("click", () => openReleaseModal(r.id));
+    const level = r.level === "crit" ? "crit" : r.level === "warn" ? "warn" : "info";
+    el.innerHTML = '<div class="release-item-head"><span class="release-item-name">' + escHtml(r.description || "Релиз") + '</span>' +
+      '<span class="release-status ' + level + '">' + escHtml((r.type || "manual") === "auto" ? "Авто" : "Ручной") + '</span></div>' +
+      '<div class="release-comment">' + (r.at ? new Date(r.at).toLocaleString("ru-RU") : "") + '</div>';
+    el.addEventListener("click", () => {
+      if (confirm("Откатить к релизу от " + new Date(r.at).toLocaleString("ru-RU") + "?\n\n" + (r.description || ""))) {
+        toast("Откат инициирован. В этой версии — только пометка.");
+      }
+    });
     box.appendChild(el);
   });
 }
-function statusLabel(s) {
-  return { idea: "Идея", in_progress: "В работе", done: "Сделано", rejected: "Отклонено" }[s] || "Идея";
+function openReleaseModal() {
+  document.getElementById("releaseCommentInput").value = "";
+  document.getElementById("releasePublishStatus").textContent = "";
+  document.getElementById("releaseModalSheet").classList.add("open");
+  document.getElementById("sheetBg").classList.add("open");
 }
-function openReleaseModal(editId) {
-  state.editingReleaseId = editId;
-  const r = editId ? state.releases.find(x => x.id === editId) : null;
-  document.getElementById("releaseModalTitle").textContent = r ? "Редактировать" : "Новая доработка";
-  document.getElementById("releaseNameInput").value = r ? r.name : "";
-  document.getElementById("releaseCommentInput").value = r ? (r.comment || "") : "";
-  state.editingReleaseStatus = r ? (r.status || "idea") : "idea";
-  document.querySelectorAll("#releaseStatusSeg button").forEach(b => {
-    b.classList.toggle("active", b.dataset.status === state.editingReleaseStatus);
-  });
-  document.getElementById("releaseDangerRow").style.display = r ? "flex" : "none";
-  document.getElementById("releaseModalBg").classList.add("open");
-}
-async function saveRelease() {
-  const name = (document.getElementById("releaseNameInput").value || "").trim() || "Без названия";
+async function publishRelease() {
   const comment = (document.getElementById("releaseCommentInput").value || "").trim();
-  if (state.editingReleaseId) {
-    const r = state.releases.find(x => x.id === state.editingReleaseId);
-    if (r) {
-      r.name = name; r.comment = comment; r.status = state.editingReleaseStatus;
-      r.updatedAt = new Date().toISOString();
-      await dbPut(STORE_RELEASES, r);
-    }
-  } else {
-    const fresh = createReleaseObj(name, comment, state.editingReleaseStatus);
-    await dbPut(STORE_RELEASES, fresh);
-    state.releases.push(fresh);
-  }
-  renderReleaseList();
-  closeAllSheets();
-  toast("Сохранено");
-}
-async function deleteRelease() {
-  if (!state.editingReleaseId) return;
-  if (!confirm("Удалить доработку?")) return;
-  await dbDel(STORE_RELEASES, state.editingReleaseId);
-  state.releases = state.releases.filter(x => x.id !== state.editingReleaseId);
-  renderReleaseList();
-  closeAllSheets();
-  toast("Удалено");
-}
-async function exportAllFiles() {
-  // Собираем все данные в один JSON-файл — локальный экспорт релиза.
-  const data = {
-    app_version: "1.0",
-    generated_at: new Date().toISOString(),
-    lots: state.lots,
-    chats: state.chats,
-    releases: state.releases,
-    settings: {
-      provider: state.provider,
-      fontSize: state.fontSize,
-      depthMode: state.depthMode,
-      mode: state.mode,
-    },
-  };
-  const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "monolog_release_" + Date.now() + ".json";
-  a.click();
-  URL.revokeObjectURL(a.href);
-  toast("Релиз сохранён в файл");
+  const status = document.getElementById("releasePublishStatus");
+  status.textContent = "Готовлю релиз...";
+  const release = createReleaseObj(comment || "Ручной релиз по запросу автора", "manual");
+  release.level = "info";
+  release.patches = [
+    { type: "state", find: "auto", replace: comment || "manual release" },
+  ];
+  state.releases.push(release);
+  await dbPut(STORE_RELEASES, release);
+  await addNotification({
+    level: "ok",
+    text: "Релиз выпущен. " + (comment || "Без комментария"),
+    action: "open_chat", actionLabel: "К диалогу",
+  });
+  renderReleasesList();
+  status.textContent = "Готово";
+  setTimeout(() => closeAllSheets(), 600);
+  broadcast("releases_updated", {});
 }
 
 // --- О продукте ---
@@ -2352,16 +3083,16 @@ function renderAbout() {
   const box = document.getElementById("aboutContent");
   box.innerHTML =
     '<div class="info-block"><strong>Ядро (не меняется)</strong><br>Человек в центре. Отражаю, не веду. Прямота. Наличие Ядра, Адаптивной части и Инфраструктуры. Лоты — единица обмена. Ошибка → данные → класс → шаблон.</div>' +
-    '<div class="info-block"><strong>Адаптивная часть (меняется)</strong><br>Интерфейс. Метрики. Тон. Модели. Правила показа. Форматы выбора. Содержание Ядра. Всё, что можно менять без потери сущности продукта.</div>' +
+    '<div class="info-block"><strong>Адаптивная часть (меняется)</strong><br>Интерфейс. Метрики. Тон. Модели. Правила показа. Форматы выбора. Содержание Ядра.</div>' +
     '<div class="info-block"><strong>Инфраструктура</strong><br>Автоматически адаптирует содержание Ядра и Адаптивной части. Работает через правила и метрики.</div>' +
-    '<div class="info-block"><strong>Слои A/B/C/D</strong><br>A — факты. B — интерпретации. C — решения. D — мета. Ответ Monolog может содержать метки слоёв. Это навигация по смыслу.</div>';
+    '<div class="info-block"><strong>Слои A/B/C/D</strong><br>A — факты. B — интерпретации. C — решения. D — мета.</div>';
 }
 function renderBusiness() {
   const box = document.getElementById("businessContent");
   box.innerHTML =
     '<div class="info-block"><strong>API Monolog</strong><br>Встраивание когнитивного партнёра в корпоративные системы. Сотрудники получают поддержку в принятии решений, руководители — метрики прогресса команды.</div>' +
     '<div class="info-block"><strong>Что даёт бизнесу</strong><br>• Единый когнитивный интерфейс для команды<br>• Корпоративные Лоты — цели компании<br>• Обучение сотрудников шаблонам мышления<br>• Аналитика принятий решений<br>• Интеграция через API</div>' +
-    '<div class="info-block"><strong>Модель монетизации</strong><br>• Pay-per-call (за вызовы API)<br>• Pay-per-user (за сотрудника)<br>• Enterprise-лицензия</div>' +
+    '<div class="info-block"><strong>Модель монетизации</strong><br>• Pay-per-call<br>• Pay-per-user<br>• Enterprise-лицензия</div>' +
     '<div class="info-block" style="color:var(--muted);font-style:italic;">Раздел в разработке. Свяжитесь с автором для пилотной интеграции.</div>';
 }
 
@@ -2371,6 +3102,7 @@ function openEditor(context) {
   const name = context.name || "";
   const body = context.body || "";
   const isCode = context.type === "code";
+  const isDoc = !isCode;
   document.getElementById("editorName").value = name;
   const ta = document.getElementById("editorBody");
   ta.value = body;
@@ -2379,9 +3111,36 @@ function openEditor(context) {
   document.getElementById("editorStatus").textContent = "";
   document.getElementById("editorTitle").textContent = isCode ? "Редактор кода" : "Редактор документа";
   document.getElementById("editorSub").textContent = isCode ? "Правьте код и сохраните в dev" : "Правьте текст и сохраните";
+  document.getElementById("editorToolbar").style.display = isDoc ? "flex" : "none";
   document.getElementById("editorCodeRow").style.display = isCode ? "flex" : "none";
   document.getElementById("editorPublishRow").style.display = isCode ? "none" : "flex";
   openSheet("editorSheet");
+}
+function insertAtCursor(ta, text) {
+  const start = ta.selectionStart || 0;
+  const end = ta.selectionEnd || 0;
+  const before = ta.value.substring(0, start);
+  const after = ta.value.substring(end);
+  ta.value = before + text + after;
+  ta.selectionStart = ta.selectionEnd = start + text.length;
+  ta.focus();
+}
+function setupEditorToolbar() {
+  document.querySelectorAll("#editorToolbar .fmt-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const ta = document.getElementById("editorBody");
+      const fmt = btn.dataset.fmt;
+      if (fmt === "bold") insertAtCursor(ta, "**жирный**");
+      else if (fmt === "italic") insertAtCursor(ta, "*курсив*");
+      else if (fmt === "h2") insertAtCursor(ta, "\n## Заголовок\n");
+      else if (fmt === "list") insertAtCursor(ta, "\n- пункт\n- пункт\n");
+      else if (fmt === "table") insertAtCursor(ta, "\n| Колонка 1 | Колонка 2 |\n|---|---|\n| — | — |\n");
+      else if (fmt === "image") {
+        const url = prompt("URL изображения:");
+        if (url) insertAtCursor(ta, "![изображение](" + url + ")");
+      }
+    });
+  });
 }
 async function saveEditorToLot() {
   const name = (document.getElementById("editorName").value || "").trim();
@@ -2402,7 +3161,6 @@ async function saveEditorToLot() {
     }
     await persistLot(l);
   } else {
-    // документ вне Лота — привязываем к chat
     const c = currentChat();
     if (!c) { status.textContent = "Нет чата"; return; }
     c.documents = c.documents || [];
@@ -2418,26 +3176,6 @@ async function saveEditorToLot() {
   status.textContent = "Сохранено";
   toast("Сохранено");
   setTimeout(() => closeAllSheets(), 600);
-}
-async function saveEditorToBlog() {
-  const title = (document.getElementById("editorName").value || "").trim();
-  const body = (document.getElementById("editorBody").value || "").trim();
-  const status = document.getElementById("editorStatus");
-  if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
-  if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
-  status.textContent = "Публикую...";
-  try {
-    const r = await fetch(API_BASE + "/blog/publish", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
-      body: JSON.stringify({ title, body, tags: [], author: "Автор" }),
-    });
-    const data = await r.json();
-    if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
-    status.textContent = "Опубликовано";
-    toast("Опубликовано");
-    setTimeout(() => closeAllSheets(), 700);
-  } catch (e) { status.textContent = "Ошибка: " + e.message; }
 }
 
 // --- Аттачи ---
@@ -2477,7 +3215,7 @@ function renderProviderGrid() {
     const btn = document.createElement("button");
     btn.className = "provider-btn" + (state.provider === pr.id ? " active" : "");
     btn.type = "button";
-    btn.innerHTML = '<span class="name">' + escHtml(pr.name) + '</span><span class="free">' + escHtml(pr.free || "") + '</span>';
+    btn.innerHTML = '<span class="name">' + escHtml(pr.name) + '</span>';
     btn.addEventListener("click", () => {
       state.provider = pr.id;
       try { localStorage.setItem(LS_PROVIDER, pr.id); } catch (e) {}
@@ -2508,6 +3246,7 @@ async function loadData() {
   state.lots = await dbGetAll(STORE_LOTS);
   state.chats = await dbGetAll(STORE_CHATS);
   state.releases = await dbGetAll(STORE_RELEASES);
+  state.notifications = await dbGetAll(STORE_NOTIFICATIONS);
   const currentId = await dbGetMeta("currentChatId");
   if (currentId && state.chats.find(c => c.id === currentId)) {
     state.currentChatId = currentId;
@@ -2520,6 +3259,22 @@ async function loadData() {
     state.currentChatId = fresh.id;
     await dbSetMeta("currentChatId", fresh.id);
   }
+  const seen = await dbGetMeta("lastNotifSeenAt");
+  if (seen) state.lastNotifSeenAt = seen;
+  try { const ls = localStorage.getItem(LS_NOTIF_SEEN); if (ls) state.lastNotifSeenAt = ls; } catch (e) {}
+}
+
+// --- Char counter ---
+function updateCharCounter() {
+  const input = document.getElementById("input");
+  const counter = document.getElementById("charCounter");
+  if (!input || !counter) return;
+  const len = (input.value || "").length;
+  if (len === 0) { counter.textContent = ""; counter.className = "char-counter"; return; }
+  counter.textContent = len + " / " + HARD_LIMIT;
+  counter.className = "char-counter";
+  if (len > HARD_LIMIT) counter.classList.add("critical");
+  else if (len > SOFT_LIMIT) counter.classList.add("warn");
 }
 
 // --- Инициализация ---
@@ -2552,10 +3307,13 @@ async function init() {
     updateMenu();
     updateIndexBtn();
     updateHeaderDynamic();
+    renderAiNote();
+    regenerateMapForCurrent();
 
     ["orbSheet", "menuSheet", "indexSheet", "profileSheet", "metricsSheet",
-     "lotsSheet", "lotCardSheet", "ideasSheet", "importantSheet",
-     "dashboardSheet", "managementSheet", "releaseSheet", "devReportSheet",
+     "notificationsSheet", "lotsSheet", "lotCardSheet", "mapSheet",
+     "ideasSheet", "importantSheet", "dashboardSheet", "managementSheet",
+     "releasesSheet", "releaseModalSheet", "devReportSheet",
      "documentsSheet", "chatsSheet", "blogSheet", "aboutSheet", "businessSheet",
      "editorSheet"
     ].forEach(id => {
@@ -2583,6 +3341,11 @@ async function init() {
 
     document.getElementById("indexBtn").addEventListener("click", () => { renderIndexSheet("all"); openSheet("indexSheet"); });
     document.getElementById("metricsBtn").addEventListener("click", () => { renderMetricsSheet(); openSheet("metricsSheet"); });
+    document.getElementById("notifBtn").addEventListener("click", () => {
+      renderNotificationsList();
+      openSheet("notificationsSheet");
+      setTimeout(markNotificationsSeen, 800);
+    });
     document.getElementById("profileBtn").addEventListener("click", () => { renderProfile(); openSheet("profileSheet"); });
     document.getElementById("menuBtn").addEventListener("click", () => { updateMenu(); openSheet("menuSheet"); });
     document.getElementById("settingsBtn").addEventListener("click", () => {
@@ -2641,7 +3404,7 @@ async function init() {
     });
     document.getElementById("orbManageRelease").addEventListener("click", () => {
       closeAllSheets();
-      setTimeout(() => { renderReleaseList(); openSheet("releaseSheet"); }, 200);
+      setTimeout(() => { renderReleasesList(); openSheet("releasesSheet"); }, 200);
     });
     document.getElementById("orbManageDevReport").addEventListener("click", () => {
       closeAllSheets();
@@ -2664,19 +3427,9 @@ async function init() {
     document.getElementById("lotSave").addEventListener("click", saveLot);
     document.getElementById("lotDelete").addEventListener("click", deleteLot);
 
-    document.getElementById("releaseAddBtn").addEventListener("click", () => { closeAllSheets(); setTimeout(() => openReleaseModal(null), 200); });
-    document.getElementById("releaseExportBtn").addEventListener("click", exportAllFiles);
-    document.getElementById("releaseModalClose").addEventListener("click", closeAllSheets);
-    document.getElementById("releaseCancel").addEventListener("click", closeAllSheets);
-    document.getElementById("releaseModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
-    document.querySelectorAll("#releaseStatusSeg button").forEach(b => {
-      b.addEventListener("click", () => {
-        state.editingReleaseStatus = b.dataset.status;
-        document.querySelectorAll("#releaseStatusSeg button").forEach(x => x.classList.toggle("active", x === b));
-      });
-    });
-    document.getElementById("releaseSave").addEventListener("click", saveRelease);
-    document.getElementById("releaseDelete").addEventListener("click", deleteRelease);
+    document.getElementById("releaseNewBtn").addEventListener("click", () => { openReleaseModal(); });
+    document.getElementById("releaseModalCancel").addEventListener("click", closeAllSheets);
+    document.getElementById("releasePublishBtn").addEventListener("click", publishRelease);
 
     document.getElementById("codePathClose").addEventListener("click", closeAllSheets);
     document.getElementById("codePathCancel").addEventListener("click", closeAllSheets);
@@ -2733,7 +3486,7 @@ async function init() {
       toast("Настройки сохранены");
     });
     document.getElementById("exportData").addEventListener("click", () => {
-      const blob = new Blob([JSON.stringify({ lots: state.lots, chats: state.chats, releases: state.releases }, null, 2)], { type: "application/json" });
+      const blob = new Blob([JSON.stringify({ lots: state.lots, chats: state.chats, releases: state.releases, notifications: state.notifications }, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "monolog_export_" + Date.now() + ".json";
@@ -2774,7 +3527,26 @@ async function init() {
       URL.revokeObjectURL(a.href);
     });
     document.getElementById("editorSaveBtn").addEventListener("click", saveEditorToLot);
-    document.getElementById("editorPublishBtn").addEventListener("click", saveEditorToBlog);
+    document.getElementById("editorPublishBtn").addEventListener("click", async () => {
+      const title = (document.getElementById("editorName").value || "").trim();
+      const body = (document.getElementById("editorBody").value || "").trim();
+      const status = document.getElementById("editorStatus");
+      if (!title || !body) { status.textContent = "Нужны заголовок и текст"; return; }
+      if (!state.authorKey) { status.textContent = "Введите ключ автора в настройках"; return; }
+      status.textContent = "Публикую...";
+      try {
+        const r = await fetch(API_BASE + "/blog/publish", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "X-Author-Key": state.authorKey },
+          body: JSON.stringify({ title, body, tags: [], author: "Автор" }),
+        });
+        const data = await r.json();
+        if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
+        status.textContent = "Опубликовано";
+        toast("Опубликовано");
+        setTimeout(() => closeAllSheets(), 700);
+      } catch (e) { status.textContent = "Ошибка: " + e.message; }
+    });
     document.getElementById("editorCodeSave").addEventListener("click", async () => {
       const ctx = state.editorContext || {};
       const path = ctx.path || (document.getElementById("editorName").value || "").trim();
@@ -2810,18 +3582,17 @@ async function init() {
     input.addEventListener("keydown", (e) => {
       if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
     });
+    input.addEventListener("input", () => {
+      input.style.height = "auto";
+      const sh = input.scrollHeight;
+      const maxH = 120;
+      input.style.height = Math.min(sh, maxH) + "px";
+      input.style.overflowY = sh > maxH ? "auto" : "hidden";
+      updateCharCounter();
+    });
     document.getElementById("attachBtn").addEventListener("click", () => fileInput.click());
     fileInput.addEventListener("change", (e) => { handleFiles(e.target.files); fileInput.value = ""; });
 
-    function resizeInput() {
-      input.style.height = "auto";
-      const sh = input.scrollHeight;
-      const maxH = 88;
-      input.style.height = Math.min(sh, maxH) + "px";
-      input.style.overflowY = sh > maxH ? "auto" : "hidden";
-    }
-    input.addEventListener("input", resizeInput);
-    resizeInput();
     setInterval(() => {
       state.placeholderIndex = (state.placeholderIndex + 1) % PLACEHOLDERS.length;
       if (!input.value) input.placeholder = PLACEHOLDERS[state.placeholderIndex];
@@ -2830,33 +3601,53 @@ async function init() {
     document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeAllSheets(); });
     setupEyeButtons();
+    setupEditorToolbar();
 
-    // visualViewport — фиксируем высоту
     if (window.visualViewport) {
       const setVh = () => {
         document.documentElement.style.setProperty("--vh", window.visualViewport.height + "px");
-        document.querySelector(".app").style.height = window.visualViewport.height + "px";
       };
       window.visualViewport.addEventListener("resize", setVh);
       window.visualViewport.addEventListener("scroll", setVh);
       setVh();
     }
 
-    // BroadcastChannel sync
     if (_bc) {
       _bc.addEventListener("message", async (e) => {
         const msg = e.data || {};
-        if (msg.type === "chat_updated" || msg.type === "lots_updated" || msg.type === "settings_updated" || msg.type === "reset") {
+        if (msg.type === "chat_updated" || msg.type === "lots_updated" || msg.type === "settings_updated" || msg.type === "reset" || msg.type === "notif_added" || msg.type === "releases_updated") {
           state.lots = await dbGetAll(STORE_LOTS);
           state.chats = await dbGetAll(STORE_CHATS);
           state.releases = await dbGetAll(STORE_RELEASES);
+          state.notifications = await dbGetAll(STORE_NOTIFICATIONS);
           renderCurrentChat();
           updateMenu();
           updateIndexBtn();
           updateHeaderDynamic();
+          if (document.getElementById("notificationsSheet").classList.contains("open")) renderNotificationsList();
         }
       });
     }
+
+    // Периодический refresh — на случай отставания вкладок
+    setInterval(async () => {
+      const lots = await dbGetAll(STORE_LOTS);
+      const chats = await dbGetAll(STORE_CHATS);
+      const releases = await dbGetAll(STORE_RELEASES);
+      const notifs = await dbGetAll(STORE_NOTIFICATIONS);
+      const changed = JSON.stringify(lots.length + ":" + chats.length + ":" + releases.length + ":" + notifs.length) !==
+                      JSON.stringify(state.lots.length + ":" + state.chats.length + ":" + state.releases.length + ":" + state.notifications.length);
+      if (changed) {
+        state.lots = lots;
+        state.chats = chats;
+        state.releases = releases;
+        state.notifications = notifs;
+        renderCurrentChat();
+        updateMenu();
+        updateIndexBtn();
+        updateHeaderDynamic();
+      }
+    }, 4000);
 
     try {
       const r = await fetch(API_BASE + "/providers");
@@ -2873,6 +3664,26 @@ async function init() {
     const sp = document.getElementById("splash");
     if (sp) sp.classList.add("hide");
   }
+}
+
+async function renderDevReport() {
+  const box = document.getElementById("devReportList");
+  if (!box) return;
+  const analytics = await dbGetAll(STORE_ANALYTICS);
+  const total = analytics.length;
+  const ok = analytics.filter(a => a.success).length;
+  const avgDuration = analytics.length ? Math.round(analytics.reduce((s, a) => s + (a.duration_ms || 0), 0) / analytics.length) : 0;
+  const byProvider = {};
+  analytics.forEach(a => { byProvider[a.provider] = (byProvider[a.provider] || 0) + 1; });
+  if (!total) { box.innerHTML = '<div class="empty-note">Отчёт появится после сессий.</div>'; return; }
+  let html = "";
+  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Всего</span><span class="artifact-item-stage">' + total + '</span></div></div>';
+  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Успех / Ошибка</span><span class="artifact-item-stage">' + ok + " / " + (total - ok) + '</span></div></div>';
+  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Среднее время</span><span class="artifact-item-stage">' + avgDuration + ' мс</span></div></div>';
+  Object.keys(byProvider).forEach(pid => {
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(pid) + '</span><span class="artifact-item-stage">' + byProvider[pid] + '</span></div></div>';
+  });
+  box.innerHTML = html;
 }
 
 if (document.readyState === "loading") {
