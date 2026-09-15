@@ -22,6 +22,7 @@
   --critical: #B85450;
   --critical-soft: rgba(184, 84, 80, 0.12);
   --success: #4F8A6B;
+  --success-soft: rgba(79, 138, 107, 0.12);
   --shadow: 0 1px 2px rgba(10, 11, 13, 0.03);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-top: env(safe-area-inset-top, 0px);
@@ -43,6 +44,7 @@ html[data-theme="dark"] {
   --critical: #E07B7B;
   --critical-soft: rgba(224, 123, 123, 0.15);
   --success: #6BB88E;
+  --success-soft: rgba(107, 184, 142, 0.15);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 html, body {
@@ -54,35 +56,23 @@ html, body {
   background: var(--bg);
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
-  transition: background 0.6s ease, color 0.6s ease, font-size 0.2s ease;
 }
 body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
+  content: ""; position: fixed; inset: 0;
   background:
     radial-gradient(600px 400px at 90% 0%, rgba(168, 181, 255, 0.06), transparent 60%),
     radial-gradient(500px 400px at 0% 100%, rgba(224, 122, 95, 0.04), transparent 60%);
-  pointer-events: none;
-  z-index: 0;
+  pointer-events: none; z-index: 0;
 }
 .app {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  height: 100dvh;
-  max-width: 700px;
-  margin: 0 auto;
-  padding: 0 12px;
+  position: relative; z-index: 1;
+  display: flex; flex-direction: column;
+  height: 100dvh; max-width: 700px;
+  margin: 0 auto; padding: 0 12px;
 }
 header {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; justify-content: space-between;
   gap: 8px;
   padding: calc(var(--safe-top) + 10px) 4px 10px;
   background: color-mix(in srgb, var(--bg) 75%, transparent);
@@ -90,34 +80,18 @@ header {
   -webkit-backdrop-filter: blur(20px) saturate(140%);
   flex-shrink: 0;
 }
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-}
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
+.header-left, .header-right {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
 }
 .index-btn {
-  height: 34px;
-  min-width: 52px;
+  height: 34px; min-width: 52px;
   border-radius: 12px;
-  background: var(--surface);
-  border: 1px solid var(--border-soft);
-  color: var(--text);
-  cursor: pointer;
+  background: var(--surface); border: 1px solid var(--border-soft);
+  color: var(--text); cursor: pointer;
   padding: 0 10px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: inline-flex; align-items: center; justify-content: center;
   gap: 5px;
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 600;
+  font-family: inherit; font-size: 13px; font-weight: 600;
   font-variant-numeric: tabular-nums;
   transition: transform 0.15s, background 0.15s;
   box-shadow: var(--shadow);
@@ -144,18 +118,12 @@ header {
   to { opacity: 1; transform: translateX(0); }
 }
 .orb {
-  width: 38px; height: 38px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  cursor: pointer;
-  position: relative;
-  padding: 0;
-  border: none;
-  background: transparent;
+  width: 38px; height: 38px; border-radius: 50%;
+  flex-shrink: 0; cursor: pointer;
+  position: relative; padding: 0;
+  border: none; background: transparent;
   transition: transform 0.2s;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: flex; align-items: center; justify-content: center;
 }
 .orb:active { transform: scale(0.94); }
 .orb-inner {
@@ -246,8 +214,7 @@ header {
   z-index: 51;
   overflow-y: auto;
   box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.08);
-  max-width: 700px;
-  margin: 0 auto;
+  max-width: 700px; margin: 0 auto;
 }
 .sheet.open { transform: translateY(0); }
 .sheet-handle {
@@ -370,10 +337,6 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
   0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
   40% { opacity: 1; transform: scale(1); }
 }
-.thinking-text {
-  font-size: 12px; color: var(--muted);
-  margin-left: 8px; font-style: italic;
-}
 .demo-block {
   background: var(--surface); border: 1px solid var(--border-soft);
   border-radius: 16px; padding: 18px;
@@ -390,7 +353,6 @@ html[data-theme="dark"] .bubble pre { background: #06070A; }
 }
 .demo-suggestion:hover { border-color: var(--accent); background: var(--accent-soft); }
 .demo-suggestion .label { display: flex; align-items: center; gap: 8px; font-weight: 500; }
-.demo-suggestion .label svg { width: 14px; height: 14px; color: var(--accent); flex-shrink: 0; }
 .attach-preview { display: flex; flex-wrap: wrap; gap: 6px; padding: 6px 2px 4px; }
 .attach-chip {
   display: inline-flex; align-items: center; gap: 6px;
@@ -448,6 +410,7 @@ textarea::placeholder { color: var(--muted); }
   cursor: pointer;
 }
 .artifact-item:hover { border-color: var(--border); }
+.artifact-item[style*="cursor:default"]:hover { border-color: var(--border-soft); }
 .artifact-item-head {
   display: flex; justify-content: space-between;
   align-items: center; gap: 8px; margin-bottom: 4px;
@@ -619,19 +582,12 @@ input[type="range"] {
 input[type="range"]::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--accent);
-  cursor: pointer;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); cursor: pointer;
 }
 input[type="range"]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--accent);
-  cursor: pointer;
-  border: none;
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--accent); cursor: pointer; border: none;
 }
 .toast {
   position: fixed; bottom: calc(80px + var(--safe-bottom)); left: 50%;
@@ -669,7 +625,7 @@ input[type="range"]::-moz-range-thumb {
 }
 .idea-status.new { border-color: var(--accent); }
 .idea-status.in_progress { border-color: var(--warning); background: var(--warning-soft); }
-.idea-status.done { border-color: var(--success); background: rgba(79, 138, 107, 0.15); }
+.idea-status.done { border-color: var(--success); background: var(--success-soft); }
 .idea-text { flex: 1; font-size: 13.5px; color: var(--text); }
 .idea-text.done { text-decoration: line-through; color: var(--muted); }
 .release-item {
@@ -678,6 +634,7 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 12px;
   padding: 12px 14px;
   margin-bottom: 8px;
+  cursor: pointer;
 }
 .release-item-head {
   display: flex;
@@ -696,18 +653,22 @@ input[type="range"]::-moz-range-thumb {
   border-radius: 999px;
   background: var(--accent-soft);
   color: var(--accent);
-  cursor: pointer;
   white-space: nowrap;
 }
 .release-status.idea { background: var(--surface-2); color: var(--muted); }
 .release-status.in_progress { background: var(--warning-soft); color: var(--warning); }
-.release-status.done { background: rgba(79, 138, 107, 0.15); color: var(--success); }
+.release-status.done { background: var(--success-soft); color: var(--success); }
 .release-status.rejected { background: var(--critical-soft); color: var(--critical); }
-.release-comment {
-  font-size: 12.5px;
-  color: var(--muted);
-  line-height: 1.5;
+.release-comment { font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+.info-block {
+  padding: 12px 14px;
+  background: var(--surface-2);
+  border-radius: 12px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  line-height: 1.6;
 }
+.info-block strong { color: var(--text); font-weight: 600; }
 @media (min-width: 768px) {
   .sheet {
     left: 50%; right: auto;
@@ -749,7 +710,7 @@ input[type="range"]::-moz-range-thumb {
   <div class="input-wrap">
     <div class="attach-preview" id="attachPreview"></div>
     <div class="input-inner">
-      <button class="attach-btn" id="attachBtn" aria-label="Прикрепить файл" type="button">
+      <button class="attach-btn" id="attachBtn" aria-label="Прикрепить" type="button">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
       </button>
       <textarea id="input" placeholder="Напишите запрос..." rows="1"></textarea>
@@ -762,7 +723,7 @@ input[type="range"]::-moz-range-thumb {
 </div>
 <div class="sheet-bg" id="sheetBg"></div>
 
-<!-- Orb Sheet (Сфера) -->
+<!-- Orb Sheet -->
 <div class="sheet" id="orbSheet">
   <div class="sheet-handle" id="orbHandle"></div>
   <h3>Состояние</h3>
@@ -784,7 +745,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <button class="menu-item" id="orbManageKey" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      <div class="info"><div class="name">Ввести ключ Управления</div><div class="desc">Разблокировать разделы</div></div>
+      <div class="info"><div class="name">Ключ Управления</div><div class="desc">Разблокировать разделы</div></div>
     </button>
   </div>
 </div>
@@ -841,7 +802,7 @@ input[type="range"]::-moz-range-thumb {
     </button>
     <button class="menu-item" id="menuDashboard" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-      <div class="info"><div class="name">Дэшборд</div><div class="desc">Метрики управления</div></div>
+      <div class="info"><div class="name">Дэшборд</div><div class="desc">Личные метрики</div></div>
     </button>
   </div>
 
@@ -852,9 +813,21 @@ input[type="range"]::-moz-range-thumb {
       <div class="info"><div class="name">Блог автора</div><div class="desc">Статьи, лонгриды</div></div>
     </button>
   </div>
+
+  <div class="menu-section">
+    <div class="menu-section-title">О продукте</div>
+    <button class="menu-item" id="menuAbout" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      <div class="info"><div class="name">Ядро и адаптив</div><div class="desc">Что меняется, что нет</div></div>
+    </button>
+    <button class="menu-item" id="menuBusiness" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <div class="info"><div class="name">Для бизнеса</div><div class="desc">API и интеграции</div></div>
+    </button>
+  </div>
 </div>
 
-<!-- Индекс: история -->
+<!-- Индекс -->
 <div class="sheet" id="indexSheet">
   <div class="sheet-handle" id="indexHandle"></div>
   <h3>Индекс полезности</h3>
@@ -863,7 +836,7 @@ input[type="range"]::-moz-range-thumb {
     <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin-bottom:4px;">Баланс</div>
     <div id="indexBalance" style="font-size:32px;font-weight:600;letter-spacing:-0.02em;">+0.0</div>
   </div>
-  <div class="tabs">
+  <div class="tabs" id="indexTabs">
     <button class="tab active" data-index-tab="all" type="button">Все</button>
     <button class="tab" data-index-tab="income" type="button">Начисления</button>
     <button class="tab" data-index-tab="expense" type="button">Списания</button>
@@ -877,7 +850,7 @@ input[type="range"]::-moz-range-thumb {
   <div id="profileContent"></div>
 </div>
 
-<!-- Пульс сессии (метрики) -->
+<!-- Метрики -->
 <div class="sheet" id="metricsSheet">
   <div class="sheet-handle" id="metricsHandle"></div>
   <h3>Пульс сессии</h3>
@@ -916,7 +889,7 @@ input[type="range"]::-moz-range-thumb {
   <div id="ideasList"></div>
 </div>
 
-<!-- Облако важных -->
+<!-- Важное -->
 <div class="sheet" id="importantSheet">
   <div class="sheet-handle" id="importantHandle"></div>
   <h3>Облако важных</h3>
@@ -936,7 +909,7 @@ input[type="range"]::-moz-range-thumb {
 <div class="sheet" id="dashboardSheet">
   <div class="sheet-handle" id="dashboardHandle"></div>
   <h3>Дэшборд</h3>
-  <div class="sheet-sub">Метрики управления</div>
+  <div class="sheet-sub">Личные метрики</div>
   <div id="dashboardList"></div>
 </div>
 
@@ -981,17 +954,23 @@ input[type="range"]::-moz-range-thumb {
   <div class="sheet-handle" id="blogHandle"></div>
   <h3>Блог автора</h3>
   <div class="sheet-sub" id="blogSub">Статьи и лонгриды</div>
-  <div class="tabs" id="blogTabs">
-    <button class="tab active" data-tab="list" type="button">Статьи</button>
-    <button class="tab" data-tab="new" type="button">Новая статья</button>
-  </div>
-  <div id="blogListPane"><div id="blogList"></div></div>
-  <div id="blogNewPane" style="display:none;">
-    <button class="open-editor-btn" id="blogNewBtn" type="button" style="width:100%;justify-content:center;">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-      Открыть редактор
-    </button>
-  </div>
+  <div id="blogList"></div>
+</div>
+
+<!-- О продукте -->
+<div class="sheet" id="aboutSheet">
+  <div class="sheet-handle" id="aboutHandle"></div>
+  <h3>О продукте</h3>
+  <div class="sheet-sub">Ядро и адаптив</div>
+  <div id="aboutContent"></div>
+</div>
+
+<!-- Для бизнеса -->
+<div class="sheet" id="businessSheet">
+  <div class="sheet-handle" id="businessHandle"></div>
+  <h3>Для бизнеса</h3>
+  <div class="sheet-sub">API и интеграции</div>
+  <div id="businessContent"></div>
 </div>
 
 <!-- Редактор -->
@@ -1023,7 +1002,7 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- Модалка настроек -->
+<!-- Настройки -->
 <div class="modal-bg" id="modalBg">
   <div class="modal">
     <button class="modal-close" id="modalClose" aria-label="Закрыть" type="button">
@@ -1044,7 +1023,7 @@ input[type="range"]::-moz-range-thumb {
       <input type="password" id="keyInput" placeholder="Вставьте ключ" autocomplete="off" />
       <label class="check">
         <input type="checkbox" id="rememberKey" />
-        Запомнить ключ
+        Запомнить
       </label>
     </div>
 
@@ -1098,7 +1077,7 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- Модалка: путь кода -->
+<!-- Код: путь -->
 <div class="modal-bg" id="codePathModalBg">
   <div class="modal">
     <button class="modal-close" id="codePathClose" aria-label="Закрыть" type="button">
@@ -1115,7 +1094,7 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- Модалка: Новый Лот -->
+<!-- Лот: модалка -->
 <div class="modal-bg" id="lotModalBg">
   <div class="modal">
     <button class="modal-close" id="lotModalClose" aria-label="Закрыть" type="button">
@@ -1139,7 +1118,7 @@ input[type="range"]::-moz-range-thumb {
   </div>
 </div>
 
-<!-- Модалка: Новая доработка -->
+<!-- Релиз: модалка -->
 <div class="modal-bg" id="releaseModalBg">
   <div class="modal">
     <button class="modal-close" id="releaseModalClose" aria-label="Закрыть" type="button">
@@ -1149,7 +1128,7 @@ input[type="range"]::-moz-range-thumb {
     <label for="releaseNameInput">Название</label>
     <input type="text" id="releaseNameInput" placeholder="Что улучшаем" />
     <label for="releaseCommentInput">Комментарий</label>
-    <textarea id="releaseCommentInput" placeholder="Детали, гипотезы, зачем нужно" style="min-height:100px;"></textarea>
+    <textarea id="releaseCommentInput" placeholder="Детали, гипотезы" style="min-height:100px;"></textarea>
     <label>Статус</label>
     <div class="segmented" id="releaseStatusSeg">
       <button data-status="idea" type="button">Идея</button>
@@ -1178,7 +1157,6 @@ const LS_KEY = "monolog_api_key";
 const LS_AUTHOR = "monolog_author_key";
 const LS_MANAGE = "monolog_manage_key";
 const LS_PROVIDER = "monolog_provider";
-const LS_PROFILE = "monolog_profile";
 const LS_FONT = "monolog_font_size";
 const LS_DEPTH = "monolog_depth_mode";
 const DB_NAME = "monolog_db_v4";
@@ -1186,13 +1164,14 @@ const DB_VERSION = 1;
 const STORE_LOTS = "lots";
 const STORE_CHATS = "chats";
 const STORE_RELEASES = "releases";
+const STORE_ANALYTICS = "analytics";
 const STORE_META = "meta";
 
 const PROVIDERS_FALLBACK = [
-  { id: "groq", name: "Groq", free: "1000/день" },
-  { id: "openrouter", name: "OpenRouter", free: "50/день" },
-  { id: "cerebras", name: "Cerebras", free: "14400/день" },
-  { id: "sambanova", name: "SambaNova", free: "12000/день" },
+  { id: "groq", name: "Groq" },
+  { id: "openrouter", name: "OpenRouter" },
+  { id: "cerebras", name: "Cerebras" },
+  { id: "sambanova", name: "SambaNova" },
 ];
 
 const DEMO_SUGGESTIONS = [
@@ -1239,7 +1218,6 @@ const state = {
   editingReleaseStatus: "idea",
   editorContext: null,
   placeholderIndex: 0,
-  importantMessageIds: {}
 };
 
 function currentChat() {
@@ -1251,7 +1229,7 @@ function currentLot() {
   return state.lots.find(l => l.id === c.lotId);
 }
 
-// ============ IndexedDB ============
+// --- IndexedDB ---
 let _db = null;
 function openDB() {
   return new Promise((resolve, reject) => {
@@ -1263,6 +1241,7 @@ function openDB() {
         if (!db.objectStoreNames.contains(STORE_LOTS)) db.createObjectStore(STORE_LOTS, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_CHATS)) db.createObjectStore(STORE_CHATS, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_RELEASES)) db.createObjectStore(STORE_RELEASES, { keyPath: "id" });
+        if (!db.objectStoreNames.contains(STORE_ANALYTICS)) db.createObjectStore(STORE_ANALYTICS, { keyPath: "id" });
         if (!db.objectStoreNames.contains(STORE_META)) db.createObjectStore(STORE_META);
       };
       req.onsuccess = (e) => { _db = e.target.result; resolve(_db); };
@@ -1325,13 +1304,9 @@ async function dbSetMeta(key, val) {
   } catch (e) { return false; }
 }
 
-// ============ Утилиты ============
-function uid(prefix) {
-  return (prefix || "id") + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-}
-function escHtml(t) {
-  return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
+// --- Утилиты ---
+function uid(prefix) { return (prefix || "id") + "_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8); }
+function escHtml(t) { return String(t == null ? "" : t).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
 function pluralize(n, forms) {
   const mod10 = n % 10, mod100 = n % 100;
   if (mod10 === 1 && mod100 !== 11) return forms[0];
@@ -1354,7 +1329,7 @@ function renderMarkdown(text) {
   return "<p>" + esc.replace(/\n\n/g, "</p><p>").replace(/\n/g, "<br>") + "</p>";
 }
 
-// ============ Тема и шрифт ============
+// --- Тема и шрифт ---
 function applyTheme() {
   let theme;
   if (state.depthMode === "auto") {
@@ -1378,7 +1353,7 @@ function applyProfile() {
   applyFontSize();
 }
 
-// ============ Сфера ============
+// --- Сфера ---
 function renderOrb() {
   const orb = document.getElementById("orbBtn");
   orb.className = "orb " + state.mode;
@@ -1390,16 +1365,14 @@ function switchMode() {
   const idx = modes.indexOf(state.mode);
   state.mode = modes[(idx + 1) % modes.length];
   const orb = document.getElementById("orbBtn");
-  orb.classList.add("switching");
   setTimeout(() => {
     orb.className = "orb " + state.mode;
     const tint = ORB_TINTS[Math.floor(Math.random() * ORB_TINTS.length)];
     orb.style.setProperty("--orb-tint", tint);
-  }, 200);
-  setTimeout(() => orb.classList.remove("switching"), 700);
+  }, 100);
+  try { localStorage.setItem("monolog_mode", state.mode); } catch (e) {}
   toast(state.mode === "analyst" ? "Аналитик" : state.mode === "strategist" ? "Стратег" : "Симбиоз");
 }
-
 function renderOrbSheet() {
   const box = document.getElementById("orbContent");
   const c = currentChat();
@@ -1410,19 +1383,13 @@ function renderOrbSheet() {
   html += '<div class="artifact-item-meta"><span>Долгий тап по сфере — переключить</span></div>';
   html += '</div>';
   if (m.stability_index != null) {
-    html += '<div class="artifact-item" style="cursor:default;">';
-    html += '<div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + Number(m.stability_index).toFixed(2) + '</span></div>';
-    html += '</div>';
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + Number(m.stability_index).toFixed(2) + '</span></div></div>';
   }
   if (m.mind_scale) {
-    html += '<div class="artifact-item" style="cursor:default;">';
-    html += '<div class="artifact-item-head"><span class="artifact-item-name">Масштаб</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div>';
-    html += '</div>';
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Масштаб</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
   }
   if (m.lots_balance) {
-    html += '<div class="artifact-item" style="cursor:default;">';
-    html += '<div class="artifact-item-head"><span class="artifact-item-name">Баланс</span><span class="artifact-item-stage">' + escHtml(m.lots_balance) + '</span></div>';
-    html += '</div>';
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Баланс</span><span class="artifact-item-stage">' + escHtml(m.lots_balance) + '</span></div></div>';
   }
   box.innerHTML = html;
   const manage = document.getElementById("orbManageSection");
@@ -1430,7 +1397,7 @@ function renderOrbSheet() {
   else manage.style.display = "none";
 }
 
-// ============ Header ============
+// --- Header ---
 function updateIndexBtn() {
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
@@ -1480,7 +1447,7 @@ function confirmReset(rp) {
   }
 }
 
-// ============ Меню ============
+// --- Меню ---
 function updateMenu() {
   const lotList = state.lots.filter(l => !l.archived);
   const lotsDesc = document.getElementById("menuLotsDesc");
@@ -1516,7 +1483,7 @@ function updateMenu() {
   }
 }
 
-// ============ Чат ============
+// --- Чат ---
 function addRow(role, content, options) {
   options = options || {};
   const chat = document.getElementById("chat");
@@ -1565,7 +1532,6 @@ function addRow(role, content, options) {
   chat.scrollTop = chat.scrollHeight;
   return { row, bubble };
 }
-
 function renderCurrentChat() {
   const c = currentChat();
   if (!c) return;
@@ -1585,7 +1551,6 @@ function renderCurrentChat() {
     updateHeaderDynamic();
   }
 }
-
 function renderDemo() {
   const chat = document.getElementById("chat");
   if (chat.children.length > 0) return;
@@ -1602,7 +1567,7 @@ function renderDemo() {
   });
 }
 
-// ============ Отправка ============
+// --- Отправка ---
 async function send() {
   const input = document.getElementById("input");
   const btn = document.getElementById("sendBtn");
@@ -1672,6 +1637,16 @@ async function send() {
       persistChat(c);
       updateIndexBtn();
       updateHeaderDynamic();
+      // analytics
+      await dbPut(STORE_ANALYTICS, {
+        id: uid("an"),
+        at: new Date().toISOString(),
+        provider: data.provider_used || state.provider,
+        model: data.model_used || null,
+        key_source: data.key_source || null,
+        msg_len: (text || "").length,
+        lot_id: c.lotId || null,
+      });
     } else {
       addRow("agent", "Пустой ответ сервера.");
     }
@@ -1688,7 +1663,7 @@ async function send() {
   }
 }
 
-// ============ Шторки ============
+// --- Шторки ---
 function openSheet(id) {
   document.getElementById("sheetBg").classList.add("open");
   const el = document.getElementById(id);
@@ -1719,7 +1694,7 @@ function setupSwipeToClose(sheetEl, handleEl) {
   window.addEventListener("mouseup", onEnd);
 }
 
-// ============ Индекс ============
+// --- Индекс ---
 function renderIndexSheet(tab) {
   tab = tab || "all";
   const c = currentChat();
@@ -1747,19 +1722,15 @@ function renderIndexSheet(tab) {
   });
 }
 
-// ============ Профиль ============
+// --- Профиль ---
 function renderProfile() {
   const box = document.getElementById("profileContent");
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   let html = '<h3>Профиль</h3><div class="sheet-sub">Когнитивная карта</div>';
   const si = typeof m.stability_index === "number" ? m.stability_index : null;
-  if (si != null) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + si.toFixed(2) + '</span></div></div>';
-  }
-  if (m.mind_scale) {
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Масштаб</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
-  }
+  if (si != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + si.toFixed(2) + '</span></div></div>';
+  if (m.mind_scale) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Масштаб</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
   const profile = m.profile || {};
   const patterns = profile.patterns || [];
   if (patterns.length) {
@@ -1776,47 +1747,38 @@ function renderProfile() {
     html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Наблюдения</div>';
     html += '<div style="display:flex;flex-direction:column;gap:8px;">' + insights.map(i => '<div style="font-size:13px;line-height:1.5;">' + escHtml(i) + '</div>').join("") + '</div>';
   }
-  // Приоритеты
   const priorities = (c && c.priorities) || [];
   html += '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:600;margin:16px 0 8px;">Приоритеты</div>';
-  if (!priorities.length) {
-    html += '<div class="empty-note">Пока нет.</div>';
-  } else {
-    html += '<div style="display:flex;flex-direction:column;gap:6px;">' + priorities.map(p => '<div style="padding:8px 12px;background:var(--surface-2);border-radius:10px;font-size:13px;">' + escHtml(p) + '</div>').join("") + '</div>';
-  }
+  if (!priorities.length) html += '<div class="empty-note">Пока нет.</div>';
+  else html += '<div style="display:flex;flex-direction:column;gap:6px;">' + priorities.map(p => '<div style="padding:8px 12px;background:var(--surface-2);border-radius:10px;font-size:13px;">' + escHtml(p) + '</div>').join("") + '</div>';
   if (!si && !m.mind_scale && !patterns.length && !distortions.length && !insights.length && !priorities.length) {
-    html += '<div class="empty-note">Пока нет данных. Продолжайте диалог — Monolog начнёт строить карту.</div>';
+    html += '<div class="empty-note">Пока нет данных. Продолжайте диалог.</div>';
   }
   box.innerHTML = html;
 }
 
-// ============ Метрики ============
+// --- Метрики ---
 function renderMetricsSheet() {
   const box = document.getElementById("metricsContent");
   const c = currentChat();
   const m = (c && c.lastMetrics) || {};
   let html = "";
   const si = typeof m.stability_index === "number" ? m.stability_index : null;
-  if (si != null) {
-    const color = si < 0.5 ? "critical" : si < 0.75 ? "warning" : "success";
-    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage" style="background:var(--' + color + '-soft,#eee);color:var(--' + color + ');">' + si.toFixed(2) + '</span></div></div>';
-  }
+  if (si != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Стабильность</span><span class="artifact-item-stage">' + si.toFixed(2) + '</span></div></div>';
   if (m.mind_scale) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Масштаб</span><span class="artifact-item-stage">' + escHtml(m.mind_scale) + '</span></div></div>';
   if (m.cognitive_pulse) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Пульс</span><span class="artifact-item-stage">' + escHtml(m.cognitive_pulse) + '</span></div></div>';
   if (m.human_contribution != null) html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Вклад человек / ИИ</span><span class="artifact-item-stage">' + Math.round(m.human_contribution * 100) + '%</span></div></div>';
+  if (m.dominant_trait && m.dominant_trait.detected) {
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Импульс</span><span class="artifact-item-stage">' + escHtml(m.dominant_trait.influence || "—") + '</span></div>' + (m.dominant_trait.hint ? '<div class="artifact-item-meta"><span>' + escHtml(m.dominant_trait.hint) + '</span></div>' : '') + '</div>';
+  }
   if (!html) html = '<div class="empty-note">Метрики появятся после первого диалога.</div>';
-  const c2 = currentChat();
-  html += '<div style="margin-top:16px;font-size:11px;color:var(--muted);">Запросов: ' + ((c2 && c2.sessionCount) || 0) + '</div>';
+  html += '<div style="margin-top:16px;font-size:11px;color:var(--muted);">Запросов в сессии: ' + ((c && c.sessionCount) || 0) + '</div>';
   box.innerHTML = html;
 }
 
-// ============ Лоты ============
+// --- Лоты ---
 function createLotObj(name, goal, price) {
-  return {
-    id: uid("lot"), name, goal: goal || null, price: price || null,
-    createdAt: new Date().toISOString(), archived: false,
-    documents: [], ideas: [], chatIds: [], indexHistory: [], indexTotal: 0
-  };
+  return { id: uid("lot"), name, goal: goal || null, price: price || null, createdAt: new Date().toISOString(), archived: false, documents: [], ideas: [], chatIds: [], indexHistory: [], indexTotal: 0 };
 }
 function renderLotsList() {
   const activeBox = document.getElementById("lotsActiveList");
@@ -1878,7 +1840,6 @@ function openLotCard(lotId) {
   if (chatsList) chats.forEach(c => {
     const row = document.createElement("div");
     row.className = "artifact-item";
-    row.style.cursor = "pointer";
     row.innerHTML = '<div class="artifact-item-name">' + escHtml(c.title) + '</div>';
     row.addEventListener("click", () => { switchChat(c.id); closeAllSheets(); });
     chatsList.appendChild(row);
@@ -1887,7 +1848,6 @@ function openLotCard(lotId) {
   if (docsList) docs.forEach((d, idx) => {
     const row = document.createElement("div");
     row.className = "artifact-item";
-    row.style.cursor = "pointer";
     row.innerHTML = '<div class="artifact-item-name">' + escHtml(d.name || "Документ") + '</div>';
     row.addEventListener("click", () => {
       closeAllSheets();
@@ -1896,7 +1856,7 @@ function openLotCard(lotId) {
     docsList.appendChild(row);
   });
   const ideasList = document.getElementById("lotIdeasList");
-  if (ideasList) ideas.forEach((it, idx) => {
+  if (ideasList) ideas.forEach((it) => {
     const row = document.createElement("div");
     row.className = "idea-row";
     const status = it.status || "new";
@@ -1962,26 +1922,16 @@ async function deleteLot() {
   toast("Лот удалён");
 }
 
-// ============ Чаты ============
+// --- Чаты ---
 function createChatObj(title, lotId) {
-  return {
-    id: uid("chat"), title: title || "Новый чат",
-    lotId: lotId || null,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    history: [], lastMetrics: null, sessionCount: 0,
-    important: {}, indexHistory: [], priorities: []
-  };
+  return { id: uid("chat"), title: title || "Новый чат", lotId: lotId || null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), history: [], lastMetrics: null, sessionCount: 0, important: {}, indexHistory: [], priorities: [] };
 }
 async function persistChat(c) {
   if (!c) return;
   await dbPut(STORE_CHATS, c);
   await dbSetMeta("currentChatId", c.id);
 }
-async function persistLot(l) {
-  if (!l) return;
-  await dbPut(STORE_LOTS, l);
-}
+async function persistLot(l) { if (!l) return; await dbPut(STORE_LOTS, l); }
 async function switchChat(chatId) {
   if (chatId === state.currentChatId) return;
   state.currentChatId = chatId;
@@ -1995,10 +1945,7 @@ function renderChatsList() {
   if (!box) return;
   box.innerHTML = "";
   const unattached = state.chats.filter(c => !c.lotId);
-  if (!unattached.length) {
-    box.innerHTML = '<div class="empty-note">Пока нет чатов без Лота.</div>';
-    return;
-  }
+  if (!unattached.length) { box.innerHTML = '<div class="empty-note">Пока нет чатов без Лота.</div>'; return; }
   unattached.forEach(c => {
     const item = document.createElement("div");
     item.className = "artifact-item";
@@ -2009,17 +1956,14 @@ function renderChatsList() {
   });
 }
 
-// ============ Идеи ============
+// --- Идеи ---
 function renderIdeasList() {
   const box = document.getElementById("ideasList");
   if (!box) return;
   box.innerHTML = "";
   const all = [];
   state.lots.forEach(l => (l.ideas || []).forEach((it, idx) => all.push({ lotId: l.id, idx, idea: it })));
-  if (!all.length) {
-    box.innerHTML = '<div class="empty-note">Пока нет идей.</div>';
-    return;
-  }
+  if (!all.length) { box.innerHTML = '<div class="empty-note">Пока нет идей.</div>'; return; }
   all.forEach(item => {
     const row = document.createElement("div");
     row.className = "idea-row";
@@ -2039,17 +1983,14 @@ function renderIdeasList() {
   });
 }
 
-// ============ Документы ============
+// --- Документы ---
 function renderDocumentsList() {
   const box = document.getElementById("documentsList");
   if (!box) return;
   box.innerHTML = "";
   const all = [];
   state.lots.forEach(l => (l.documents || []).forEach((d, idx) => all.push({ lotId: l.id, lotName: l.name, idx, doc: d })));
-  if (!all.length) {
-    box.innerHTML = '<div class="empty-note">Пока нет документов.</div>';
-    return;
-  }
+  if (!all.length) { box.innerHTML = '<div class="empty-note">Пока нет документов.</div>'; return; }
   all.forEach(item => {
     const el = document.createElement("div");
     el.className = "artifact-item";
@@ -2063,16 +2004,13 @@ function renderDocumentsList() {
   });
 }
 
-// ============ Важное ============
+// --- Важное ---
 function renderImportantList() {
   const box = document.getElementById("importantList");
   if (!box) return;
   box.innerHTML = "";
   const c = currentChat();
-  if (!c || !c.important || !Object.keys(c.important).length) {
-    box.innerHTML = '<div class="empty-note">Пока нет важных сообщений.</div>';
-    return;
-  }
+  if (!c || !c.important || !Object.keys(c.important).length) { box.innerHTML = '<div class="empty-note">Пока нет важных сообщений.</div>'; return; }
   const ids = Object.keys(c.important).map(Number).sort((a, b) => b - a);
   ids.forEach(id => {
     const msg = c.history[id];
@@ -2085,23 +2023,15 @@ function renderImportantList() {
   });
 }
 
-// ============ Релиз ============
+// --- Релиз ---
 function createReleaseObj(name, comment, status) {
-  return {
-    id: uid("rel"), name, comment: comment || "",
-    status: status || "idea",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString()
-  };
+  return { id: uid("rel"), name, comment: comment || "", status: status || "idea", createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
 }
 function renderReleaseList() {
   const box = document.getElementById("releaseList");
   if (!box) return;
   box.innerHTML = "";
-  if (!state.releases.length) {
-    box.innerHTML = '<div class="empty-note">Список пуст.</div>';
-    return;
-  }
+  if (!state.releases.length) { box.innerHTML = '<div class="empty-note">Список пуст.</div>'; return; }
   state.releases.forEach(r => {
     const el = document.createElement("div");
     el.className = "release-item";
@@ -2157,7 +2087,36 @@ async function deleteRelease() {
   toast("Удалено");
 }
 
-// ============ Редактор ============
+// --- О продукте ---
+function renderAbout() {
+  const box = document.getElementById("aboutContent");
+  box.innerHTML =
+    '<div class="info-block"><strong>Ядро (не меняется)</strong><br>' +
+    'Человек в центре. Отражаю, не веду. Прямота. Наличие Ядра, Адаптивной части и Инфраструктуры. Лоты — единица обмена. Ошибка → данные → класс → шаблон.</div>' +
+    '<div class="info-block"><strong>Адаптивная часть (меняется)</strong><br>' +
+    'Интерфейс. Метрики. Тон. Модели. Правила показа. Форматы выбора. Содержание Ядра. Всё, что можно менять без потери сущности продукта.</div>' +
+    '<div class="info-block"><strong>Инфраструктура</strong><br>' +
+    'Автоматически адаптирует содержание Ядра и Адаптивной части. Работает через правила и метрики.</div>';
+}
+function renderBusiness() {
+  const box = document.getElementById("businessContent");
+  box.innerHTML =
+    '<div class="info-block"><strong>API Monolog</strong><br>' +
+    'Встраивание когнитивного партнёра в корпоративные системы. Сотрудники получают поддержку в принятии решений, руководители — метрики прогресса команды.</div>' +
+    '<div class="info-block"><strong>Что даёт бизнесу</strong><br>' +
+    '• Единый когнитивный интерфейс для команды<br>' +
+    '• Корпоративные Лоты — цели компании, которые ведёт Monolog<br>' +
+    '• Обучение сотрудников шаблонам мышления<br>' +
+    '• Аналитика принятий решений<br>' +
+    '• Интеграция через API</div>' +
+    '<div class="info-block"><strong>Модель монетизации</strong><br>' +
+    '• Pay-per-call (за вызовы API)<br>' +
+    '• Pay-per-user (за сотрудника)<br>' +
+    '• Enterprise-лицензия</div>' +
+    '<div class="info-block" style="color:var(--muted);font-style:italic;">Раздел в разработке. Свяжитесь с автором для пилотной интеграции.</div>';
+}
+
+// --- Редактор ---
 function openEditor(context) {
   state.editorContext = context || {};
   const name = context.name || "";
@@ -2196,7 +2155,7 @@ async function saveEditorToLot() {
   setTimeout(() => closeAllSheets(), 600);
 }
 
-// ============ Аттачи ============
+// --- Аттачи ---
 function renderAttachPreview() {
   const box = document.getElementById("attachPreview");
   box.innerHTML = "";
@@ -2224,7 +2183,7 @@ async function handleFiles(files) {
   renderAttachPreview();
 }
 
-// ============ Настройки ============
+// --- Настройки ---
 function renderProviderGrid() {
   const grid = document.getElementById("providerGrid");
   if (!grid) return;
@@ -2243,7 +2202,7 @@ function renderProviderGrid() {
   });
 }
 
-// ============ Инициализация ============
+// --- Init ---
 async function init() {
   setTimeout(() => {
     const sp = document.getElementById("splash");
@@ -2256,8 +2215,7 @@ async function init() {
       state.authorKey = localStorage.getItem(LS_AUTHOR) || "";
       state.manageKey = localStorage.getItem(LS_MANAGE) || "";
       state.provider = localStorage.getItem(LS_PROVIDER) || "groq";
-      const depth = localStorage.getItem(LS_DEPTH) || "auto";
-      state.depthMode = depth;
+      state.depthMode = localStorage.getItem(LS_DEPTH) || "auto";
       const fs = parseInt(localStorage.getItem(LS_FONT) || "14", 10);
       state.fontSize = isNaN(fs) ? 14 : fs;
       const mode = localStorage.getItem("monolog_mode");
@@ -2278,7 +2236,8 @@ async function init() {
     ["orbSheet", "menuSheet", "indexSheet", "profileSheet", "metricsSheet",
      "lotsSheet", "lotCardSheet", "ideasSheet", "importantSheet",
      "notificationsSheet", "dashboardSheet", "releaseSheet", "devReportSheet",
-     "documentsSheet", "chatsSheet", "blogSheet", "editorSheet"
+     "documentsSheet", "chatsSheet", "blogSheet", "aboutSheet", "businessSheet",
+     "editorSheet"
     ].forEach(id => {
       const s = document.getElementById(id);
       const h = s ? s.querySelector(".sheet-handle") : null;
@@ -2303,11 +2262,8 @@ async function init() {
       });
     });
 
-    // Header кнопки
-    document.getElementById("indexBtn").addEventListener("click", () => {
-      renderIndexSheet("all");
-      openSheet("indexSheet");
-    });
+    // Header
+    document.getElementById("indexBtn").addEventListener("click", () => { renderIndexSheet("all"); openSheet("indexSheet"); });
     document.getElementById("metricsBtn").addEventListener("click", () => { renderMetricsSheet(); openSheet("metricsSheet"); });
     document.getElementById("profileBtn").addEventListener("click", () => { renderProfile(); openSheet("profileSheet"); });
     document.getElementById("menuBtn").addEventListener("click", () => { updateMenu(); openSheet("menuSheet"); });
@@ -2325,10 +2281,10 @@ async function init() {
       document.getElementById("modalBg").classList.add("open");
     });
 
-    // Табы индекса
-    document.querySelectorAll("#indexSheet .tab").forEach(t => {
+    // Index табы
+    document.querySelectorAll("#indexTabs .tab").forEach(t => {
       t.addEventListener("click", () => {
-        document.querySelectorAll("#indexSheet .tab").forEach(x => x.classList.remove("active"));
+        document.querySelectorAll("#indexTabs .tab").forEach(x => x.classList.remove("active"));
         t.classList.add("active");
         renderIndexSheet(t.dataset.indexTab);
       });
@@ -2348,10 +2304,12 @@ async function init() {
     document.getElementById("menuChats").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderChatsList(); openSheet("chatsSheet"); }, 200); });
     document.getElementById("menuImportant").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderImportantList(); openSheet("importantSheet"); }, 200); });
     document.getElementById("menuNotifications").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { const box = document.getElementById("notificationsList"); if (box) box.innerHTML = '<div class="empty-note">Пока нет уведомлений.</div>'; openSheet("notificationsSheet"); }, 200); });
-    document.getElementById("menuDashboard").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { const box = document.getElementById("dashboardList"); if (box) box.innerHTML = '<div class="empty-note">В разработке.</div>'; openSheet("dashboardSheet"); }, 200); });
+    document.getElementById("menuDashboard").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderDashboard(); openSheet("dashboardSheet"); }, 200); });
     document.getElementById("menuBlog").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { const box = document.getElementById("blogList"); if (box) box.innerHTML = '<div class="empty-note">Блог появится здесь.</div>'; openSheet("blogSheet"); }, 200); });
+    document.getElementById("menuAbout").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderAbout(); openSheet("aboutSheet"); }, 200); });
+    document.getElementById("menuBusiness").addEventListener("click", () => { closeAllSheets(); setTimeout(() => { renderBusiness(); openSheet("businessSheet"); }, 200); });
 
-    // Orb → Управление
+    // Управление из сферы
     document.getElementById("orbManageCode").addEventListener("click", () => {
       closeAllSheets();
       setTimeout(() => {
@@ -2366,7 +2324,7 @@ async function init() {
     });
     document.getElementById("orbManageDevReport").addEventListener("click", () => {
       closeAllSheets();
-      setTimeout(() => { const box = document.getElementById("devReportList"); if (box) box.innerHTML = '<div class="empty-note">Отчёт появится после нескольких сессий.</div>'; openSheet("devReportSheet"); }, 200);
+      setTimeout(() => { renderDevReport(); openSheet("devReportSheet"); }, 200);
     });
     document.getElementById("orbManageKey").addEventListener("click", () => {
       closeAllSheets();
@@ -2376,7 +2334,7 @@ async function init() {
       }, 200);
     });
 
-    // Табы лотов
+    // Табы Лотов
     document.querySelectorAll("#lotsTabs .tab").forEach(t => {
       t.addEventListener("click", () => {
         document.querySelectorAll("#lotsTabs .tab").forEach(x => x.classList.remove("active"));
@@ -2408,7 +2366,7 @@ async function init() {
     document.getElementById("releaseSave").addEventListener("click", saveRelease);
     document.getElementById("releaseDelete").addEventListener("click", deleteRelease);
 
-    // Модалка кода
+    // Код
     document.getElementById("codePathClose").addEventListener("click", closeAllSheets);
     document.getElementById("codePathCancel").addEventListener("click", closeAllSheets);
     document.getElementById("codePathModalBg").addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
@@ -2424,12 +2382,8 @@ async function init() {
         });
         const data = await r.json();
         if (!r.ok) throw new Error(data.detail || ("HTTP " + r.status));
-        if (!data.exists) {
-          status.textContent = "Файл не найден.";
-        } else {
-          closeAllSheets();
-          openEditor({ type: "code", name: path, body: data.content || "", path: path });
-        }
+        if (!data.exists) status.textContent = "Файл не найден.";
+        else { closeAllSheets(); openEditor({ type: "code", name: path, body: data.content || "", path: path }); }
       } catch (e) { status.textContent = "Ошибка: " + e.message; }
     });
 
@@ -2532,7 +2486,7 @@ async function init() {
       } catch (e) { status.textContent = "Ошибка: " + e.message; }
     });
 
-    // Поля ввода / отправа
+    // Input
     const sendBtn = document.getElementById("sendBtn");
     const input = document.getElementById("input");
     const fileInput = document.getElementById("fileInput");
@@ -2552,15 +2506,21 @@ async function init() {
     }
     input.addEventListener("input", resizeInput);
     resizeInput();
-
-    // Placeholders
     setInterval(() => {
       state.placeholderIndex = (state.placeholderIndex + 1) % PLACEHOLDERS.length;
       if (!input.value) input.placeholder = PLACEHOLDERS[state.placeholderIndex];
     }, 8000);
 
-    // Sheet bg close
     document.getElementById("sheetBg").addEventListener("click", closeAllSheets);
+
+    // providers
+    try {
+      const r = await fetch(API_BASE + "/providers");
+      if (r.ok) {
+        const data = await r.json();
+        if (data.providers && data.providers.length) _providersCache = data.providers;
+      }
+    } catch (e) {}
 
   } catch (e) {
     console.error("init error", e);
@@ -2571,7 +2531,43 @@ async function init() {
   }
 }
 
-// ============ Загрузка данных ============
+// --- Dashboard ---
+async function renderDashboard() {
+  const box = document.getElementById("dashboardList");
+  if (!box) return;
+  const analytics = await dbGetAll(STORE_ANALYTICS);
+  const total = analytics.length;
+  const byProvider = {};
+  analytics.forEach(a => { byProvider[a.provider] = (byProvider[a.provider] || 0) + 1; });
+  const lotCount = state.lots.length;
+  const chatCount = state.chats.length;
+  let html = "";
+  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Всего запросов</span><span class="artifact-item-stage">' + total + '</span></div></div>';
+  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Лотов</span><span class="artifact-item-stage">' + lotCount + '</span></div></div>';
+  html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">Чатов</span><span class="artifact-item-stage">' + chatCount + '</span></div></div>';
+  Object.keys(byProvider).forEach(pid => {
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(pid) + '</span><span class="artifact-item-stage">' + byProvider[pid] + '</span></div></div>';
+  });
+  box.innerHTML = html;
+}
+async function renderDevReport() {
+  const box = document.getElementById("devReportList");
+  if (!box) return;
+  const analytics = await dbGetAll(STORE_ANALYTICS);
+  const byModel = {};
+  analytics.forEach(a => {
+    const key = a.model || "—";
+    byModel[key] = (byModel[key] || 0) + 1;
+  });
+  if (!Object.keys(byModel).length) { box.innerHTML = '<div class="empty-note">Отчёт появится после сессий.</div>'; return; }
+  let html = "";
+  Object.keys(byModel).sort((a, b) => byModel[b] - byModel[a]).forEach(m => {
+    html += '<div class="artifact-item" style="cursor:default;"><div class="artifact-item-head"><span class="artifact-item-name">' + escHtml(m) + '</span><span class="artifact-item-stage">' + byModel[m] + '</span></div></div>';
+  });
+  box.innerHTML = html;
+}
+
+// --- Load ---
 async function loadData() {
   state.lots = await dbGetAll(STORE_LOTS);
   state.chats = await dbGetAll(STORE_CHATS);
