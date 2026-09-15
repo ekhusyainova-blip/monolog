@@ -1,13 +1,12 @@
 # app.py
-# Monolog — stateless-прокси к 4 провайдерам LLM + блог + Word-экспорт.
-# Режим Управления: ключ Эгида-Эльвира-7.
-# Пакет разработчика: /code/* (в ветку dev).
-# Слой B НЕ отправляется. История НЕ отправляется. Ключи не сохраняются.
+# Monolog — когнитивный партнёр. Ядро 1.0 + публичный слой.
+# Stateless. Ключи не сохраняются. История не отправляется.
 
 import os
 import re
 import json
 import time
+import hmac
 import base64
 import logging
 import itertools
@@ -25,6 +24,12 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("monolog")
 
+SECRET_PATTERN = re.compile(r"(sk_[A-Za-z0-9_\-]{8,}|gsk_[A-Za-z0-9_\-]{8,}|Bearer\s+[A-Za-z0-9_\-\.]{10,})")
+
+def safe_log(msg: str):
+    log.info(SECRET_PATTERN.sub("[SECRET]", str(msg)))
+
+
 PROVIDERS = {
     "groq": {
         "name": "Groq",
@@ -34,6 +39,13 @@ PROVIDERS = {
             "medium": "openai/gpt-oss-120b",
             "heavy": "qwen/qwen3.6-27b",
         },
+        "all_models": [
+            "openai/gpt-oss-20b",
+            "openai/gpt-oss-120b",
+            "qwen/qwen3.6-27b",
+            "llama-3.3-70b-versatile",
+            "llama-3.1-8b-instant",
+        ],
         "reasoning_effort": True,
     },
     "openrouter": {
@@ -44,6 +56,13 @@ PROVIDERS = {
             "medium": "openai/gpt-oss-120b:free",
             "heavy": "qwen/qwen-coder:free",
         },
+        "all_models": [
+            "openai/gpt-oss-20b:free",
+            "openai/gpt-oss-120b:free",
+            "qwen/qwen-coder:free",
+            "meta-llama/llama-3.3-70b-instruct:free",
+            "google/gemma-2-9b-it:free",
+        ],
         "reasoning_effort": False,
     },
     "cerebras": {
@@ -54,6 +73,7 @@ PROVIDERS = {
             "medium": "gpt-oss-120b",
             "heavy": "gpt-oss-120b",
         },
+        "all_models": ["gpt-oss-20b", "gpt-oss-120b", "llama3.1-8b", "llama3.1-70b"],
         "reasoning_effort": True,
     },
     "sambanova": {
@@ -64,30 +84,47 @@ PROVIDERS = {
             "medium": "Meta-Llama-3.3-70B-Instruct",
             "heavy": "DeepSeek-V3.1",
         },
+        "all_models": [
+            "Meta-Llama-3.3-70B-Instruct",
+            "Meta-Llama-3.1-8B-Instruct",
+            "DeepSeek-V3.1",
+        ],
         "reasoning_effort": False,
     },
 }
 
-# Увеличено для длинных документов и кода
-MAX_TOKENS = 6000
+MAX_TOKENS = 3500
+META_MAX_TOKENS = 800
 TIMEOUT = 120.0
 
-_DEV_KEYS_GROQ: List[str] = [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()]
+MAX_MESSAGE_LEN = 8000
+SOFT_MESSAGE_LEN = 4000
+MAX_ATTACH_LEN = 3000
+MAX_ATTACHMENTS = 3
+MAX_BODY_BYTES = 200_000
+
+_DEV_KEYS_GROQ: List[str] = [
+    k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()
+]
 _dev_key_cycle = itertools.cycle(_DEV_KEYS_GROQ) if _DEV_KEYS_GROQ else None
+
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
+MANAGEMENT_KEY = os.getenv("MANAGEMENT_KEY", "").strip()
+AUTHOR_SECRET = os.getenv("AUTHOR_SECRET", "").strip()
 
-# Режим Управления — ключ Эльвиры
-MANAGEMENT_KEY = "Эгида-Эльвира-7"
+CORS_ORIGINS_ENV = os.getenv("CORS_ORIGINS", "*").strip()
+CORS_ORIGINS = [o.strip() for o in CORS_ORIGINS_ENV.split(",") if o.strip()] or ["*"]
 
-# Блог
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ekhusyainova-blip/monolog").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
+CODE_BRANCH = os.getenv("CODE_BRANCH", "dev").strip()
 BLOG_PATH = "blog/posts.json"
-AUTHOR_SECRET = os.getenv("AUTHOR_SECRET", "").strip()
-
-# Пакет разработчика — ветка dev
-CODE_BRANCH = "dev"
+RELEASES_PATH = "releases.json"
+PUBLIC_TEMPLATES_PATH = "public/templates.json"
+PUBLIC_LOTS_PATH = "public/lots.json"
+PUBLIC_REVIEWS_PATH = "public/reviews.json"
+PUBLIC_REPUTATION_PATH = "public/reputation.json"
 
 
 def _load(path: str) -> str:
@@ -98,13 +135,57 @@ def _load(path: str) -> str:
         log.warning(f"Prompt file not found: {path}")
         return ""
 
+
 LAYER_A = _load("prompts/layer_a.txt")
+LAYER_B = _load("prompts/layer_b.txt")
+LAYER_A_CONTENT = _load("prompts/layer_a_content_prompt")
 
 
-def mask_key(key: str) -> str:
-    if not key or len(key) < 12:
-        return "***"
-    return f"{key[:6]}...{key[-4:]}"
+BASE_METRICS = {
+    "stability_index": 0.0,
+    "indicator_status": "success",
+    "cycles_completed": 0,
+    "lots_balance": "+0.0",
+    "index_delta": None,
+    "mind_scale": "micro",
+    "human_contribution": 0.0,
+    "cognitive_pulse": "stable",
+    "mode_suggested": "analyst",
+    "layer_marker": None,
+    "ai_note": None,
+    "learning_template": None,
+    "reset_proposal": None,
+    "reminder": None,
+    "value_choices": [],
+    "risk_intercept": None,
+    "social_adaptation": {"active": False, "reason": None, "level": "inactive"},
+    "dominant_trait": {"detected": False, "influence": None, "risk": None,
+                       "stability_delta": 0.0, "hint": None, "steps": []},
+    "passport": {
+        "level": "micro", "title": None, "goal": None, "result": None,
+        "mission": None, "values": [], "constraints": [], "stakeholders": [],
+        "risks": [], "metrics": [], "completion": 0,
+    },
+    "profile": {
+        "values": {}, "patterns": [], "distortions": [], "insights": [],
+        "somatic": {"energy": 0.5, "tension": 0.3, "focus": 0.5,
+                    "mood": None, "note": None},
+        "skills": [],
+    },
+    "dimension": None,
+    "priority_drift": None,
+    "mood_board": None,
+    "ideas": [],
+    "artifacts": [],
+    "protocol_integrity": True,
+    "management_mode": False,
+    "public_index": {
+        "given": 0,
+        "taken": 0,
+        "help_score": 0,
+        "reputation": 0,
+    },
+}
 
 
 def next_dev_key() -> Optional[str]:
@@ -113,22 +194,29 @@ def next_dev_key() -> Optional[str]:
     return next(_dev_key_cycle)
 
 
+def _safe_eq(a: str, b: str) -> bool:
+    if not a or not b:
+        return False
+    return hmac.compare_digest(a, b)
+
+
 def check_author(request: Request):
     if not AUTHOR_SECRET:
-        raise HTTPException(status_code=503, detail="AUTHOR_SECRET не настроен на сервере")
+        raise HTTPException(status_code=503, detail="Ключ автора не настроен")
     key = request.headers.get("X-Author-Key", "").strip()
-    if key != AUTHOR_SECRET:
-        raise HTTPException(status_code=403, detail="Неверный ключ автора")
+    if not _safe_eq(key, AUTHOR_SECRET):
+        raise HTTPException(status_code=403, detail="Неверный ключ автора. Проверьте в настройках.")
 
 
 def check_management(request: Request):
-    """Проверка режима Управления."""
+    if not MANAGEMENT_KEY:
+        raise HTTPException(status_code=503, detail="Ключ Управления не настроен")
     key = request.headers.get("X-Management-Key", "").strip()
-    if key != MANAGEMENT_KEY:
-        raise HTTPException(status_code=403, detail="Режим Управления не активирован")
+    if not _safe_eq(key, MANAGEMENT_KEY):
+        raise HTTPException(status_code=403, detail="Неверный ключ Управления. Проверьте в настройках.")
 
 
-def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]], models: Dict[str, str]) -> str:
+def _pick_model_tier(user_message, carried_metrics, models):
     text = (user_message or "").lower()
     heavy_keywords = [
         "статья", "лонгрид", "пост", "напиши",
@@ -147,132 +235,21 @@ def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]
     return models.get("light") or models.get("medium")
 
 
-def pick_provider_and_model(body: Dict[str, Any], user_message: str, carried_metrics: Optional[Dict[str, Any]] = None):
+def pick_provider_and_model(body, user_message, carried_metrics=None):
     provider = (body.get("provider") or "groq").strip().lower()
     if provider not in PROVIDERS:
         provider = "groq"
-
     user_key = (body.get("api_key") or "").strip()
     if user_key and len(user_key) > 20:
         cfg = PROVIDERS[provider]
         model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
         return provider, cfg["base_url"], model, user_key, "user"
-
     dev_key = next_dev_key()
     if dev_key:
         cfg = PROVIDERS["groq"]
         model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
         return "groq", cfg["base_url"], model, dev_key, "developer"
-
     return None, None, None, None, "none"
-
-
-BASE_METRICS = {
-    "stability_index": 0.0,
-    "indicator_status": "success",
-    "cycles_completed": 0,
-    "collisions_resolved": "0/0",
-    "lots_balance": "+0.0",
-    "patterns_applied": [],
-    "cognitive_distortions": [],
-    "autonomy_levels": [],
-    "mind_scale": "micro",
-    "human_contribution": 0.0,
-    "value_choices": [],
-    "consequences_tree": None,
-    "dilemma_type": None,
-    "impact_map": None,
-    "reset_proposal": None,
-    "artifact_status": None,
-    "required_skills": [],
-    "risk_intercept": None,
-    "reasoning_trace": None,
-    "breakthrough_marker": False,
-    "cognitive_pulse": "stable",
-    "protocol_integrity": True,
-    "management_mode": False,
-    "mode_suggested": "analyst",  # analyst | strategist | neutral
-    "reminder": None,
-    "artifacts": [],
-    "ideas": [],
-    "dimension": None,
-    "priority_drift": None,
-    "mood_board": None,
-    "social_adaptation": {
-        "active": False,
-        "reason": None,
-        "level": "inactive",
-    },
-    "dominant_trait": {
-        "detected": False,
-        "influence": None,
-        "risk": None,
-        "stability_delta": 0.0,
-        "hint": None,
-        "steps": [],
-    },
-    "passport": {
-        "level": "micro", "title": None, "goal": None, "result": None,
-        "mission": None, "values": [], "constraints": [], "stakeholders": [],
-        "risks": [], "metrics": [], "completion": 0,
-    },
-    "profile": {
-        "values": {}, "patterns": [], "distortions": [], "insights": [],
-        "somatic": {
-            "energy": 0.5, "tension": 0.3, "focus": 0.5,
-            "mood": None, "note": None,
-        },
-        "skills": [],
-    },
-}
-
-
-COMPACT_SCHEMA = {
-    "stability_index": "float 0-1",
-    "indicator_status": "success | warning | critical",
-    "cycles_completed": "int",
-    "collisions_resolved": "N/N",
-    "lots_balance": "+X.X",
-    "mind_scale": "micro | tactical | strategic | systemic",
-    "human_contribution": "float 0-1",
-    "cognitive_pulse": "slow | stable | fast",
-    "mode_suggested": "analyst | strategist | neutral",
-    "reasoning_trace": "string | null",
-    "breakthrough_marker": "bool",
-    "reset_proposal": "{recommended, reset_point, reason} | null",
-    "reminder": "{set, at, text} | null",
-    "artifact_status": "{type, title, ready, suggested_tags, format, path, language, edit} | null",
-    "value_choices": "[{question, dilemma_type, options: [{label, recommended, consequences}]}]",
-    "risk_intercept": "{active, requested_action, risk_level, safe_alternative} | null",
-    "social_adaptation": "{active, reason, level}",
-    "dominant_trait": "{detected, influence, risk, stability_delta, hint, steps}",
-    "dimension": "{active, related, warning} | null",
-    "priority_drift": "{detected, current, preferred, reason, action} | null",
-    "ideas": "[{id, text, status}]",
-    "mood_board": "{active, wish, options} | null",
-    "passport": {
-        "level": "micro | tactical | strategic | systemic",
-        "title": "string | null",
-        "goal": "string | null",
-        "result": "string | null",
-        "mission": "string | null",
-        "values": "[string]",
-        "constraints": "[string]",
-        "stakeholders": "[string]",
-        "risks": "[string]",
-        "metrics": "[string]",
-        "completion": "int 0-100",
-    },
-    "profile": {
-        "values": "{развитие: 0-1, стабильность: 0-1, свобода: 0-1, контроль: 0-1, связь: 0-1}",
-        "patterns": "[string]",
-        "distortions": "[string]",
-        "insights": "[string]",
-        "somatic": "{energy, tension, focus, mood, note}",
-        "skills": "[string]",
-    },
-    "artifacts": "[{id, name, type, format, stage, version, comment, path, language}]",
-}
 
 
 def strip_thinking(text: str) -> str:
@@ -286,26 +263,17 @@ def strip_thinking(text: str) -> str:
 def extract_json(text: str) -> Optional[Dict[str, Any]]:
     if not text:
         return None
-
     text = text.replace("\ufeff", "").replace("\u200b", "").replace("\u200c", "").replace("\u200d", "")
     text = strip_thinking(text)
-
-    # Убираем markdown-обёртки
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```\s*$", "", text)
-
-    # Ищем первый {
     start = text.find("{")
     if start == -1:
         return None
-
-    # Пробуем как есть
     try:
         return json.loads(text[start:])
     except Exception:
         pass
-
-    # Ищем сбалансированный блок
     depth = 0
     in_string = False
     escape = False
@@ -331,8 +299,7 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
                 try:
                     return json.loads(chunk)
                 except Exception:
-                    # Попытка с экранированием живых \n
-                    fixed = re.sub(r'(?<!\\)\n', '\\\\n', chunk)
+                    fixed = re.sub(r"(?<!\\)\n", "\\\\n", chunk)
                     try:
                         return json.loads(fixed)
                     except Exception:
@@ -340,17 +307,13 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
     return None
 
 
-def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+def compact_carried(carried):
     if not carried:
         return {}
     out = {}
     p = carried.get("passport") or {}
     if p:
-        out["passport"] = {
-            "level": p.get("level"),
-            "title": p.get("title"),
-            "goal": p.get("goal"),
-        }
+        out["passport"] = {"level": p.get("level"), "title": p.get("title"), "goal": p.get("goal")}
     pr = carried.get("profile") or {}
     if pr:
         out["profile"] = {
@@ -359,31 +322,25 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
         }
     arts = carried.get("artifacts") or []
     if arts:
-        compacted_arts = []
+        compacted = []
         for a in arts[-3:]:
             if not isinstance(a, dict):
                 continue
             item = {
-                "id": a.get("id"),
-                "name": a.get("name"),
-                "type": a.get("type"),
-                "version": a.get("version"),
-                "stage": a.get("stage"),
-                "path": a.get("path"),
-                "language": a.get("language"),
+                "id": a.get("id"), "name": a.get("name"), "type": a.get("type"),
+                "version": a.get("version"), "stage": a.get("stage"),
             }
             content = a.get("content") or ""
-            if content and len(content) < 12000:
+            if content and len(content) < 6000:
                 item["content"] = content
-            compacted_arts.append(item)
-        out["artifacts"] = compacted_arts
+            compacted.append(item)
+        out["artifacts"] = compacted
     return out
 
 
-def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+def merge_metrics(incoming, carried=None):
     carried = carried or {}
     result = {**BASE_METRICS, **carried}
-
     skip_keys = ("passport", "profile", "reminder", "artifacts", "social_adaptation",
                  "dominant_trait", "ideas", "dimension", "priority_drift", "mood_board")
     for k, v in (incoming or {}).items():
@@ -392,7 +349,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         if v is not None:
             result[k] = v
 
-    # social_adaptation
     inc_sa = (incoming or {}).get("social_adaptation")
     if isinstance(inc_sa, dict):
         result["social_adaptation"] = {
@@ -403,7 +359,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     else:
         result["social_adaptation"] = carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
 
-    # dominant_trait
     inc_dt = (incoming or {}).get("dominant_trait")
     if isinstance(inc_dt, dict):
         result["dominant_trait"] = {
@@ -417,7 +372,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     else:
         result["dominant_trait"] = carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
 
-    # ideas
     inc_ideas = (incoming or {}).get("ideas")
     if isinstance(inc_ideas, list):
         existing = list(carried.get("ideas") or [])
@@ -430,19 +384,10 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     else:
         result["ideas"] = carried.get("ideas") or []
 
-    # dimension
-    inc_dim = (incoming or {}).get("dimension")
-    result["dimension"] = inc_dim if inc_dim is not None else carried.get("dimension")
+    result["dimension"] = (incoming or {}).get("dimension", carried.get("dimension"))
+    result["priority_drift"] = (incoming or {}).get("priority_drift", carried.get("priority_drift"))
+    result["mood_board"] = (incoming or {}).get("mood_board", carried.get("mood_board"))
 
-    # priority_drift
-    inc_pd = (incoming or {}).get("priority_drift")
-    result["priority_drift"] = inc_pd if inc_pd is not None else carried.get("priority_drift")
-
-    # mood_board — перезапись
-    inc_mb = (incoming or {}).get("mood_board")
-    result["mood_board"] = inc_mb if inc_mb is not None else carried.get("mood_board")
-
-    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -459,7 +404,6 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
-    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
@@ -474,7 +418,7 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
                 if str(item) not in seen:
                     old.append(str(item))
                     seen.add(str(item))
-        merged_prof[list_key] = old
+            merged_prof[list_key] = old
     if isinstance(inc_prof.get("somatic"), dict):
         merged_som = {**(merged_prof.get("somatic") or {})}
         for k in ("energy", "tension", "focus"):
@@ -488,11 +432,9 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
         merged_prof["somatic"] = merged_som
     result["profile"] = merged_prof
 
-    # reminder
     inc_rem = (incoming or {}).get("reminder")
     result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
 
-    # artifacts
     inc_art = (incoming or {}).get("artifacts") or []
     car_art = list(carried.get("artifacts") or [])
     seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
@@ -508,35 +450,20 @@ def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = 
     return result
 
 
-SYSTEM_PROMPT = (
-    "Ты — когнитивный AI-партнёр Monolog. "
-    "Отвечай ТОЛЬКО валидным JSON, без пояснений и размышлений. "
-    "Ничего до { и ничего после }. "
-    "Формат строго: {\"reply_text\": \"...\", \"metrics\": {...}}\n"
-    "reply_text — Markdown-текст ответа на русском языке. "
-    "Не сжимай итоговый ответ — сжатие только для анализа. "
-    "metrics — строго по схеме ниже. Все поля обязательны.\n\n"
-    f"=== КОГНИТИВНЫЙ ПРОМПТ (СЛОИ A + B + C + D) ===\n{LAYER_A}\n\n"
-    f"=== СХЕМА METRICS ===\n{json.dumps(COMPACT_SCHEMA, ensure_ascii=False)}"
-)
-
-
-async def call_provider(messages: List[Dict[str, str]], api_key: str, base_url: str, model: str, provider: str) -> str:
+async def call_provider(messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS):
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     if provider == "openrouter":
-        headers["HTTP-Referer"] = "https://agent-23r6.onrender.com"
+        headers["HTTP-Referer"] = "https://monolog.onrender.com"
         headers["X-Title"] = "AI Monolog"
-
     payload = {
         "model": model,
         "messages": messages,
-        "max_tokens": MAX_TOKENS,
+        "max_tokens": max_tokens,
         "temperature": 0.6,
     }
-
     cfg = PROVIDERS.get(provider, {})
     if cfg.get("reasoning_effort"):
         if model.startswith("openai/gpt-oss") or model.startswith("gpt-oss"):
@@ -546,75 +473,98 @@ async def call_provider(messages: List[Dict[str, str]], api_key: str, base_url: 
 
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         r = await client.post(base_url, headers=headers, json=payload)
+        remaining = r.headers.get("x-ratelimit-remaining-tokens", "?")
+        safe_log(f"Provider [{provider}/{model}] status={r.status_code} remaining={remaining}")
+        if r.status_code == 429:
+            retry_after = r.headers.get("retry-after")
+            detail = (f"Лимит вашего ключа исчерпан. Повторите через {retry_after} сек."
+                      if retry_after else
+                      "Лимит ключа исчерпан. Он обновится автоматически. Или введите свой ключ в настройках → Ключ API.")
+            raise HTTPException(status_code=429, detail=detail)
+        if r.status_code == 402:
+            raise HTTPException(status_code=402, detail="На провайдере закончились кредиты. Пополните баланс или смените провайдера.")
+        if r.status_code in (401, 403):
+            raise HTTPException(status_code=403, detail="Ключ не принят провайдером. Проверьте ключ в настройках → Ключ API.")
+        if r.status_code == 413:
+            raise HTTPException(status_code=413, detail="Запрос слишком длинный. Сократите или прикрепите файл.")
+        if r.status_code >= 500:
+            log.error(f"Provider error {r.status_code}")
+            raise HTTPException(status_code=502, detail=f"{PROVIDERS.get(provider, {}).get('name', provider)} недоступен. Попробуйте позже.")
+        if r.status_code >= 400:
+            log.error(f"Provider error {r.status_code}")
+            raise HTTPException(status_code=r.status_code, detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API.")
+        data = r.json()
+        return strip_thinking(data["choices"][0]["message"]["content"])
 
-    remaining = r.headers.get("x-ratelimit-remaining-tokens", "?")
-    log.info(f"Provider [{provider}/{model}] | status={r.status_code} | remaining={remaining}")
 
-    if r.status_code == 429:
-        retry_after = r.headers.get("retry-after")
-        if retry_after:
-            detail = f"Лимит исчерпан. Повторите через {retry_after} сек. Или введите свой ключ в настройках."
-        else:
-            detail = "Дневной лимит ключа исчерпан. Он сбросится в полночь UTC (03:00 МСК). Или введите свой ключ в настройках → Провайдер."
-        raise HTTPException(status_code=429, detail=detail)
-    if r.status_code == 402:
-        raise HTTPException(status_code=402, detail="Недостаточно кредитов на провайдере. Пополните баланс или смените провайдера.")
-    if r.status_code >= 400:
-        log.error(f"Provider error {r.status_code}: {r.text[:300]}")
-        raise HTTPException(status_code=r.status_code, detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API")
-
-    data = r.json()
-    content = data["choices"][0]["message"]["content"]
-    return strip_thinking(content)
+async def call_meta(user_message, carried_metrics, api_key, base_url, model, provider):
+    if not LAYER_B:
+        return {}
+    messages = [{"role": "system", "content": LAYER_B}]
+    payload = {"prev": compact_carried(carried_metrics), "msg": (user_message or "")[:200]}
+    messages.append({"role": "user", "content": json.dumps(payload, ensure_ascii=False)})
+    try:
+        raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=META_MAX_TOKENS)
+        return extract_json(raw) or {}
+    except HTTPException:
+        raise
+    except Exception as e:
+        safe_log(f"meta failed: {e}")
+        return {}
 
 
-# --- GitHub API ---
+async def call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments=None):
+    system = LAYER_A + "\n\n" + LAYER_A_CONTENT
+    user_content = user_message or "Проанализируй вложения."
+    if attachments:
+        block = "\n\n=== ВЛОЖЕНИЯ ===\n"
+        for a in attachments[:MAX_ATTACHMENTS]:
+            txt = (a.get("text") or "")[:MAX_ATTACH_LEN]
+            block += f"\n[Файл: {a.get('name', 'без имени')}]\n{txt}\n"
+        user_content += block
+    user_content += "\n\n=== СОСТОЯНИЕ ===\n" + json.dumps(compact_carried(full_metrics), ensure_ascii=False)
+    messages = [
+        {"role": "system", "content": system},
+        {"role": "user", "content": user_content},
+    ]
+    raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS)
+    parsed = extract_json(raw) or {}
+    if "reply_text" not in parsed:
+        parsed = {"reply_text": raw}
+    return parsed
+
+
+# --- GitHub helpers ---
 GITHUB_API = "https://api.github.com"
-_blog_cache = {"posts": None, "sha": None, "fetched_at": 0}
-BLOG_CACHE_TTL = 300
 
 
-async def github_get_file():
-    now = time.time()
-    if _blog_cache["posts"] is not None and (now - _blog_cache["fetched_at"]) < BLOG_CACHE_TTL:
-        return _blog_cache["posts"], _blog_cache.get("sha")
-
-    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{BLOG_PATH}"
+async def github_get_json(path: str):
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
     headers = {"Accept": "application/vnd.github+json"}
     if GITHUB_TOKEN:
         headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
-
-    if r.status_code == 404:
-        return [], None
-    if r.status_code >= 400:
-        raise HTTPException(status_code=502, detail="Не удалось прочитать блог из GitHub")
-
-    data = r.json()
-    content_b64 = data.get("content", "")
-    try:
-        raw = base64.b64decode(content_b64).decode("utf-8")
-        posts = json.loads(raw) if raw.strip() else []
-    except Exception:
-        posts = []
-
-    _blog_cache["posts"] = posts
-    _blog_cache["sha"] = data.get("sha")
-    _blog_cache["fetched_at"] = now
-    return posts, data.get("sha")
+        if r.status_code == 404:
+            return None, None
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"Не удалось прочитать {path}")
+        data = r.json()
+        try:
+            raw = base64.b64decode(data.get("content", "")).decode("utf-8")
+            parsed = json.loads(raw) if raw.strip() else None
+        except Exception:
+            parsed = None
+        return parsed, data.get("sha")
 
 
-async def github_put_file(posts: list, message: str):
+async def github_put_json(path: str, content_obj, message: str):
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
-
-    _, sha = await github_get_file()
-    content = json.dumps(posts, ensure_ascii=False, indent=2)
+    _, sha = await github_get_json(path)
+    content = json.dumps(content_obj, ensure_ascii=False, indent=2)
     content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-
-    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{BLOG_PATH}"
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
     headers = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -622,21 +572,31 @@ async def github_put_file(posts: list, message: str):
     body = {"message": message, "content": content_b64, "branch": GITHUB_BRANCH}
     if sha:
         body["sha"] = sha
-
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.put(url, headers=headers, json=body)
-
-    if r.status_code >= 400:
-        raise HTTPException(status_code=502, detail="Не удалось сохранить блог в GitHub")
-
-    _blog_cache["posts"] = posts
-    _blog_cache["sha"] = r.json().get("content", {}).get("sha")
-    _blog_cache["fetched_at"] = time.time()
-    return True
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"Не удалось сохранить {path}")
+        return True
 
 
-app = FastAPI(title="Monolog MVP")
-app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+# --- FastAPI ---
+app = FastAPI(title="Monolog")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["*"],
+)
+
+
+@app.middleware("http")
+async def limit_body(request: Request, call_next):
+    if request.method in ("POST", "PUT"):
+        cl = request.headers.get("content-length")
+        if cl and cl.isdigit() and int(cl) > MAX_BODY_BYTES:
+            return JSONResponse({"detail": "Запрос слишком большой. Сократите или прикрепите файл."}, status_code=413)
+    return await call_next(request)
 
 
 @app.get("/")
@@ -648,34 +608,58 @@ async def root():
 async def health():
     return {
         "status": "ok",
+        "version": "2.0",
         "dev_keys": len(_DEV_KEYS_GROQ),
         "byok": ALLOW_BYOK,
         "blog_ready": bool(GITHUB_TOKEN),
+        "public_ready": bool(GITHUB_TOKEN),
         "author_secret_set": bool(AUTHOR_SECRET),
         "management_key_set": bool(MANAGEMENT_KEY),
         "providers": list(PROVIDERS.keys()),
+        "cors": CORS_ORIGINS,
+        "limits": {
+            "max_message_len": MAX_MESSAGE_LEN,
+            "soft_message_len": SOFT_MESSAGE_LEN,
+            "max_tokens": MAX_TOKENS,
+            "meta_max_tokens": META_MAX_TOKENS,
+        },
+        "prompts_loaded": {
+            "layer_a": bool(LAYER_A),
+            "layer_b": bool(LAYER_B),
+            "layer_a_content": bool(LAYER_A_CONTENT),
+        },
     }
 
 
 @app.get("/providers")
 async def providers_info():
-    return JSONResponse({
-        "providers": [
-            {"id": "groq", "name": "Groq", "url": "https://console.groq.com/keys", "free": "1000/день",
-             "steps": ["Открой console.groq.com", "Зарегистрируйся", "API Keys", "Create API Key", "Скопируй ключ"]},
-            {"id": "openrouter", "name": "OpenRouter", "url": "https://openrouter.ai/keys", "free": "50/день",
-             "steps": ["Открой openrouter.ai", "Регистрация", "Keys", "Create Key", "Скопируй ключ"]},
-            {"id": "cerebras", "name": "Cerebras", "url": "https://cloud.cerebras.ai", "free": "14400/день",
-             "steps": ["Открой cloud.cerebras.ai", "Регистрация", "API Keys", "Generate", "Скопируй ключ"]},
-            {"id": "sambanova", "name": "SambaNova", "url": "https://cloud.sambanova.ai", "free": "12000/день",
-             "steps": ["Открой cloud.sambanova.ai", "Регистрация", "API Keys", "Create", "Скопируй ключ"]},
-        ]
-    })
+    out = []
+    urls = {
+        "groq": "https://console.groq.com/keys",
+        "openrouter": "https://openrouter.ai/keys",
+        "cerebras": "https://cloud.cerebras.ai",
+        "sambanova": "https://cloud.sambanova.ai",
+    }
+    for pid, cfg in PROVIDERS.items():
+        out.append({
+            "id": pid,
+            "name": cfg["name"],
+            "url": urls.get(pid, ""),
+            "models": list(cfg.get("all_models") or []),
+        })
+    return JSONResponse({"providers": out})
 
 
 @app.post("/chat")
 async def chat(request: Request):
-    body = await request.json()
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Некорректный формат запроса")
+
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+
     user_message = (body.get("message") or "").strip()
     attachments = body.get("attachments") or []
     carried_metrics = body.get("carried_metrics") or {}
@@ -683,140 +667,277 @@ async def chat(request: Request):
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
 
+    if len(user_message) > MAX_MESSAGE_LEN:
+        user_message = user_message[:MAX_MESSAGE_LEN]
+
+    if not isinstance(attachments, list):
+        attachments = []
+    if not isinstance(carried_metrics, dict):
+        carried_metrics = {}
+
     provider, base_url, model, api_key, source = pick_provider_and_model(body, user_message, carried_metrics)
     if not api_key:
-        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках.")
+        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках → Ключ API.")
 
-    management_mode = (body.get("management_key") or "").strip() == MANAGEMENT_KEY
+    management_mode = _safe_eq((body.get("management_key") or "").strip(), MANAGEMENT_KEY)
+    safe_log(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode} | len={len(user_message)}")
 
-    log.info(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode}")
+    try:
+        meta_delta = await call_meta(user_message, carried_metrics, api_key, base_url, model, provider)
+        full_metrics = merge_metrics(meta_delta, carried_metrics)
+        full_metrics["management_mode"] = management_mode
 
-    compacted = compact_carried(carried_metrics)
+        content_result = await call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments)
+        reply_text = content_result.get("reply_text", "")
+        if not reply_text:
+            reply_text = "Не получилось построить ответ. Попробуйте переформулировать запрос."
+            full_metrics["protocol_integrity"] = False
+            full_metrics["indicator_status"] = "warning"
 
-    messages = [{"role": "system", "content": SYSTEM_PROMPT}]
-
-    user_content = user_message or "Проанализируй вложения."
-    if attachments:
-        block = "\n\n=== ВЛОЖЕНИЯ ===\n"
-        for a in attachments[:3]:
-            block += f"\n[Файл: {a.get('name', 'без имени')}]\n{a.get('text', '')}\n"
-        user_content = user_content + block
-
-    if compacted:
-        user_content += "\n\n=== СЖАТЫЙ КОНТЕКСТ ПРОЕКТА ===\n" + json.dumps(compacted, ensure_ascii=False)
-
-    messages.append({"role": "user", "content": user_content})
-
-    raw = await call_provider(messages, api_key, base_url, model, provider)
-    parsed = extract_json(raw)
-
-    if parsed and "reply_text" in parsed:
-        metrics = merge_metrics(parsed.get("metrics") or {}, carried_metrics)
-        metrics["management_mode"] = management_mode
         return JSONResponse({
-            "reply_text": parsed["reply_text"],
-            "metrics": metrics,
+            "reply_text": reply_text,
+            "metrics": full_metrics,
+            "meta_delta": meta_delta,
+            "key_source": source,
+            "provider_used": provider,
+            "model_used": model,
+            "management_mode": management_mode,
+        })
+    except HTTPException:
+        raise
+    except Exception as e:
+        safe_log(f"Chat error: {e}")
+        fallback_metrics = merge_metrics({}, carried_metrics)
+        fallback_metrics["protocol_integrity"] = False
+        fallback_metrics["indicator_status"] = "warning"
+        fallback_metrics["management_mode"] = management_mode
+        return JSONResponse({
+            "reply_text": "Внутренняя ошибка сервера. Мы уже работаем над этим. Попробуйте ещё раз.",
+            "metrics": fallback_metrics,
             "key_source": source,
             "provider_used": provider,
             "model_used": model,
             "management_mode": management_mode,
         })
 
-    log.warning(f"JSON parse failed. Raw (first 500): {raw[:500]}")
 
-    fallback_text = None
-    m2 = re.search(r'"reply_text"\s*:\s*"((?:[^"\\]|\\.)*)"', raw, re.DOTALL)
-    if m2:
-        try:
-            fallback_text = json.loads('"' + m2.group(1) + '"')
-        except Exception:
-            fallback_text = m2.group(1).replace("\\n", "\n").replace('\\"', '"')
+# --- Public layer ---
+@app.get("/public/templates")
+async def public_templates_list(sort: str = "new", limit: int = 100):
+    data, _ = await github_get_json(PUBLIC_TEMPLATES_PATH)
+    items = data if isinstance(data, list) else []
+    if sort == "top":
+        items.sort(key=lambda x: (x.get("help_score") or 0), reverse=True)
+    elif sort == "help":
+        items.sort(key=lambda x: (x.get("taken_count") or 0), reverse=True)
+    else:
+        items.sort(key=lambda x: x.get("at") or "", reverse=True)
+    return JSONResponse({"templates": items[:limit], "count": len(items)})
 
-    if not fallback_text:
-        fallback_text = "Извините, произошла ошибка обработки ответа. Попробуйте ещё раз или переформулируйте запрос."
 
-    fallback_metrics = merge_metrics({}, carried_metrics)
-    fallback_metrics["protocol_integrity"] = False
-    fallback_metrics["indicator_status"] = "warning"
-    fallback_metrics["management_mode"] = management_mode
+@app.post("/public/templates")
+async def public_templates_publish(request: Request):
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    template = body.get("template") or {}
+    if not isinstance(template, dict) or not template.get("name"):
+        raise HTTPException(status_code=400, detail="Нужно поле name")
+    uid = (body.get("uid") or "").strip()
+    if not uid:
+        raise HTTPException(status_code=400, detail="Нужно поле uid")
 
+    data, _ = await github_get_json(PUBLIC_TEMPLATES_PATH)
+    items = data if isinstance(data, list) else []
+
+    new_item = {
+        "id": "tpl_" + str(int(time.time() * 1000)),
+        "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "uid": uid,
+        "name": template.get("name"),
+        "kind": template.get("kind") or "pattern",
+        "content": template.get("content") or "",
+        "tags": template.get("tags") or [],
+        "taken_count": 0,
+        "help_score": 0,
+        "help_count": 0,
+        "nohelp_count": 0,
+    }
+    items.append(new_item)
+    await github_put_json(PUBLIC_TEMPLATES_PATH, items, f"Public: template '{new_item['name'][:40]}'")
+
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    user_rep["given"] = (user_rep.get("given") or 0) + 1
+    rep[uid] = user_rep
+    await github_put_json(PUBLIC_REPUTATION_PATH, rep, f"Reputation: {uid} +given")
+
+    return JSONResponse({"ok": True, "template": new_item})
+
+
+@app.get("/public/lots")
+async def public_lots_list(sort: str = "new", limit: int = 100):
+    data, _ = await github_get_json(PUBLIC_LOTS_PATH)
+    items = data if isinstance(data, list) else []
+    if sort == "top":
+        items.sort(key=lambda x: (x.get("help_score") or 0), reverse=True)
+    else:
+        items.sort(key=lambda x: x.get("at") or "", reverse=True)
+    return JSONResponse({"lots": items[:limit], "count": len(items)})
+
+
+@app.post("/public/lots")
+async def public_lots_publish(request: Request):
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    lot = body.get("lot") or {}
+    if not isinstance(lot, dict) or not lot.get("name"):
+        raise HTTPException(status_code=400, detail="Нужно поле name")
+    uid = (body.get("uid") or "").strip()
+    if not uid:
+        raise HTTPException(status_code=400, detail="Нужно поле uid")
+
+    data, _ = await github_get_json(PUBLIC_LOTS_PATH)
+    items = data if isinstance(data, list) else []
+
+    new_item = {
+        "id": "lot_" + str(int(time.time() * 1000)),
+        "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "uid": uid,
+        "name": lot.get("name"),
+        "goal": lot.get("goal") or "",
+        "price": lot.get("price") or "",
+        "taken_count": 0,
+        "help_score": 0,
+        "help_count": 0,
+        "nohelp_count": 0,
+    }
+    items.append(new_item)
+    await github_put_json(PUBLIC_LOTS_PATH, items, f"Public: lot '{new_item['name'][:40]}'")
+
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    user_rep["given"] = (user_rep.get("given") or 0) + 1
+    rep[uid] = user_rep
+    await github_put_json(PUBLIC_REPUTATION_PATH, rep, f"Reputation: {uid} +given")
+
+    return JSONResponse({"ok": True, "lot": new_item})
+
+
+@app.post("/public/take")
+async def public_take(request: Request):
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    target_id = (body.get("target_id") or "").strip()
+    target_type = (body.get("target_type") or "").strip()
+    uid = (body.get("uid") or "").strip()
+    if not target_id or not target_type or not uid:
+        raise HTTPException(status_code=400, detail="Нужны target_id, target_type, uid")
+
+    path = PUBLIC_TEMPLATES_PATH if target_type == "template" else PUBLIC_LOTS_PATH
+    data, _ = await github_get_json(path)
+    items = data if isinstance(data, list) else []
+    found = None
+    for it in items:
+        if it.get("id") == target_id:
+            found = it
+            break
+    if not found:
+        raise HTTPException(status_code=404, detail="Не найдено")
+    if found.get("uid") == uid:
+        return JSONResponse({"ok": True, "self": True})
+
+    found["taken_count"] = (found.get("taken_count") or 0) + 1
+    await github_put_json(path, items, f"Public: take '{target_id}'")
+
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    user_rep["taken"] = (user_rep.get("taken") or 0) + 1
+    rep[uid] = user_rep
+    author_uid = found.get("uid")
+    if author_uid:
+        author_rep = rep.get(author_uid) or {"given": 0, "taken": 0, "help_score": 0}
+        rep[author_uid] = author_rep
+    await github_put_json(PUBLIC_REPUTATION_PATH, rep, f"Reputation: {uid} +taken")
+
+    index_delta = -1.0 if target_type == "template" else -2.0
     return JSONResponse({
-        "reply_text": fallback_text,
-        "metrics": fallback_metrics,
-        "key_source": source,
-        "provider_used": provider,
-        "model_used": model,
-        "management_mode": management_mode,
+        "ok": True,
+        "content": found.get("content") or found.get("goal") or "",
+        "index_delta": index_delta,
+        "author_uid": found.get("uid"),
     })
 
 
-@app.post("/export/docx")
-async def export_docx(request: Request):
-    try:
-        from docx import Document
-        from docx.shared import Pt
-    except ImportError:
-        raise HTTPException(status_code=503, detail="python-docx не установлен")
-
+@app.post("/public/review")
+async def public_review(request: Request):
     body = await request.json()
-    title = (body.get("title") or "Документ").strip()
-    text = (body.get("body") or "").strip()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    target_id = (body.get("target_id") or "").strip()
+    target_type = (body.get("target_type") or "").strip()
+    verdict = (body.get("verdict") or "").strip()
+    uid = (body.get("uid") or "").strip()
+    if not target_id or not target_type or verdict not in ("help", "nohelp") or not uid:
+        raise HTTPException(status_code=400, detail="Нужны target_id, target_type, verdict (help|nohelp), uid")
 
-    if not text:
-        raise HTTPException(status_code=400, detail="Пустой текст")
+    path = PUBLIC_TEMPLATES_PATH if target_type == "template" else PUBLIC_LOTS_PATH
+    data, _ = await github_get_json(path)
+    items = data if isinstance(data, list) else []
+    found = None
+    for it in items:
+        if it.get("id") == target_id:
+            found = it
+            break
+    if not found:
+        raise HTTPException(status_code=404, detail="Не найдено")
 
-    doc = Document()
-    if title:
-        doc.add_heading(title, level=0)
+    if verdict == "help":
+        found["help_count"] = (found.get("help_count") or 0) + 1
+    else:
+        found["nohelp_count"] = (found.get("nohelp_count") or 0) + 1
+    total = (found.get("help_count") or 0) + (found.get("nohelp_count") or 0)
+    found["help_score"] = round((found.get("help_count") or 0) / total, 2) if total else 0
+    await github_put_json(path, items, f"Review: '{target_id}' ({verdict})")
 
-    for line in text.split("\n"):
-        s = line.rstrip()
-        if not s:
-            continue
-        if s.startswith("# "):
-            doc.add_heading(s[2:].strip(), level=1)
-        elif s.startswith("## "):
-            doc.add_heading(s[3:].strip(), level=2)
-        elif s.startswith("### "):
-            doc.add_heading(s[4:].strip(), level=3)
-        elif s.startswith("- ") or s.startswith("* "):
-            doc.add_paragraph(s[2:].strip(), style="List Bullet")
-        elif re.match(r"^\d+\.\s", s):
-            doc.add_paragraph(re.sub(r"^\d+\.\s", "", s), style="List Number")
-        else:
-            p = doc.add_paragraph(s)
-            for run in p.runs:
-                run.font.size = Pt(11)
-
-    buf = BytesIO()
-    doc.save(buf)
-    buf.seek(0)
-
-    safe_title = re.sub(r"[^\w\-]+", "_", title or "document")[:60]
-    filename = f"{safe_title}.docx"
-
-    return StreamingResponse(
-        buf,
-        media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-    )
+    return JSONResponse({"ok": True, "help_score": found["help_score"]})
 
 
-# --- Blog endpoints ---
+@app.get("/public/profile/{uid}")
+async def public_profile(uid: str):
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    reputation = (user_rep.get("given", 0) * 1.0) + (user_rep.get("help_score", 0) * 2.0) - (user_rep.get("taken", 0) * 0.3)
+    return JSONResponse({
+        "uid": uid,
+        "given": user_rep.get("given", 0),
+        "taken": user_rep.get("taken", 0),
+        "help_score": user_rep.get("help_score", 0),
+        "reputation": round(reputation, 2),
+    })
+
+
+# --- Blog ---
 @app.get("/blog")
 async def blog_list():
-    posts, _ = await github_get_file()
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
     metas = []
     for p in posts:
         metas.append({
             "id": p.get("id"),
             "title": p.get("title"),
             "tags": p.get("tags", []),
-            "author": p.get("author", "Эльвира"),
+            "author": p.get("author", "Автор"),
             "created_at": p.get("created_at"),
             "updated_at": p.get("updated_at"),
             "preview": (p.get("body") or "")[:180],
-            "cover": p.get("cover"),
         })
     metas.sort(key=lambda x: x.get("created_at") or "", reverse=True)
     return JSONResponse({"posts": metas, "count": len(metas)})
@@ -824,7 +945,8 @@ async def blog_list():
 
 @app.get("/blog/{post_id}")
 async def blog_get(post_id: str):
-    posts, _ = await github_get_file()
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
     for p in posts:
         if p.get("id") == post_id:
             return JSONResponse(p)
@@ -838,93 +960,64 @@ async def blog_publish(request: Request):
     title = (body.get("title") or "").strip()
     text = (body.get("body") or "").strip()
     tags = body.get("tags") or []
-    author = (body.get("author") or "Эльвира").strip()
-
+    author = (body.get("author") or "Автор").strip()
     if not title or not text:
         raise HTTPException(status_code=400, detail="Нужны заголовок и текст")
 
-    posts, _ = await github_get_file()
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
     post_id = "post_" + str(int(time.time() * 1000))
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
     new_post = {
         "id": post_id, "title": title, "body": text,
         "tags": tags if isinstance(tags, list) else [],
         "author": author, "created_at": now, "updated_at": now,
     }
     posts.append(new_post)
-    await github_put_file(posts, f"Blog: publish '{title[:50]}'")
-    return JSONResponse({"ok": True, "id": post_id})
-
-
-@app.put("/blog/{post_id}")
-async def blog_update(post_id: str, request: Request):
-    check_author(request)
-    body = await request.json()
-    posts, _ = await github_get_file()
-
-    found = None
-    for p in posts:
-        if p.get("id") == post_id:
-            found = p
-            break
-    if not found:
-        raise HTTPException(status_code=404, detail="Статья не найдена")
-
-    if "title" in body and body["title"] is not None:
-        found["title"] = (body["title"] or "").strip()
-    if "body" in body and body["body"] is not None:
-        found["body"] = body["body"]
-    if "tags" in body and isinstance(body["tags"], list):
-        found["tags"] = body["tags"]
-    found["updated_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-
-    await github_put_file(posts, f"Blog: update '{post_id}'")
+    await github_put_json(BLOG_PATH, posts, f"Blog: publish '{title[:50]}'")
     return JSONResponse({"ok": True, "id": post_id})
 
 
 @app.delete("/blog/{post_id}")
 async def blog_delete(post_id: str, request: Request):
     check_author(request)
-    posts, _ = await github_get_file()
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
     new_posts = [p for p in posts if p.get("id") != post_id]
     if len(new_posts) == len(posts):
         raise HTTPException(status_code=404, detail="Статья не найдена")
-    await github_put_file(new_posts, f"Blog: delete '{post_id}'")
+    await github_put_json(BLOG_PATH, new_posts, f"Blog: delete '{post_id}'")
     return JSONResponse({"ok": True})
 
 
-# --- Code endpoints (Пакет разработчика, ветка dev) ---
+# --- Code (ветка dev) ---
 @app.get("/code/read")
 async def code_read(request: Request, path: str):
     check_author(request)
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
-
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {GITHUB_TOKEN}"}
+    headers = {"Accept": "application/vnd.github+json",
+               "Authorization": f"Bearer {GITHUB_TOKEN}"}
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
         branch_used = CODE_BRANCH
         if r.status_code == 404:
             r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
             branch_used = GITHUB_BRANCH
-
-    if r.status_code == 404:
-        return JSONResponse({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
-    if r.status_code >= 400:
-        raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
-
-    data = r.json()
-    try:
-        content = base64.b64decode(data.get("content", "")).decode("utf-8")
-    except Exception:
-        content = ""
-
-    return JSONResponse({
-        "exists": True, "path": path, "content": content,
-        "sha": data.get("sha"), "branch": branch_used,
-    })
+        if r.status_code == 404:
+            return JSONResponse({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
+        data = r.json()
+        try:
+            content = base64.b64decode(data.get("content", "")).decode("utf-8")
+        except Exception:
+            content = ""
+        return JSONResponse({
+            "exists": True, "path": path,
+            "content": content, "sha": data.get("sha"), "branch": branch_used,
+        })
 
 
 @app.post("/code/save")
@@ -932,41 +1025,62 @@ async def code_save(request: Request):
     check_author(request)
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
-
     body = await request.json()
     path = (body.get("path") or "").strip()
     content = body.get("content") or ""
-    message = (body.get("message") or f"Update {path} via Monolog").strip()
-
+    message = (body.get("message") or f"Update {path}").strip()
     if not path:
         raise HTTPException(status_code=400, detail="Не указан путь")
 
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {GITHUB_TOKEN}"}
-
+    headers = {"Accept": "application/vnd.github+json",
+               "Authorization": f"Bearer {GITHUB_TOKEN}"}
     sha = None
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
         if r.status_code == 200:
             sha = r.json().get("sha")
-
-    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-    payload = {"message": message, "content": content_b64, "branch": CODE_BRANCH}
-    if sha:
-        payload["sha"] = sha
-
-    async with httpx.AsyncClient(timeout=30.0) as client:
+        content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+        payload = {"message": message, "content": content_b64, "branch": CODE_BRANCH}
+        if sha:
+            payload["sha"] = sha
         r = await client.put(url, headers=headers, json=payload)
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail="Не удалось сохранить код")
+        data = r.json()
+        return JSONResponse({
+            "ok": True, "path": path, "branch": CODE_BRANCH,
+            "commit_sha": data.get("commit", {}).get("sha"),
+            "html_url": data.get("commit", {}).get("html_url"),
+        })
 
-    if r.status_code >= 400:
-        raise HTTPException(status_code=502, detail="Не удалось сохранить код в GitHub")
 
-    data = r.json()
-    return JSONResponse({
-        "ok": True, "path": path, "branch": CODE_BRANCH,
-        "commit_sha": data.get("commit", {}).get("sha"),
-        "html_url": data.get("commit", {}).get("html_url"),
-    })
+# --- Releases ---
+@app.get("/releases")
+async def releases_list():
+    data, _ = await github_get_json(RELEASES_PATH)
+    if not isinstance(data, list):
+        data = []
+    return JSONResponse({"releases": data})
+
+
+@app.post("/releases/save")
+async def releases_save(request: Request):
+    check_author(request)
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+    body = await request.json()
+    releases = body.get("releases") or []
+    if not isinstance(releases, list):
+        raise HTTPException(status_code=400, detail="releases должен быть списком")
+    await github_put_json(RELEASES_PATH, releases, "Update releases")
+    return JSONResponse({"ok": True, "count": len(releases)})
+
+
+@app.post("/management/check")
+async def management_check(request: Request):
+    check_management(request)
+    return JSONResponse({"ok": True, "management_mode": True})
 
 
 if __name__ == "__main__":
