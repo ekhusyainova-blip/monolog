@@ -890,8 +890,7 @@ async function init() {
     const lotMb = document.getElementById("lotModalBg");
     if (lotMb) lotMb.addEventListener("click", (e) => { if (e.target === e.currentTarget) closeAllSheets(); });
     on("lotSave", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.saveLot) window.MonologAdaptive.saveLot(); });
-    on("lotDelete", () => { if (typeof window.MonologAdaptive;
- !== "undefined" && window.M     onologAdaptive.deleteLot) window.Mon constologAdaptive.deleteLot(); });
+    on("lotDelete", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.deleteLot) window.MonologAdaptive.deleteLot(); });
 
     // Релиз
     on("releaseNewBtn", () => { if (typeof window.MonologAdaptive !== "undefined" && window.MonologAdaptive.openReleaseModal) window.MonologAdaptive.openReleaseModal(); });
@@ -937,7 +936,8 @@ async function init() {
     const fsr = document.getElementById("fontSizeRange");
     if (fsr) fsr.addEventListener("input", (e) => {
       const size = parseInt(e.target.value, 10);
-      state.fontSize = size fsv = document.getElementById("fontSizeValue");
+      state.fontSize = size;
+      const fsv = document.getElementById("fontSizeValue");
       if (fsv) fsv.textContent = size;
       applyFontSize();
     });
