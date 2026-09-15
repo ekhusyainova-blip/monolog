@@ -1,18 +1,22 @@
 // adaptive/adaptive.js
-// Компоненты интерфейса Monolog: сфера, уведомления, метрики, карта, редактор, релизы, обмен.
+// Компоненты интерфейса Monolog.
+// Ждёт события monolog-ready от core.js.
 
 "use strict";
 
-const C = window.MonologCore;
-if (!C) {
-  console.error("MonologCore не загружен — adaptive.js не может стартовать");
-} else {
+function bootstrapAdaptive() {
+  const C = window.MonologCore;
+  if (!C) {
+    console.error("MonologCore не загружен — adaptive.js не может стартовать");
+    return;
+  }
+
   const {
     state, API_BASE, uid, escHtml, pluralize, toast, renderMarkdown, softenText,
     broadcast, dbGetAll, dbPut, dbDel, dbGetMeta, dbSetMeta,
     currentChat, currentLot, addRow, renderCurrentChat, send,
     createChatObj, createLotObj, persistChat, persistLot,
-    updateCharCounter, renderAttachPreview, handleAttachClick,
+    updateCharCounter, renderAttachPreview, handleFiles,
     openSheet, closeAllSheets,
     STORE_LOTS, STORE_CHATS, STORE_RELEASES, STORE_ANALYTICS,
     STORE_NOTIFICATIONS, STORE_PUBLIC, STORE_META,
@@ -50,14 +54,9 @@ if (!C) {
     orb.style.setProperty("--orb-tint", tint);
   }
 
-  function canSwitchMode() {
-    return !!state.manageKey;
-  }
+  function canSwitchMode() { return !!state.manageKey; }
   function switchMode() {
-    if (!canSwitchMode()) {
-      toast("Переключение режима доступно только с ключом Управления");
-      return;
-    }
+    if (!canSwitchMode()) { toast("Переключение режима доступно только с ключом Управления"); return; }
     const modes = ["analyst", "strategist", "neutral"];
     const idx = modes.indexOf(state.mode);
     state.mode = modes[(idx + 1) % modes.length];
@@ -136,9 +135,7 @@ if (!C) {
       btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>';
       btn.addEventListener("click", () => confirmReset(rp));
       header.appendChild(btn);
-    } else if (!rp && existing) {
-      existing.remove();
-    }
+    } else if (!rp && existing) existing.remove();
     updateNotifBadge();
     updateProfileBadge();
   }
@@ -169,7 +166,8 @@ if (!C) {
         const idx = parseInt(match[1], 10);
         if (idx >= 0 && idx < c.history.length) c.history = c.history.slice(0, idx);
       } else c.history = [];
-      document.getElementById("chat").innerHTML = "";
+      const chat = document.getElementById("chat");
+      if (chat) chat.innerHTML = "";
       renderCurrentChat();
       persistChat(c);
       broadcast("reset", { chatId: c.id });
@@ -386,26 +384,30 @@ if (!C) {
         return metricCard("Глубина", escHtml(m.mind_scale || "—"), { desc: "Уровень задачи." });
       case "pulse":
         return metricCard("Пульс", escHtml(m.cognitive_pulse || "—"), { desc: m.cognitive_pulse === "fast" ? "Быстрый темп." : "Ровный темп." });
-      case "human":
+      case "human": {
         let extra = "";
         if (hc != null) extra = humanBar(hc);
         return metricCard("Вклад человек / ИИ", hc != null ? Math.round(hc * 100) + "% / " + Math.round((1 - hc) * 100) + "%" : "—", { desc: "Соотношение вкладов." }) + extra;
-      case "balance":
+      }
+      case "balance": {
         const bal = state.balance || 0;
         return metricCard("Индекс полезности", (bal >= 0 ? "+" : "") + bal.toFixed(1), {
           level: bal < 0 ? "crit" : "ok",
           desc: "Накопленный вклад.",
           alert: bal < 0 ? "Индекс в минусе" : null,
         });
+      }
       case "dominant":
         if (m.dominant_trait && m.dominant_trait.detected) return metricCard("Импульс", escHtml(m.dominant_trait.influence || "—"), { level: "warn", desc: m.dominant_trait.hint || "", alert: "Обратить внимание" });
         return "";
-      case "social":
+      case "social": {
         const sa = m.social_adaptation || {};
         return metricCard("Социальная адаптация", escHtml(sa.level || "inactive"), { desc: sa.reason || "" });
-      case "public":
+      }
+      case "public": {
         const pi = m.public_index || {};
         return metricCard("Публичный индекс", String(pi.reputation || 0), { desc: "Отдал: " + (pi.given || 0) + " · Взял: " + (pi.taken || 0) });
+      }
       default:
         return "";
     }
@@ -686,7 +688,8 @@ if (!C) {
       state.currentChatId = fresh.id;
       await dbSetMeta("currentChatId", fresh.id);
     }
-    document.getElementById("chat").innerHTML = "";
+    const chat = document.getElementById("chat");
+    if (chat) chat.innerHTML = "";
     renderCurrentChat();
     updateMenu();
     closeAllSheets();
@@ -699,7 +702,8 @@ if (!C) {
     if (chatId === state.currentChatId) return;
     state.currentChatId = chatId;
     await dbSetMeta("currentChatId", chatId);
-    document.getElementById("chat").innerHTML = "";
+    const chat = document.getElementById("chat");
+    if (chat) chat.innerHTML = "";
     renderCurrentChat();
     updateMenu();
     regenerateMapForCurrent();
@@ -1222,7 +1226,7 @@ if (!C) {
     }
   }
 
-  // --- Регистрация в core ---
+  // --- Экспорт в core, чтобы core мог вызывать adaptive-функции ---
   window.MonologAdaptive = {
     getUserStatus,
     renderOrb,
@@ -1279,7 +1283,7 @@ if (!C) {
     scanForAlerts,
   };
 
-  // Прокидываем в core
+  // --- Прокидываем в core для использования ---
   C.renderOrb = renderOrb;
   C.switchMode = switchMode;
   C.renderOrbSheet = renderOrbSheet;
@@ -1322,24 +1326,23 @@ if (!C) {
   C.saveEditorToLot = saveEditorToLot;
   C.scanForAlerts = scanForAlerts;
 
-  // Порядок init: core уже загрузил состояние, теперь построим интерфейс
-  function bootstrapAdaptive() {
-    // Обновляем визуальные элементы
-    if (typeof renderOrb === "function") renderOrb();
-    document.documentElement.setAttribute("data-mode", state.mode);
-    updateIndexBtn();
-    updateHeaderDynamic();
-    renderAiNote();
-    regenerateMapForCurrent();
-    updateMenu();
-  }
+  // --- Bootstrap ---
+  renderOrb();
+  document.documentElement.setAttribute("data-mode", state.mode);
+  updateIndexBtn();
+  updateHeaderDynamic();
+  renderAiNote();
+  regenerateMapForCurrent();
+  updateMenu();
+}
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", () => {
-      // core.init уже стартовал — ждём, когда он закончит
-      setTimeout(bootstrapAdaptive, 100);
-    });
-  } else {
-    setTimeout(bootstrapAdaptive, 100);
-  }
+// Ждём событие monolog-ready от core.js
+if (window.MonologCore) {
+  bootstrapAdaptive();
+} else {
+  window.addEventListener("monolog-ready", bootstrapAdaptive, { once: true });
+  // Резервная страховка: если событие уже прошло
+  setTimeout(() => {
+    if (window.MonologCore && !window.MonologAdaptive) bootstrapAdaptive();
+  }, 1000);
 }
