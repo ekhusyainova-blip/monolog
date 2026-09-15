@@ -2,14 +2,14 @@
   "version": "2.1",
   "header": {
     "items": [
-      { "id": "orb", "type": "orb", "side": "left" },
-      { "id": "index", "type": "index", "side": "left" },
-      { "id": "pulse", "type": "button", "side": "right", "sheet": "metricsSheet" },
-      { "id": "exchange", "type": "button", "side": "right", "sheet": "exchangeSheet" },
-      { "id": "notifications", "type": "button", "side": "right", "sheet": "notificationsSheet", "badge": true },
-      { "id": "profile", "type": "button", "side": "right", "sheet": "profileSheet", "badge": true },
-      { "id": "menu", "type": "button", "side": "right", "sheet": "menuSheet" },
-      { "id": "settings", "type": "button", "side": "right", "sheet": "settingsSheet" }
+      { "id": "orb", "type": "orb", "side": "left", "labelKey": "orb" },
+      { "id": "index", "type": "index", "side": "left", "labelKey": "index" },
+      { "id": "pulse", "type": "button", "side": "right", "sheet": "metricsSheet", "labelKey": "pulse" },
+      { "id": "exchange", "type": "button", "side": "right", "sheet": "exchangeSheet", "labelKey": "exchange" },
+      { "id": "notifications", "type": "button", "side": "right", "sheet": "notificationsSheet", "badge": true, "labelKey": "notifications" },
+      { "id": "profile", "type": "button", "side": "right", "sheet": "profileSheet", "badge": true, "labelKey": "profile" },
+      { "id": "menu", "type": "button", "side": "right", "sheet": "menuSheet", "labelKey": "menu" },
+      { "id": "settings", "type": "button", "side": "right", "sheet": "settingsSheet", "labelKey": "settings" }
     ]
   },
   "main": {
@@ -19,26 +19,27 @@
     ]
   },
   "sheets": [
-    { "id": "orbSheet", "title": "Состояние", "component": "orb" },
-    { "id": "menuSheet", "title": "Меню", "component": "menu" },
-    { "id": "indexSheet", "title": "Индекс", "component": "index" },
-    { "id": "profileSheet", "title": "Профиль", "component": "profile" },
-    { "id": "metricsSheet", "title": "Пульс сессии", "component": "metrics" },
-    { "id": "notificationsSheet", "title": "Уведомления", "component": "notifications" },
-    { "id": "exchangeSheet", "title": "Обмен", "component": "exchange" },
-    { "id": "myPublicSheet", "title": "Мои публикации", "component": "myPublic" },
-    { "id": "lotsSheet", "title": "Лоты", "component": "lots" },
-    { "id": "lotCardSheet", "title": "Лот", "component": "lotCard" },
-    { "id": "mapSheet", "title": "Карта местности", "component": "map" },
-    { "id": "ideasSheet", "title": "Идеи", "component": "ideas" },
-    { "id": "importantSheet", "title": "Важное", "component": "important" },
-    { "id": "dashboardSheet", "title": "Дэшборд", "component": "dashboard" },
-    { "id": "managementSheet", "title": "Управление", "component": "management" },
-    { "id": "releasesSheet", "title": "Релизы", "component": "releases" },
-    { "id": "documentsSheet", "title": "Документы", "component": "documents" },
-    { "id": "chatsSheet", "title": "Чаты", "component": "chats" },
-    { "id": "blogSheet", "title": "Блог", "component": "blog" },
-    { "id": "aboutSheet", "title": "О продукте", "component": "about" },
-    { "id": "businessSheet", "title": "Бизнес", "component": "business" },
-    { "id": "editorSheet", "title": "Редактор", "component": "editor", "fullscreen": true }
+    { "id": "orbSheet", "titleKey": "sheet.orbSheet", "component": "orb" },
+    { "id": "menuSheet", "titleKey": "sheet.menuSheet", "component": "menu" },
+    { "id": "indexSheet", "titleKey": "sheet.indexSheet", "component": "index" },
+    { "id": "profileSheet", "titleKey": "sheet.profileSheet", "component": "profile" },
+    { "id": "metricsSheet", "titleKey": "sheet.metricsSheet", "component": "metrics" },
+    { "id": "notificationsSheet", "titleKey": "sheet.notificationsSheet", "component": "notifications" },
+    { "id": "exchangeSheet", "titleKey": "sheet.exchangeSheet", "component": "exchange" },
+    { "id": "myPublicSheet", "titleKey": "sheet.myPublicSheet", "component": "myPublic" },
+    { "id": "lotsSheet", "titleKey": "sheet.lotsSheet", "component": "lots" },
+    { "id": "lotCardSheet", "titleKey": "sheet.lotCardSheet", "component": "lotCard" },
+    { "id": "mapSheet", "titleKey": "sheet.mapSheet", "component": "map" },
+    { "id": "ideasSheet", "titleKey": "sheet.ideasSheet", "component": "ideas" },
+    { "id": "importantSheet", "titleKey": "sheet.importantSheet", "component": "important" },
+    { "id": "dashboardSheet", "titleKey": "sheet.dashboardSheet", "component": "dashboard" },
+    { "id": "managementSheet", "titleKey": "sheet.managementSheet", "component": "management" },
+    { "id": "releasesSheet", "titleKey": "sheet.releasesSheet", "component": "releases" },
+    { "id": "documentsSheet", "titleKey": "sheet.documentsSheet", "component": "documents" },
+    { "id": "chatsSheet", "titleKey": "sheet.chatsSheet", "component": "chats" },
+    { "id": "blogSheet", "titleKey": "sheet.blogSheet", "component": "blog" },
+    { "id": "aboutSheet", "titleKey": "sheet.aboutSheet", "component": "about" },
+    { "id": "businessSheet", "titleKey": "sheet.businessSheet", "component": "business" },
+    { "id": "editorSheet", "titleKey": "sheet.editorSheet", "component": "editor", "fullscreen": true }
   ]
+}
