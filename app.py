@@ -1,13 +1,13 @@
 # app.py
-# Monolog — когнитивный партнёр.
-# Ядро 1.0. Три промпта: layer_a (system), layer_b (meta), layer_a_content_prompt (content).
-# Stateless. История не отправляется. Ключи не сохраняются.
-# Релиз 10+ итераций: согласованность ядра, расширенные модели, /releases, Управление, мета/контент разделены.
+# Monolog — когнитивный партнёр. Ядро 1.0.
+# Stateless. Ключи не сохраняются. История не отправляется.
+# Аудит: безопасность, устойчивость, метрики, экономика (базовая), интеграции.
 
 import os
 import re
 import json
 import time
+import hmac
 import base64
 import logging
 import itertools
@@ -15,18 +15,25 @@ from io import BytesIO
 from typing import Optional, List, Dict, Any
 
 import httpx
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request, HTTPException, Depends
 from fastapi.responses import JSONResponse, FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
 load_dotenv()
 
+# --- Логирование без секретов ---
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("monolog")
 
+SECRET_PATTERN = re.compile(r"(sk_[A-Za-z0-9_\-]{8,}|gsk_[A-Za-z0-9_\-]{8,}|Bearer\s+[A-Za-z0-9_\-\.]{10,})")
+
+def safe_log(msg: str):
+    """Пишет лог, вырезая потенциальные секреты."""
+    log.info(SECRET_PATTERN.sub("[SECRET]", str(msg)))
+
+
 # --- Конфигурация провайдеров ---
-# Каждый провайдер: base_url, три модели по уровню (light/medium/heavy), полный список моделей.
 PROVIDERS = {
     "groq": {
         "name": "Groq",
@@ -70,12 +77,7 @@ PROVIDERS = {
             "medium": "gpt-oss-120b",
             "heavy": "gpt-oss-120b",
         },
-        "all_models": [
-            "gpt-oss-20b",
-            "gpt-oss-120b",
-            "llama3.1-8b",
-            "llama3.1-70b",
-        ],
+        "all_models": ["gpt-oss-20b", "gpt-oss-120b", "llama3.1-8b", "llama3.1-70b"],
         "reasoning_effort": True,
     },
     "sambanova": {
@@ -95,12 +97,16 @@ PROVIDERS = {
     },
 }
 
-# --- Лимиты ---
-MAX_TOKENS = 6000
-META_MAX_TOKENS = 2000
+MAX_TOKENS = 5000
+META_MAX_TOKENS = 1500
 TIMEOUT = 120.0
 
-# --- Ключи разработчика (Groq) ---
+MAX_MESSAGE_LEN = 8000
+MAX_ATTACH_LEN = 3000
+MAX_ATTACHMENTS = 3
+MAX_BODY_BYTES = 200_000
+
+# --- Ключи ---
 _DEV_KEYS_GROQ: List[str] = [
     k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()
 ]
@@ -108,21 +114,23 @@ _dev_key_cycle = itertools.cycle(_DEV_KEYS_GROQ) if _DEV_KEYS_GROQ else None
 
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
 
-# --- Ключ Управления ---
 MANAGEMENT_KEY = os.getenv("MANAGEMENT_KEY", "").strip()
+AUTHOR_SECRET = os.getenv("AUTHOR_SECRET", "").strip()
 
-# --- GitHub для блога и кода ---
+# --- CORS через env ---
+CORS_ORIGINS_ENV = os.getenv("CORS_ORIGINS", "*").strip()
+CORS_ORIGINS = [o.strip() for o in CORS_ORIGINS_ENV.split(",") if o.strip()] or ["*"]
+
+# --- GitHub ---
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
 GITHUB_REPO = os.getenv("GITHUB_REPO", "ekhusyainova-blip/monolog").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
+CODE_BRANCH = os.getenv("CODE_BRANCH", "dev").strip()
 BLOG_PATH = "blog/posts.json"
 RELEASES_PATH = "releases.json"
-AUTHOR_SECRET = os.getenv("AUTHOR_SECRET", "").strip()
-CODE_BRANCH = os.getenv("CODE_BRANCH", "dev").strip()
 
 
 def _load(path: str) -> str:
-    """Загружает промпт из файла. Если файла нет — пустая строка."""
     try:
         with open(path, "r", encoding="utf-8") as f:
             return f.read().strip()
@@ -131,23 +139,23 @@ def _load(path: str) -> str:
         return ""
 
 
-# Три промпта ядра 1.0
-LAYER_A = _load("prompts/layer_a.txt")             # system — ядро 1.0
-LAYER_B = _load("prompts/layer_b.txt")             # meta — метрики (delta)
-LAYER_A_CONTENT = _load("prompts/layer_a_content_prompt")  # content — reply_text
+LAYER_A = _load("prompts/layer_a.txt")
+LAYER_B = _load("prompts/layer_b.txt")
+LAYER_A_CONTENT = _load("prompts/layer_a_content_prompt")
 
 
-# --- Базовая схема метрик ---
 BASE_METRICS = {
     "stability_index": 0.0,
     "indicator_status": "success",
     "cycles_completed": 0,
     "collisions_resolved": "0/0",
     "lots_balance": "+0.0",
+    "index_delta": None,
     "mind_scale": "micro",
     "human_contribution": 0.0,
     "cognitive_pulse": "stable",
     "mode_suggested": "analyst",
+    "layer_marker": None,
     "reasoning_trace": None,
     "breakthrough_marker": False,
     "reset_proposal": None,
@@ -156,10 +164,8 @@ BASE_METRICS = {
     "value_choices": [],
     "risk_intercept": None,
     "social_adaptation": {"active": False, "reason": None, "level": "inactive"},
-    "dominant_trait": {
-        "detected": False, "influence": None, "risk": None,
-        "stability_delta": 0.0, "hint": None, "steps": [],
-    },
+    "dominant_trait": {"detected": False, "influence": None, "risk": None,
+                       "stability_delta": 0.0, "hint": None, "steps": []},
     "passport": {
         "level": "micro", "title": None, "goal": None, "result": None,
         "mission": None, "values": [], "constraints": [], "stakeholders": [],
@@ -179,7 +185,6 @@ BASE_METRICS = {
     "protocol_integrity": True,
     "management_mode": False,
     "required_skills": [],
-    "index_delta": None,
 }
 
 
@@ -189,26 +194,29 @@ def next_dev_key() -> Optional[str]:
     return next(_dev_key_cycle)
 
 
+def _safe_eq(a: str, b: str) -> bool:
+    if not a or not b:
+        return False
+    return hmac.compare_digest(a, b)
+
+
 def check_author(request: Request):
     if not AUTHOR_SECRET:
-        raise HTTPException(status_code=503, detail="AUTHOR_SECRET не настроен")
+        raise HTTPException(status_code=503, detail="Ключ автора не настроен")
     key = request.headers.get("X-Author-Key", "").strip()
-    if key != AUTHOR_SECRET:
+    if not _safe_eq(key, AUTHOR_SECRET):
         raise HTTPException(status_code=403, detail="Неверный ключ автора")
 
 
 def check_management(request: Request):
+    if not MANAGEMENT_KEY:
+        raise HTTPException(status_code=503, detail="Ключ Управления не настроен")
     key = request.headers.get("X-Management-Key", "").strip()
-    if not key or key != MANAGEMENT_KEY:
-        raise HTTPException(status_code=403, detail="Режим Управления не активен")
+    if not _safe_eq(key, MANAGEMENT_KEY):
+        raise HTTPException(status_code=403, detail="Неверный ключ Управления")
 
 
-def _pick_model_tier(
-    user_message: str,
-    carried_metrics: Optional[Dict[str, Any]],
-    models: Dict[str, str],
-) -> str:
-    """Выбирает уровень модели (light/medium/heavy) по содержанию запроса."""
+def _pick_model_tier(user_message: str, carried_metrics: Optional[Dict[str, Any]], models: Dict[str, str]) -> str:
     text = (user_message or "").lower()
     heavy_keywords = [
         "статья", "лонгрид", "пост", "напиши",
@@ -227,28 +235,20 @@ def _pick_model_tier(
     return models.get("light") or models.get("medium")
 
 
-def pick_provider_and_model(
-    body: Dict[str, Any],
-    user_message: str,
-    carried_metrics: Optional[Dict[str, Any]] = None,
-):
-    """Возвращает (provider, base_url, model, api_key, source)."""
+def pick_provider_and_model(body: Dict[str, Any], user_message: str, carried_metrics: Optional[Dict[str, Any]] = None):
     provider = (body.get("provider") or "groq").strip().lower()
     if provider not in PROVIDERS:
         provider = "groq"
-
     user_key = (body.get("api_key") or "").strip()
     if user_key and len(user_key) > 20:
         cfg = PROVIDERS[provider]
         model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
         return provider, cfg["base_url"], model, user_key, "user"
-
     dev_key = next_dev_key()
     if dev_key:
         cfg = PROVIDERS["groq"]
         model = _pick_model_tier(user_message, carried_metrics, cfg["models"])
         return "groq", cfg["base_url"], model, dev_key, "developer"
-
     return None, None, None, None, "none"
 
 
@@ -261,23 +261,19 @@ def strip_thinking(text: str) -> str:
 
 
 def extract_json(text: str) -> Optional[Dict[str, Any]]:
-    """Извлекает JSON из ответа модели. Устойчив к мусору."""
     if not text:
         return None
     text = text.replace("\ufeff", "").replace("\u200b", "").replace("\u200c", "").replace("\u200d", "")
     text = strip_thinking(text)
     text = re.sub(r"^```(?:json)?\s*", "", text)
     text = re.sub(r"\s*```\s*$", "", text)
-
     start = text.find("{")
     if start == -1:
         return None
-
     try:
         return json.loads(text[start:])
     except Exception:
         pass
-
     depth = 0
     in_string = False
     escape = False
@@ -312,17 +308,12 @@ def extract_json(text: str) -> Optional[Dict[str, Any]]:
 
 
 def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
-    """Сжимает carried_metrics до минимально нужного для meta/content."""
     if not carried:
         return {}
     out = {}
     p = carried.get("passport") or {}
     if p:
-        out["passport"] = {
-            "level": p.get("level"),
-            "title": p.get("title"),
-            "goal": p.get("goal"),
-        }
+        out["passport"] = {"level": p.get("level"), "title": p.get("title"), "goal": p.get("goal")}
     pr = carried.get("profile") or {}
     if pr:
         out["profile"] = {
@@ -336,39 +327,28 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
             if not isinstance(a, dict):
                 continue
             item = {
-                "id": a.get("id"),
-                "name": a.get("name"),
-                "type": a.get("type"),
-                "version": a.get("version"),
-                "stage": a.get("stage"),
+                "id": a.get("id"), "name": a.get("name"), "type": a.get("type"),
+                "version": a.get("version"), "stage": a.get("stage"),
             }
             content = a.get("content") or ""
-            if content and len(content) < 12000:
+            if content and len(content) < 8000:
                 item["content"] = content
             compacted.append(item)
         out["artifacts"] = compacted
     return out
 
 
-def merge_metrics(
-    incoming: Dict[str, Any],
-    carried: Optional[Dict[str, Any]] = None,
-) -> Dict[str, Any]:
-    """Накладывает delta (incoming) на carried. Возвращает полное состояние."""
+def merge_metrics(incoming: Dict[str, Any], carried: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
     carried = carried or {}
     result = {**BASE_METRICS, **carried}
-
-    skip_keys = (
-        "passport", "profile", "reminder", "artifacts", "social_adaptation",
-        "dominant_trait", "ideas", "dimension", "priority_drift", "mood_board",
-    )
+    skip_keys = ("passport", "profile", "reminder", "artifacts", "social_adaptation",
+                 "dominant_trait", "ideas", "dimension", "priority_drift", "mood_board")
     for k, v in (incoming or {}).items():
         if k in skip_keys:
             continue
         if v is not None:
             result[k] = v
 
-    # social_adaptation
     inc_sa = (incoming or {}).get("social_adaptation")
     if isinstance(inc_sa, dict):
         result["social_adaptation"] = {
@@ -377,11 +357,8 @@ def merge_metrics(
             "level": inc_sa.get("level", "inactive"),
         }
     else:
-        result["social_adaptation"] = (
-            carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
-        )
+        result["social_adaptation"] = carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
 
-    # dominant_trait
     inc_dt = (incoming or {}).get("dominant_trait")
     if isinstance(inc_dt, dict):
         result["dominant_trait"] = {
@@ -390,15 +367,11 @@ def merge_metrics(
             "risk": inc_dt.get("risk"),
             "stability_delta": float(inc_dt.get("stability_delta") or 0.0),
             "hint": inc_dt.get("hint"),
-            "steps": list(inc_dt.get("steps") or [])
-            if isinstance(inc_dt.get("steps"), list) else [],
+            "steps": list(inc_dt.get("steps") or []) if isinstance(inc_dt.get("steps"), list) else [],
         }
     else:
-        result["dominant_trait"] = (
-            carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
-        )
+        result["dominant_trait"] = carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
 
-    # ideas — добавление по id
     inc_ideas = (incoming or {}).get("ideas")
     if isinstance(inc_ideas, list):
         existing = list(carried.get("ideas") or [])
@@ -411,19 +384,10 @@ def merge_metrics(
     else:
         result["ideas"] = carried.get("ideas") or []
 
-    # dimension
-    inc_dim = (incoming or {}).get("dimension")
-    result["dimension"] = inc_dim if inc_dim is not None else carried.get("dimension")
+    result["dimension"] = (incoming or {}).get("dimension", carried.get("dimension"))
+    result["priority_drift"] = (incoming or {}).get("priority_drift", carried.get("priority_drift"))
+    result["mood_board"] = (incoming or {}).get("mood_board", carried.get("mood_board"))
 
-    # priority_drift
-    inc_pd = (incoming or {}).get("priority_drift")
-    result["priority_drift"] = inc_pd if inc_pd is not None else carried.get("priority_drift")
-
-    # mood_board
-    inc_mb = (incoming or {}).get("mood_board")
-    result["mood_board"] = inc_mb if inc_mb is not None else carried.get("mood_board")
-
-    # passport
     inc_pass = (incoming or {}).get("passport") or {}
     car_pass = carried.get("passport") or {}
     merged_pass = {**BASE_METRICS["passport"], **car_pass}
@@ -440,16 +404,11 @@ def merge_metrics(
                 merged_pass[k] = v
     result["passport"] = merged_pass
 
-    # profile
     inc_prof = (incoming or {}).get("profile") or {}
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
-
     if isinstance(inc_prof.get("values"), dict) and inc_prof["values"]:
-        merged_prof["values"] = {
-            **merged_prof.get("values", {}),
-            **inc_prof["values"],
-        }
+        merged_prof["values"] = {**merged_prof.get("values", {}), **inc_prof["values"]}
     for list_key in ("patterns", "distortions", "insights", "skills"):
         old = list(merged_prof.get(list_key) or [])
         new = inc_prof.get(list_key) or []
@@ -460,7 +419,6 @@ def merge_metrics(
                     old.append(str(item))
                     seen.add(str(item))
             merged_prof[list_key] = old
-
     if isinstance(inc_prof.get("somatic"), dict):
         merged_som = {**(merged_prof.get("somatic") or {})}
         for k in ("energy", "tension", "focus"):
@@ -472,14 +430,11 @@ def merge_metrics(
         if inc_prof["somatic"].get("note"):
             merged_som["note"] = inc_prof["somatic"]["note"]
         merged_prof["somatic"] = merged_som
-
     result["profile"] = merged_prof
 
-    # reminder
     inc_rem = (incoming or {}).get("reminder")
     result["reminder"] = inc_rem if inc_rem is not None else carried.get("reminder")
 
-    # artifacts — добавление по id
     inc_art = (incoming or {}).get("artifacts") or []
     car_art = list(carried.get("artifacts") or [])
     seen_ids = set(a.get("id") for a in car_art if isinstance(a, dict))
@@ -495,15 +450,7 @@ def merge_metrics(
     return result
 
 
-async def call_provider(
-    messages: List[Dict[str, str]],
-    api_key: str,
-    base_url: str,
-    model: str,
-    provider: str,
-    max_tokens: int = MAX_TOKENS,
-) -> str:
-    """Один вызов провайдера. Универсально для всех."""
+async def call_provider(messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS) -> str:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
@@ -511,14 +458,12 @@ async def call_provider(
     if provider == "openrouter":
         headers["HTTP-Referer"] = "https://monolog.onrender.com"
         headers["X-Title"] = "AI Monolog"
-
     payload = {
         "model": model,
         "messages": messages,
         "max_tokens": max_tokens,
         "temperature": 0.6,
     }
-
     cfg = PROVIDERS.get(provider, {})
     if cfg.get("reasoning_effort"):
         if model.startswith("openai/gpt-oss") or model.startswith("gpt-oss"):
@@ -529,94 +474,62 @@ async def call_provider(
     async with httpx.AsyncClient(timeout=TIMEOUT) as client:
         r = await client.post(base_url, headers=headers, json=payload)
         remaining = r.headers.get("x-ratelimit-remaining-tokens", "?")
-        log.info(f"Provider [{provider}/{model}] status={r.status_code} remaining={remaining}")
-
+        safe_log(f"Provider [{provider}/{model}] status={r.status_code} remaining={remaining}")
         if r.status_code == 429:
             retry_after = r.headers.get("retry-after")
-            if retry_after:
-                detail = f"Лимит исчерпан. Повторите через {retry_after} сек. Или введите свой ключ в настройках."
-            else:
-                detail = "Дневной лимит исчерпан. Он сбросится в полночь UTC. Или введите свой ключ в настройках."
+            detail = (f"Лимит исчерпан. Повторите через {retry_after} сек." if retry_after
+                      else "Дневной лимит исчерпан. Сбросится в полночь UTC.")
             raise HTTPException(status_code=429, detail=detail)
         if r.status_code == 402:
             raise HTTPException(status_code=402, detail="Недостаточно кредитов на провайдере.")
         if r.status_code >= 400:
-            log.error(f"Provider error {r.status_code}: {r.text[:300]}")
+            log.error(f"Provider error {r.status_code}")
             raise HTTPException(
                 status_code=r.status_code,
                 detail=f"Ошибка {PROVIDERS.get(provider, {}).get('name', provider)} API",
             )
         data = r.json()
-        content = data["choices"][0]["message"]["content"]
-        return strip_thinking(content)
+        return strip_thinking(data["choices"][0]["message"]["content"])
 
 
-async def call_meta(
-    user_message: str,
-    carried_metrics: Dict[str, Any],
-    api_key: str,
-    base_url: str,
-    model: str,
-    provider: str,
-) -> Dict[str, Any]:
-    """Meta-вызов: только метрики. Только delta. Не падает при ошибке."""
+async def call_meta(user_message, carried_metrics, api_key, base_url, model, provider) -> Dict[str, Any]:
     if not LAYER_B:
         return {}
     messages = [{"role": "system", "content": LAYER_B}]
-    payload = {
-        "prev": compact_carried(carried_metrics),
-        "msg": (user_message or "")[:200],
-    }
-    messages.append({
-        "role": "user",
-        "content": json.dumps(payload, ensure_ascii=False),
-    })
+    payload = {"prev": compact_carried(carried_metrics), "msg": (user_message or "")[:200]}
+    messages.append({"role": "user", "content": json.dumps(payload, ensure_ascii=False)})
     try:
-        raw = await call_provider(
-            messages, api_key, base_url, model, provider, max_tokens=META_MAX_TOKENS
-        )
+        raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=META_MAX_TOKENS)
         return extract_json(raw) or {}
     except HTTPException:
         raise
     except Exception as e:
-        log.warning(f"meta failed: {e}")
+        safe_log(f"meta failed: {e}")
         return {}
 
 
-async def call_content(
-    user_message: str,
-    full_metrics: Dict[str, Any],
-    api_key: str,
-    base_url: str,
-    model: str,
-    provider: str,
-    attachments: Optional[List[Dict[str, Any]]] = None,
-) -> Dict[str, Any]:
-    """Content-вызов: только reply_text."""
+async def call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments=None) -> Dict[str, Any]:
     system = LAYER_A + "\n\n" + LAYER_A_CONTENT
     user_content = user_message or "Проанализируй вложения."
     if attachments:
         block = "\n\n=== ВЛОЖЕНИЯ ===\n"
-        for a in attachments[:3]:
-            block += f"\n[Файл: {a.get('name', 'без имени')}]\n{a.get('text', '')}\n"
+        for a in attachments[:MAX_ATTACHMENTS]:
+            txt = (a.get("text") or "")[:MAX_ATTACH_LEN]
+            block += f"\n[Файл: {a.get('name', 'без имени')}]\n{txt}\n"
         user_content += block
-    user_content += "\n\n=== СОСТОЯНИЕ ===\n" + json.dumps(
-        compact_carried(full_metrics), ensure_ascii=False
-    )
+    user_content += "\n\n=== СОСТОЯНИЕ ===\n" + json.dumps(compact_carried(full_metrics), ensure_ascii=False)
     messages = [
         {"role": "system", "content": system},
         {"role": "user", "content": user_content},
     ]
-    raw = await call_provider(
-        messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS
-    )
+    raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS)
     parsed = extract_json(raw) or {}
     if "reply_text" not in parsed:
         parsed = {"reply_text": raw}
     return parsed
 
 
-# --- GitHub API ---
+# --- GitHub helpers ---
 GITHUB_API = "https://api.github.com"
 _blog_cache = {"posts": None, "sha": None, "fetched_at": 0}
 BLOG_CACHE_TTL = 300
@@ -701,12 +614,22 @@ async def github_put_blog(posts: list, message: str):
 
 # --- FastAPI ---
 app = FastAPI(title="Monolog")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
+    allow_origins=CORS_ORIGINS,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def limit_body(request: Request, call_next):
+    if request.method in ("POST", "PUT"):
+        cl = request.headers.get("content-length")
+        if cl and cl.isdigit() and int(cl) > MAX_BODY_BYTES:
+            return JSONResponse({"detail": "Слишком большой запрос"}, status_code=413)
+    return await call_next(request)
 
 
 @app.get("/")
@@ -724,6 +647,7 @@ async def health():
         "author_secret_set": bool(AUTHOR_SECRET),
         "management_key_set": bool(MANAGEMENT_KEY),
         "providers": list(PROVIDERS.keys()),
+        "cors": CORS_ORIGINS,
         "prompts_loaded": {
             "layer_a": bool(LAYER_A),
             "layer_b": bool(LAYER_B),
@@ -735,16 +659,17 @@ async def health():
 @app.get("/providers")
 async def providers_info():
     out = []
+    urls = {
+        "groq": "https://console.groq.com/keys",
+        "openrouter": "https://openrouter.ai/keys",
+        "cerebras": "https://cloud.cerebras.ai",
+        "sambanova": "https://cloud.sambanova.ai",
+    }
     for pid, cfg in PROVIDERS.items():
         out.append({
             "id": pid,
             "name": cfg["name"],
-            "url": {
-                "groq": "https://console.groq.com/keys",
-                "openrouter": "https://openrouter.ai/keys",
-                "cerebras": "https://cloud.cerebras.ai",
-                "sambanova": "https://cloud.sambanova.ai",
-            }.get(pid, ""),
+            "url": urls.get(pid, ""),
             "models": list(cfg.get("all_models") or []),
         })
     return JSONResponse({"providers": out})
@@ -752,39 +677,39 @@ async def providers_info():
 
 @app.post("/chat")
 async def chat(request: Request):
-    body = await request.json()
-    user_message = (body.get("message") or "").strip()
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Некорректный JSON")
+
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело должно быть объектом")
+
+    user_message = (body.get("message") or "").strip()[:MAX_MESSAGE_LEN]
     attachments = body.get("attachments") or []
     carried_metrics = body.get("carried_metrics") or {}
 
     if not user_message and not attachments:
         raise HTTPException(status_code=400, detail="Пустое сообщение")
 
-    provider, base_url, model, api_key, source = pick_provider_and_model(
-        body, user_message, carried_metrics
-    )
-    if not api_key:
-        raise HTTPException(
-            status_code=503,
-            detail="Нет доступных ключей. Введите свой ключ в настройках.",
-        )
+    if not isinstance(attachments, list):
+        attachments = []
+    if not isinstance(carried_metrics, dict):
+        carried_metrics = {}
 
-    management_mode = (body.get("management_key") or "").strip() == MANAGEMENT_KEY
-    log.info(
-        f"Chat | provider={provider} | source={source} | model={model} | "
-        f"management={management_mode}"
-    )
+    provider, base_url, model, api_key, source = pick_provider_and_model(body, user_message, carried_metrics)
+    if not api_key:
+        raise HTTPException(status_code=503, detail="Нет доступных ключей. Введите свой ключ в настройках.")
+
+    management_mode = _safe_eq((body.get("management_key") or "").strip(), MANAGEMENT_KEY)
+    safe_log(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode}")
 
     try:
-        meta_delta = await call_meta(
-            user_message, carried_metrics, api_key, base_url, model, provider
-        )
+        meta_delta = await call_meta(user_message, carried_metrics, api_key, base_url, model, provider)
         full_metrics = merge_metrics(meta_delta, carried_metrics)
         full_metrics["management_mode"] = management_mode
 
-        content_result = await call_content(
-            user_message, full_metrics, api_key, base_url, model, provider, attachments
-        )
+        content_result = await call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments)
         reply_text = content_result.get("reply_text", "")
         if not reply_text:
             reply_text = "Извините, произошла ошибка обработки ответа. Попробуйте ещё раз."
@@ -800,11 +725,10 @@ async def chat(request: Request):
             "model_used": model,
             "management_mode": management_mode,
         })
-
     except HTTPException:
         raise
     except Exception as e:
-        log.error(f"Chat error: {e}")
+        safe_log(f"Chat error: {e}")
         fallback_metrics = merge_metrics({}, carried_metrics)
         fallback_metrics["protocol_integrity"] = False
         fallback_metrics["indicator_status"] = "warning"
@@ -859,11 +783,10 @@ async def export_docx(request: Request):
     doc.save(buf)
     buf.seek(0)
     safe_title = re.sub(r"[^\w\-]+", "_", title or "document")[:60]
-    filename = f"{safe_title}.docx"
     return StreamingResponse(
         buf,
         media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        headers={"Content-Disposition": f'attachment; filename="{safe_title}.docx"'},
     )
 
 
@@ -910,13 +833,9 @@ async def blog_publish(request: Request):
     post_id = "post_" + str(int(time.time() * 1000))
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     new_post = {
-        "id": post_id,
-        "title": title,
-        "body": text,
+        "id": post_id, "title": title, "body": text,
         "tags": tags if isinstance(tags, list) else [],
-        "author": author,
-        "created_at": now,
-        "updated_at": now,
+        "author": author, "created_at": now, "updated_at": now,
     }
     posts.append(new_post)
     await github_put_blog(posts, f"Blog: publish '{title[:50]}'")
@@ -941,10 +860,8 @@ async def code_read(request: Request, path: str):
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-    }
+    headers = {"Accept": "application/vnd.github+json",
+               "Authorization": f"Bearer {GITHUB_TOKEN}"}
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
         branch_used = CODE_BRANCH
@@ -952,10 +869,7 @@ async def code_read(request: Request, path: str):
             r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
             branch_used = GITHUB_BRANCH
         if r.status_code == 404:
-            return JSONResponse({
-                "exists": False, "path": path,
-                "content": None, "sha": None, "branch": branch_used,
-            })
+            return JSONResponse({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
         if r.status_code >= 400:
             raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
         data = r.json()
@@ -982,10 +896,8 @@ async def code_save(request: Request):
         raise HTTPException(status_code=400, detail="Не указан путь")
 
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-    }
+    headers = {"Accept": "application/vnd.github+json",
+               "Authorization": f"Bearer {GITHUB_TOKEN}"}
     sha = None
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
@@ -1006,7 +918,7 @@ async def code_save(request: Request):
         })
 
 
-# --- Releases (архив) ---
+# --- Releases ---
 @app.get("/releases")
 async def releases_list():
     data, _ = await github_get_file(RELEASES_PATH)
@@ -1028,7 +940,7 @@ async def releases_save(request: Request):
     return JSONResponse({"ok": True, "count": len(releases)})
 
 
-# --- Управление (проверка ключа) ---
+# --- Management check ---
 @app.post("/management/check")
 async def management_check(request: Request):
     check_management(request)
