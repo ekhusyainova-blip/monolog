@@ -6,7 +6,10 @@ window.Monolog = window.Monolog || {};
 
 Monolog.core = {
   version: '2.1',
-  state: {},
+  state: {
+    index: 0,
+    orb: 'calm'
+  },
   ready: false,
 
   // --- события ---
@@ -36,36 +39,57 @@ Monolog.core = {
       await this.initAPI();
       this.ready = true;
       this.emit('core:ready', { version: this.version });
+      this.emit('core:state', { key: 'index', value: this.state.index });
+      this.emit('core:state', { key: 'orb', value: this.state.orb });
     } catch (e) {
       console.error('[core] ошибка init:', e);
       throw e;
     }
   },
 
-  // --- IndexedDB (заглушка, допишем позже) ---
+  // --- IndexedDB ---
   async initDB() {
     // TODO: открыть monolog_db_v5, прогнать миграции
     console.log('[core] DB init (заглушка)');
   },
 
-  // --- API (заглушка, допишем позже) ---
+  // --- API ---
   async initAPI() {
-    // TODO: проверить /health, подгрузить провайдеров
-    console.log('[core] API init (заглушка)');
+    try {
+      const res = await fetch('/health');
+      if (res.ok) {
+        const data = await res.json();
+        console.log('[core] health:', data);
+      }
+    } catch (e) {
+      console.warn('[core] health недоступен:', e.message);
+    }
   },
 
-  // --- экономика (заглушка) ---
+  // --- экономика ---
   economy: {
-    plus(n) { console.log('[core] +', n); },
-    minus(n) { console.log('[core] -', n); },
-    balance() { return 0; }
+    plus(n) { Monolog.core.set('index', Monolog.core.get('index') + n); },
+    minus(n) { Monolog.core.set('index', Monolog.core.get('index') - n); },
+    balance() { return Monolog.core.get('index'); }
   },
 
-  // --- чат (заглушка) ---
+  // --- чат ---
   chat: {
     async send(text) {
-      console.log('[core] chat.send:', text);
-      return { reply: '' };
+      if (!text || !text.trim()) return { reply: '' };
+      try {
+        const res = await fetch('/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message: text })
+        });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        return { reply: data.reply_text || data.reply || '' };
+      } catch (e) {
+        console.error('[core] chat ошибка:', e.message);
+        return { reply: 'Ошибка сети. Попробуй ещё раз.' };
+      }
     }
   }
 };
