@@ -2,8 +2,8 @@
   "version": "2.1",
   "header": {
     "items": [
-      { "id": "orb", "type": "orb", "side": "left", "labelKey": "orb" },
-      { "id": "index", "type": "index", "side": "left", "labelKey": "index" },
+      { "id": "orb", "type": "orb", "side": "left", "labelKey": "orb", "sheet": "orbSheet" },
+      { "id": "index", "type": "index", "side": "left", "labelKey": "index", "sheet": "indexSheet" },
       { "id": "pulse", "type": "button", "side": "right", "sheet": "metricsSheet", "labelKey": "pulse" },
       { "id": "exchange", "type": "button", "side": "right", "sheet": "exchangeSheet", "labelKey": "exchange" },
       { "id": "notifications", "type": "button", "side": "right", "sheet": "notificationsSheet", "badge": true, "labelKey": "notifications" },
@@ -26,6 +26,7 @@
     { "id": "metricsSheet", "titleKey": "sheet.metricsSheet", "component": "metrics" },
     { "id": "notificationsSheet", "titleKey": "sheet.notificationsSheet", "component": "notifications" },
     { "id": "exchangeSheet", "titleKey": "sheet.exchangeSheet", "component": "exchange" },
+    { "id": "settingsSheet", "titleKey": "sheet.settingsSheet", "component": "settings" },
     { "id": "myPublicSheet", "titleKey": "sheet.myPublicSheet", "component": "myPublic" },
     { "id": "lotsSheet", "titleKey": "sheet.lotsSheet", "component": "lots" },
     { "id": "lotCardSheet", "titleKey": "sheet.lotCardSheet", "component": "lotCard" },
@@ -42,4 +43,4 @@
     { "id": "businessSheet", "titleKey": "sheet.businessSheet", "component": "business" },
     { "id": "editorSheet", "titleKey": "sheet.editorSheet", "component": "editor", "fullscreen": true }
   ]
-} 
+}
