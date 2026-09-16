@@ -8,6 +8,7 @@ Monolog.adaptive = {
   version: '2.1',
   config: null,
   content: null,
+  openSheetId: null,
 
   async mount() {
     await this.loadManifests();
@@ -58,12 +59,16 @@ Monolog.adaptive = {
     el.setAttribute('aria-label', label);
     el.title = label;
 
-    if (item.type === 'orb') el.classList.add('orb');
+    if (item.type === 'orb') {
+      el.classList.add('orb', 'state-calm');
+    }
     if (item.type === 'index') {
       el.classList.add('index');
       el.textContent = '0';
     }
-    if (item.type === 'button') el.textContent = label;
+    if (item.type === 'button') {
+      el.textContent = label;
+    }
 
     if (item.badge) {
       const badge = document.createElement('span');
@@ -73,7 +78,7 @@ Monolog.adaptive = {
     }
 
     if (item.sheet) {
-      el.addEventListener('click', () => this.openSheet(item.sheet));
+      el.addEventListener('click', () => this.toggleSheet(item.sheet));
     }
 
     return el;
@@ -111,6 +116,7 @@ Monolog.adaptive = {
       const head = document.createElement('div');
       head.className = 'sheet-head';
       head.textContent = this.text(spec.titleKey) || spec.id;
+      head.addEventListener('click', () => this.closeSheet(spec.id));
       sheet.appendChild(head);
 
       const body = document.createElement('div');
@@ -124,7 +130,12 @@ Monolog.adaptive = {
   openSheet(id) {
     const sheet = document.getElementById(id);
     if (!sheet) return;
+    if (this.openSheetId && this.openSheetId !== id) {
+      const prev = document.getElementById(this.openSheetId);
+      if (prev) prev.hidden = true;
+    }
     sheet.hidden = false;
+    this.openSheetId = id;
     this.emit('adaptive:sheet', { id, open: true });
   },
 
@@ -132,7 +143,16 @@ Monolog.adaptive = {
     const sheet = document.getElementById(id);
     if (!sheet) return;
     sheet.hidden = true;
+    if (this.openSheetId === id) this.openSheetId = null;
     this.emit('adaptive:sheet', { id, open: false });
+  },
+
+  toggleSheet(id) {
+    if (this.openSheetId === id) {
+      this.closeSheet(id);
+    } else {
+      this.openSheet(id);
+    }
   },
 
   // --- связь с core ---
@@ -148,7 +168,8 @@ Monolog.adaptive = {
         const el = document.querySelector('.header-item-orb');
         if (el) {
           el.classList.remove('state-calm', 'state-doubt', 'state-active', 'state-need');
-          el.classList.add('state-' + d.value);
+          const value = d.value || 'calm';
+          el.classList.add('state-' + value);
         }
       }
     });
