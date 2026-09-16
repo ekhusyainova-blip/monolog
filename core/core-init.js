@@ -21,4 +21,4 @@
   }
 
   Monolog.core.emit('app:ready', {});
-})();
+})(); 
