@@ -140,7 +140,17 @@ Monolog.adaptive = {
     if (!Monolog.core) return;
 
     Monolog.core.on('core:state', (d) => {
-      console.log('[adaptive] state:', d);
+      if (d.key === 'index') {
+        const el = document.querySelector('.header-item-index');
+        if (el) el.textContent = d.value;
+      }
+      if (d.key === 'orb') {
+        const el = document.querySelector('.header-item-orb');
+        if (el) {
+          el.classList.remove('state-calm', 'state-doubt', 'state-active', 'state-need');
+          el.classList.add('state-' + d.value);
+        }
+      }
     });
 
     Monolog.core.on('app:ready', () => {
