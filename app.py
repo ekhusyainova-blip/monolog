@@ -1,6 +1,5 @@
 # app.py — точка входа Monolog.
-# Только импорты, подключение роутеров, root.
-# Логика разнесена по core/ и adaptive/.
+# Безопасный режим: если роутер не найден, приложение всё равно стартует.
 
 import os
 import logging
@@ -30,10 +29,12 @@ CORS_ORIGINS = [o.strip() for o in CORS_ORIGINS_ENV.split(",") if o.strip()] or 
 
 app = FastAPI(title="Monolog")
 
-app.mount("/core", StaticFiles(directory="core"), name="core")
-app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
-app.mount("/public", StaticFiles(directory="public"), name="public")
-app.mount("/blog", StaticFiles(directory="blog"), name="blog")
+# Статика — только те папки, что точно есть
+for _dir, _name in (("core", "core"), ("adaptive", "adaptive"), ("public", "public"), ("blog", "blog")):
+    if os.path.isdir(_dir):
+        app.mount(f"/{_name}", StaticFiles(directory=_dir), name=_name)
+    else:
+        log.warning(f"Static dir not found: {_dir}")
 
 app.add_middleware(
     CORSMiddleware,
@@ -57,16 +58,21 @@ async def root():
     return FileResponse("index.html")
 
 
-# --- роутеры ---
-from core.chat import router as chat_router
-from adaptive.public import router as public_router
-from adaptive.code import router as code_router
-from adaptive.patches import router as patches_router
+# --- Роутеры (мягкое подключение) ---
+def _try_include(module_path: str, router_name: str = "router"):
+    try:
+        mod = __import__(module_path, fromlist=[router_name])
+        r = getattr(mod, router_name)
+        app.include_router(r)
+        log.info(f"[router] подключён: {module_path}")
+    except Exception as e:
+        log.warning(f"[router] не подключён {module_path}: {e}")
 
-app.include_router(chat_router)
-app.include_router(public_router)
-app.include_router(code_router)
-app.include_router(patches_router)
+
+_try_include("core.chat")
+_try_include("adaptive.public")
+_try_include("adaptive.code")
+_try_include("adaptive.patches")
 
 
 if __name__ == "__main__":
