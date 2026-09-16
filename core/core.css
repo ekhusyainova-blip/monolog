@@ -2,7 +2,6 @@
    Компоненты — в adaptive/adaptive.css. */
 
 :root {
-  /* цвет */
   --bg: #0e0e11;
   --bg-soft: #16161b;
   --bg-elev: #1d1d24;
@@ -16,7 +15,6 @@
   --ok: #5bd67a;
   --line: #26262e;
 
-  /* размер */
   --r-sm: 6px;
   --r-md: 10px;
   --r-lg: 16px;
@@ -25,7 +23,6 @@
   --gap-md: 14px;
   --gap-lg: 22px;
 
-  /* типографика */
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --fs-xs: 12px;
@@ -35,7 +32,6 @@
   --fs-xl: 26px;
   --lh: 1.5;
 
-  /* прочее */
   --shadow: 0 6px 24px rgba(0,0,0,.35);
   --t-fast: .15s ease;
   --t-med: .25s ease;
@@ -47,6 +43,7 @@ html, body {
   margin: 0;
   padding: 0;
   height: 100%;
+  overflow: hidden;
   background: var(--bg);
   color: var(--fg);
   font-family: var(--font);
@@ -58,9 +55,10 @@ html, body {
 #app {
   display: flex;
   flex-direction: column;
-  min-height: 100%;
+  height: 100dvh;
   max-width: 880px;
   margin: 0 auto;
+  overflow: hidden;
 }
 
 #app-header,
@@ -75,10 +73,8 @@ html, body {
   justify-content: space-between;
   padding: var(--gap-sm) var(--gap-md);
   border-bottom: 1px solid var(--line);
-  position: sticky;
-  top: 0;
   background: var(--bg);
-  z-index: 10;
+  flex: 0 0 auto;
 }
 
 .header-side {
@@ -89,10 +85,12 @@ html, body {
 
 #app-main {
   flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   padding: var(--gap-md);
   gap: var(--gap-md);
+  overflow: hidden;
 }
 
 a { color: var(--accent); text-decoration: none; }
