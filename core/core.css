@@ -131,5 +131,4 @@ button {
 
 ::selection { background: var(--accent-soft); }
 
-/* заглушки листов — стилизуем в adaptive, тут только каркас */
 #app-sheets { position: relative; }
