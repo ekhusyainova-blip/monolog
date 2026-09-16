@@ -12,7 +12,6 @@ Monolog.core = {
   },
   ready: false,
 
-  // --- события ---
   emit(evt, data) {
     document.dispatchEvent(new CustomEvent(evt, { detail: data }));
   },
@@ -21,7 +20,6 @@ Monolog.core = {
     document.addEventListener(evt, (e) => fn(e.detail));
   },
 
-  // --- состояние ---
   set(key, value) {
     this.state[key] = value;
     this.emit('core:state', { key, value });
@@ -31,7 +29,6 @@ Monolog.core = {
     return this.state[key];
   },
 
-  // --- инициализация ---
   async init() {
     if (this.ready) return;
     try {
@@ -47,13 +44,10 @@ Monolog.core = {
     }
   },
 
-  // --- IndexedDB ---
   async initDB() {
-    // TODO: открыть monolog_db_v5, прогнать миграции
     console.log('[core] DB init (заглушка)');
   },
 
-  // --- API ---
   async initAPI() {
     try {
       const res = await fetch('/health');
@@ -66,14 +60,12 @@ Monolog.core = {
     }
   },
 
-  // --- экономика ---
   economy: {
     plus(n) { Monolog.core.set('index', Monolog.core.get('index') + n); },
     minus(n) { Monolog.core.set('index', Monolog.core.get('index') - n); },
     balance() { return Monolog.core.get('index'); }
   },
 
-  // --- чат ---
   chat: {
     async send(text) {
       if (!text || !text.trim()) return { reply: '' };
