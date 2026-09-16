@@ -42,4 +42,4 @@
     { "id": "businessSheet", "titleKey": "sheet.businessSheet", "component": "business" },
     { "id": "editorSheet", "titleKey": "sheet.editorSheet", "component": "editor", "fullscreen": true }
   ]
-}
+} 
