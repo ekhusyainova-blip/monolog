@@ -1,6 +1,5 @@
 // adaptive/adaptive.js — сборка интерфейса Monolog по манифесту
 // Читает config.json и content.json, строит компоненты, подписывается на core.
-// В IndexedDB напрямую не пишет — только через Monolog.core.
 
 window.Monolog = window.Monolog || {};
 
@@ -19,7 +18,6 @@ Monolog.adaptive = {
     console.log('[adaptive] смонтирован');
   },
 
-  // --- загрузка манифестов ---
   async loadManifests() {
     try {
       this.config = await fetch('adaptive/config.json').then(r => r.json());
@@ -59,16 +57,12 @@ Monolog.adaptive = {
     el.setAttribute('aria-label', label);
     el.title = label;
 
-    if (item.type === 'orb') {
-      el.classList.add('orb', 'state-calm');
-    }
+    if (item.type === 'orb') el.classList.add('orb', 'state-calm');
     if (item.type === 'index') {
       el.classList.add('index');
       el.textContent = '0';
     }
-    if (item.type === 'button') {
-      el.textContent = label;
-    }
+    if (item.type === 'button') el.textContent = label;
 
     if (item.badge) {
       const badge = document.createElement('span');
@@ -77,9 +71,7 @@ Monolog.adaptive = {
       el.appendChild(badge);
     }
 
-    if (item.sheet) {
-      el.addEventListener('click', () => this.toggleSheet(item.sheet));
-    }
+    if (item.sheet) el.addEventListener('click', () => this.toggleSheet(item.sheet));
 
     return el;
   },
@@ -94,9 +86,86 @@ Monolog.adaptive = {
       const el = document.createElement('div');
       el.className = `main-item main-item-${item.type}`;
       el.dataset.id = item.id;
-      if (item.type === 'note') el.textContent = this.text('ai-note') || '';
+
+      if (item.type === 'note') {
+        el.textContent = this.text('ai-note') || '';
+      }
+
+      if (item.type === 'chat') {
+        el.appendChild(this.buildChat());
+      }
+
       main.appendChild(el);
     });
+  },
+
+  buildChat() {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat';
+
+    const log = document.createElement('div');
+    log.className = 'chat-log';
+    log.id = 'chat-log';
+
+    const form = document.createElement('form');
+    form.className = 'chat-form';
+    form.id = 'chat-form';
+
+    const input = document.createElement('textarea');
+    input.className = 'chat-input';
+    input.id = 'chat-input';
+    input.rows = 1;
+    input.placeholder = 'Напиши сообщение…';
+
+    const btn = document.createElement('button');
+    btn.type = 'submit';
+    btn.className = 'btn btn-primary chat-send';
+    btn.textContent = 'Отправить';
+
+    form.appendChild(input);
+    form.appendChild(btn);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      this.sendChat();
+    });
+
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        this.sendChat();
+      }
+    });
+
+    wrap.appendChild(log);
+    wrap.appendChild(form);
+    return wrap;
+  },
+
+  appendMessage(role, text) {
+    const log = document.getElementById('chat-log');
+    if (!log) return;
+    const msg = document.createElement('div');
+    msg.className = `chat-msg chat-msg-${role}`;
+    msg.textContent = text;
+    log.appendChild(msg);
+    log.scrollTop = log.scrollHeight;
+  },
+
+  async sendChat() {
+    const input = document.getElementById('chat-input');
+    if (!input) return;
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    this.appendMessage('user', text);
+    Monolog.core.set('orb', 'active');
+
+    const res = await Monolog.core.chat.send(text);
+    const reply = res?.reply || '';
+    this.appendMessage('ai', reply || 'Пустой ответ.');
+    Monolog.core.set('orb', reply ? 'calm' : 'doubt');
   },
 
   // --- sheets ---
@@ -148,11 +217,8 @@ Monolog.adaptive = {
   },
 
   toggleSheet(id) {
-    if (this.openSheetId === id) {
-      this.closeSheet(id);
-    } else {
-      this.openSheet(id);
-    }
+    if (this.openSheetId === id) this.closeSheet(id);
+    else this.openSheet(id);
   },
 
   // --- связь с core ---
@@ -168,14 +234,9 @@ Monolog.adaptive = {
         const el = document.querySelector('.header-item-orb');
         if (el) {
           el.classList.remove('state-calm', 'state-doubt', 'state-active', 'state-need');
-          const value = d.value || 'calm';
-          el.classList.add('state-' + value);
+          el.classList.add('state-' + (d.value || 'calm'));
         }
       }
-    });
-
-    Monolog.core.on('app:ready', () => {
-      console.log('[adaptive] app:ready получен');
     });
   },
 
