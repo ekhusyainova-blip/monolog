@@ -1,5 +1,6 @@
 # app.py — точка входа Monolog.
-# Только импорты и подключение роутеров. Логика — в core/ и adaptive/.
+# Только импорты, подключение роутеров, root.
+# Логика разнесена по core/ и adaptive/.
 
 import os
 import logging
@@ -56,13 +57,13 @@ async def root():
     return FileResponse("index.html")
 
 
-# --- Подключение роутеров ---
-from core.app_core import router as core_router
-from adaptive.app_public import router as public_router
-from adaptive.app_code import router as code_router
-from adaptive.app_patches import router as patches_router
+# --- роутеры ---
+from core.chat import router as chat_router
+from adaptive.public import router as public_router
+from adaptive.code import router as code_router
+from adaptive.patches import router as patches_router
 
-app.include_router(core_router)
+app.include_router(chat_router)
 app.include_router(public_router)
 app.include_router(code_router)
 app.include_router(patches_router)
