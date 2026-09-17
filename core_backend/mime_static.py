@@ -38,3 +38,4 @@ class MimeStaticFiles(StaticFiles):
             scope_path = scope.get("path", "")
             response.headers["content-type"] = guess_mime(scope_path)
         return response
+    
