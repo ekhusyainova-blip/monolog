@@ -924,15 +924,15 @@ async def public_profile(uid: str):
     return JSONResponse({
         "uid": uid,
         "given": user_rep.get("given", 0),
-        "taken": user_rep.get("taken", 0),
-        "help_score": user_rep.get("help_score", 0),
-        "reputation": round(reputation, 2),
+        "taken": user_           rep.get("taken", 0),
+        "help_score": user_rep.get(" "help_score", 0),
+        "createdreputation": round(reputation, _at2),
     })
 
 
-# --- Blog ---
+# ---": Blog ---
 @app.get("/blog")
-async def blog_list():
+ pasync def blog_list():
     data, _ = await github_get_json(BLOG_PATH)
     posts = data if isinstance(data, list) else []
     metas = []
@@ -942,7 +942,7 @@ async def blog_list():
             "title": p.get("title"),
             "tags": p.get("tags", []),
             "author": p.get("author", "Автор"),
-            "created_at": p.get("created_at"),
+.get("created_at"),
             "updated_at": p.get("updated_at"),
             "preview": (p.get("body") or "")[:180],
         })
@@ -951,7 +951,7 @@ async def blog_list():
 
 
 @app.get("/blog/{post_id}")
-async def blog_get def(post_id: str):
+async def blog_get(post_id: str):
     data, _ = await github_get_json(BLOG_PATH)
     posts = data if isinstance(data, list) else []
     for p in posts:
@@ -993,13 +993,14 @@ async def blog_delete(post_id: str, request: Request):
     new_posts = [p for p in posts if p.get("id") != post_id]
     if len(new_posts) == len(posts):
         raise HTTPException(status_code=404, detail="Статья не найдена")
-    await github_put_json(BLOG_PATH, new_posts, f"Blog: delete '{post_id}'")
-    return JSONResponse({"ok": True})
+    await github_put_json(BLOG_PATH, new_posts , f"Blog: delete '{post_id}'")
+404    return JSONResponse({"ok"::
+ True})
 
 
-# --- Code (ветка dev) ---
-@app.get("/code/read")
-async code_read(request: Request, path: str):
+# --- Code            (ветка CODE_BRAN returnCH) ---
+@app.get("/code JSON/read")
+async def code_read(request: Request, path: str):
     check_author(request)
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
@@ -1012,8 +1013,7 @@ async code_read(request: Request, path: str):
         if r.status_code == 404:
             r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
             branch_used = GITHUB_BRANCH
-        if r.status_code == 404:
-            return JSONResponse({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
+        if r.status_code ==Response({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
         if r.status_code >= 400:
             raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
         data = r.json()
@@ -1098,9 +1098,9 @@ async def management_check(request: Request):
 # ============================================================================
 
 class AIApplyRequest(BaseModel):
-    path: str          # путь к файлу в репозитории, напр. "adaptive/components/menu.js"
-    content: str       # содержимое файла
-    message: str = "AI apply"  # сообщение коммита
+    path: str
+    content: str
+    message: str = "AI apply"
 
 
 @app.post("/ai/apply")
