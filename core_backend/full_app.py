@@ -29,9 +29,9 @@ from core_backend.config import (
 
 app = FastAPI(title="Monolog")
 
-app.mount("/core", StaticFiles(directory="core"), name="core")
-app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
-app.mount("/blog", StaticFiles(directory="blog"), name="blog")
+app.mount("/core", MimeStaticFiles(directory="core"), name="core")
+app.mount("/adaptive", MimeStaticFiles(directory="adaptive"), name="adaptive")
+app.mount("/blog", MimeStaticFiles(directory="blog"), name="blog")
 
 app.add_middleware(
     CORSMiddleware,
