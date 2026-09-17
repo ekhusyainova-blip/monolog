@@ -47,4 +47,7 @@
   "stateActive": "Активно",
   "stateCalm": "Спокойно",
   "stateNeed": "Нужен ввод"
+  "menu.editor": "Редактор",
+  "menu.settings": "Настройки",
+  "menu.about": "О продукте"
 }
