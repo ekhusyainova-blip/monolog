@@ -1,6 +1,5 @@
-# core_backend/public_templates.py
-# Публичные шаблоны: список и публикация.
-# APIRouter с префиксом /public.
+# core_backend/routers/public_templates.py
+# Публичные шаблоны. APIRouter.
 
 import time
 from fastapi import APIRouter, Request, HTTPException
@@ -33,7 +32,7 @@ async def public_templates_list(sort: str = "new", limit: int = 100):
 async def public_templates_publish(request: Request):
     body = await request.json()
     if not isinstance(body, dict):
-        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+        raise HTTPException(status_code=400, detail="Тело должно быть объектом")
     template = body.get("template") or {}
     if not isinstance(template, dict) or not template.get("name"):
         raise HTTPException(status_code=400, detail="Нужно поле name")
