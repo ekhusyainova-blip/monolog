@@ -33,10 +33,12 @@ app.mount("/core", StaticFiles(directory="core"), name="core")
 app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
 app.mount("/blog", StaticFiles(directory="blog"), name="blog")
 
-app.add CORSMiddleware,
+app.add_middleware(
+    CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+)
 
 import core_backend.routers as _routers_pkg
 
