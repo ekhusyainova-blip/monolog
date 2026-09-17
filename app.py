@@ -1,6 +1,5 @@
 # app.py
 # Точка входа Monolog. Подключает модули из core_backend/.
-# Все эндпоинты — в core_backend/*.
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
@@ -25,7 +24,8 @@ from core_backend.config import (
 )
 
 from core_backend.chat import router as chat_router
-from core_backend.public_layer import router as public_router
+from core_backend.public_templates import router as public_tpl_router
+from core_backend.public_lots import router as public_lots_router
 from core_backend.code_ai import router as code_router
 
 
@@ -47,7 +47,8 @@ app.add_middleware(
 
 # --- роутеры ---
 app.include_router(chat_router)
-app.include_router(public_router)
+app.include_router(public_tpl_router)
+app.include_router(public_lots_router)
 app.include_router(code_router)
 
 
@@ -60,7 +61,7 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "version": "2.2",
+        "version": "2.3",
         "dev_keys": len(_DEV_KEYS_GROQ),
         "byok": ALLOW_BYOK,
         "github_ready": bool(GITHUB_TOKEN),
