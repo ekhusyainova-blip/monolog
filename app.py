@@ -88,7 +88,7 @@ PROVIDERS = {
         },
         "all_models": [
             "Meta-Llama-3.3-70B-Instruct",
-            "Meta-Llama-3 for.1-8B-Instruct",
+            "Meta-Llama-3.1-8B-Instruct",
             "DeepSeek-V3.1",
         ],
         "reasoning_effort": False,
@@ -106,7 +106,7 @@ MAX_ATTACHMENTS = 3
 MAX_BODY_BYTES = 200_000
 
 _DEV_KEYS_GROQ: List[str] = [
-    k.strip() k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()
+    k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()
 ]
 _dev_key_cycle = itertools.cycle(_DEV_KEYS_GROQ) if _DEV_KEYS_GROQ else None
 
@@ -730,4 +730,434 @@ async def chat(request: Request):
 
 # --- Public layer ---
 @app.get("/public/templates")
-async def public_templates_list(sort: str = "new", limit
+async def public_templates_list(sort: str = "new", limit: int = 100):
+    data, _ = await github_get_json(PUBLIC_TEMPLATES_PATH)
+    items = data if isinstance(data, list) else []
+    if sort == "top":
+        items.sort(key=lambda x: (x.get("help_score") or 0), reverse=True)
+    elif sort == "help":
+        items.sort(key=lambda x: (x.get("taken_count") or 0), reverse=True)
+    else:
+        items.sort(key=lambda x: x.get("at") or "", reverse=True)
+    return JSONResponse({"templates": items[:limit], "count": len(items)})
+
+
+@app.post("/public/templates")
+async def public_templates_publish(request: Request):
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    template = body.get("template") or {}
+    if not isinstance(template, dict) or not template.get("name"):
+        raise HTTPException(status_code=400, detail="Нужно поле name")
+    uid = (body.get("uid") or "").strip()
+    if not uid:
+        raise HTTPException(status_code=400, detail="Нужно поле uid")
+
+    data, _ = await github_get_json(PUBLIC_TEMPLATES_PATH)
+    items = data if isinstance(data, list) else []
+
+    new_item = {
+        "id": "tpl_" + str(int(time.time() * 1000)),
+        "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "uid": uid,
+        "name": template.get("name"),
+        "kind": template.get("kind") or "pattern",
+        "content": template.get("content") or "",
+        "tags": template.get("tags") or [],
+        "taken_count": 0,
+        "help_score": 0,
+        "help_count": 0,
+        "nohelp_count": 0,
+    }
+    items.append(new_item)
+    await github_put_json(PUBLIC_TEMPLATES_PATH, items, f"Public: template '{new_item['name'][:40]}'")
+
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    user_rep["given"] = (user_rep.get("given") or 0) + 1
+    rep[uid] = user_rep
+    await github_put_json(PUBLIC_REPUTATION_PATH, rep, f"Reputation: {uid} +given")
+
+    return JSONResponse({"ok": True, "template": new_item})
+
+
+@app.get("/public/lots")
+async def public_lots_list(sort: str = "new", limit: int = 100):
+    data, _ = await github_get_json(PUBLIC_LOTS_PATH)
+    items = data if isinstance(data, list) else []
+    if sort == "top":
+        items.sort(key=lambda x: (x.get("help_score") or 0), reverse=True)
+    else:
+        items.sort(key=lambda x: x.get("at") or "", reverse=True)
+    return JSONResponse({"lots": items[:limit], "count": len(items)})
+
+
+@app.post("/public/lots")
+async def public_lots_publish(request: Request):
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    lot = body.get("lot") or {}
+    if not isinstance(lot, dict) or not lot.get("name"):
+        raise HTTPException(status_code=400, detail="Нужно поле name")
+    uid = (body.get("uid") or "").strip()
+    if not uid:
+        raise HTTPException(status_code=400, detail="Нужно поле uid")
+
+    data, _ = await github_get_json(PUBLIC_LOTS_PATH)
+    items = data if isinstance(data, list) else []
+
+    new_item = {
+        "id": "lot_" + str(int(time.time() * 1000)),
+        "at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+        "uid": uid,
+        "name": lot.get("name"),
+        "goal": lot.get("goal") or "",
+        "price": lot.get("price") or "",
+        "taken_count": 0,
+        "help_score": 0,
+        "help_count": 0,
+        "nohelp_count": 0,
+    }
+    items.append(new_item)
+    await github_put_json(PUBLIC_LOTS_PATH, items, f"Public: lot '{new_item['name'][:40]}'")
+
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    user_rep["given"] = (user_rep.get("given") or 0) + 1
+    rep[uid] = user_rep
+    await github_put_json(PUBLIC_REPUTATION_PATH, rep, f"Reputation: {uid} +given")
+
+    return JSONResponse({"ok": True, "lot": new_item})
+
+
+@app.post("/public/take")
+async def public_take(request: Request):
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    target_id = (body.get("target_id") or "").strip()
+    target_type = (body.get("target_type") or "").strip()
+    uid = (body.get("uid") or "").strip()
+    if not target_id or not target_type or not uid:
+        raise HTTPException(status_code=400, detail="Нужны target_id, target_type, uid")
+
+    path = PUBLIC_TEMPLATES_PATH if target_type == "template" else PUBLIC_LOTS_PATH
+    data, _ = await github_get_json(path)
+    items = data if isinstance(data, list) else []
+    found = None
+    for it in items:
+        if it.get("id") == target_id:
+            found = it
+            break
+    if not found:
+        raise HTTPException(status_code=404, detail="Не найдено")
+    if found.get("uid") == uid:
+        return JSONResponse({"ok": True, "self": True})
+
+    found["taken_count"] = (found.get("taken_count") or 0) + 1
+    await github_put_json(path, items, f"Public: take '{target_id}'")
+
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    user_rep["taken"] = (user_rep.get("taken") or 0) + 1
+    rep[uid] = user_rep
+    author_uid = found.get("uid")
+    if author_uid:
+        author_rep = rep.get(author_uid) or {"given": 0, "taken": 0, "help_score": 0}
+        rep[author_uid] = author_rep
+    await github_put_json(PUBLIC_REPUTATION_PATH, rep, f"Reputation: {uid} +taken")
+
+    index_delta = -1.0 if target_type == "template" else -2.0
+    return JSONResponse({
+        "ok": True,
+        "content": found.get("content") or found.get("goal") or "",
+        "index_delta": index_delta,
+        "author_uid": found.get("uid"),
+    })
+
+
+@app.post("/public/review")
+async def public_review(request: Request):
+    body = await request.json()
+    if not isinstance(body, dict):
+        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+    target_id = (body.get("target_id") or "").strip()
+    target_type = (body.get("target_type") or "").strip()
+    verdict = (body.get("verdict") or "").strip()
+    uid = (body.get("uid") or "").strip()
+    if not target_id or not target_type or verdict not in ("help", "nohelp") or not uid:
+        raise HTTPException(status_code=400, detail="Нужны target_id, target_type, verdict (help|nohelp), uid")
+
+    path = PUBLIC_TEMPLATES_PATH if target_type == "template" else PUBLIC_LOTS_PATH
+    data, _ = await github_get_json(path)
+    items = data if isinstance(data, list) else []
+    found = None
+    for it in items:
+        if it.get("id") == target_id:
+            found = it
+            break
+    if not found:
+        raise HTTPException(status_code=404, detail="Не найдено")
+
+    if verdict == "help":
+        found["help_count"] = (found.get("help_count") or 0) + 1
+    else:
+        found["nohelp_count"] = (found.get("nohelp_count") or 0) + 1
+    total = (found.get("help_count") or 0) + (found.get("nohelp_count") or 0)
+    found["help_score"] = round((found.get("help_count") or 0) / total, 2) if total else 0
+    await github_put_json(path, items, f"Review: '{target_id}' ({verdict})")
+
+    return JSONResponse({"ok": True, "help_score": found["help_score"]})
+
+
+@app.get("/public/profile/{uid}")
+async def public_profile(uid: str):
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep = rep if isinstance(rep, dict) else {}
+    user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
+    reputation = (user_rep.get("given", 0) * 1.0) + (user_rep.get("help_score", 0) * 2.0) - (user_rep.get("taken", 0) * 0.3)
+    return JSONResponse({
+        "uid": uid,
+        "given": user_rep.get("given", 0),
+        "taken": user_rep.get("taken", 0),
+        "help_score": user_rep.get("help_score", 0),
+        "reputation": round(reputation, 2),
+    })
+
+
+# --- Blog ---
+@app.get("/blog")
+async def blog_list():
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
+    metas = []
+    for p in posts:
+        metas.append({
+            "id": p.get("id"),
+            "title": p.get("title"),
+            "tags": p.get("tags", []),
+            "author": p.get("author", "Автор"),
+            "created_at": p.get("created_at"),
+            "updated_at": p.get("updated_at"),
+            "preview": (p.get("body") or "")[:180],
+        })
+    metas.sort(key=lambda x: x.get("created_at") or "", reverse=True)
+    return JSONResponse({"posts": metas, "count": len(metas)})
+
+
+@app.get("/blog/{post_id}")
+async def blog_get def(post_id: str):
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
+    for p in posts:
+        if p.get("id") == post_id:
+            return JSONResponse(p)
+    raise HTTPException(status_code=404, detail="Статья не найдена")
+
+
+@app.post("/blog/publish")
+async def blog_publish(request: Request):
+    check_author(request)
+    body = await request.json()
+    title = (body.get("title") or "").strip()
+    text = (body.get("body") or "").strip()
+    tags = body.get("tags") or []
+    author = (body.get("author") or "Автор").strip()
+    if not title or not text:
+        raise HTTPException(status_code=400, detail="Нужны заголовок и текст")
+
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
+    post_id = "post_" + str(int(time.time() * 1000))
+    now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+    new_post = {
+        "id": post_id, "title": title, "body": text,
+        "tags": tags if isinstance(tags, list) else [],
+        "author": author, "created_at": now, "updated_at": now,
+    }
+    posts.append(new_post)
+    await github_put_json(BLOG_PATH, posts, f"Blog: publish '{title[:50]}'")
+    return JSONResponse({"ok": True, "id": post_id})
+
+
+@app.delete("/blog/{post_id}")
+async def blog_delete(post_id: str, request: Request):
+    check_author(request)
+    data, _ = await github_get_json(BLOG_PATH)
+    posts = data if isinstance(data, list) else []
+    new_posts = [p for p in posts if p.get("id") != post_id]
+    if len(new_posts) == len(posts):
+        raise HTTPException(status_code=404, detail="Статья не найдена")
+    await github_put_json(BLOG_PATH, new_posts, f"Blog: delete '{post_id}'")
+    return JSONResponse({"ok": True})
+
+
+# --- Code (ветка dev) ---
+@app.get("/code/read")
+async code_read(request: Request, path: str):
+    check_author(request)
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {"Accept": "application/vnd.github+json",
+               "Authorization": f"Bearer {GITHUB_TOKEN}"}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
+        branch_used = CODE_BRANCH
+        if r.status_code == 404:
+            r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
+            branch_used = GITHUB_BRANCH
+        if r.status_code == 404:
+            return JSONResponse({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
+        data = r.json()
+        try:
+            content = base64.b64decode(data.get("content", "")).decode("utf-8")
+        except Exception:
+            content = ""
+        return JSONResponse({
+            "exists": True, "path": path,
+            "content": content, "sha": data.get("sha"), "branch": branch_used,
+        })
+
+
+@app.post("/code/save")
+async def code_save(request: Request):
+    check_author(request)
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+    body = await request.json()
+    path = (body.get("path") or "").strip()
+    content = body.get("content") or ""
+    message = (body.get("message") or f"Update {path}").strip()
+    if not path:
+        raise HTTPException(status_code=400, detail="Не указан путь")
+
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {"Accept": "application/vnd.github+json",
+               "Authorization": f"Bearer {GITHUB_TOKEN}"}
+    sha = None
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
+        if r.status_code == 200:
+            sha = r.json().get("sha")
+        content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+        payload = {"message": message, "content": content_b64, "branch": CODE_BRANCH}
+        if sha:
+            payload["sha"] = sha
+        r = await client.put(url, headers=headers, json=payload)
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail="Не удалось сохранить код")
+        data = r.json()
+        return JSONResponse({
+            "ok": True, "path": path, "branch": CODE_BRANCH,
+            "commit_sha": data.get("commit", {}).get("sha"),
+            "html_url": data.get("commit", {}).get("html_url"),
+        })
+
+
+# --- Releases ---
+@app.get("/releases")
+async def releases_list():
+    data, _ = await github_get_json(RELEASES_PATH)
+    if not isinstance(data, list):
+        data = []
+    return JSONResponse({"releases": data})
+
+
+@app.post("/releases/save")
+async def releases_save(request: Request):
+    check_author(request)
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+    body = await request.json()
+    releases = body.get("releases") or []
+    if not isinstance(releases, list):
+        raise HTTPException(status_code=400, detail="releases должен быть списком")
+    await github_put_json(RELEASES_PATH, releases, "Update releases")
+    return JSONResponse({"ok": True, "count": len(releases)})
+
+
+@app.post("/management/check")
+async def management_check(request: Request):
+    check_management(request)
+    return JSONResponse({"ok": True, "management_mode": True})
+
+
+# ============================================================================
+# AI-APPLY — автоматизация разработки
+# ----------------------------------------------------------------------------
+# Принимает файл от ИИ, сохраняет в main, проверяет /health,
+# при неудаче — откатывает.
+# ============================================================================
+
+class AIApplyRequest(BaseModel):
+    path: str          # путь к файлу в репозитории, напр. "adaptive/components/menu.js"
+    content: str       # содержимое файла
+    message: str = "AI apply"  # сообщение коммита
+
+
+@app.post("/ai/apply")
+async def ai_apply(body: AIApplyRequest):
+    """
+    Принимает файл от ИИ, сохраняет в main, проверяет /health,
+    при неудаче — откатывает.
+    """
+    path = body.path.strip()
+    content = body.content
+    message = body.message.strip()
+
+    if not path:
+        raise HTTPException(status_code=400, detail="Нужно поле path")
+    if not content:
+        raise HTTPException(status_code=400, detail="Нужно поле content")
+
+    FORBIDDEN = (".env", "requirements.txt", "Dockerfile")
+    if any(path.endswith(f) for f in FORBIDDEN):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Файл {path} защищён от автоправок",
+        )
+
+    _, sha_before = await github_get_json(path)
+
+    try:
+        await github_put_json(path, content, message)
+    except HTTPException as e:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Не удалось сохранить {path}: {e.detail}",
+        )
+
+    await asyncio.sleep(3)
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.get("https://ai-monolog.onrender.com/health")
+            if r.status_code != 200:
+                raise Exception(f"health вернул {r.status_code}")
+    except Exception as e:
+        safe_log(f"AI apply: health check failed ({e}), откатываю {path}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Изменение не прошло проверку, откат выполнен. Причина: {e}",
+        )
+
+    return JSONResponse({
+        "ok": True,
+        "path": path,
+        "sha_before": sha_before,
+        "message": message,
+        "health": "ok",
+    })
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
