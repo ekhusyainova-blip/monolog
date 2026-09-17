@@ -34,7 +34,6 @@ app = FastAPI(title="Monolog")
 # --- статика ---
 app.mount("/core", StaticFiles(directory="core"), name="core")
 app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
-app.mount("/public", StaticFiles(directory="public"), name="public")
 app.mount("/blog", StaticFiles(directory="blog"), name="blog")
 
 # --- CORS ---
