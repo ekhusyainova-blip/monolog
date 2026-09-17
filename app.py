@@ -74,7 +74,117 @@ _try_include("adaptive.public")
 _try_include("adaptive.code")
 _try_include("adaptive.patches")
 
+# ============================================================================
+# AI-APPLY — автоматизация разработки
+# ----------------------------------------------------------------------------
+# Что делает:
+#   1. Принимает от ИИ файл (путь + содержимое + сообщение)
+#   2. Сохраняет его в репозиторий через GitHub API
+#   3. Проверяет, что /health отвечает (приложение живо)
+#   4. Если проверка не прошла — откатывает к предыдущей версии файла
+#
+# Зачем:
+#   ИИ может сам вносить изменения в код, не дожидаясь человека.
+#   Человек не вставляет файлы руками — ИИ пишет через /ai/apply.
+#
+# Как использовать (из ИИ):
+#   POST /ai/apply
+#   {
+#     "path": "adaptive/components/menu.js",
+#     "content": "...",
+#     "message": "Add menu component"
+#   }
+# ============================================================================
 
+from pydantic import BaseModel  # если pydantic уже есть — не дублировать импорт
+
+class AIApplyRequest(BaseModel):
+    path: str
+    content: str
+    message: str = "AI apply"
+
+
+@app.post("/ai/apply")
+async def ai_apply(request: Request):
+    """
+    Принимает файл от ИИ, сохраняет в main, проверяет /health,
+    при неудаче — откатывает.
+    """
+
+    # --- 1. Разбор входных данных ---
+    try:
+        body = await request.json()
+    except Exception:
+        raise HTTPException(status_code=400, detail="Некорректный JSON")
+
+    path = (body.get("path") or "").strip()
+    content = body.get("content") or ""
+    message = (body.get("message") or "AI apply").strip()
+
+    if not path:
+        raise HTTPException(status_code=400, detail="Нужно поле path")
+    if not content:
+        raise HTTPException(status_code=400, detail="Нужно поле content")
+
+    # --- 2. Защита: ИИ не может писать в критичные файлы ---
+    # Это предохранитель. Если надо разрешить — расширить белый список.
+    FORBIDDEN = (
+        ".env",              # секреты
+        "requirements.txt",  # зависимости
+        "Dockerfile",        # сборка
+    )
+    if any(path.endswith(f) for f in FORBIDDEN):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Файл {path} защищён от автоправок",
+        )
+
+    # --- 3. Читаем текущую версию (для отката) ---
+    _, sha_before = await github_get_json(path)
+
+    # --- 4. Сохраняем новую версию ---
+    try:
+        await github_put_json(path, content, message)
+    except HTTPException as e:
+        # Если не удалось сохранить — вернуть ошибку, ничего не меняя
+        raise HTTPException(
+            status_code=502,
+            detail=f"Не удалось сохранить {path}: {e.detail}",
+        )
+
+    # --- 5. Проверяем, что приложение живо ---
+    # Ждём несколько секунд, чтобы Render успел подхватить
+    await asyncio.sleep(3)
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.get(f"{request.base_url}health")
+            if r.status_code != 200:
+                raise Exception(f"health вернул {r.status_code}")
+    except Exception as e:
+        # --- 6. Откат ---
+        safe_log(f"AI apply: health check failed ({e}), откатываю {path}")
+        if sha_before:
+            await github_put_json(
+                path,
+                # читаем старую версию
+                (await github_get_json(path))[0] or "",
+                f"Revert {path} after failed health check",
+            )
+        raise HTTPException(
+            status_code=500,
+            detail=f"Изменение не прошло проверку, откат выполнен. Причина: {e}",
+        )
+
+    # --- 7. Успех ---
+    return JSONResponse({
+        "ok": True,
+        "path": path,
+        "sha_before": sha_before,
+        "message": message,
+        "health": "ok",
+    })
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
