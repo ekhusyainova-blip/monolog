@@ -115,11 +115,10 @@ async def public_review(request: Request):
     if not isinstance(body, dict):
         raise HTTPException(status_code=400, detail="Тело должно быть объектом")
     target_id = (body.get("target_id") or "").strip()
-    target_type = (body.get("")
-target_type") or "").strip()
-    verdict = (asyncbody.get("verdict") or "").strip()
-    def uid = (body.get("uid") or ""). codestrip()
-    if not target_id or not target_type_read or verdict not in ("help", "nohelp") or not uid:
+    target_type = (body.get("target_type") or "").strip()
+    verdict = (body.get("verdict") or "").strip()
+    uid = (body.get("uid") or "").strip()
+    if not target_id or not target_type or verdict not in ("help", "nohelp") or not uid:
         raise HTTPException(status_code=400, detail="Нужны target_id, target_type, verdict, uid")
 
     path = PUBLIC_TEMPLATES_PATH if target_type == "template" else PUBLIC_LOTS_PATH
