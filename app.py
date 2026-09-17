@@ -1,5 +1,9 @@
 # app.py
-# Точка входа Monolog. Подключает модули из core_backend/.
+# Точка входа Monolog.
+# Статика, CORS, автосканирование роутеров из core_backend/routers/.
+
+import pkgutil
+import importlib
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
@@ -23,18 +27,15 @@ from core_backend.config import (
     LAYER_A_CONTENT,
 )
 
-from core_backend.chat import router as chat_router
-from core_backend.public_templates import router as public_tpl_router
-from core_backend.public_lots import router as public_lots_router
-from core_backend.code_ai import router as code_router
-
 
 app = FastAPI(title="Monolog")
+
 
 # --- статика ---
 app.mount("/core", StaticFiles(directory="core"), name="core")
 app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
 app.mount("/blog", StaticFiles(directory="blog"), name="blog")
+
 
 # --- CORS ---
 app.add_middleware(
@@ -44,13 +45,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- роутеры ---
-app.include_router(chat_router)
-app.include_router(public_tpl_router)
-app.include_router(public_lots_router)
-app.include_router(code_router)
+
+# --- автосканирование роутеров из core_backend/routers/ ---
+import core_backend.routers as _routers_pkg
+
+for _, module_name, _ in pkgutil.iter_modules(_routers_pkg.__path__):
+    if module_name.startswith("_"):
+        continue
+    module = importlib.import_module(f"core_backend.routers.{module_name}")
+    if hasattr(module, "router"):
+        app.include_router(module.router)
 
 
+# --- базовые эндпоинты ---
 @app.get("/")
 async def root():
     return FileResponse("index.html")
@@ -60,7 +67,7 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "version": "2.3",
+        "version": "2.4",
         "dev_keys": len(_DEV_KEYS_GROQ),
         "byok": ALLOW_BYOK,
         "github_ready": bool(GITHUB_TOKEN),
