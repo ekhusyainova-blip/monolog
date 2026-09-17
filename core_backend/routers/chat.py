@@ -21,6 +21,7 @@ ENT,
 )
 from core_backend.metrics import BASE_METRICS, merge_metrics, compact_carried
 from core_backend.providers import call_provider, pick_provider_and_model, extract_json
+from core_backend.provider_rotation import call_with_fallback
 
 
 router = APIRouter()
@@ -39,14 +40,19 @@ async def call_meta(user_message, carried_metrics, api_key, base_url, model, pro
     payload = {"prev": compact_carried(carried_metrics), "msg": (user_message or "")[:200]}
     messages.append({"role": "user", "content": json.dumps(payload, ensure_ascii=False)})
     try:
-        raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=META_MAX_TOKENS)
-        return extract_json(raw) or {}
+        result = await call_with_fallback(
+            messages,
+            user_api_key=api_key,
+            user_provider=provider,
+            user_model=model,
+            max_tokens=META_MAX_TOKENS,
+        )
+        return extract_json(result["text"]) or {}
     except HTTPException:
         raise
     except Exception as e:
         safe_log(f"meta failed: {e}")
         return {}
-
 
 async def call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments=None):
     system = (LAYER_A + "\n\n" + LAYER_A_CONTENT).strip()
@@ -62,12 +68,18 @@ async def call_content(user_message, full_metrics, api_key, base_url, model, pro
     if system:
         messages.append({"role": "system", "content": system})
     messages.append({"role": "user", "content": user_content})
-    raw = await call_provider(messages, api_key, base_url, model, provider, max_tokens=MAX_TOKENS)
+    result = await call_with_fallback(
+        messages,
+        user_api_key=api_key,
+        user_provider=provider,
+        user_model=model,
+        max_tokens=MAX_TOKENS,
+    )
+    raw = result["text"]
     parsed = extract_json(raw) or {}
     if "reply_text" not in parsed:
         parsed = {"reply_text": raw}
     return parsed
-
 
 @router.post("/chat")
 async def chat(request: Request):
