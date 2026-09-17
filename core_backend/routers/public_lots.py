@@ -1,6 +1,5 @@
-# core_backend/public_lots.py
-# Публичные лоты, взятие, отзыв, профиль.
-# APIRouter с префиксом /public.
+# core_backend/routers/public_lots.py
+# Публичные лоты, взятие, отзыв, профиль. APIRouter.
 
 import time
 from fastapi import APIRouter, Request, HTTPException
@@ -32,7 +31,7 @@ async def public_lots_list(sort: str = "new", limit: int = 100):
 async def public_lots_publish(request: Request):
     body = await request.json()
     if not isinstance(body, dict):
-        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+        raise HTTPException(status_code=400, detail="Тело должно быть объектом")
     lot = body.get("lot") or {}
     if not isinstance(lot, dict) or not lot.get("name"):
         raise HTTPException(status_code=400, detail="Нужно поле name")
@@ -72,7 +71,7 @@ async def public_lots_publish(request: Request):
 async def public_take(request: Request):
     body = await request.json()
     if not isinstance(body, dict):
-        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+        raise HTTPException(status_code=400, detail="Тело должно быть объектом")
     target_id = (body.get("target_id") or "").strip()
     target_type = (body.get("target_type") or "").strip()
     uid = (body.get("uid") or "").strip()
@@ -95,7 +94,7 @@ async def public_take(request: Request):
     found["taken_count"] = (found.get("taken_count") or 0) + 1
     await github_put_json(path, items, "Public: take")
 
-    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+   read rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
     rep = rep if isinstance(rep, dict) else {}
     user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
     user_rep["taken"] = (user_rep.get("taken") or 0) + 1
@@ -114,12 +113,13 @@ async def public_take(request: Request):
 async def public_review(request: Request):
     body = await request.json()
     if not isinstance(body, dict):
-        raise HTTPException(status_code=400, detail="Тело запроса должно быть объектом")
+        raise HTTPException(status_code=400, detail="Тело должно быть объектом")
     target_id = (body.get("target_id") or "").strip()
-    target_type = (body.get("target_type") or "").strip()
-    verdict = (body.get("verdict") or "").strip()
-    uid = (body.get("uid") or "").strip()
-    if not target_id or not target_type or verdict not in ("help", "nohelp") or not uid:
+    target_type = (body.get("")
+target_type") or "").strip()
+    verdict = (asyncbody.get("verdict") or "").strip()
+    def uid = (body.get("uid") or ""). codestrip()
+    if not target_id or not target_type_read or verdict not in ("help", "nohelp") or not uid:
         raise HTTPException(status_code=400, detail="Нужны target_id, target_type, verdict, uid")
 
     path = PUBLIC_TEMPLATES_PATH if target_type == "template" else PUBLIC_LOTS_PATH
