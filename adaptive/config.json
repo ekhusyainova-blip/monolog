@@ -20,7 +20,13 @@
   },
   "sheets": [
     { "id": "orbSheet", "titleKey": "sheet.orbSheet", "component": "orb" },
-    { "id": "menuSheet", "titleKey": "sheet.menuSheet", "component": "menu" },
+    { "id": "menuSheet", "titleKey": "sheet.menuSheet", "component": "menu",
+    "items": [
+      { "id": "editor", "labelKey": "menu.editor", "action": "openSheet", "target": "editorSheet" },
+      { "id": "settings", "labelKey": "menu.settings", "action": "openSheet", "target": "settingsSheet" },
+      { "id": "about", "labelKey": "menu.about", "action": "openSheet", "target": "aboutSheet" }
+    ]
+  }
     { "id": "indexSheet", "titleKey": "sheet.indexSheet", "component": "index" },
     { "id": "profileSheet", "titleKey": "sheet.profileSheet", "component": "profile" },
     { "id": "metricsSheet", "titleKey": "sheet.metricsSheet", "component": "metrics" },
@@ -42,5 +48,13 @@
     { "id": "aboutSheet", "titleKey": "sheet.aboutSheet", "component": "about" },
     { "id": "businessSheet", "titleKey": "sheet.businessSheet", "component": "business" },
     { "id": "editorSheet", "titleKey": "sheet.editorSheet", "component": "editor", "fullscreen": true }
+  ]
+}
+
+{ "id": "menuSheet", "titleKey": "sheet.menuSheet", "component": "menu",
+  "items": [
+    { "id": "editor", "labelKey": "menu.editor", "action": "openSheet", "target": "editorSheet" },
+    { "id": "settings", "labelKey": "menu.settings", "action": "openSheet", "target": "settingsSheet" },
+    { "id": "about", "labelKey": "menu.about", "action": "openSheet", "target": "aboutSheet" }
   ]
 }
