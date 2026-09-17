@@ -97,3 +97,79 @@ async def code_check(path: str):
             "offset": e.offset,
             "text": (e.text or "").strip(),
         })
+        
+        # --- /code/diagnose (проверка всех .py файлов одним вызовом) ---
+import httpx as _httpx  # локальный алиас, чтобы не путаться
+
+
+@router.get("/code/diagnose")
+async def code_diagnose():
+    """
+    Проверяет синтаксис всех .py файлов в core_backend/ и app.py.
+    Возвращает список сломанных с указанием строки.
+    """
+    from core_backend.stub_github import GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, GITHUB_API
+
+    # 1. Получить дерево файлов репозитория
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/trees/{GITHUB_BRANCH}"
+    headers = {"Accept": "application/vnd.github+json"}
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+
+    async with _httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"recursive": "1"})
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"GitHub tree: {r.status_code}")
+        tree = r.json().get("tree", [])
+
+    # 2. Фильтр: только .py в core_backend/ и app.py
+    py_files = []
+    for item in tree:
+        p = item.get("path", "")
+        if item.get("type") != "blob":
+            continue
+        if not p.endswith(".py"):
+            continue
+        if p.startswith("core_backend/") or p == "app.py":
+            py_files.append(p)
+
+    # 3. Проверить каждый
+    results = []
+    invalid = []
+    for path in py_files:
+        try:
+            content = await _get_content(path)
+        except Exception as e:
+            invalid.append({
+                "path": path,
+                "error": f"не удалось прочитать: {e}",
+                "line": None,
+                "text": None,
+            })
+            continue
+
+        if content is None:
+            continue
+
+        try:
+            ast.parse(content)
+            results.append({"path": path, "valid": True})
+        except SyntaxError as e:
+            item = {
+                "path": path,
+                "valid": False,
+                "error": str(e),
+                "line": e.lineno,
+                "offset": e.offset,
+                "text": (e.text or "").strip(),
+            }
+            results.append(item)
+            invalid.append(item)
+
+    return JSONResponse({
+        "total": len(py_files),
+        "valid_count": len(py_files) - len(invalid),
+        "invalid_count": len(invalid),
+        "invalid": invalid,
+        "all": results,
+    })
