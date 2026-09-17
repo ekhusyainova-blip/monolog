@@ -37,7 +37,6 @@ app.add CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-)
 
 import core_backend.routers as _routers_pkg
 
