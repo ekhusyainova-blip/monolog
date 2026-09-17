@@ -94,7 +94,7 @@ async def public_take(request: Request):
     found["taken_count"] = (found.get("taken_count") or 0) + 1
     await github_put_json(path, items, "Public: take")
 
-   read rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
+    rep, _ = await github_get_json(PUBLIC_REPUTATION_PATH)
     rep = rep if isinstance(rep, dict) else {}
     user_rep = rep.get(uid) or {"given": 0, "taken": 0, "help_score": 0}
     user_rep["taken"] = (user_rep.get("taken") or 0) + 1
