@@ -1,13 +1,13 @@
 // adaptive/adaptive.js — сборка интерфейса Monolog по манифесту
 // Читает config.json и content.json, строит компоненты, подписывается на core.
+// В IndexedDB напрямую не пишет — только через Monolog.core.
 
 window.Monolog = window.Monolog || {};
 
 Monolog.adaptive = {
-  version: '2.1',
+  version: '2.2',
   config: null,
   content: null,
-  openSheetId: null,
 
   async mount() {
     await this.loadManifests();
@@ -18,6 +18,7 @@ Monolog.adaptive = {
     console.log('[adaptive] смонтирован');
   },
 
+  // --- загрузка манифестов ---
   async loadManifests() {
     try {
       this.config = await fetch('adaptive/config.json').then(r => r.json());
@@ -57,7 +58,7 @@ Monolog.adaptive = {
     el.setAttribute('aria-label', label);
     el.title = label;
 
-    if (item.type === 'orb') el.classList.add('orb', 'state-calm');
+    if (item.type === 'orb') el.classList.add('orb');
     if (item.type === 'index') {
       el.classList.add('index');
       el.textContent = '0';
@@ -71,7 +72,9 @@ Monolog.adaptive = {
       el.appendChild(badge);
     }
 
-    if (item.sheet) el.addEventListener('click', () => this.toggleSheet(item.sheet));
+    if (item.sheet) {
+      el.addEventListener('click', () => this.openSheet(item.sheet));
+    }
 
     return el;
   },
@@ -86,86 +89,9 @@ Monolog.adaptive = {
       const el = document.createElement('div');
       el.className = `main-item main-item-${item.type}`;
       el.dataset.id = item.id;
-
-      if (item.type === 'note') {
-        el.textContent = this.text('ai-note') || '';
-      }
-
-      if (item.type === 'chat') {
-        el.appendChild(this.buildChat());
-      }
-
+      if (item.type === 'note') el.textContent = this.text('ai-note') || '';
       main.appendChild(el);
     });
-  },
-
-  buildChat() {
-    const wrap = document.createElement('div');
-    wrap.className = 'chat';
-
-    const log = document.createElement('div');
-    log.className = 'chat-log';
-    log.id = 'chat-log';
-
-    const form = document.createElement('form');
-    form.className = 'chat-form';
-    form.id = 'chat-form';
-
-    const input = document.createElement('textarea');
-    input.className = 'chat-input';
-    input.id = 'chat-input';
-    input.rows = 1;
-    input.placeholder = 'Напиши сообщение…';
-
-    const btn = document.createElement('button');
-    btn.type = 'submit';
-    btn.className = 'btn btn-primary chat-send';
-    btn.textContent = 'Отправить';
-
-    form.appendChild(input);
-    form.appendChild(btn);
-
-    form.addEventListener('submit', (e) => {
-      e.preventDefault();
-      this.sendChat();
-    });
-
-    input.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
-        e.preventDefault();
-        this.sendChat();
-      }
-    });
-
-    wrap.appendChild(log);
-    wrap.appendChild(form);
-    return wrap;
-  },
-
-  appendMessage(role, text) {
-    const log = document.getElementById('chat-log');
-    if (!log) return;
-    const msg = document.createElement('div');
-    msg.className = `chat-msg chat-msg-${role}`;
-    msg.textContent = text;
-    log.appendChild(msg);
-    log.scrollTop = log.scrollHeight;
-  },
-
-  async sendChat() {
-    const input = document.getElementById('chat-input');
-    if (!input) return;
-    const text = input.value.trim();
-    if (!text) return;
-
-    input.value = '';
-    this.appendMessage('user', text);
-    Monolog.core.set('orb', 'active');
-
-    const res = await Monolog.core.chat.send(text);
-    const reply = res?.reply || '';
-    this.appendMessage('ai', reply || 'Пустой ответ.');
-    Monolog.core.set('orb', reply ? 'calm' : 'doubt');
   },
 
   // --- sheets ---
@@ -185,14 +111,18 @@ Monolog.adaptive = {
       const head = document.createElement('div');
       head.className = 'sheet-head';
       head.textContent = this.text(spec.titleKey) || spec.id;
-      head.addEventListener('click', () => this.closeSheet(spec.id));
       sheet.appendChild(head);
 
       const body = document.createElement('div');
       body.className = 'sheet-body';
       sheet.appendChild(body);
-      
-      // модуль редактора — если это sheet редактора
+
+      // --- menuSheet: рисуем пункты ---
+      if (spec.id === 'menuSheet') {
+        this.renderMenuItems(body);
+      }
+
+      // --- editorSheet: монтируем MonologEditor ---
       if (spec.id === 'editorSheet' && window.MonologEditor) {
         setTimeout(() => window.MonologEditor.mount(body), 0);
       }
@@ -201,15 +131,39 @@ Monolog.adaptive = {
     });
   },
 
+  // --- содержимое menuSheet ---
+  renderMenuItems(body) {
+    const items = [
+      { id: 'editor',    label: 'Редактор',     target: 'editorSheet' },
+      { id: 'settings',  label: 'Настройки',    target: 'settingsSheet' },
+      { id: 'about',     label: 'О продукте',   target: 'aboutSheet' },
+    ];
+
+    const list = document.createElement('div');
+    list.className = 'menu-list';
+
+    items.forEach(it => {
+      const btn = document.createElement('button');
+      btn.className = 'menu-item';
+      btn.dataset.id = it.id;
+      btn.textContent = it.label;
+      btn.addEventListener('click', () => this.openSheet(it.target));
+      list.appendChild(btn);
+    });
+
+    body.appendChild(list);
+  },
+
   openSheet(id) {
     const sheet = document.getElementById(id);
     if (!sheet) return;
-    if (this.openSheetId && this.openSheetId !== id) {
-      const prev = document.getElementById(this.openSheetId);
-      if (prev) prev.hidden = true;
-    }
+
+    // закрыть все открытые
+    document.querySelectorAll('.sheet').forEach(s => {
+      if (s.id !== id) s.hidden = true;
+    });
+
     sheet.hidden = false;
-    this.openSheetId = id;
     this.emit('adaptive:sheet', { id, open: true });
   },
 
@@ -217,13 +171,7 @@ Monolog.adaptive = {
     const sheet = document.getElementById(id);
     if (!sheet) return;
     sheet.hidden = true;
-    if (this.openSheetId === id) this.openSheetId = null;
     this.emit('adaptive:sheet', { id, open: false });
-  },
-
-  toggleSheet(id) {
-    if (this.openSheetId === id) this.closeSheet(id);
-    else this.openSheet(id);
   },
 
   // --- связь с core ---
@@ -231,17 +179,11 @@ Monolog.adaptive = {
     if (!Monolog.core) return;
 
     Monolog.core.on('core:state', (d) => {
-      if (d.key === 'index') {
-        const el = document.querySelector('.header-item-index');
-        if (el) el.textContent = d.value;
-      }
-      if (d.key === 'orb') {
-        const el = document.querySelector('.header-item-orb');
-        if (el) {
-          el.classList.remove('state-calm', 'state-doubt', 'state-active', 'state-need');
-          el.classList.add('state-' + (d.value || 'calm'));
-        }
-      }
+      console.log('[adaptive] state:', d);
+    });
+
+    Monolog.core.on('app:ready', () => {
+      console.log('[adaptive] app:ready получен');
     });
   },
 
