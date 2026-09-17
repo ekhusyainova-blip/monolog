@@ -1,127 +1,20 @@
-# app.py (заглушка + /ai/apply)
-# Временный минимальный backend.
-# Цель: Render запускается, /ai/apply работает.
-# Через /ai/apply заливаем правильные файлы. Потом заменим этот app.py на полный.
+# app.py
+# Точка входа Monolog.
+# Переключатель APP_MODE: 'stub' — заглушка, 'full' — полный backend.
 
 import os
-import base64
-import asyncio
 
-import httpx
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-
-app = FastAPI(title="Monolog (stub)")
-
-app.mount("/core", StaticFiles(directory="core"), name="core")
-app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
-app.mount("/blog", StaticFiles(directory="blog"), name="blog")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
-)
-
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
-GITHUB_REPO = os.getenv("GITHUB_REPO", "ekhusyainova-blip/monolog").strip()
-GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
-GITHUB_API = "https://api.github.com"
+APP_MODE = os.getenv("APP_MODE", "stub").strip().lower()
 
 
-async def _get_sha(path: str):
-    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {"Accept": "application/vnd.github+json"}
-    if GITHUB_TOKEN:
-        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
-        if r.status_code == 200:
-            return r.json().get("sha")
-        return None
+if APP_MODE == "stub":
+    from core_backend.stub import app
 
+elif APP_MODE == "full":
+    from core_backend.full_app import app
 
-async def _put_file(path: str, content: str, message: str):
-    if not GITHUB_TOKEN:
-        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
-    sha = await _get_sha(path)
-    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
-    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {
-        "Accept": "application/vnd.github+json",
-        "Authorization": f"Bearer {GITHUB_TOKEN}",
-    }
-    body = {"message": message, "content": content_b64, "branch": GITHUB_BRANCH}
-    if sha:
-        body["sha"] = sha
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.put(url, headers=headers, json=body)
-        if r.status_code >= 400:
-            raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code} {r.text[:200]}")
-        return r.json()
-
-
-class AIApplyRequest(BaseModel):
-    path: str
-    content: str
-    message: str = "AI apply"
-
-
-@app.post("/ai/apply")
-async def ai_apply(body: AIApplyRequest):
-    path = body.path.strip()
-    content = body.content
-    message = body.message.strip()
-
-    if not path or not content:
-        raise HTTPException(status_code=400, detail="Нужны path и content")
-
-    FORBIDDEN = (".env", "requirements.txt", "Dockerfile")
-    if any(path.endswith(f) for f in FORBIDDEN):
-        raise HTTPException(status_code=403, detail=f"Файл {path} защищён")
-
-    sha_before = await _get_sha(path)
-    await _put_file(path, content, message)
-
-    await asyncio.sleep(3)
-
-    try:
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            r = await client.get("https://ai-monolog.onrender.com/health")
-            if r.status_code != 200:
-                raise Exception(f"health вернул {r.status_code}")
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Health check не прошёл. Причина: {e}",
-        )
-
-    return JSONResponse({
-        "ok": True,
-        "path": path,
-        "sha_before": sha_before,
-        "message": message,
-        "health": "ok",
-    })
-
-
-@app.get("/")
-async def root():
-    return FileResponse("index.html")
-
-
-@app.get("/health")
-async def health():
-    return {
-        "status": "ok",
-        "version": "stub+ai",
-        "mode": "заглушка с /ai/apply",
-        "github_ready": bool(GITHUB_TOKEN),
-    }
+else:
+    raise RuntimeError(f"APP_MODE='{APP_MODE}' — неизвестное значение. Используй 'stub' или 'full'.")
 
 
 if __name__ == "__main__":
