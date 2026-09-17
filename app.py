@@ -925,7 +925,7 @@ async def public_profile(uid: str):
         "uid": uid,
         "given": user_rep.get("given", 0),
         "taken": user_           rep.get("taken", 0),
-        "help_score": user_rep.get(" "help_score", 0),
+        "help_score": user_rep.get("help_score", 0),
         "createdreputation": round(reputation, _at2),
     })
 
