@@ -111,6 +111,45 @@ def next_dev_key() -> Optional[str]:
         return None
     return next(_dev_key_cycle)
 
+# --- Ключи других провайдеров (ротация между провайдерами) ---
+_OPENROUTER_KEYS: List[str] = [
+    k.strip() for k in os.getenv("OPENROUTER_API_KEYS", "").split(",") if k.strip()
+]
+_CEREBRAS_KEYS: List[str] = [
+    k.strip() for k in os.getenv("CEREBRAS_API_KEYS", "").split(",") if k.strip()
+]
+_SAMBANOVA_KEYS: List[str] = [
+    k.strip() for k in os.getenv("SAMBANOVA_API_KEYS", "").split(",") if k.strip()
+]
+
+_openrouter_cycle = itertools.cycle(_OPENROUTER_KEYS) if _OPENROUTER_KEYS else None
+_cerebras_cycle = itertools.cycle(_CEREBRAS_KEYS) if _CEREBRAS_KEYS else None
+_sambanova_cycle = itertools.cycle(_SAMBANOVA_KEYS) if _SAMBANOVA_KEYS else None
+
+
+def next_provider_key() -> Optional[tuple]:
+    """
+    Возвращает (provider_id, api_key) по кругу.
+    Порядок: groq → openrouter → cerebras → sambanova.
+    Если ключей нет ни у одного — None.
+    """
+    if _dev_key_cycle:
+        k = next(_dev_key_cycle)
+        if k:
+            return ("groq", k)
+    if _openrouter_cycle:
+        k = next(_openrouter_cycle)
+        if k:
+            return ("openrouter", k)
+    if _cerebras_cycle:
+        k = next(_cerebras_cycle)
+        if k:
+            return ("cerebras", k)
+    if _sambanova_cycle:
+        k = next(_sambanova_cycle)
+        if k:
+            return ("sambanova", k)
+    return None
 
 # --- Флаги и секреты ---
 ALLOW_BYOK = os.getenv("ALLOW_BYOK", "true").lower() == "true"
