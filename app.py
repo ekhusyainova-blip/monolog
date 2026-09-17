@@ -5,7 +5,7 @@
 import os
 import mimetypes
 
-# Явная регистрация MIME-типов — в slim-контейнерах они отсутствуют
+# Регистрируем MIME-типы до импорта StaticFiles
 mimetypes.add_type("application/javascript", ".js")
 mimetypes.add_type("text/css", ".css")
 mimetypes.add_type("application/json", ".json")
