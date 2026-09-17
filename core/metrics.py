@@ -1,8 +1,7 @@
-# core/metrics.py — метрики состояния и слияние дельт.
-# Однородный файл: только данные и чистая логика, без сети.
+# core_backend/metrics.py
+# Метрики Monolog: базовый набор, слияние, компактное состояние.
 
-import json
-from typing import Any, Dict, Optional
+from typing import Optional, Dict, Any
 
 
 BASE_METRICS = {
@@ -23,17 +22,39 @@ BASE_METRICS = {
     "value_choices": [],
     "risk_intercept": None,
     "social_adaptation": {"active": False, "reason": None, "level": "inactive"},
-    "dominant_trait": {"detected": False, "influence": None, "risk": None,
-                       "stability_delta": 0.0, "hint": None, "steps": []},
+    "dominant_trait": {
+        "detected": False,
+        "influence": None,
+        "risk": None,
+        "stability_delta": 0.0,
+        "hint": None,
+        "steps": [],
+    },
     "passport": {
-        "level": "micro", "title": None, "goal": None, "result": None,
-        "mission": None, "values": [], "constraints": [], "stakeholders": [],
-        "risks": [], "metrics": [], "completion": 0,
+        "level": "micro",
+        "title": None,
+        "goal": None,
+        "result": None,
+        "mission": None,
+        "values": [],
+        "constraints": [],
+        "stakeholders": [],
+        "risks": [],
+        "metrics": [],
+        "completion": 0,
     },
     "profile": {
-        "values": {}, "patterns": [], "distortions": [], "insights": [],
-        "somatic": {"energy": 0.5, "tension": 0.3, "focus": 0.5,
-                    "mood": None, "note": None},
+        "values": {},
+        "patterns": [],
+        "distortions": [],
+        "insights": [],
+        "somatic": {
+            "energy": 0.5,
+            "tension": 0.3,
+            "focus": 0.5,
+            "mood": None,
+            "note": None,
+        },
         "skills": [],
     },
     "dimension": None,
@@ -43,17 +64,27 @@ BASE_METRICS = {
     "artifacts": [],
     "protocol_integrity": True,
     "management_mode": False,
-    "public_index": {"given": 0, "taken": 0, "help_score": 0, "reputation": 0},
+    "public_index": {
+        "given": 0,
+        "taken": 0,
+        "help_score": 0,
+        "reputation": 0,
+    },
 }
 
 
-def compact_carried(carried):
+def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
+    """Сжимает состояние до ключевых полей — для передачи в LLM."""
     if not carried:
         return {}
     out = {}
     p = carried.get("passport") or {}
     if p:
-        out["passport"] = {"level": p.get("level"), "title": p.get("title"), "goal": p.get("goal")}
+        out["passport"] = {
+            "level": p.get("level"),
+            "title": p.get("title"),
+            "goal": p.get("goal"),
+        }
     pr = carried.get("profile") or {}
     if pr:
         out["profile"] = {
@@ -64,11 +95,14 @@ def compact_carried(carried):
     if arts:
         compacted = []
         for a in arts[-3:]:
-            if not isinstance(a, dict):
+            if not isinstance(a,t dict):
                 continue
             item = {
-                "id": a.get("id"), "name": a.get("name"), "type": a.get("type"),
-                "version": a.get("version"), "stage": a.get("stage"),
+                "id": a.get("id"),
+                "name": a.get("name"),
+                "type": a.get("type"),
+                "version": a.get("version"),
+                "stage": a.get("stage"),
             }
             content = a.get("content") or ""
             if content and len(content) < 6000:
@@ -78,11 +112,15 @@ def compact_carried(carried):
     return out
 
 
-def merge_metrics(incoming, carried=None):
+def merge_metrics(incoming: Optional[Dict[str, Any]], carried: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
+    """Сливает входящие метрики с уже накопленными."""
     carried = carried or {}
     result = {**BASE_METRICS, **carried}
-    skip_keys = ("passport", "profile", "reminder", "artifacts", "social_adaptation",
-                 "dominant_trait", "ideas", "dimension", "priority_drift", "mood_board")
+    skip_keys = (
+        "passport", "profile", "reminder", "artifacts",
+        "social_adaptation", "dominant_trait", "ideas",
+        "dimension", "priority_drift", "mood_board",
+    )
     for k, v in (incoming or {}).items():
         if k in skip_keys:
             continue
@@ -97,10 +135,12 @@ def merge_metrics(incoming, carried=None):
             "level": inc_sa.get("level", "inactive"),
         }
     else:
-        result["social_adaptation"] = carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
+        result["social_adaptation"] = (
+            carried.get("social_adaptation") or BASE_METRICS["social_adaptation"]
+        )
 
     inc_dt = (incoming or {}).get("dominant_trait")
-    if isinstance(inc_dt, dict):
+    if isinstance(inc_d, dict):
         result["dominant_trait"] = {
             "detected": bool(inc_dt.get("detected")),
             "influence": inc_dt.get("influence"),
@@ -110,7 +150,9 @@ def merge_metrics(incoming, carried=None):
             "steps": list(inc_dt.get("steps") or []) if isinstance(inc_dt.get("steps"), list) else [],
         }
     else:
-        result["dominant_trait"] = carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
+        result["dominant_trait"] = (
+            carried.get("dominant_trait") or BASE_METRICS["dominant_trait"]
+        )
 
     inc_ideas = (incoming or {}).get("ideas")
     if isinstance(inc_ideas, list):
@@ -148,7 +190,10 @@ def merge_metrics(incoming, carried=None):
     car_prof = carried.get("profile") or {}
     merged_prof = {**BASE_METRICS["profile"], **car_prof}
     if isinstance(inc_prof.get("values"), dict) and inc_prof["values"]:
-        merged_prof["values"] = {**merged_prof.get("values", {}), **inc_prof["values"]}
+        merged_prof["values"] = {
+            **merged_prof.get("values", {}),
+            **inc_prof["values"],
+        }
     for list_key in ("patterns", "distortions", "insights", "skills"):
         old = list(merged_prof.get(list_key) or [])
         new = inc_prof.get(list_key) or []
