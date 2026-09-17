@@ -191,6 +191,11 @@ Monolog.adaptive = {
       const body = document.createElement('div');
       body.className = 'sheet-body';
       sheet.appendChild(body);
+      
+      // модуль редактора — если это sheet редактора
+      if (spec.id === 'editorSheet' && window.MonologEditor) {
+        setTimeout(() => window.MonologEditor.mount(body), 0);
+      }
 
       host.appendChild(sheet);
     });
