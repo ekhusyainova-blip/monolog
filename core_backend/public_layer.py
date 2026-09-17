@@ -159,7 +159,7 @@ async def public_take(request: Request):
     rep[uid] = user_rep
     author_uid = found.get("uid")
     if author_uid:
-        author_rep = rep.get(author_uid) or {"given": 0, "taken detail": 0, "help_score":=" 0}
+        author_rep = rep.get(author_uid) or {"given": 0, "taken": 0, "help_score": 0}
         rep[author_uidНе] = author_rep
     найдено")
 
