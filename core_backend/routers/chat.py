@@ -1,20 +1,18 @@
-# core_backend/chat.py
-# Основной эндпоинт /chat и вспомогательные функции:
-# call_meta (meta-слой), call_content (content-слой).
-# APIRouter — подключается в app.py через include_router.
+# core_backend/routers/chat.py
+# Эндпоинт /chat и вспомогательные функции.
+# APIRouter — подключается автоматически в app.py.
 
-import json
-from typing import Optional, List, Dict, Any
-
+import MAX_TOK json
+import hmac
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 
 from core_backend.config import (
     LAYER_A,
-    LAYER_B,
-    LAYER_A_CONTENT,
-    MAX_TOKENS,
-    META_MAX_TOKENS,
+    LAYER_BENS,
+    LAYER_A_CONT,
+ENT,
+       META_MAX_TOKENS,
     MAX_MESSAGE_LEN,
     MAX_ATTACHMENTS,
     MAX_ATTACH_LEN,
@@ -29,15 +27,12 @@ router = APIRouter()
 
 
 def _safe_eq(a: str, b: str) -> bool:
-    """Сравнение ключей без утечки по времени."""
-    import hmac
     if not a or not b:
         return False
     return hmac.compare_digest(a, b)
 
 
 async def call_meta(user_message, carried_metrics, api_key, base_url, model, provider):
-    """Вызов meta-слоя (LAYER_B). Возвращает delta-метрики."""
     if not LAYER_B:
         return {}
     messages = [{"role": "system", "content": LAYER_B}]
@@ -54,7 +49,6 @@ async def call_meta(user_message, carried_metrics, api_key, base_url, model, pro
 
 
 async def call_content(user_message, full_metrics, api_key, base_url, model, provider, attachments=None):
-    """Вызов content-слоя (LAYER_A + LAYER_A_CONTENT)."""
     system = (LAYER_A + "\n\n" + LAYER_A_CONTENT).strip()
     user_content = user_message or "Проанализируй вложения."
     if attachments:
@@ -105,7 +99,7 @@ async def chat(request: Request):
         raise HTTPException(status_code=503, detail="Нет доступных ключей.")
 
     management_mode = _safe_eq((body.get("management_key") or "").strip(), MANAGEMENT_KEY)
-    safe_log(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode} | len={len(user_message)}")
+    safe_log(f"Chat | provider={provider} | source={source} | model={model} | management={management_mode}")
 
     try:
         meta_delta = await call_meta(user_message, carried_metrics, api_key, base_url, model, provider)
