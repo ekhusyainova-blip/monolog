@@ -33,8 +33,7 @@ app.mount("/core", StaticFiles(directory="core"), name="core")
 app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
 app.mount("/blog", StaticFiles(directory="blog"), name="blog")
 
-app.add_middleware(
-    CORSMiddleware,
+app.add CORSMiddleware,
     allow_origins=CORS_ORIGINS,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
