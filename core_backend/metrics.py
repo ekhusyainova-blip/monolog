@@ -95,7 +95,7 @@ def compact_carried(carried: Optional[Dict[str, Any]]) -> Dict[str, Any]:
     if arts:
         compacted = []
         for a in arts[-3:]:
-            if not isinstance(a,t dict):
+            if not isinstance(a, dict):
                 continue
             item = {
                 "id": a.get("id"),
@@ -140,7 +140,7 @@ def merge_metrics(incoming: Optional[Dict[str, Any]], carried: Optional[Dict[str
         )
 
     inc_dt = (incoming or {}).get("dominant_trait")
-    if isinstance(inc_d, dict):
+    if isinstance(inc_dt, dict):
         result["dominant_trait"] = {
             "detected": bool(inc_dt.get("detected")),
             "influence": inc_dt.get("influence"),
