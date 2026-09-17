@@ -133,6 +133,60 @@ async def health():
         "github_ready": bool(GITHUB_TOKEN),
     }
 
+# --- /chat (тест пустых промптов) ---
+# Что делает: принимает { message }, отправляет в Groq с ПУСТЫМ system-prompt,
+# возвращает ответ модели. Используется, чтобы проверить работу без промптов.
+
+from pydantic import BaseModel as _BM
+
+class ChatRequest(_BM):
+    message: str = ""
+
+_GROQ_KEY = os.getenv("GROQ_API_KEYS", "").split(",")[0].strip() if os.getenv("GROQ_API_KEYS") else ""
+_GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
+_GROQ_MODEL = "openai/gpt-oss-20b"
+
+@app.post("/chat")
+async def chat_test(req: ChatRequest):
+    """
+    Тестовый /chat. Без system-prompt. Без метрик.
+    Только user-message → провайдер → ответ.
+    """
+    if not _GROQ_KEY:
+        raise HTTPException(status_code=503, detail="GROQ_API_KEYS не настроен")
+    if not req.message.strip():
+        raise HTTPException(status_code=400, detail="Пустое сообщение")
+
+    # system-prompt ПУСТОЙ — не отправляем его вообще
+    messages = [
+        {"role": "user", "content": req.message}
+    ]
+
+    payload = {
+        "model": _GROQ_MODEL,
+        "messages": messages,
+        "max_tokens": 1000,
+        "temperature": 0.6,
+    }
+    headers = {
+        "Authorization": f"Bearer {_GROQ_KEY}",
+        "Content-Type": "application/json",
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        r = await client.post(_GROQ_URL, headers=headers, json=payload)
+        if r.status_code >= 400:
+            raise HTTPException(status_code=r.status_code, detail=f"Groq: {r.text[:300]}")
+        data = r.json()
+
+    reply = data["choices"][0]["message"]["content"]
+
+    return JSONResponse({
+        "reply_text": reply,
+        "model_used": _GROQ_MODEL,
+        "system_prompt": "пустой",
+        "user_message": req.message,
+    })
 
 if __name__ == "__main__":
     import uvicorn
