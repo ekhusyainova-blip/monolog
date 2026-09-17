@@ -4,7 +4,7 @@
 import os
 from fastapi import FastAPI
 from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
+from core_backend.mime_static import MimeStaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from core_backend.stub_endpoints import router as stub_router
@@ -12,9 +12,9 @@ from core_backend.stub_endpoints import router as stub_router
 
 app = FastAPI(title="Monolog (stub)")
 
-app.mount("/core", StaticFiles(directory="core"), name="core")
-app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
-app.mount("/blog", StaticFiles(directory="blog"), name="blog")
+app.mount("/core", MimeStaticFiles(directory="core"), name="core")
+app.mount("/adaptive", MimeStaticFiles(directory="adaptive"), name="adaptive")
+app.mount("/blog", MimeStaticFiles(directory="blog"), name="blog")
 
 app.add_middleware(
     CORSMiddleware,
