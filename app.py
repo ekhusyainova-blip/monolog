@@ -1,63 +1,114 @@
-# app.py
-# Точка входа Monolog.
-# Статика, CORS, автосканирование роутеров из core_backend/routers/.
+# app.py (заглушка + /ai/apply)
+# Временный минимальный backend.
+# Цель: Render запускается, /ai/apply работает.
+# Через /ai/apply заливаем правильные файлы. Потом заменим этот app.py на полный.
 
-import pkgutil
-import importlib
+import os
+import base64
+import asyncio
 
-from fastapi import FastAPI
+import httpx
+from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
-from core_backend.config import (
-    CORS_ORIGINS,
-    PROVIDERS,
-    _DEV_KEYS_GROQ,
-    ALLOW_BYOK,
-    AUTHOR_SECRET,
-    MANAGEMENT_KEY,
-    GITHUB_TOKEN,
-    MAX_MESSAGE_LEN,
-    SOFT_MESSAGE_LEN,
-    MAX_TOKENS,
-    META_MAX_TOKENS,
-    LAYER_A,
-    LAYER_B,
-    LAYER_A_CONTENT,
-)
+app = FastAPI(title="Monolog (stub)")
 
-
-app = FastAPI(title="Monolog")
-
-
-# --- статика ---
 app.mount("/core", StaticFiles(directory="core"), name="core")
 app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
 app.mount("/blog", StaticFiles(directory="blog"), name="blog")
 
-
-# --- CORS ---
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
+    allow_origins=["*"],
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
-
-# --- автосканирование роутеров из core_backend/routers/ ---
-import core_backend.routers as _routers_pkg
-
-for _, module_name, _ in pkgutil.iter_modules(_routers_pkg.__path__):
-    if module_name.startswith("_"):
-        continue
-    module = importlib.import_module(f"core_backend.routers.{module_name}")
-    if hasattr(module, "router"):
-        app.include_router(module.router)
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "").strip()
+GITHUB_REPO = os.getenv("GITHUB_REPO", "ekhusyainova-blip/monolog").strip()
+GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main").strip()
+GITHUB_API = "https://api.github.com"
 
 
-# --- базовые эндпоинты ---
+async def _get_sha(path: str):
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {"Accept": "application/vnd.github+json"}
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
+        if r.status_code == 200:
+            return r.json().get("sha")
+        return None
+
+
+async def _put_file(path: str, content: str, message: str):
+    if not GITHUB_TOKEN:
+        raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
+    sha = await _get_sha(path)
+    content_b64 = base64.b64encode(content.encode("utf-8")).decode("utf-8")
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
+    body = {"message": message, "content": content_b64, "branch": GITHUB_BRANCH}
+    if sha:
+        body["sha"] = sha
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.put(url, headers=headers, json=body)
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code} {r.text[:200]}")
+        return r.json()
+
+
+class AIApplyRequest(BaseModel):
+    path: str
+    content: str
+    message: str = "AI apply"
+
+
+@app.post("/ai/apply")
+async def ai_apply(body: AIApplyRequest):
+    path = body.path.strip()
+    content = body.content
+    message = body.message.strip()
+
+    if not path or not content:
+        raise HTTPException(status_code=400, detail="Нужны path и content")
+
+    FORBIDDEN = (".env", "requirements.txt", "Dockerfile")
+    if any(path.endswith(f) for f in FORBIDDEN):
+        raise HTTPException(status_code=403, detail=f"Файл {path} защищён")
+
+    sha_before = await _get_sha(path)
+    await _put_file(path, content, message)
+
+    await asyncio.sleep(3)
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            r = await client.get("https://ai-monolog.onrender.com/health")
+            if r.status_code != 200:
+                raise Exception(f"health вернул {r.status_code}")
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Health check не прошёл. Причина: {e}",
+        )
+
+    return JSONResponse({
+        "ok": True,
+        "path": path,
+        "sha_before": sha_before,
+        "message": message,
+        "health": "ok",
+    })
+
+
 @app.get("/")
 async def root():
     return FileResponse("index.html")
@@ -67,48 +118,12 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "version": "2.4",
-        "dev_keys": len(_DEV_KEYS_GROQ),
-        "byok": ALLOW_BYOK,
+        "version": "stub+ai",
+        "mode": "заглушка с /ai/apply",
         "github_ready": bool(GITHUB_TOKEN),
-        "author_secret_set": bool(AUTHOR_SECRET),
-        "management_key_set": bool(MANAGEMENT_KEY),
-        "providers": list(PROVIDERS.keys()),
-        "cors": CORS_ORIGINS,
-        "limits": {
-            "max_message_len": MAX_MESSAGE_LEN,
-            "soft_message_len": SOFT_MESSAGE_LEN,
-            "max_tokens": MAX_TOKENS,
-            "meta_max_tokens": META_MAX_TOKENS,
-        },
-        "prompts_loaded": {
-            "layer_a": bool(LAYER_A),
-            "layer_b": bool(LAYER_B),
-            "layer_a_content": bool(LAYER_A_CONTENT),
-        },
     }
-
-
-@app.get("/providers")
-async def providers_info():
-    urls = {
-        "groq": "https://console.groq.com/keys",
-        "openrouter": "https://openrouter.ai/keys",
-        "cerebras": "https://cloud.cerebras.ai",
-        "sambanova": "https://cloud.sambanova.ai",
-    }
-    out = []
-    for pid, cfg in PROVIDERS.items():
-        out.append({
-            "id": pid,
-            "name": cfg["name"],
-            "url": urls.get(pid, ""),
-            "models": list(cfg.get("all_models") or []),
-        })
-    return JSONResponse({"providers": out})
 
 
 if __name__ == "__main__":
     import uvicorn
-    import os
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
