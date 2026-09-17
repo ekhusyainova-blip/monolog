@@ -99,3 +99,4 @@ async def providers_info():
             "models": list(cfg.get("all_models") or []),
         })
     return JSONResponse({"providers": out})
+    
