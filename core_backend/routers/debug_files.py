@@ -59,10 +59,13 @@ async def files_index_html():
 
 @router.get("/mime_static_check")
 async def mime_static_check():
-    """Проверяет наличие mime_static.py в контейнере."""
     return {
         "core_backend/mime_static.py": os.path.exists("core_backend/mime_static.py"),
         "core/mime_static.py": os.path.exists("core/mime_static.py"),
         "mime_static.py": os.path.exists("mime_static.py"),
-        "full_app_uses_mime_static": None,  # проверим в system
+        "full_app_exists": os.path.exists("core_backend/full_app.py"),
+        "full_app_first_500": (
+            open("core_backend/full_app.py", encoding="utf-8").read(500)
+            if os.path.exists("core_backend/full_app.py") else None
+        ),
     }
