@@ -1,5 +1,5 @@
 # core_backend/routers/code_ai.py
-# /code/* и /ai/apply. APIRouter.
+# Роутер /code/* и /ai/apply.
 
 import hmac
 import asyncio
@@ -38,13 +38,16 @@ def _check_author(request: Request):
         raise HTTPException(status_code=403, detail="Неверный ключ автора.")
 
 
-@router.get("/code/(request: Request, path: str):
+@router.get("/code/read")
+async def code_read(request: Request, path: str):
     _check_author(request)
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {"Accept": "application/vnd.github+json",
-               "Authorization": f"Bearer {GITHUB_TOKEN}"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
         branch_used = CODE_BRANCH
@@ -52,7 +55,13 @@ def _check_author(request: Request):
             r = await client.get(url, headers=headers, params={"ref": GITHUB_BRANCH})
             branch_used = GITHUB_BRANCH
         if r.status_code == 404:
-            return JSONResponse({"exists": False, "path": path, "content": None, "sha": None, "branch": branch_used})
+            return JSONResponse({
+                "exists": False,
+                "path": path,
+                "content": None,
+                "sha": None,
+                "branch": branch_used,
+            })
         if r.status_code >= 400:
             raise HTTPException(status_code=502, detail="Не удалось прочитать файл")
         data = r.json()
@@ -61,8 +70,11 @@ def _check_author(request: Request):
         except Exception:
             content = ""
         return JSONResponse({
-            "exists": True, "path": path,
-            "content": content, "sha": data.get("sha"), "branch": branch_used,
+            "exists": True,
+            "path": path,
+            "content": content,
+            "sha": data.get("sha"),
+            "branch": branch_used,
         })
 
 
@@ -79,8 +91,10 @@ async def code_save(request: Request):
         raise HTTPException(status_code=400, detail="Не указан путь")
 
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
-    headers = {"Accept": "application/vnd.github+json",
-               "Authorization": f"Bearer {GITHUB_TOKEN}"}
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+    }
     sha = None
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=headers, params={"ref": CODE_BRANCH})
@@ -95,7 +109,9 @@ async def code_save(request: Request):
             raise HTTPException(status_code=502, detail="Не удалось сохранить код")
         data = r.json()
         return JSONResponse({
-            "ok": True, "path": path, "branch": CODE_BRANCH,
+            "ok": True,
+            "path": path,
+            "branch": CODE_BRANCH,
             "commit_sha": data.get("commit", {}).get("sha"),
             "html_url": data.get("commit", {}).get("html_url"),
         })
