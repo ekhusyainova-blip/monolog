@@ -1,11 +1,9 @@
-# core_backend/code_ai.py
-# Роутер /code/* (чтение, сохранение) и /ai/apply (автоматизация разработки).
-# APIRouter — подключается в app.py.
+# core_backend/routers/code_ai.py
+# /code/* и /ai/apply. APIRouter.
 
 import hmac
 import asyncio
 import base64
-from typing import Optional
 
 import httpx
 from fastapi import APIRouter, Request, HTTPException
@@ -20,11 +18,7 @@ from core_backend.config import (
     CODE_BRANCH,
     GITHUB_API,
 )
-from core_backend.github_api import (
-    github_get_sha,
-    github_get_file,
-    github_put_file,
-)
+from core_backend.github_api import github_get_sha, github_put_file
 
 
 router = APIRouter(tags=["code"])
@@ -44,9 +38,7 @@ def _check_author(request: Request):
         raise HTTPException(status_code=403, detail="Неверный ключ автора.")
 
 
-# --- /code/read ---
-@router.get("/code/read")
-async def code_read(request: Request, path: str):
+@router.get("/code/(request: Request, path: str):
     _check_author(request)
     if not GITHUB_TOKEN:
         raise HTTPException(status_code=503, detail="GITHUB_TOKEN не настроен")
@@ -74,7 +66,6 @@ async def code_read(request: Request, path: str):
         })
 
 
-# --- /code/save ---
 @router.post("/code/save")
 async def code_save(request: Request):
     _check_author(request)
@@ -110,7 +101,6 @@ async def code_save(request: Request):
         })
 
 
-# --- /ai/apply ---
 class AIApplyRequest(BaseModel):
     path: str
     content: str
@@ -119,9 +109,6 @@ class AIApplyRequest(BaseModel):
 
 @router.post("/ai/apply")
 async def ai_apply(body: AIApplyRequest):
-    """
-    Сохраняет файл в main. Проверяет /health. При неудаче — не сохраняет.
-    """
     path = body.path.strip()
     content = body.content
     message = body.message.strip()
@@ -133,7 +120,7 @@ async def ai_apply(body: AIApplyRequest):
 
     FORBIDDEN = (".env", "requirements.txt", "Dockerfile")
     if any(path.endswith(f) for f in FORBIDDEN):
-        raise HTTPException(status_code=403, detail=f"Файл {path} защищён от автоправок")
+        raise HTTPException(status_code=403, detail=f"Файл {path} защищён")
 
     sha_before = await github_get_sha(path)
     await github_put_file(path, content, message)
