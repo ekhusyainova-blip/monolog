@@ -146,7 +146,6 @@ def _load(path: str) -> str:
         log.warning(f"Prompt file not found: {path}")
         return ""
 
-
 # --- Промпты (пустые — модель достраивает из ядра) ---
 LAYER_A = _load("prompts/layer_a.txt")
 LAYER_B = _load("prompts/layer_b.txt")
