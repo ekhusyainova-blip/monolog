@@ -6,7 +6,7 @@ import importlib
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from core_backend.mime_static import MimeStaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
 from core_backend.config import (
