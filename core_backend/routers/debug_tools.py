@@ -1,15 +1,17 @@
 # core_backend/routers/debug_tools.py
-# Диагностика: MIME, заголовки, состояние StaticFiles, состояние файлов в GitHub.
+# Полный набор диагностических эндпоинтов.
 # APIRouter — подключается автоматически в full_app.py.
 
 import os
-import mimetypes
+import sys
+import time
 import importlib
 import base64
+import mimetypes
 
 import httpx
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 
 from core_backend.config import (
     GITHUB_TOKEN, GITHUB_REPO, GITHUB_BRANCH, GITHUB_API,
@@ -17,6 +19,8 @@ from core_backend.config import (
 
 
 router = APIRouter(prefix="/debug", tags=["debug"])
+
+_START_TIME = time.time()
 
 
 def _gh_headers():
@@ -26,6 +30,7 @@ def _gh_headers():
     return h
 
 
+# --- 1. MIME ---
 @router.get("/mime")
 async def debug_mime():
     return {
@@ -39,6 +44,7 @@ async def debug_mime():
     }
 
 
+# --- 2. Заголовки URL ---
 @router.get("/headers")
 async def debug_headers(url: str):
     if not url.startswith("http"):
@@ -55,7 +61,8 @@ async def debug_headers(url: str):
     })
 
 
-")
+# --- 3. Static check ---
+@router.get("/static_check")
 async def debug_static_check(path: str):
     path_clean = path[1:] if path.startswith("/") else path
     url = "https://ai-monolog.onrender.com/" + path_clean
@@ -74,17 +81,16 @@ async def debug_static_check(path: str):
     })
 
 
+# --- 4. Env ---
 @router.get("/env")
 async def debug_env():
     safe_keys = ["APP_MODE", "GITHUB_BRANCH", "GITHUB_REPO", "CODE_BRANCH", "RENDER", "PORT"]
     return {k: os.environ.get(k) for k in safe_keys}
 
 
-# --- НОВОЕ: file_info, render_logs, check_mime_static ---
-
+# --- 5. File info (что в GitHub) ---
 @router.get("/file_info")
 async def debug_file_info(path: str):
-    """Проверяет, что лежит в GitHub по указанному path."""
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url, headers=_gh_headers(), params={"ref": GITHUB_BRANCH})
@@ -108,25 +114,24 @@ async def debug_file_info(path: str):
         })
 
 
+# --- 6. Файлы в контейнере ---
 @router.get("/render_logs")
 async def debug_render_logs():
-    """Не может читать реальные Render Logs — но отдаёт ключевые маркеры."""
-    import sys
     return {
         "python": sys.version,
         "platform": sys.platform,
         "cwd": os.getcwd(),
-        "cwd_files": os.listdir(".") if os.path.exists(".") else None,
+        "cwd_files": sorted(os.listdir(".")) if os.path.exists(".") else None,
         "core_backend_exists": os.path.exists("core_backend"),
-        "core_backend_files": os.listdir("core_backend") if os.path.exists("core_backend") else None,
-        "routers_files": os.listdir("core_backend/routers") if os.path.exists("core_backend/routers") else None,
+        "core_backend_files": sorted(os.listdir("core_backend")) if os.path.exists("core_backend") else None,
+        "routers_files": sorted(os.listdir("core_backend/routers")) if os.path.exists("core_backend/routers") else None,
         "mime_static_exists": os.path.exists("core_backend/mime_static.py"),
     }
 
 
+# --- 7. Проверка mime_static ---
 @router.get("/check_mime_static")
 async def debug_check_mime_static():
-    """Проверяет, что mime_static импортируется и используется."""
     result = {}
     try:
         mod = importlib.import_module("core_backend.mime_static")
@@ -144,8 +149,57 @@ async def debug_check_mime_static():
         full = importlib.import_module("core_backend.full_app")
         src = open(full.__file__, "r", encoding="utf-8").read() if full.__file__ else ""
         result["full_app_uses_MimeStaticFiles"] = "MimeStaticFiles" in src
-        result["full_app_uses_StaticFiles"] = "StaticFiles" in src and "MimeStaticFiles" not in src
+        result["full_app_uses_only_StaticFiles"] = ("StaticFiles" in src and "MimeStaticFiles" not in src)
     except Exception as e:
         result["full_app_error"] = str(e)
 
     return JSONResponse(result)
+
+
+# --- 8. Кэш ---
+@router.get("/cache_info")
+async def debug_cache_info(url: str):
+    if not url.startswith("http"):
+        url = "https://ai-monolog.onrender.com" + url
+    async with httpx.AsyncClient(timeout=15.0) as client:
+        try:
+            r = await client.get(url)
+        except Exception as e:
+            raise HTTPException(status_code=502, detail=f"GET не прошёл: {e}")
+    keys = ["etag", "age", "cache-control", "cf-cache-status", "last-modified", "date", "expires"]
+    return JSONResponse({
+        "url": url,
+        "cache_headers": {k: r.headers.get(k) for k in keys},
+        "content_type": r.headers.get("content-type"),
+    })
+
+
+# --- 9. Deploy info ---
+@router.get("/deploy_info")
+async def debug_deploy_info():
+    return {
+        "uptime_seconds": round(time.time() - _START_TIME, 1),
+        "cwd": os.getcwd(),
+        "app_mode": os.environ.get("APP_MODE"),
+        "render": os.environ.get("RENDER"),
+        "render_service_id": os.environ.get("RENDER_SERVICE_ID"),
+        "render_instance_id": os.environ.get("RENDER_INSTANCE_ID"),
+        "render_external_url": os.environ.get("RENDER_EXTERNAL_URL"),
+        "commit": os.environ.get("RENDER_GIT_COMMIT"),
+        "branch": os.environ.get("RENDER_GIT_BRANCH"),
+        "repo": os.environ.get("RENDER_GIT_REPO_SLUG"),
+    }
+
+
+# --- 10. index.html ---
+@router.get("/index_html")
+async def debug_index_html():
+    if not os.path.exists("index.html"):
+        return JSONResponse({"exists": False})
+    with open("index.html", "r", encoding="utf-8") as f:
+        content = f.read()
+    return JSONResponse({
+        "exists": True,
+        "size": len(content),
+        "content": content,
+    })
