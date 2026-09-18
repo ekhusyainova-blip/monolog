@@ -12,7 +12,14 @@ window.MonologJourney = (function () {
 
   function render(host, cycles) {
     host.innerHTML = '';
-    (cycles || []).forEach(function (c) {
+    if (!cycles || !cycles.length) {
+      const empty = document.createElement('div');
+      empty.className = 'jrn-empty';
+      empty.textContent = 'журнал пуст';
+      host.appendChild(empty);
+      return;
+    }
+    cycles.forEach(function (c) {
       const card = document.createElement('div');
       card.className = 'jrn-card';
 
@@ -40,14 +47,42 @@ window.MonologJourney = (function () {
     });
   }
 
+  function load(list, logBox) {
+    if (!window.MonologDevA || !window.MonologDevA.cycles) {
+      log(logBox, 'MonologDevA не загружен', 'err');
+      return;
+    }
+    log(logBox, 'загрузка журнала...', 'info');
+    window.MonologDevA.cycles().then(function (res) {
+      const status = res ? res.status : 'no-res';
+      if (!res || !res.ok) {
+        log(logBox, 'ошибка /cycles: ' + status, 'err');
+        return;
+      }
+      const cycles = (res.data && res.data.cycles) || [];
+      log(logBox, 'загружено циклов: ' + cycles.length, 'ok');
+      render(list, cycles);
+    });
+  }
+
   function mount(container) {
     container.innerHTML = '';
     const wrap = document.createElement('div');
     wrap.className = 'jrn-wrap';
 
-    const title = document.createElement('h3');
+    const head = document.createElement('div');
+    head.className = 'jrn-bar';
+
+    const title = document.createElement('span');
     title.className = 'jrn-title';
     title.textContent = 'Журнал циклов';
+
+    const btn = document.createElement('button');
+    btn.className = 'jrn-btn';
+    btn.textContent = 'Обновить';
+
+    head.appendChild(title);
+    head.appendChild(btn);
 
     const list = document.createElement('div');
     list.className = 'jrn-list';
@@ -55,22 +90,14 @@ window.MonologJourney = (function () {
     const logBox = document.createElement('div');
     logBox.className = 'jrn-log';
 
-    wrap.appendChild(title);
+    wrap.appendChild(head);
     wrap.appendChild(list);
     wrap.appendChild(logBox);
-    container.appendChild(wrap);
+    container.appendChild(wrap**);
 
-    log(logBox, 'загрузка журнала...', 'info');
-    window.MonologDevA.cycles().then(function (res) {
-      if (!res || !res.ok) {
-        log(logBox, 'ошибка: ' + (res && res.status), 'err');
-        return;
-      }
-      const cycles = (res.data && res.data.cycles) || [];
-      log(logBox, 'загружено циклов: ' + cycles.length, 'ok');
-      render(list, cycles);
-    });
+    btn.addEventListener('click', function () { load(list, logBox); });
 
+    load(list, logBox);
     return wrap;
   }
 
