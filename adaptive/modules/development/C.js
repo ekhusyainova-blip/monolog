@@ -28,9 +28,19 @@ window.MonologDevelopment.C = {
   },
 
   createEditor() {
+    const pathRow = document.createElement('div');
+    pathRow.className = 'dev-path-row';
+
     const pathInput = document.createElement('input');
     pathInput.className = 'dev-input dev-path';
     pathInput.placeholder = 'путь к файлу';
+
+    const btnLoad = document.createElement('button');
+    btnLoad.className = 'dev-btn';
+    btnLoad.textContent = 'Открыть';
+
+    pathRow.appendChild(pathInput);
+    pathRow.appendChild(btnLoad);
 
     const ta = document.createElement('textarea');
     ta.className = 'dev-textarea';
@@ -47,12 +57,11 @@ window.MonologDevelopment.C = {
       return b;
     };
 
-    const btnLoad = mkBtn('Загрузить');
     const btnSave = mkBtn('Сохранить');
     const btnCheck = mkBtn('Проверить');
     const btnCreate = mkBtn('Создать');
     const btnDelete = mkBtn('Удалить');
 
-    return { pathInput, ta, buttons, btnLoad, btnSave, btnCheck, btnCreate, btnDelete };
+    return { pathRow, pathInput, ta, buttons, btnLoad, btnSave, btnCheck, btnCreate, btnDelete };
   }
 };
