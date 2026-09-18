@@ -1,5 +1,4 @@
-/* core/core.css — переменные, типографика, базовая сетка.
-   Компоненты — в adaptive/adaptive.css. */
+/* core/core.css — переменные и база. */
 
 :root {
   --bg: #0e0e11;
@@ -7,34 +6,19 @@
   --bg-elev: #1d1d24;
   --fg: #e8e8ec;
   --fg-dim: #9a9aa6;
-  --fg-mute: #6a6a76;
   --accent: #7c8cff;
   --accent-soft: #3a3f66;
-  --warn: #ffb347;
-  --err: #ff6b6b;
-  --ok: #5bd67a;
   --line: #26262e;
-
-  --r-sm: 6px;
+  --ok: #5bd67a;
+  --err: #ff6b6b;
   --r-md: 10px;
-  --r-lg: 16px;
-  --gap-xs: 4px;
   --gap-sm: 8px;
   --gap-md: 14px;
-  --gap-lg: 22px;
-
-  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --fs-xs: 12px;
   --fs-sm: 14px;
   --fs-md: 16px;
   --fs-lg: 20px;
-  --fs-xl: 26px;
-  --lh: 1.5;
-
-  --shadow: 0 6px 24px rgba(0,0,0,.35);
-  --t-fast: .15s ease;
-  --t-med: .25s ease;
 }
 
 * { box-sizing: border-box; }
@@ -48,7 +32,7 @@ html, body {
   color: var(--fg);
   font-family: var(--font);
   font-size: var(--fs-md);
-  line-height: var(--lh);
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -56,77 +40,51 @@ html, body {
   display: flex;
   flex-direction: column;
   height: 100dvh;
-  max-width: 880px;
-  margin: 0 auto;
-  overflow: hidden;
-}
-
-#app-header,
-#app-main,
-#app-sheets {
   width: 100%;
 }
 
 #app-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: var(--gap-sm) var(--gap-md);
+  align-items: center;
+  gap: var(--gap-sm);
+  padding: 10px 12px;
   border-bottom: 1px solid var(--line);
-  background: var(--bg);
-  flex: 0 0 auto;
+  background: var(--bg-soft);
+  overflow-x: auto;
+  flex-wrap: nowrap;
 }
 
 .header-side {
   display: flex;
-  align-items: center;
   gap: var(--gap-sm);
+  align-items: center;
 }
 
 #app-main {
   flex: 1;
-  min-height: 0;
+  overflow-y: auto;
+  padding: 14px 12px;
   display: flex;
   flex-direction: column;
-  padding: var(--gap-md);
   gap: var(--gap-md);
-  overflow: hidden;
 }
 
-a { color: var(--accent); text-decoration: none; }
-a:hover { text-decoration: underline; }
-
-h1, h2, h3 {
-  margin: 0 0 var(--gap-sm);
-  line-height: 1.25;
-  font-weight: 600;
-}
-h1 { font-size: var(--fs-xl); }
-h2 { font-size: var(--fs-lg); }
-h3 { font-size: var(--fs-md); }
-
-p { margin: 0 0 var(--gap-sm); }
-
-code, pre {
-  font-family: var(--font-mono);
-  font-size: var(--fs-sm);
-}
-pre {
-  background: var(--bg-soft);
-  padding: var(--gap-md);
-  border-radius: var(--r-md);
-  overflow-x: auto;
+#app-sheets {
+  position: relative;
 }
 
-button {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  cursor: pointer;
+#__debug {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-height: 25vh;
+  overflow-y: auto;
+  background: #111;
+  color: #eee;
+  font: 12px monospace;
+  padding: 8px;
+  z-index: 9999;
+  white-space: pre-wrap;
 }
-
-::selection { background: var(--accent-soft); }
-
-#app-sheets { position: relative; }
