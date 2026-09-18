@@ -45,6 +45,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from fastapi.staticfiles import StaticFiles
+
+app.mount("/core", StaticFiles(directory="core"), name="core")
+app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
 
 @app.get("/")
 async def root():
