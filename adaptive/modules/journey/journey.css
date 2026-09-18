@@ -1,0 +1,75 @@
+/* journey.css — Журнал */
+
+.jrn-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.jrn-title {
+  margin: 0;
+  font-size: 16px;
+  color: var(--fg, #ddd);
+}
+
+.jrn-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.jrn-card {
+  border: 1px solid #222;
+  border-radius: 8px;
+  padding: 10px;
+  background: #0d0d0d;
+}
+
+.jrn-head {
+  font-family: monospace;
+  font-size: 13px;
+  color: #7faaff;
+  margin-bottom: 4px;
+}
+
+.jrn-summary {
+  font-size: 13px;
+  color: #ccc;
+  margin-bottom: 6px;
+}
+
+.jrn-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.jrn-tag {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: #1e1e2e;
+  border: 1px solid #2a2a3a;
+  border-radius: 10px;
+  color: #888;
+}
+
+.jrn-log {
+  flex-shrink: 0;
+  height: 80px;
+  overflow-y: auto;
+  font-family: monospace;
+  font-size: 11px;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 6px;
+  background: #0a0a0a;
+}
+
+.jrn-log-err { color: #ff6b6b; }
+.jrn-log-ok  { color: #6bff8f; }
+.jrn-log-info { color: #888; }
