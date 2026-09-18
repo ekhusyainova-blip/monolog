@@ -1,7 +1,7 @@
-# C_papka/C_file.py
-# Модули интерфейса — решение.
-# Формирует решение модуля: комплект в обёртке.
-# Вывод: в D файл A папки.
+# C_papka/B_file.py
+# Модули интерфейса — коннектор.
+# Связывает данные модуля с условиями и событиями.
+# Вывод: в C файл A папки.
 # Только события. Данные приходят снаружи.
 
 # --- фрагменты A/B/C/D (обычные) ---
@@ -15,15 +15,12 @@ def b_fragment(data):
     return {
         "conditions": data.get("conditions", []),
         "events": data.get("events", []),
+        "linked": True,
     }
 
 # [C] c_fragment — получает решение и действует
 def c_fragment(data):
-    return {
-        "decision": data.get("decision", {}),
-        "acted": True,
-        "resolved": True,
-    }
+    return {"decision": data.get("decision", {}), "acted": True}
 
 # [D] d_fragment — получает и выводит результат
 def d_fragment(data):
@@ -37,11 +34,11 @@ def a_fragment_fix():
 
 # [B-fix] b_fragment_fix — фикс условий и событий
 def b_fragment_fix():
-    return {"conditions": [], "events": []}
+    return {"conditions": [], "events": [], "linked": True}
 
 # [C-fix] c_fragment_fix — фикс решения
 def c_fragment_fix():
-    return {"decision": {}, "acted": True, "resolved": True}
+    return {"decision": {}, "acted": True}
 
 # [D-fix] d_fragment_fix — фикс результата
 def d_fragment_fix():
