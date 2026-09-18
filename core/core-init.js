@@ -1,6 +1,5 @@
 // core/core-init.js — инициализация Monolog.
 // Только события. Без if и try/catch.
-// Перехват ошибок сохранён.
 
 (async () => {
   const log = (msg) => {
