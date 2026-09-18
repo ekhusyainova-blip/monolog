@@ -95,7 +95,9 @@ window.MonologDevelopment.mount = function (container) {
 
   // boot-маркер (если A.state есть)
   if (A && A.state) {
-    A.state("mount", "ABCD", true, "development");
+    ["A", "B", "C", "D"].forEach(function (l) {
+  A.state("mount", l, true, "development");
+});
   }
   if (A && A.boot) {
     A.boot("ready");
