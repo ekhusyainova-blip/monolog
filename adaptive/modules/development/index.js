@@ -1,61 +1,105 @@
 // adaptive/modules/development/index.js
-// Сборка модуля разработки из A, B, C, D.
+// Сборка модуля разработки. Только события.
+// B — панель, C — рендер, D — лог/состояние, A — запросы.
 
 window.MonologDevelopment = window.MonologDevelopment || {};
-window.MonologDevelopment.mount = async function(container) {
-  const A = window.MonologDevelopment.A;
+
+window.MonologDevelopment.mount = function (container) {
   const B = window.MonologDevelopment.B;
   const C = window.MonologDevelopment.C;
   const D = window.MonologDevelopment.D;
+  const A = window.MonologDevA;
 
-  const ui = B.createPanel(container);
-  D.logTo(ui.log, 'модуль разработки запущен');
+  const panel = B.createPanel(container);
+  const { branches, tree, editor, log } = panel;
 
-  // загрузка веток
-  const br = await A.branches();
-  C.renderBranches(ui.branches, br.branches || ['main'], D.getBranch(), async (name) => {
+  // ветки
+  const branchNames = ["main", "structure", "dev"];
+  C.renderBranches(branches, branchNames, D.getBranch(), function (name) {
     D.setBranch(name);
-    D.logTo(ui.log, 'ветка: ' + name);
-    const tr = await A.tree(name);
-    C.renderTree(ui.tree, tr.paths || [], loadFile);
+    C.renderBranches(branches, branchNames, name, arguments.callee);
+    D.logTo(log, "ветка: " + name, "ok");
+    loadTree(name);
   });
+
+  // дерево
+  function loadTree(branch) {
+    D.logTo(log, "загрузка дерева: " + branch, "info");
+    A.tree(branch).then(function (res) {
+      if (!res || !res.ok) {
+        D.logTo(log, "ошибка дерева: " + (res && res.status), "err");
+        return;
+      }
+      const paths = (res.data && res.data.paths) || [];
+      C.renderTree(tree, paths, function (path) {
+        D.setPath(path);
+        loadFile(branch, path);
+      });
+    });
+  }
 
   // редактор
   const ed = C.createEditor();
-  ui.editor.appendChild(ed.pathInput);
-  ui.editor.appendChild(ed.ta);
-  ui.editor.appendChild(ed.buttons);
+  editor.appendChild(ed.pathInput);
+  editor.appendChild(ed.ta);
+  editor.appendChild(ed.buttons);
 
-  async function loadFile(path) {
-    const data = await A.read(path);
-    if (!data.exists) {
-      D.logTo(ui.log, 'не найден: ' + path, 'err');
-      return;
-    }
-    D.setPath(path);
+  function loadFile(branch, path) {
     ed.pathInput.value = path;
-    ed.ta.value = data.content || '';
-    D.logTo(ui.log, 'загружен: ' + path, 'ok');
+    D.logTo(log, "загрузка: " + path, "info");
+    A.read(branch, path).then(function (res) {
+      if (!res || !res.ok) {
+        D.logTo(log, "ошибка чтения: " + (res && res.status), "err");
+        return;
+      }
+      ed.ta.value = (res.data && res.data.content) || "";
+      D.logTo(log, "загружен: " + path, "ok");
+    });
   }
 
-  ed.btnLoad.addEventListener('click', () => {
-    const p = ed.pathInput.value.trim();
-    if (p) loadFile(p);
+  ed.btnLoad.addEventListener("click", function () {
+    const path = ed.pathInput.value.trim();
+    if (path) loadFile(D.getBranch(), path);
   });
 
-  ed.btnSave.addEventListener('click', async () => {
-    const p = ed.pathInput.value.trim();
-    const r = await A.save(p, ed.ta.value);
-    D.logTo(ui.log, r.ok ? 'сохранено: ' + p : 'ошибка сохранения', r.ok ? 'ok' : 'err');
+  ed.btnSave.addEventListener("click", function () {
+    const path = ed.pathInput.value.trim();
+    if (!path) return;
+    D.logTo(log, "save " + path, "info");
+    A.save(D.getBranch(), path, ed.ta.value).then(function (res) {
+      const ok = res && res.ok;
+      D.logTo(
+        log,
+        "save → " + (res && res.status) + (ok ? " ok" : " FAIL"),
+        ok ? "ok" : "err"
+      );
+    });
   });
 
-  ed.btnCheck.addEventListener('click', async () => {
-    const p = ed.pathInput.value.trim();
-    const r = await A.check(p);
-    D.logTo(ui.log, r.valid ? 'синтаксис ок' : 'ошибка: ' + (r.error || ''), r.valid ? 'ok' : 'err');
+  ed.btnCheck.addEventListener("click", function () {
+    const path = ed.pathInput.value.trim();
+    if (!path) return;
+    D.logTo(log, "check " + path, "info");
+    A.check(D.getBranch(), path).then(function (res) {
+      const ok = res && res.ok;
+      D.logTo(
+        log,
+        "check → " + (res && res.status) + (ok ? " ok" : " FAIL"),
+        ok ? "ok" : "err"
+      );
+    });
   });
 
-  // первичная загрузка дерева
-  const tr = await A.tree(D.getBranch());
-  C.renderTree(ui.tree, tr.paths || [], loadFile);
+  // стартовое дерево
+  loadTree(D.getBranch());
+
+  // boot-маркер (если A.state есть)
+  if (A && A.state) {
+    A.state("mount", "ABCD", true, "development");
+  }
+  if (A && A.boot) {
+    A.boot("ready");
+  }
+
+  return panel;
 };
