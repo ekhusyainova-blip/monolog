@@ -26,27 +26,18 @@ window.MonologDevA = (function () {
   }
 
   return {
-    tree: function (branch) {
-      return get("/code/tree", { branch: branch });
-    },
-    read: function (branch, path) {
-      return get("/code/read", { branch: branch, path: path });
-    },
-    save: function (branch, path, content, sha) {
-      return post("/code/save", {
-        branch: branch, path: path, content: content, sha: sha,
-      });
-    },
-    check: function (branch, path) {
-      return post("/code/check", { branch: branch, path: path });
-    },
-    state: function (kind, layer, ok, detail) {
-      return post("/state/event", {
-        kind: kind, layer: layer, ok: ok, detail: detail,
-      });
-    },
-    boot: function (phase) {
-      return post("/state/boot", { phase: phase });
-    },
+    tree: (branch) => get("/code/tree", { branch }),
+    read: (branch, path) => get("/code/read", { branch, path }),
+    save: (branch, path, content, sha) =>
+      post("/code/save", { branch, path, content, sha }),
+    check: (branch, path) => post("/code/check", { branch, path }),
+    create: (branch, path, content) =>
+      post("/code/create", { branch, path, content: content || "" }),
+    remove: (branch, path) => post("/code/delete", { branch, path }),
+    state: (kind, layer, ok, detail) =>
+      post("/state/event", { kind, layer, ok, detail }),
+    boot: (phase) => post("/state/boot", { phase }),
+    cycles: () => get("/cycles", {}),
+    cycleAdd: (payload) => post("/cycles/add", payload),
   };
 })();
