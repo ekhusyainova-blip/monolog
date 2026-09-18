@@ -4,6 +4,8 @@
   padding: 0 !important;
   overflow: hidden !important;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
 .dev-wrap {
@@ -71,6 +73,13 @@
   overflow: hidden;
 }
 
+.dev-path-row {
+  display: flex;
+  gap: 6px;
+  align-items: stretch;
+  flex-shrink: 0;
+}
+
 .dev-input,
 .dev-textarea {
   width: 100%;
@@ -85,9 +94,11 @@
 }
 
 .dev-input {
-  flex-shrink: 0;
   height: 34px;
 }
+
+.dev-path-row .dev-input { flex: 1 1 auto; }
+.dev-path-row .dev-btn   { flex-shrink: 0; }
 
 .dev-textarea {
   flex: 1 1 auto;
@@ -138,7 +149,7 @@
 .dev-log-info { color: #888; }
 
 /* ПК: две колонки */
-@media (min-width: 900px) {
+@media (min-width: 900px) and (orientation: landscape) {
   .dev-wrap {
     grid-template-columns: 280px 1fr;
     grid-template-rows: auto 1fr auto auto;
@@ -154,11 +165,3 @@
   .dev-buttons  { grid-area: buttons; }
   .dev-log      { grid-area: log; height: 140px; }
 }
-
-.dev-path-row {
-  display: flex;
-  gap: 6px;
-  align-items: stretch;
-}
-.dev-path-row .dev-input { flex: 1 1 auto; }
-.dev-path-row .dev-btn   { flex-shrink: 0; }
