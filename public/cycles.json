@@ -1,0 +1,11 @@
+{
+  "cycles": [
+    {
+      "n": 343,
+      "date": "2026-09-19",
+      "summary": "Редактор замкнут: дерево, ветки, чтение, save 200, check 200, /state работает",
+      "tags": ["editor", "state", "save", "check"],
+      "status": "closed"
+    }
+  ]
+}
