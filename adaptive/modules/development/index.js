@@ -1,6 +1,5 @@
 // adaptive/modules/development/index.js
 // Сборка модуля разработки. Только события.
-// B — панель, C — рендер, D — лог/состояние, A — запросы.
 
 window.MonologDevelopment = window.MonologDevelopment || {};
 
@@ -13,7 +12,6 @@ window.MonologDevelopment.mount = function (container) {
   const panel = B.createPanel(container);
   const { branches, tree, editor, log } = panel;
 
-  // ветки
   const branchNames = ["main", "structure", "dev"];
   C.renderBranches(branches, branchNames, D.getBranch(), function (name) {
     D.setBranch(name);
@@ -22,7 +20,6 @@ window.MonologDevelopment.mount = function (container) {
     loadTree(name);
   });
 
-  // дерево
   function loadTree(branch) {
     D.logTo(log, "загрузка дерева: " + branch, "info");
     A.tree(branch).then(function (res) {
@@ -38,7 +35,6 @@ window.MonologDevelopment.mount = function (container) {
     });
   }
 
-  // редактор
   const ed = C.createEditor();
   editor.appendChild(ed.pathInput);
   editor.appendChild(ed.ta);
@@ -68,11 +64,13 @@ window.MonologDevelopment.mount = function (container) {
     D.logTo(log, "save " + path, "info");
     A.save(D.getBranch(), path, ed.ta.value).then(function (res) {
       const ok = res && res.ok;
+      const body = res && res.data ? JSON.stringify(res.data).slice(0, 300) : "";
       D.logTo(
         log,
-        "save → " + (res && res.status) + (ok ? " ok" : " FAIL"),
+        "save → " + (res && res.status) + (ok ? " ok" : " FAIL") + " " + body,
         ok ? "ok" : "err"
       );
+      if (ok) loadTree(D.getBranch());
     });
   });
 
@@ -90,18 +88,14 @@ window.MonologDevelopment.mount = function (container) {
     });
   });
 
-  // стартовое дерево
   loadTree(D.getBranch());
 
-  // boot-маркер (если A.state есть)
   if (A && A.state) {
     ["A", "B", "C", "D"].forEach(function (l) {
-  A.state("mount", l, true, "development");
-});
+      A.state("mount", l, true, "development");
+    });
   }
-  if (A && A.boot) {
-    A.boot("ready");
-  }
+  if (A && A.boot) A.boot("ready");
 
   return panel;
 };
