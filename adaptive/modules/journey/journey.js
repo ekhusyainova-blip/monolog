@@ -50,4 +50,29 @@ window.MonologJourney = (function () {
     title.textContent = 'Журнал циклов';
 
     const list = document.createElement('div');
-    list.class
+    list.className = 'jrn-list';
+
+    const logBox = document.createElement('div');
+    logBox.className = 'jrn-log';
+
+    wrap.appendChild(title);
+    wrap.appendChild(list);
+    wrap.appendChild(logBox);
+    container.appendChild(wrap);
+
+    log(logBox, 'загрузка журнала...', 'info');
+    window.MonologDevA.cycles().then(function (res) {
+      if (!res || !res.ok) {
+        log(logBox, 'ошибка: ' + (res && res.status), 'err');
+        return;
+      }
+      const cycles = (res.data && res.data.cycles) || [];
+      log(logBox, 'загружено циклов: ' + cycles.length, 'ok');
+      render(list, cycles);
+    });
+
+    return wrap;
+  }
+
+  return { mount: mount };
+})();
