@@ -127,6 +127,10 @@ Monolog.adaptive = {
       if (spec.id === 'editorSheet' && window.MonologDevelopment) {
         setTimeout(() => window.MonologDevelopment.mount(body), 0);
       }
+      
+      if (spec.id === 'journeySheet' && window.MonologJourney) {
+      setTimeout(() => window.MonologJourney.mount(body), 0);
+      }
 
       sheet.appendChild(head);
       sheet.appendChild(body);
