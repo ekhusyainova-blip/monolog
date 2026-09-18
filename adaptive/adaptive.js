@@ -4,7 +4,7 @@
 window.Monolog = window.Monolog || {};
 
 Monolog.adaptive = {
-  version: '3.0',
+  version: '3.1',
 
   ui: {
     header: {
@@ -39,6 +39,7 @@ Monolog.adaptive = {
     this.renderMain();
     this.renderSheets();
     this.bindCore();
+    this.bindBackdrop();
     console.log('[adaptive] смонтирован');
   },
 
@@ -71,9 +72,7 @@ Monolog.adaptive = {
       el.className = 'main-item main-item-' + item.type;
       el.dataset.id = item.id;
 
-      if (item.type === 'note') {
-        el.textContent = item.text;
-      }
+      if (item.type === 'note') el.textContent = item.text;
 
       if (item.type === 'chat') {
         const ta = document.createElement('textarea');
@@ -115,21 +114,31 @@ Monolog.adaptive = {
 
       const head = document.createElement('div');
       head.className = 'sheet-head';
-      head.textContent = spec.title;
+
+      const title = document.createElement('span');
+      title.className = 'sheet-title';
+      title.textContent = spec.title;
+
+      const close = document.createElement('button');
+      close.className = 'sheet-close';
+      close.type = 'button';
+      close.textContent = '×';
+      close.addEventListener('click', () => this.closeSheet());
+
+      head.appendChild(title);
+      head.appendChild(close);
 
       const body = document.createElement('div');
       body.className = 'sheet-body';
 
-      if (spec.id === 'menuSheet') {
-        this.renderMenuItems(body);
-      }
+      if (spec.id === 'menuSheet') this.renderMenuItems(body);
 
       if (spec.id === 'editorSheet' && window.MonologDevelopment) {
         setTimeout(() => window.MonologDevelopment.mount(body), 0);
       }
-      
+
       if (spec.id === 'journeySheet' && window.MonologJourney) {
-      setTimeout(() => window.MonologJourney.mount(body), 0);
+        setTimeout(() => window.MonologJourney.mount(body), 0);
       }
 
       sheet.appendChild(head);
@@ -158,6 +167,17 @@ Monolog.adaptive = {
       s.hidden = s.id !== id;
     });
     this.emit('adaptive:sheet', { id, open: true });
+  },
+
+  closeSheet() {
+    document.querySelectorAll('.sheet').forEach(s => { s.hidden = true; });
+    this.emit('adaptive:sheet', { id: null, open: false });
+  },
+
+  bindBackdrop() {
+    const bg = document.getElementById('sheetBg');
+    if (!bg) return;
+    bg.addEventListener('click', () => this.closeSheet());
   },
 
   bindCore() {
