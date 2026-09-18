@@ -1,24 +1,26 @@
+// core/core-init.js — цепочка инициализации Monolog.
+// Только события. Без проверок и try/catch.
+
 (async () => {
-  if (!window.Monolog || !Monolog.core) {
-    console.error('[init] core не загружен');
-    return;
-  }
-
-  try {
-    await Monolog.core.init();
-  } catch (e) {
-    console.error('[init] ошибка core:', e);
-    return;
-  }
-
-  if (Monolog.adaptive && typeof Monolog.adaptive.mount === 'function') {
-    try {
-      await Monolog.adaptive.mount();
-    } catch (e) {
-      console.error('[init] ошибка adaptive:', e);
-      return;
+  const log = (msg) => {
+    console.log(msg);
+    let box = document.getElementById('__debug');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = '__debug';
+      box.style.cssText = 'position:fixed;left:0;right:0;bottom:0;max-height:30vh;overflow:auto;background:#111;color:#eee;font:12px monospace;padding:8px;z-index:9999;white-space:pre-wrap';
+      document.body.appendChild(box);
     }
-  }
+    box.textContent += '• ' + msg + '\n';
+  };
 
-  Monolog.core.emit('app:ready', {});
-})(); 
+  log('init start');
+
+  await Monolog.core.init();
+  log('core init');
+
+  await Monolog.adaptive.mount();
+  log('adaptive mount');
+
+  log('ready');
+})();
