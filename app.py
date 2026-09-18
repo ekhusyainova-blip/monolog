@@ -108,4 +108,180 @@ async def chat(body: ChatRequest):
                 json={
                     "model": "openai/gpt-oss-20b",
                     "messages": [
-                        {"role": "system", "content": "Ты
+                        {"role": "system", "content": "Ты — Monolog. Когнитивный партнёр."},
+                        {"role": "user", "content": msg},
+                    ],
+                    "max_tokens": 1500,
+                },
+            )
+        data = r.json()
+        reply = data["choices"][0]["message"]["content"]
+        return JSONResponse({"reply_text": reply})
+    except Exception as e:
+        return JSONResponse({"reply_text": f"Ошибка: {e}"})
+
+
+# --- /code/* ---
+
+def _gh_headers():
+    h = {"Accept": "application/vnd.github+json"}
+    if GITHUB_TOKEN:
+        h["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return h
+
+
+@app.get("/code/tree")
+async def code_tree(branch: str = ""):
+    ref = branch or GITHUB_BRANCH
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/trees/{ref}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"recursive": "1"})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
+    tree = r.json().get("tree", [])
+    paths = [item["path"] for item in tree if item.get("type") == "blob"]
+    return JSONResponse({"branch": ref, "count": len(paths), "paths": paths[:500]})
+
+
+@app.get("/code/branches")
+async def code_branches():
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/branches"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers())
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
+    names = [b.get("name") for b in r.json()]
+    return JSONResponse({"branches": names, "count": len(names)})
+
+
+@app.get("/code/read")
+async def code_read(path: str, branch: str = ""):
+    ref = branch or GITHUB_BRANCH
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"ref": ref})
+    if r.status_code == 404:
+        return JSONResponse({"exists": False, "path": path})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
+    data = r.json()
+    try:
+        content = base64.b64decode(data.get("content", "")).decode("utf-8")
+    except Exception:
+        content = ""
+    return JSONResponse({
+        "exists": True,
+        "path": path,
+        "sha": data.get("sha"),
+        "content": content,
+    })
+
+
+class SaveRequest(BaseModel):
+    branch: str = ""
+    path: str
+    content: str
+    sha: Optional[str] = None
+
+
+@app.post("/code/save")
+async def code_save(body: SaveRequest):
+    ref = body.branch or GITHUB_BRANCH
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{body.path}"
+
+    sha = body.sha
+    if not sha:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            r0 = await client.get(url, headers=_gh_headers(), params={"ref": ref})
+        if r0.status_code == 200:
+            sha = r0.json().get("sha")
+
+    payload = {
+        "message": f"save {body.path} via Monolog",
+        "content": base64.b64encode(body.content.encode("utf-8")).decode("ascii"),
+        "branch": ref,
+    }
+    if sha:
+        payload["sha"] = sha
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.put(url, headers=_gh_headers(), json=payload)
+
+    if r.status_code >= 400:
+        raise HTTPException(
+            status_code=502,
+            detail=f"GitHub {r.status_code}: {r.text[:300]}",
+        )
+    data = r.json()
+    return JSONResponse({
+        "ok": True,
+        "path": body.path,
+        "sha": data.get("content", {}).get("sha"),
+    })
+
+
+class CheckRequest(BaseModel):
+    branch: str = ""
+    path: str
+
+
+@app.post("/code/check")
+async def code_check(body: CheckRequest):
+    ref = body.branch or GITHUB_BRANCH
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{body.path}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"ref": ref})
+    return JSONResponse({
+        "path": body.path,
+        "branch": ref,
+        "exists": r.status_code == 200,
+        "status": r.status_code,
+    })
+
+
+# --- /state (наблюдаемость ABCD) ---
+
+STATE = {
+    "cycle": "ABCD",
+    "phase": "idle",
+    "modules": {},
+    "events": [],
+    "errors": [],
+    "booted_at": None,
+}
+
+
+@app.get("/state")
+async def state_get():
+    return STATE
+
+
+@app.post("/state/event")
+async def state_event(request: Request):
+    body = await request.json()
+    layer = body.get("layer")
+    if layer and layer not in STATE["modules"]:
+        STATE["modules"][layer] = {"status": "loaded"}
+    STATE["events"].insert(0, {
+        "kind": body.get("kind"),
+        "layer": layer,
+        "ok": body.get("ok"),
+        "detail": body.get("detail"),
+    })
+    del STATE["events"][40:]
+    if body.get("ok") is False:
+        STATE["errors"].insert(0, body)
+        del STATE["errors"][20:]
+    return {"ok": True}
+
+
+@app.post("/state/boot")
+async def state_boot(request: Request):
+    body = await request.json()
+    STATE["phase"] = body.get("phase", "ready")
+    return {"ok": True}
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
