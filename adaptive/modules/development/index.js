@@ -114,11 +114,13 @@ window.MonologDevelopment.mount = function (container) {
   loadTree(D.getBranch());
 
   if (A && A.state) {
-    ["A", "B", "C", "D"].forEach(function (l) {
-      A.state("mount", l, true, "development");
-    });
-  }
-  if (A && A.boot) A.boot("ready");
+  (async function () {
+    for (const l of ["A", "B", "C", "D"]) {
+      await A.state("mount", l, true, "development");
+    }
+    if (A && A.boot) await A.boot("ready");
+  })();
+}
 
   return panel;
 };
