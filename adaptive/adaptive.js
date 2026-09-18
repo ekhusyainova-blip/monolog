@@ -1,5 +1,5 @@
 // adaptive/adaptive.js — сборка интерфейса Monolog.
-// Только события. Без if и проверок.
+// Только события.
 
 window.Monolog = window.Monolog || {};
 
@@ -120,6 +120,10 @@ Monolog.adaptive = {
 
       if (spec.id === 'menuSheet') {
         this.renderMenuItems(body);
+      }
+
+      if (spec.id === 'editorSheet' && window.MonologDevelopment) {
+        setTimeout(() => window.MonologDevelopment.mount(body), 0);
       }
 
       sheet.appendChild(head);
