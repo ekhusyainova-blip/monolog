@@ -1,44 +1,61 @@
-// adaptive/modules/development/C.js — фрагмент: логирование и save/check
-// Только события. Никаких if в бизнес-логике — только match.
+// adaptive/modules/development/C.js
+// Слой C — модули интерфейса: дерево, редактор, ветки.
+// Только события.
 
-window.MonologDevC = window.MonologDevC || {};
+window.MonologDevelopment = window.MonologDevelopment || {};
+window.MonologDevelopment.C = {
 
-MonologDevC.log = function (node, text, kind) {
-  const line = document.createElement("div");
-  line.className = "dev-log-" + (kind || "info");
-  const t = new Date().toISOString().substr(11, 8);
-  line.textContent = "[" + t + "] " + text;
-  node.prepend(line);
-  const lines = node.querySelectorAll("div");
-  for (let i = 40; i < lines.length; i++) lines[i].remove();
-};
+  renderBranches(host, branches, current, onPick) {
+    host.innerHTML = '';
+    branches.forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = 'dev-branch-btn' + (name === current ? ' active' : '');
+      btn.textContent = name;
+      btn.addEventListener('click', () => onPick(name));
+      host.appendChild(btn);
+    });
+  },
 
-MonologDevC.report = function (node, label, res) {
-  const ok = res && res.ok;
-  const status = res ? res.status : "no-response";
-  const body = res && res.data ? JSON.stringify(res.data).slice(0, 200) : "";
-  MonologDevC.log(
-    node,
-    label + " → " + status + (ok ? " ok" : " FAIL") + " " + body,
-    ok ? "ok" : "err"
-  );
-  MonologDevC.state(label, "C", !!ok, status + " " + body);
-};
+  renderTree(host, paths, onPick) {
+    host.innerHTML = '';
+    paths.forEach(p => {
+      const el = document.createElement('div');
+      el.className = 'dev-tree-item';
+      el.textContent = p;
+      el.title = p;
+      el.addEventListener('click', () => onPick(p));
+      host.appendChild(el);
+    });
+  },
 
-MonologDevC.onSave = async function (logNode, branch, path, content, sha) {
-  MonologDevC.log(logNode, "save " + path, "info");
-  const res = await MonologDevA.save(branch, path, content, sha);
-  MonologDevC.report(logNode, "save", res);
-};
+  createEditor() {
+    const pathInput = document.createElement('input');
+    pathInput.className = 'dev-input dev-path';
+    pathInput.placeholder = 'путь к файлу';
 
-MonologDevC.onCheck = async function (logNode, branch, path) {
-  MonologDevC.log(logNode, "check " + path, "info");
-  const res = await MonologDevA.check(branch, path);
-  MonologDevC.report(logNode, "check", res);
-};
+    const ta = document.createElement('textarea');
+    ta.className = 'dev-textarea';
+    ta.placeholder = 'содержимое файла';
 
-MonologDevC.onRead = async function (logNode, branch, path) {
-  const res = await MonologDevA.read(branch, path);
-  MonologDevC.report(logNode, "read " + path, res);
-  return res;
+    const buttons = document.createElement('div');
+    buttons.className = 'dev-buttons';
+
+    const btnLoad = document.createElement('button');
+    btnLoad.className = 'dev-btn';
+    btnLoad.textContent = 'Загрузить';
+
+    const btnSave = document.createElement('button');
+    btnSave.className = 'dev-btn';
+    btnSave.textContent = 'Сохранить';
+
+    const btnCheck = document.createElement('button');
+    btnCheck.className = 'dev-btn';
+    btnCheck.textContent = 'Проверить';
+
+    buttons.appendChild(btnLoad);
+    buttons.appendChild(btnSave);
+    buttons.appendChild(btnCheck);
+
+    return { pathInput, ta, btnLoad, btnSave, btnCheck, buttons };
+  }
 };
