@@ -36,7 +36,7 @@ window.MonologDevelopment.mount = function (container) {
   }
 
   const ed = C.createEditor();
-  editor.appendChild(ed.pathInput);
+  editor.appendChild(ed.pathRow);
   editor.appendChild(ed.ta);
   editor.appendChild(ed.buttons);
 
