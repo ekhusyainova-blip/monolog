@@ -1,36 +1,68 @@
-/* adaptive/adaptive.css — стили компонентов. */
+/* adaptive/adaptive.css — стили компонентов интерфейса. */
+
+/* --- header items --- */
 
 .header-item {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 36px;
-  height: 36px;
-  padding: 0 var(--gap-sm);
+  min-width: 38px;
+  height: 38px;
+  padding: 0 14px;
   border-radius: var(--r-md);
   background: var(--bg-soft);
   border: 1px solid var(--line);
   color: var(--fg-dim);
   font-size: var(--fs-sm);
+  font-weight: 500;
   white-space: nowrap;
-  cursor: pointer;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+  position: relative;
 }
-.header-item:hover { background: var(--bg-elev); color: var(--fg); }
+
+.header-item:hover {
+  background: var(--bg-elev);
+  color: var(--fg);
+  border-color: var(--accent-soft);
+}
+
+.header-item:active {
+  transform: scale(.97);
+}
 
 .header-item-orb {
-  width: 22px; height: 22px;
-  min-width: 22px;
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
   padding: 0;
   border-radius: 50%;
   border: 0;
   background: radial-gradient(circle at 35% 30%, var(--accent), var(--accent-soft) 70%);
-  box-shadow: 0 0 12px rgba(124,140,255,.45);
+  box-shadow: 0 0 14px var(--accent-glow);
+}
+
+.header-item-index {
+  min-width: 38px;
+  font-family: var(--font-mono);
+  color: var(--fg);
+}
+
+.header-item-button {
+  color: var(--fg-dim);
+}
+
+/* --- main items --- */
+
+.main-item {
+  width: 100%;
 }
 
 .main-item-note {
   color: var(--fg-dim);
   font-size: var(--fs-sm);
   padding: 4px 0;
+  border-left: 2px solid var(--accent-soft);
+  padding-left: 10px;
 }
 
 .main-item-chat {
@@ -39,63 +71,105 @@
   gap: var(--gap-sm);
 }
 
+/* --- чат --- */
+
 .chat-input {
   width: 100%;
-  min-height: 80px;
-  padding: 10px;
+  min-height: 90px;
+  padding: 12px 14px;
   border-radius: var(--r-md);
   background: var(--bg-soft);
   border: 1px solid var(--line);
   color: var(--fg);
   font-family: var(--font);
   font-size: var(--fs-md);
+  line-height: var(--lh);
   resize: vertical;
+  transition: border-color var(--t-fast);
+}
+
+.chat-input:focus {
+  outline: none;
+  border-color: var(--accent);
 }
 
 .chat-send {
   align-self: flex-start;
-  padding: 10px 16px;
+  padding: 10px 20px;
   border-radius: var(--r-md);
   border: 1px solid var(--accent);
   background: var(--accent-soft);
   color: var(--fg);
   font-size: var(--fs-sm);
-  cursor: pointer;
+  font-weight: 500;
+  transition: background var(--t-fast), color var(--t-fast);
 }
-.chat-send:hover { background: var(--accent); color: #fff; }
+
+.chat-send:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+.chat-send:disabled {
+  opacity: .5;
+  cursor: wait;
+}
 
 .chat-replies {
   margin-top: 8px;
+  padding: 12px 14px;
+  border-radius: var(--r-md);
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
   color: var(--fg);
   white-space: pre-wrap;
+  font-size: var(--fs-sm);
+  line-height: var(--lh);
 }
+
+/* --- sheets --- */
 
 .sheet {
   position: fixed;
-  left: 0; right: 0; bottom: 0;
-  top: 60px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 64px;
   background: var(--bg-soft);
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  box-shadow: 0 -8px 24px rgba(0,0,0,.5);
+  border-top-left-radius: var(--r-xl);
+  border-top-right-radius: var(--r-xl);
+  box-shadow: var(--shadow-lg);
   display: flex;
   flex-direction: column;
   z-index: 100;
+  animation: slideUp var(--t-med) ease-out;
 }
-.sheet[hidden] { display: none; }
+
+.sheet[hidden] {
+  display: none;
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
 
 .sheet-head {
-  padding: 12px 16px;
+  padding: 16px 20px;
   font-size: var(--fs-lg);
   font-weight: 600;
   border-bottom: 1px solid var(--line);
+  color: var(--fg);
+  flex-shrink: 0;
 }
 
 .sheet-body {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: var(--gap-md);
 }
+
+/* --- menu --- */
 
 .menu-list {
   display: flex;
@@ -104,13 +178,46 @@
 }
 
 .menu-item {
-  padding: 14px 16px;
+  padding: 16px 18px;
   border-radius: var(--r-md);
   background: var(--bg-elev);
   border: 1px solid var(--line);
   color: var(--fg);
   font-size: var(--fs-md);
   text-align: left;
-  cursor: pointer;
+  transition: background var(--t-fast), border-color var(--t-fast);
 }
-.menu-item:hover { border-color: var(--accent); }
+
+.menu-item:hover {
+  border-color: var(--accent);
+  background: var(--bg-accent);
+}
+
+.menu-item:active {
+  transform: scale(.99);
+}
+
+/* --- адаптивность под ПК --- */
+
+@media (min-width: 768px) {
+  .sheet {
+    left: 50%;
+    right: auto;
+    width: 600px;
+    margin-left: -300px;
+    border-radius: var(--r-lg);
+    top: 80px;
+    bottom: 80px;
+  }
+
+  .chat-input {
+    min-height: 110px;
+  }
+}
+
+@media (min-width: 1200px) {
+  .sheet {
+    width: 720px;
+    margin-left: -360px;
+  }
+}
