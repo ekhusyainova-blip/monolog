@@ -1,6 +1,5 @@
 // adaptive/modules/development/A.js
-// Запросы модуля разработки. Только события.
-// GET для чтения, POST для записи.
+// Запросы. GET — чтение, POST — запись.
 
 window.MonologDevA = (function () {
 
