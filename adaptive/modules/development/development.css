@@ -1,14 +1,20 @@
-/* development.css — раскладка модуля разработки */
-/* Мобильный — вертикально, ПК — две колонки. */
+/* development.css — раскладка редактора. Не прыгает. */
+
+.sheet-body:has(.dev-wrap) {
+  padding: 0 !important;
+  overflow: hidden !important;
+  height: 100%;
+}
 
 .dev-wrap {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto auto;
   gap: 8px;
   padding: 8px;
   height: 100%;
-  box-sizing: border-box;
   min-height: 0;
+  box-sizing: border-box;
+  overflow: hidden;
 }
 
 .dev-branches {
@@ -35,13 +41,13 @@
 }
 
 .dev-tree {
-  flex: 1 1 auto;
-  min-height: 120px;
-  max-height: 30vh;
+  flex-shrink: 0;
+  max-height: 22vh;
   overflow-y: auto;
   border: 1px solid #222;
   border-radius: 6px;
   padding: 4px;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dev-tree-item {
@@ -55,16 +61,14 @@
   text-overflow: ellipsis;
 }
 
-.dev-tree-item:hover {
-  background: #222;
-}
+.dev-tree-item:hover { background: #222; }
 
 .dev-editor {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  flex: 1 1 auto;
   min-height: 0;
+  overflow: hidden;
 }
 
 .dev-input,
@@ -80,10 +84,18 @@
   font-size: 12px;
 }
 
+.dev-input {
+  flex-shrink: 0;
+  height: 34px;
+}
+
 .dev-textarea {
   flex: 1 1 auto;
-  min-height: 160px;
-  resize: vertical;
+  min-height: 0;
+  resize: none;
+  overflow-y: auto;
+  line-height: 1.4;
+  -webkit-overflow-scrolling: touch;
 }
 
 .dev-buttons {
@@ -94,22 +106,21 @@
 }
 
 .dev-btn {
-  padding: 6px 14px;
+  padding: 8px 12px;
   background: #2a2a3a;
   color: #ddd;
   border: 1px solid #3a3a4a;
   border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
+  min-height: 36px;
 }
 
-.dev-btn:hover {
-  background: #3a3a4a;
-}
+.dev-btn:hover { background: #3a3a4a; }
 
 .dev-log {
   flex-shrink: 0;
-  height: 110px;
+  height: 90px;
   overflow-y: auto;
   border: 1px solid #222;
   border-radius: 6px;
@@ -117,32 +128,29 @@
   font-family: monospace;
   font-size: 11px;
   background: #0a0a0a;
+  -webkit-overflow-scrolling: touch;
 }
 
-.dev-log > div {
-  padding: 1px 0;
-}
+.dev-log > div { padding: 1px 0; }
 
 .dev-log-err { color: #ff6b6b; }
 .dev-log-ok  { color: #6bff8f; }
 .dev-log-info { color: #888; }
 
-/* ПК: две колонки, лог снизу на всю ширину */
+/* ПК: две колонки */
 @media (min-width: 900px) {
   .dev-wrap {
-    display: grid;
     grid-template-columns: 280px 1fr;
-    grid-template-rows: auto 1fr auto;
+    grid-template-rows: auto 1fr auto auto;
     grid-template-areas:
       "branches editor"
       "tree     editor"
+      "buttons  buttons"
       "log      log";
-    gap: 10px;
-    height: 100%;
   }
   .dev-branches { grid-area: branches; }
   .dev-tree     { grid-area: tree; max-height: none; }
   .dev-editor   { grid-area: editor; }
+  .dev-buttons  { grid-area: buttons; }
   .dev-log      { grid-area: log; height: 140px; }
-  .dev-textarea { min-height: 240px; }
 }
