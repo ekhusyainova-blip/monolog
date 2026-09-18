@@ -1,37 +1,45 @@
 // adaptive/modules/development/A.js
-// Слой A — запросы к backend.
-// Только события. Без условий.
+// Запросы модуля разработки. Только события.
+// Данные приходят снаружи. Решение — за ИИ/ядром.
+window.MonologDevA = (function () {
+  const base = "";
 
-window.MonologDevelopment = window.MonologDevelopment || {};
-window.MonologDevelopment.A = {
-
-  async tree(branch) {
-    const res = await fetch('/code/tree?branch=' + encodeURIComponent(branch || ''));
-    return await res.json();
-  },
-
-  async branches() {
-    const res = await fetch('/code/branches');
-    return await res.json();
-  },
-
-  async read(path) {
-    const res = await fetch('/code/read?path=' + encodeURIComponent(path));
-    return await res.json();
-  },
-
-  async save(path, content) {
-    const res = await fetch('/ai/apply_raw?path=' + encodeURIComponent(path) +
-      '&message=Update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: content,
+  async function call(path, payload) {
+    const r = await fetch(base + path, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload || {}),
     });
-    return await res.json();
-  },
-
-  async check(path) {
-    const res = await fetch('/code/check?path=' + encodeURIComponent(path));
-    return await res.json();
+    const text = await r.text();
+    let data = null;
+    try { data = JSON.parse(text); } catch (e) { data = { raw: text }; }
+    return { status: r.status, ok: r.ok, data: data };
   }
-};
+
+  function state(kind, layer, ok, detail) {
+    return call("/state/event", {
+      kind: kind, layer: layer, ok: ok, detail: detail,
+    });
+  }
+
+  return {
+    tree: function (branch) {
+      return call("/code/tree", { branch: branch });
+    },
+    read: function (branch, path) {
+      return call("/code/read", { branch: branch, path: path });
+    },
+    save: function (branch, path, content, sha) {
+      return call("/code/save", {
+        branch: branch, path: path, content: content, sha: sha,
+      });
+    },
+    check: function (branch, path) {
+      return call("/code/check", { branch: branch, path: path });
+    },
+    state: state,
+    boot: function (phase) {
+      return call("/state/boot", { phase: phase });
+    },
+  };
+})();
