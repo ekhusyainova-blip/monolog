@@ -1,11 +1,10 @@
-# app.py — тонкая точка входа Monolog.
-# Отдаёт index.html и API.
-# Структура A/B/C/D — в папках A_papka, B_papka, C_papka, D_papka.
-# Пока подключена минимально.
+# app.py — точка входа Monolog.
+# Отдаёт index.html, /chat, /code/*.
+# Подключает структуру A/B/C/D.
 
 import os
+import sys
 import json
-import asyncio
 import logging
 from typing import List, Optional
 
@@ -13,7 +12,15 @@ import httpx
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
+
+# Подключение структуры A/B/C/D
+sys.path.insert(0, os.path.dirname(__file__))
+from A_papka import A_file as A_AF
+from B_papka import B_file as B_BF
+from C_papka import C_file as C_CF
+from D_papka import D_file as D_DF
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 log = logging.getLogger("monolog")
@@ -38,6 +45,10 @@ def next_dev_key() -> Optional[str]:
 
 
 app = FastAPI(title="Monolog (structure)")
+
+app.mount("/core", StaticFiles(directory="core"), name="core")
+app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -45,10 +56,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-from fastapi.staticfiles import StaticFiles
-
-app.mount("/core", StaticFiles(directory="core"), name="core")
-app.mount("/adaptive", StaticFiles(directory="adaptive"), name="adaptive")
 
 @app.get("/")
 async def root():
@@ -59,11 +66,27 @@ async def root():
 async def health():
     return {
         "status": "ok",
-        "version": "structure-1.0",
+        "version": "structure-1.1",
         "branch": GITHUB_BRANCH,
         "github_ready": bool(GITHUB_TOKEN),
         "groq_keys": len(_DEV_KEYS_GROQ),
     }
+
+
+@app.get("/ui")
+async def ui():
+    """Тестовое подключение A/B/C/D."""
+    data = {"input": {"hello": "world"}}
+    a = A_AF.a_fragment(data)
+    b = B_BF.b_fragment(data)
+    c = C_CF.c_fragment(data)
+    d = D_DF.d_fragment(data)
+    return JSONResponse({
+        "a": a,
+        "b": b,
+        "c": c,
+        "d": d,
+    })
 
 
 class ChatRequest(BaseModel):
@@ -82,7 +105,10 @@ async def chat(body: ChatRequest):
         async with httpx.AsyncClient(timeout=120.0) as client:
             r = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                headers={
+                    "Authorization": f"Bearer {key}",
+                    "Content-Type": "application/json",
+                },
                 json={
                     "model": "openai/gpt-oss-20b",
                     "messages": [
@@ -97,6 +123,57 @@ async def chat(body: ChatRequest):
         return JSONResponse({"reply_text": reply})
     except Exception as e:
         return JSONResponse({"reply_text": f"Ошибка: {e}"})
+
+
+# --- /code/* ---
+
+def _gh_headers():
+    h = {"Accept": "application/vnd.github+json"}
+    if GITHUB_TOKEN:
+        h["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+    return h
+
+
+@app.get("/code/tree")
+async def code_tree(branch: str = ""):
+    ref = branch or GITHUB_BRANCH
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/trees/{ref}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"recursive": "1"})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
+    tree = r.json().get("tree", [])
+    paths = [item["path"] for item in tree if item.get("type") == "blob"]
+    return JSONResponse({"branch": ref, "count": len(paths), "paths": paths[:500]})
+
+
+@app.get("/code/branches")
+async def code_branches():
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/branches"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers())
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
+    names = [b.get("name") for b in r.json()]
+    return JSONResponse({"branches": names, "count": len(names)})
+
+
+@app.get("/code/read")
+async def code_read(path: str):
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{path}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"ref": GITHUB_BRANCH})
+    if r.status_code == 404:
+        return JSONResponse({"exists": False, "path": path})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
+    import base64
+    data = r.json()
+    try:
+        content = base64.b64decode(data.get("content", "")).decode("utf-8")
+    except Exception:
+        content = ""
+    return JSONResponse({"exists": True, "path": path, "content": content})
 
 
 if __name__ == "__main__":
