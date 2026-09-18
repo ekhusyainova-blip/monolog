@@ -50,14 +50,24 @@ window.MonologDevelopment.mount = function (container) {
   }
 
   function loadFile(branch, path) {
-    ed.pathInput.value = path;
-    D.logTo(log, "загрузка: " + path, "info");
-    A.read(branch, path).then(function (res) {
-      if (!res || !res.ok) { report("read " + path, res); return; }
-      ed.ta.value = (res.data && res.data.content) || "";
-      D.logTo(log, "загружен: " + path, "ok");
-    });
-  }
+  ed.pathInput.value = path;
+  D.logTo(log, "загрузка: " + path, "info");
+  A.read(branch, path).then(function (res) {
+    if (!res || !res.ok) {
+      D.logTo(log, "не найден: " + path + " (" + (res && res.status) + ")", "err");
+      ed.ta.value = "";
+      return;
+    }
+    if (res.data && res.data.exists === false) {
+      D.logTo(log, "не найден: " + path, "err");
+      ed.ta.value = "";
+      return;
+    }
+    ed.ta.value = (res.data && res.data.content) || "";
+    D.logTo(log, "загружен: " + path, "ok");
+  });
+}
+
 
   ed.btnLoad.addEventListener("click", function () {
     const path = ed.pathInput.value.trim();
