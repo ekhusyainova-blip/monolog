@@ -1,6 +1,5 @@
 // adaptive/modules/development/C.js
-// Слой C — модули интерфейса: дерево, редактор, ветки.
-// Только события.
+// Слой C — рендер. Только события.
 
 window.MonologDevelopment = window.MonologDevelopment || {};
 window.MonologDevelopment.C = {
@@ -40,70 +39,20 @@ window.MonologDevelopment.C = {
     const buttons = document.createElement('div');
     buttons.className = 'dev-buttons';
 
-    const btnLoad = document.createElement('button');
-    btnLoad.className = 'dev-btn';
-    btnLoad.textContent = 'Загрузить';
+    const mkBtn = (text) => {
+      const b = document.createElement('button');
+      b.className = 'dev-btn';
+      b.textContent = text;
+      buttons.appendChild(b);
+      return b;
+    };
 
-    const btnSave = document.createElement('button');
-    btnSave.className = 'dev-btn';
-    btnSave.textContent = 'Сохранить';
+    const btnLoad = mkBtn('Загрузить');
+    const btnSave = mkBtn('Сохранить');
+    const btnCheck = mkBtn('Проверить');
+    const btnCreate = mkBtn('Создать');
+    const btnDelete = mkBtn('Удалить');
 
-    const btnCheck = document.createElement('button');
-    btnCheck.className = 'dev-btn';
-    btnCheck.textContent = 'Проверить';
-
-    buttons.appendChild(btnLoad);
-    buttons.appendChild(btnSave);
-    buttons.appendChild(btnCheck);
-
-    return { pathInput, ta, btnLoad, btnSave, btnCheck, buttons };
+    return { pathInput, ta, buttons, btnLoad, btnSave, btnCheck, btnCreate, btnDelete };
   }
 };
-
-// --- дописано: диагностика save/check/read через /state ---
-// Старый код выше не трогаем. Только добавляем.
-(function () {
-  if (!window.MonologDevC) window.MonologDevC = {};
-
-  MonologDevC.log = function (node, text, kind) {
-    const line = document.createElement("div");
-    line.className = "dev-log-" + (kind || "info");
-    const t = new Date().toISOString().substr(11, 8);
-    line.textContent = "[" + t + "] " + text;
-    node.prepend(line);
-    const lines = node.querySelectorAll("div");
-    for (let i = 40; i < lines.length; i++) lines[i].remove();
-  };
-
-  MonologDevC.report = function (node, label, res) {
-    const ok = res && res.ok;
-    const status = res ? res.status : "no-response";
-    const body = res && res.data ? JSON.stringify(res.data).slice(0, 200) : "";
-    MonologDevC.log(
-      node,
-      label + " → " + status + (ok ? " ok" : " FAIL") + " " + body,
-      ok ? "ok" : "err"
-    );
-    if (MonologDevA && MonologDevA.state) {
-      MonologDevA.state(label, "C", !!ok, status + " " + body);
-    }
-  };
-
-  MonologDevC.onSave = async function (logNode, branch, path, content, sha) {
-    MonologDevC.log(logNode, "save " + path, "info");
-    const res = await MonologDevA.save(branch, path, content, sha);
-    MonologDevC.report(logNode, "save", res);
-  };
-
-  MonologDevC.onCheck = async function (logNode, branch, path) {
-    MonologDevC.log(logNode, "check " + path, "info");
-    const res = await MonologDevA.check(branch, path);
-    MonologDevC.report(logNode, "check", res);
-  };
-
-  MonologDevC.onRead = async function (logNode, branch, path) {
-    const res = await MonologDevA.read(branch, path);
-    MonologDevC.report(logNode, "read " + path, res);
-    return res;
-  };
-})();
