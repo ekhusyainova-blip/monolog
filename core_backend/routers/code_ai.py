@@ -38,6 +38,71 @@ def _check_author(request: Request):
         raise HTTPException(status_code=403, detail="Неверный ключ автора.")
 
 
+
+# ============================================================
+# /code/tree и /code/branches — структура и ветки
+# ============================================================
+
+@router.get("/code/tree")
+async def code_tree(branch: str = ""):
+    """Возвращает список файлов в репозитории (для дерева)."""
+    ref = branch or GITHUB_BRANCH
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/trees/{ref}"
+    headers = {"Accept": "application/vnd.github+json"}
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers, params={"recursive": "1"})
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"GitHub tree: {r.status_code}")
+
+    tree = r.json().get("tree", [])
+    paths = []
+    for item in tree:
+        if item.get("type") != "blob":
+            continue
+        p = item.get("path", "")
+        if (
+            p.startswith("core/")
+            or p.startswith("adaptive/")
+            or p.startswith("core_backend/")
+            or p.startswith("prompts/")
+            or p.startswith("public/")
+            or p.startswith("blog/")
+            or p == "app.py"
+            or p == "index.html"
+            or p == "requirements.txt"
+            or p == "Dockerfile"
+            or p == "PRINCIPLES.md"
+            or p == "MODES.md"
+        ):
+            paths.append(p)
+
+    paths.sort()
+    return JSONResponse({
+        "branch": ref,
+        "count": len(paths),
+        "paths": paths[:500],
+    })
+
+@router.get("/code/branches")
+async def code_branches():
+    """Возвращает список веток репозитория."""
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/branches"
+    headers = {"Accept": "application/vnd.github+json"}
+    if GITHUB_TOKEN:
+        headers["Authorization"] = f"Bearer {GITHUB_TOKEN}"
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=headers)
+        if r.status_code >= 400:
+            raise HTTPException(status_code=502, detail=f"GitHub branches: {r.status_code}")
+
+    data = r.json()
+    names = [b.get("name") for b in data]
+    return JSONResponse({"branches": names, "count": len(names)})
+
 @router.get("/code/read")
 async def code_read(request: Request, path: str):
     _check_author(request)
