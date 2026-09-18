@@ -1,156 +1,148 @@
-/* adaptive/modules/development/development.css */
-/* Стили модуля разработки. */
+/* development.css — раскладка модуля разработки */
+/* Мобильный — вертикально, ПК — две колонки. */
 
 .dev-wrap {
-  display: grid;
-  grid-template-columns: 240px 1fr;
-  grid-template-rows: auto 1fr auto;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
   height: 100%;
-  padding: 10px;
   box-sizing: border-box;
-  color: var(--fg);
+  min-height: 0;
 }
 
 .dev-branches {
-  grid-column: 1 / -1;
   display: flex;
-  gap: 8px;
-  align-items: center;
+  gap: 6px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .dev-branch-btn {
-  padding: 6px 12px;
-  border-radius: var(--r-sm);
-  border: 1px solid var(--line);
-  background: var(--bg-soft);
-  color: var(--fg-dim);
+  padding: 6px 14px;
+  background: transparent;
+  color: var(--fg, #ddd);
+  border: 1px solid #333;
+  border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
-  transition: all var(--t-fast);
 }
-.dev-branch-btn:hover {
-  color: var(--fg);
-  border-color: var(--accent-soft);
-}
+
 .dev-branch-btn.active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--fg);
+  background: #3b4cca;
+  border-color: #3b4cca;
+  color: #fff;
 }
 
 .dev-tree {
-  background: var(--bg-soft);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
+  flex: 1 1 auto;
+  min-height: 120px;
+  max-height: 30vh;
   overflow-y: auto;
-  padding: 6px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  min-height: 0;
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 4px;
 }
 
 .dev-tree-item {
   padding: 4px 8px;
-  border-radius: var(--r-xs);
+  font-size: 12px;
+  font-family: monospace;
   cursor: pointer;
+  border-radius: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  color: var(--fg-dim);
-  transition: background var(--t-fast), color var(--t-fast);
 }
+
 .dev-tree-item:hover {
-  background: var(--bg-elev);
-  color: var(--accent);
+  background: #222;
 }
 
 .dev-editor {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  min-width: 0;
+  gap: 6px;
+  flex: 1 1 auto;
   min-height: 0;
 }
 
-.dev-input {
-  background: var(--bg-soft);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  color: var(--fg);
-  padding: 8px 10px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-}
-.dev-input:focus {
-  outline: none;
-  border-color: var(--accent);
+.dev-input,
+.dev-textarea {
+  width: 100%;
+  box-sizing: border-box;
+  background: #111;
+  color: #eee;
+  border: 1px solid #333;
+  border-radius: 6px;
+  padding: 8px;
+  font-family: monospace;
+  font-size: 12px;
 }
 
 .dev-textarea {
-  flex: 1;
-  min-height: 240px;
-  background: var(--bg-soft);
-  border: 1px solid var(--line);
-  border-radius: var(--r-md);
-  color: var(--fg);
-  padding: 10px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.5;
+  flex: 1 1 auto;
+  min-height: 160px;
   resize: vertical;
-  white-space: pre;
-  overflow: auto;
-}
-.dev-textarea:focus {
-  outline: none;
-  border-color: var(--accent);
 }
 
 .dev-buttons {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
+  flex-shrink: 0;
 }
 
 .dev-btn {
-  padding: 8px 14px;
-  border-radius: var(--r-md);
-  border: 1px solid var(--accent);
-  background: var(--accent-soft);
-  color: var(--fg);
+  padding: 6px 14px;
+  background: #2a2a3a;
+  color: #ddd;
+  border: 1px solid #3a3a4a;
+  border-radius: 6px;
   font-size: 13px;
   cursor: pointer;
-  transition: background var(--t-fast), color var(--t-fast);
 }
+
 .dev-btn:hover {
-  background: var(--accent);
-  color: #fff;
-}
-.dev-btn:disabled {
-  opacity: .5;
-  cursor: wait;
+  background: #3a3a4a;
 }
 
 .dev-log {
-  grid-column: 1 / -1;
-  background: #111;
-  color: #eee;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.4;
-  padding: 6px 10px;
-  border-radius: var(--r-sm);
-  max-height: 100px;
+  flex-shrink: 0;
+  height: 110px;
   overflow-y: auto;
-  white-space: pre-wrap;
-  border: 1px solid var(--line);
+  border: 1px solid #222;
+  border-radius: 6px;
+  padding: 6px;
+  font-family: monospace;
+  font-size: 11px;
+  background: #0a0a0a;
 }
 
-@media (max-width: 700px) {
+.dev-log > div {
+  padding: 1px 0;
+}
+
+.dev-log-err { color: #ff6b6b; }
+.dev-log-ok  { color: #6bff8f; }
+.dev-log-info { color: #888; }
+
+/* ПК: две колонки, лог снизу на всю ширину */
+@media (min-width: 900px) {
   .dev-wrap {
-    grid-template-columns: 1fr;
-    grid-template-rows: auto auto 1fr auto;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr auto;
+    grid-template-areas:
+      "branches editor"
+      "tree     editor"
+      "log      log";
+    gap: 10px;
+    height: 100%;
   }
+  .dev-branches { grid-area: branches; }
+  .dev-tree     { grid-area: tree; max-height: none; }
+  .dev-editor   { grid-area: editor; }
+  .dev-log      { grid-area: log; height: 140px; }
+  .dev-textarea { min-height: 240px; }
 }
