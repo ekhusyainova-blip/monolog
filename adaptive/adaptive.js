@@ -23,11 +23,13 @@ Monolog.adaptive = {
     sheets: [
       { id: 'menuSheet', title: 'Меню' },
       { id: 'editorSheet', title: 'Редактор' },
+      { id: 'journeySheet', title: 'Журнал' },
       { id: 'orbSheet', title: 'Состояние' },
       { id: 'indexSheet', title: 'Индекс' }
     ],
     menuItems: [
       { id: 'editor', label: 'Редактор', target: 'editorSheet' },
+      { id: 'journey', label: 'Журнал', target: 'journeySheet' },
       { id: 'index', label: 'Индекс', target: 'indexSheet' }
     ]
   },
