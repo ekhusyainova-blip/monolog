@@ -3,43 +3,9 @@
     {
       "n": 344,
       "date": "2026-09-19",
-      "summary": "Восстановление",
-      "tags": ["restore"],
-      "status": "in_progress"
-    }
-  ]
-}
-
-{
-  "cycles": [
-    {
-      "n": 344,
-      "date": "2026-09-19",
       "summary": "Восстановление: журнал показывает",
       "tags": ["restore"],
       "status": "in_progress"
-    }
-  ]
-}
-{
-  "cycles": [
-    {
-      "n": 344,
-      "date": "2026-09-19",
-      "summary": "Журнал — карта пути. Прогнозы трёх уровней. Кэш четырёх слоёв.",
-      "tags": ["journal", "forecast", "cache"],
-      "status": "in_progress",
-      "levels": [
-        { "level": "AAAA.A", "status": "in_progress" },
-        { "level": "AAAA.B", "status": "pending" }
-      ]
-    },
-    {
-      "n": 343,
-      "date": "2026-09-19",
-      "summary": "Редактор замкнут: дерево, ветки, чтение, save 200, check 200",
-      "tags": ["editor", "state", "save", "check"],
-      "status": "closed"
     }
   ]
 }
