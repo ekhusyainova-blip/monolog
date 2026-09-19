@@ -1,12 +1,17 @@
 {
-  "n": 343,
-  "date": "2026-09-19",
-  "summary": "Редактор замкнут",
-  "decisions": [
-    { "n": 1, "тема": "save", "решение": "PUT + auto-sha", "файл": "app.py" },
-    { "n": 2, "тема": "tree", "решение": "GET не POST", "файл": "app.py" },
-    { "n": 3, "тема": "read", "решение": "404 если нет", "файл": "app.py" }
-  ],
-  "files_touched": ["app.py","A.js","C.js","index.js"],
-  "tags": ["editor","save"]
+  "cycles": [
+    {
+      "n": 343,
+      "date": "2026-09-19",
+      "summary": "Редактор замкнут: дерево, ветки, чтение, save 200, check 200",
+      "tags": ["editor", "state", "save", "check"],
+      "status": "closed",
+      "decisions": [
+        { "n": 1, "topic": "save",   "decision": "PUT + auto-sha",   "file": "app.py" },
+        { "n": 2, "topic": "tree",   "decision": "GET не POST",      "file": "app.py" },
+        { "n": 3, "topic": "read",   "decision": "404 если нет",     "file": "app.py" }
+      ],
+      "files_touched": ["app.py", "A.js", "C.js", "index.js"]
+    }
+  ]
 }
