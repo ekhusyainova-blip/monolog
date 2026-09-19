@@ -90,6 +90,23 @@ window.MonologDevelopment.mount = function (container) {
     A.check(D.getBranch(), path).then(function (res) { report("check", res); });
   });
 
+ed.btnCheckAll.addEventListener("click", function () {
+  D.logTo(log, "проверка всего дерева " + D.getBranch() + "...", "info");
+  A.checkAll(D.getBranch()).then(function (res) {
+    if (!res || !res.ok) {
+      D.logTo(log, "check-all FAIL " + (res && res.status), "err");
+      return;
+    }
+    const d = res.data || {};
+    D.logTo(log,
+      "check-all: всего " + d.total + ", ok " + d.ok + ", битых " +
+      ((d.bad || []).length), "ok");
+    (d.bad || []).forEach(function (b) {
+      D.logTo(log, "битый: " + b.path + " (" + b.status + ")", "err");
+    });
+  });
+});
+
   ed.btnCreate.addEventListener("click", function () {
     const path = ed.pathInput.value.trim();
     if (!path) { D.logTo(log, "укажи путь для нового файла", "err"); return; }
