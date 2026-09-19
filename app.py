@@ -26,6 +26,8 @@ else:
 
 # --- /report (от стартера) ---
 
+from pydantic import BaseModel
+
 REPORTS = []
 
 
@@ -52,11 +54,6 @@ async def report_add(body: ReportBody):
     }
     REPORTS.insert(0, entry)
     del REPORTS[200:]
-
-    if body.emergency:
-        STATE["errors"].insert(0, entry)
-        del STATE["errors"][20:]
-
     return {"ok": True}
 
 
