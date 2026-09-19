@@ -3,6 +3,18 @@
     {
       "n": 344,
       "date": "2026-09-19",
+      "summary": "Восстановление",
+      "tags": ["restore"],
+      "status": "in_progress"
+    }
+  ]
+}
+
+{
+  "cycles": [
+    {
+      "n": 344,
+      "date": "2026-09-19",
       "summary": "Восстановление: журнал показывает",
       "tags": ["restore"],
       "status": "in_progress"
