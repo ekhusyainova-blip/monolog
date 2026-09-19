@@ -1,17 +1,22 @@
 {
   "cycles": [
     {
+      "n": 344,
+      "date": "2026-09-19",
+      "summary": "Журнал — карта пути. Прогнозы трёх уровней. Кэш четырёх слоёв.",
+      "tags": ["journal", "forecast", "cache"],
+      "status": "in_progress",
+      "levels": [
+        { "level": "AAAA.A", "status": "in_progress" },
+        { "level": "AAAA.B", "status": "pending" }
+      ]
+    },
+    {
       "n": 343,
       "date": "2026-09-19",
       "summary": "Редактор замкнут: дерево, ветки, чтение, save 200, check 200",
       "tags": ["editor", "state", "save", "check"],
-      "status": "closed",
-      "decisions": [
-        { "n": 1, "topic": "save",   "decision": "PUT + auto-sha",   "file": "app.py" },
-        { "n": 2, "topic": "tree",   "decision": "GET не POST",      "file": "app.py" },
-        { "n": 3, "topic": "read",   "decision": "404 если нет",     "file": "app.py" }
-      ],
-      "files_touched": ["app.py", "A.js", "C.js", "index.js"]
+      "status": "closed"
     }
   ]
 }
