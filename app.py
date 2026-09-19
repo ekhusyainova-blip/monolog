@@ -24,7 +24,46 @@ elif APP_MODE == "full":
 else:
     raise RuntimeError(f"APP_MODE='{APP_MODE}' — неизвестное значение. Используй 'stub' или 'full'.")
 
+# --- /report (от стартера) ---
 
+REPORTS = []
+
+
+class ReportBody(BaseModel):
+    t: str = ""
+    level: str = ""
+    cycles_done: int = 0
+    went_to: str = ""
+    last_result: str = ""
+    emergency: bool = False
+    reason: str = ""
+
+
+@app.post("/report")
+async def report_add(body: ReportBody):
+    entry = {
+        "t": body.t,
+        "level": body.level,
+        "cycles_done": body.cycles_done,
+        "went_to": body.went_to,
+        "last_result": body.last_result,
+        "emergency": body.emergency,
+        "reason": body.reason,
+    }
+    REPORTS.insert(0, entry)
+    del REPORTS[200:]
+
+    if body.emergency:
+        STATE["errors"].insert(0, entry)
+        del STATE["errors"][20:]
+
+    return {"ok": True}
+
+
+@app.get("/reports")
+async def reports_get():
+    return {"reports": REPORTS}
+    
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
