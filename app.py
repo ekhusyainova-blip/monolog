@@ -211,6 +211,40 @@ async def code_check(body: CheckRequest):
                          "exists": r.status_code == 200, "status": r.status_code})
 
 
+class CheckAllRequest(BaseModel):
+    branch: str = ""
+    limit: int = 500
+
+
+@app.post("/code/check-all")
+async def code_check_all(body: CheckAllRequest):
+    ref = body.branch or GITHUB_BRANCH
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/trees/{ref}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"recursive": "1"})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
+    tree = r.json().get("tree", [])
+    paths = [i["path"] for i in tree if i.get("type") == "blob"][:body.limit]
+
+    ok_list = []
+    bad_list = []
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for p in paths:
+            u = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{p}"
+            rr = await client.get(u, headers=_gh_headers(), params={"ref": ref})
+            if rr.status_code == 200:
+                ok_list.append(p)
+            else:
+                bad_list.append({"path": p, "status": rr.status_code})
+
+    return JSONResponse({
+        "branch": ref,
+        "total": len(paths),
+        "ok": len(ok_list),
+        "bad": bad_list,
+    })
+
 class CreateRequest(BaseModel):
     branch: str = ""
     path: str
