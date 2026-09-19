@@ -426,6 +426,52 @@ async def report_add(body: ReportBody):
 @app.get("/reports")
 async def reports_get():
     return {"reports": REPORTS}
+    
+    # --- /start (запуск стартера) ---
+
+@app.get("/start")
+async def start_cycle():
+    # читаем файл Стартер из репозитория
+    r = await _gh_get("Стартер", GITHUB_BRANCH)
+    if r.status_code != 200:
+        raise HTTPException(status_code=404, detail="Файл Стартер не найден")
+    try:
+        prompt = base64.b64decode(r.json().get("content", "")).decode("utf-8")
+    except Exception:
+        raise HTTPException(status_code=502, detail="Не удалось прочитать Стартер")
+
+    # берём ключ
+    key = next_dev_key()
+    if not key:
+        raise HTTPException(status_code=503, detail="Нет ключей")
+
+    # состояние для контекста
+    state_json = json.dumps(STATE, ensure_ascii=False)[:2000]
+
+    try:
+        async with httpx.AsyncClient(timeout=180.0) as client:
+            r = await client.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                json={
+                    "model": "openai/gpt-oss-20b",
+                    "messages": [
+                        {"role": "system", "content": prompt},
+                        {"role": "user", "content": "Состояние: " + state_json},
+                    ],
+                    "max_tokens": 2000,
+                },
+            )
+        data = r.json()
+        reply = data["choices"][0]["message"]["content"]
+        STATE["events"].insert(0, {
+            "kind": "start", "layer": "A", "ok": True,
+            "detail": reply[:200],
+        })
+        del STATE["events"][40:]
+        return JSONResponse({"ok": True, "reply": reply})
+    except Exception as e:
+        raise HTTPException(status_code=502, detail=f"Ошибка ИИ: {e}")
 
 if __name__ == "__main__":
     import uvicorn
