@@ -432,7 +432,8 @@ async def reports_get():
 @app.get("/start")
 async def start_cycle():
     # читаем файл Стартер из репозитория
-    r = await _gh_get("Стартер", GITHUB_BRANCH)
+    from urllib.parse import quote
+r = await _gh_get(quote("Стартер"), GITHUB_BRANCH)
     if r.status_code != 200:
         raise HTTPException(status_code=404, detail="Файл Стартер не найден")
     try:
