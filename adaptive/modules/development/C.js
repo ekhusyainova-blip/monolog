@@ -59,9 +59,11 @@ window.MonologDevelopment.C = {
 
     const btnSave = mkBtn('Сохранить');
     const btnCheck = mkBtn('Проверить');
+    const btnCheckAll = mkBtn('Проверить всё');
     const btnCreate = mkBtn('Создать');
     const btnDelete = mkBtn('Удалить');
 
-    return { pathRow, pathInput, ta, buttons, btnLoad, btnSave, btnCheck, btnCreate, btnDelete };
+    return { pathRow, pathInput, ta, buttons,
+             btnLoad, btnSave, btnCheck, btnCheckAll, btnCreate, btnDelete };
   }
 };
