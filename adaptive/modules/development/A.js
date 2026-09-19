@@ -31,6 +31,8 @@ window.MonologDevA = (function () {
     save: (branch, path, content, sha) =>
       post("/code/save", { branch, path, content, sha }),
     check: (branch, path) => post("/code/check", { branch, path }),
+    checkAll: (branch, limit) =>
+      post("/code/check-all", { branch, limit: limit || 500 }),
     create: (branch, path, content) =>
       post("/code/create", { branch, path, content: content || "" }),
     remove: (branch, path) => post("/code/delete", { branch, path }),
