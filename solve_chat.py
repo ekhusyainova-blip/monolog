@@ -108,3 +108,8 @@ def handle_save_user(payload):
     }
     MESSAGES.append(msg)
     emit("message_saved", msg)
+
+# ================= ЗАГРУЗКА СЛОЁВ =================
+# C грузит D. D — последний, никого не грузит.
+
+import meta_chat
