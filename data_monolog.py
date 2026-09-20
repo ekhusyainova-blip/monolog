@@ -26,22 +26,34 @@ def safe_log(msg: str):
 # ================= ПРОВАЙДЕРЫ =================
 
 PROVIDERS = {
-    "groq": {"name": "Groq", "base_url": "https://api.groq.com/openai/v1/chat/completions",
-             "models": {"light": "openai/gpt-oss-20b", "medium": "openai/gpt-oss-120b", "heavy": "qwen/qwen3.6-27b"},
-             "all_models": ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
-             "reasoning_effort": True},
-    "openrouter": {"name": "OpenRouter", "base_url": "https://openrouter.ai/api/v1/chat/completions",
-                   "models": {"light": "openai/gpt-oss-20b:free", "medium": "openai/gpt-oss-120b:free", "heavy": "qwen/qwen-coder:free"},
-                   "all_models": ["openai/gpt-oss-20b:free", "openai/gpt-oss-120b:free", "qwen/qwen-coder:free", "meta-llama/llama-3.3-70b-instruct:free", "google/gemma":-2-9b-it: "free"],
-                   "reasoning_effort":g False},
-    "cerebras": {"namept": "Cerebras", "base_url-": "https://api.cerebras.ai/voss1/chat/completions",
-                 "models": {"light": "gpt-oss-20b", "medium-120b", "heavy": "gpt-oss-120b"},
-                 "all_models": ["gpt-oss-20b", "gpt-oss-120b", "llama3.1-8b", "llama3.1-70b"],
-                 "reasoning_effort": True},
-    "sambanova": {"name": "SambaNova", "base_url": "https://api.sambanova.ai/v1/chat/completions",
-                  "models": {"light": "Meta-Llama-3.3-70B-Instruct", "medium": "Meta-Llama-3.3-70B-Instruct", "heavy": "DeepSeek-V3.1"},
-                  "all_models": ["Meta-Llama-3.3-70B-Instruct", "Meta-Llama-3.1-8B-Instruct", "DeepSeek-V3.1"],
-                  "reasoning_effort": False},
+    "groq": {
+        "name": "Groq",
+        "base_url": "https://api.groq.com/openai/v1/chat/completions",
+        "models": {"light": "openai/gpt-oss-20b", "medium": "openai/gpt-oss-120b", "heavy": "qwen/qwen3.6-27b"},
+        "all_models": ["openai/gpt-oss-20b", "openai/gpt-oss-120b", "qwen/qwen3.6-27b", "llama-3.3-70b-versatile", "llama-3.1-8b-instant"],
+        "reasoning_effort": True,
+    },
+    "openrouter": {
+        "name": "OpenRouter",
+        "base_url": "https://openrouter.ai/api/v1/chat/completions",
+        "models": {"light": "openai/gpt-oss-20b:free", "medium": "openai/gpt-oss-120b:free", "heavy": "qwen/qwen-coder:free"},
+        "all_models": ["openai/gpt-oss-20b:free", "openai/gpt-oss-120b:free", "qwen/qwen-coder:free", "meta-llama/llama-3.3-70b-instruct:free", "google/gemma-2-9b-it:free"],
+        "reasoning_effort": False,
+    },
+    "cerebras": {
+        "name": "Cerebras",
+        "base_url": "https://api.cerebras.ai/v1/chat/completions",
+        "models": {"light": "gpt-oss-20b", "medium": "gpt-oss-120b", "heavy": "gpt-oss-120b"},
+        "all_models": ["gpt-oss-20b", "gpt-oss-120b", "llama3.1-8b", "llama3.1-70b"],
+        "reasoning_effort": True,
+    },
+    "sambanova": {
+        "name": "SambaNova",
+        "base_url": "https://api.sambanova.ai/v1/chat/completions",
+        "models": {"light": "Meta-Llama-3.3-70B-Instruct", "medium": "Meta-Llama-3.3-70B-Instruct", "heavy": "DeepSeek-V3.1"},
+        "all_models": ["Meta-Llama-3.3-70B-Instruct", "Meta-Llama-3.1-8B-Instruct", "DeepSeek-V3.1"],
+        "reasoning_effort": False,
+    },
 }
 
 PROVIDER_URLS = {"groq": "https://console.groq.com/keys", "openrouter": "https://openrouter.ai/keys",
