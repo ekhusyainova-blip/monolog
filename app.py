@@ -1,5 +1,5 @@
 # app.py — точка входа Monolog.
-# Отдаёт index.html, /chat, /code/*, /state, /cycles.
+# Отдаёт index.html, /chat, /code/*, /state, /cycles, /report, /render/*, /admin.
 
 import os
 import sys
@@ -29,6 +29,9 @@ GITHUB_REPO = os.getenv("GITHUB_REPO", "ekhusyainova-blip/monolog").strip()
 GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "structure").strip()
 GITHUB_API = "https://api.github.com"
 
+RENDER_API_KEY = os.getenv("RENDER_API_KEY", "").strip()
+RENDER_API = "https://api.render.com/v1"
+
 _DEV_KEYS_GROQ: List[str] = [
     k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()
 ]
@@ -57,8 +60,14 @@ async def root():
     return FileResponse("index.html")
 
 
-RENDER_API_KEY = os.getenv("RENDER_API_KEY", "").strip()
-RENDER_API = "https://api.render.com/v1"
+@app.get("/admin")
+async def admin_page():
+    return FileResponse("admin.html")
+
+
+@app.get("/newbranch")
+async def newbranch_page():
+    return FileResponse("newbranch.html")
 
 
 @app.get("/health")
@@ -71,6 +80,7 @@ async def health():
         "render_ready": bool(RENDER_API_KEY),
         "groq_keys": len(_DEV_KEYS_GROQ),
     }
+
 
 @app.get("/ui")
 async def ui():
@@ -157,10 +167,7 @@ async def code_branches():
 async def code_read(path: str, branch: str = ""):
     r = await _gh_get(f"contents/{path}", branch)
     if r.status_code == 404:
-        return JSONResponse(
-            {"exists": False, "path": path, "content": ""},
-            status_code=404,
-        )
+        return JSONResponse({"exists": False, "path": path, "content": ""}, status_code=404)
     if r.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
     data = r.json()
@@ -170,9 +177,6 @@ async def code_read(path: str, branch: str = ""):
         content = ""
     return JSONResponse({"exists": True, "path": path, "sha": data.get("sha"), "content": content})
 
-@app.get("/newbranch")
-async def newbranch_page():
-    return FileResponse("newbranch.html")
 
 class SaveRequest(BaseModel):
     branch: str = ""
@@ -233,7 +237,6 @@ async def code_check_all(body: CheckAllRequest):
         raise HTTPException(status_code=502, detail=f"GitHub: {r.status_code}")
     tree = r.json().get("tree", [])
     paths = [i["path"] for i in tree if i.get("type") == "blob"][:body.limit]
-
     ok_list = []
     bad_list = []
     async with httpx.AsyncClient(timeout=30.0) as client:
@@ -244,13 +247,8 @@ async def code_check_all(body: CheckAllRequest):
                 ok_list.append(p)
             else:
                 bad_list.append({"path": p, "status": rr.status_code})
+    return JSONResponse({"branch": ref, "total": len(paths), "ok": len(ok_list), "bad": bad_list})
 
-    return JSONResponse({
-        "branch": ref,
-        "total": len(paths),
-        "ok": len(ok_list),
-        "bad": bad_list,
-    })
 
 class CreateRequest(BaseModel):
     branch: str = ""
@@ -289,13 +287,113 @@ async def code_delete(body: DeleteRequest):
         raise HTTPException(status_code=404, detail="Файл не найден")
     sha = r0.json().get("sha")
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{body.path}"
-    payload = {"message": f"delete {body.path} via Monolog",
-               "sha": sha, "branch": ref}
+    payload = {"message": f"delete {body.path} via Monolog", "sha": sha, "branch": ref}
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.request("DELETE", url, headers=_gh_headers(), json=payload)
     if r.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"GitHub {r.status_code}: {r.text[:300]}")
     return JSONResponse({"ok": True, "path": body.path})
+
+
+# --- ветки ---
+
+class BranchCreate(BaseModel):
+    name: str
+    from_branch: str = ""
+
+
+class BranchDelete(BaseModel):
+    name: str
+
+
+class BranchRename(BaseModel):
+    old_name: str
+    new_name: str
+
+
+class ClearBranch(BaseModel):
+    branch: str
+
+
+@app.post("/code/branch-create")
+async def code_branch_create(body: BranchCreate):
+    from_ref = body.from_branch or GITHUB_BRANCH
+    url_ref = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/ref/heads/{from_ref}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url_ref, headers=_gh_headers())
+    if r.status_code != 200:
+        raise HTTPException(status_code=502, detail=f"Не найдена ветка {from_ref}: {r.status_code}")
+    sha = r.json().get("object", {}).get("sha")
+    url_create = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs"
+    payload = {"ref": f"refs/heads/{body.name}", "sha": sha}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r2 = await client.post(url_create, headers=_gh_headers(), json=payload)
+    if r2.status_code == 422:
+        raise HTTPException(status_code=409, detail="Ветка уже существует")
+    if r2.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub {r2.status_code}: {r2.text[:300]}")
+    return JSONResponse({"ok": True, "branch": body.name, "from": from_ref, "sha": sha})
+
+
+@app.post("/code/branch-delete")
+async def code_branch_delete(body: BranchDelete):
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs/heads/{body.name}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.request("DELETE", url, headers=_gh_headers())
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub {r.status_code}: {r.text[:300]}")
+    return JSONResponse({"ok": True, "deleted": body.name})
+
+
+@app.post("/code/branch-rename")
+async def code_branch_rename(body: BranchRename):
+    url_ref = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/ref/heads/{body.old_name}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url_ref, headers=_gh_headers())
+    if r.status_code != 200:
+        raise HTTPException(status_code=502, detail=f"Ветка {body.old_name} не найдена")
+    sha = r.json().get("object", {}).get("sha")
+    payload = {"ref": f"refs/heads/{body.new_name}", "sha": sha}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r2 = await client.post(f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs",
+                               headers=_gh_headers(), json=payload)
+    if r2.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub {r2.status_code}: {r2.text[:300]}")
+    url_del = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs/heads/{body.old_name}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r3 = await client.request("DELETE", url_del, headers=_gh_headers())
+    if r3.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Создана {body.new_name}, не удалена {body.old_name}")
+    return JSONResponse({"ok": True, "from": body.old_name, "to": body.new_name})
+
+
+@app.post("/code/clear")
+async def code_clear(body: ClearBranch):
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/trees/{body.branch}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"recursive": "1"})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"GitHub {r.status_code}")
+    tree = r.json().get("tree", [])
+    paths = [i["path"] for i in tree if i.get("type") == "blob"]
+    deleted = []
+    errors = []
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for p in paths:
+            ur = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{p}"
+            rr = await client.get(ur, headers=_gh_headers(), params={"ref": body.branch})
+            if rr.status_code != 200:
+                errors.append({"path": p, "status": rr.status_code})
+                continue
+            sha = rr.json().get("sha")
+            payload = {"message": f"clear {p}", "sha": sha, "branch": body.branch}
+            rd = await client.request("DELETE", ur, headers=_gh_headers(), json=payload)
+            if rd.status_code < 400:
+                deleted.append(p)
+            else:
+                errors.append({"path": p, "status": rd.status_code})
+    return JSONResponse({"ok": True, "branch": body.branch,
+                         "total": len(paths), "deleted": len(deleted), "errors": errors[:20]})
 
 
 # --- /state ---
@@ -335,7 +433,7 @@ async def state_boot(request: Request):
     return {"ok": True}
 
 
-# --- /cycles (Журнал) ---
+# --- /cycles ---
 
 def _cycles_path():
     return "public/cycles.json"
@@ -394,7 +492,8 @@ async def cycles_add(body: CycleAdd):
         raise HTTPException(status_code=502, detail=f"GitHub {r.status_code}: {r.text[:300]}")
     return JSONResponse({"ok": True, "n": body.n})
 
-# --- /report (от стартера) ---
+
+# --- /report ---
 
 REPORTS = []
 
@@ -412,33 +511,28 @@ class ReportBody(BaseModel):
 @app.post("/report")
 async def report_add(body: ReportBody):
     entry = {
-        "t": body.t,
-        "level": body.level,
-        "cycles_done": body.cycles_done,
-        "went_to": body.went_to,
+        "t": body.t, "level": body.level,
+        "cycles_done": body.cycles_done, "went_to": body.went_to,
         "last_result": body.last_result,
-        "emergency": body.emergency,
-        "reason": body.reason,
+        "emergency": body.emergency, "reason": body.reason,
     }
     REPORTS.insert(0, entry)
     del REPORTS[200:]
-
     if body.emergency:
         STATE["errors"].insert(0, entry)
         del STATE["errors"][20:]
-
     return {"ok": True}
 
 
 @app.get("/reports")
 async def reports_get():
     return {"reports": REPORTS}
-    
-    # --- /start (запуск стартера) ---
+
+
+# --- /start (запуск стартера) ---
 
 @app.get("/start")
 async def start_cycle():
-    # читаем файл Стартер из репозитория
     from urllib.parse import quote
     r = await _gh_get(quote("Стартер"), GITHUB_BRANCH)
     if r.status_code != 200:
@@ -447,18 +541,13 @@ async def start_cycle():
         prompt = base64.b64decode(r.json().get("content", "")).decode("utf-8")
     except Exception:
         raise HTTPException(status_code=502, detail="Не удалось прочитать Стартер")
-
-    # берём ключ
     key = next_dev_key()
     if not key:
         raise HTTPException(status_code=503, detail="Нет ключей")
-
-    # состояние для контекста
     state_json = json.dumps(STATE, ensure_ascii=False)[:2000]
-
     try:
         async with httpx.AsyncClient(timeout=180.0) as client:
-            r = await client.post(
+            rr = await client.post(
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
                 json={
@@ -470,53 +559,14 @@ async def start_cycle():
                     "max_tokens": 2000,
                 },
             )
-        data = r.json()
+        data = rr.json()
         reply = data["choices"][0]["message"]["content"]
-        STATE["events"].insert(0, {
-            "kind": "start", "layer": "A", "ok": True,
-            "detail": reply[:200],
-        })
+        STATE["events"].insert(0, {"kind": "start", "layer": "A", "ok": True, "detail": reply[:200]})
         del STATE["events"][40:]
         return JSONResponse({"ok": True, "reply": reply})
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Ошибка ИИ: {e}")
 
-# --- создание ветки ---
-
-class BranchCreate(BaseModel):
-    name: str
-    from_branch: str = ""
-
-
-@app.post("/code/branch-create")
-async def code_branch_create(body: BranchCreate):
-    from_ref = body.from_branch or GITHUB_BRANCH
-    # 1. получить sha базовой ветки
-    url_ref = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/ref/heads/{from_ref}"
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r = await client.get(url_ref, headers=_gh_headers())
-    if r.status_code != 200:
-        raise HTTPException(
-            status_code=502,
-            detail=f"Не найдена ветка {from_ref}: {r.status_code}",
-        )
-    sha = r.json().get("object", {}).get("sha")
-    if not sha:
-        raise HTTPException(status_code=502, detail="Не получен SHA базовой ветки")
-
-    # 2. создать новую ветку
-    url_create = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs"
-    payload = {"ref": f"refs/heads/{body.name}", "sha": sha}
-    async with httpx.AsyncClient(timeout=30.0) as client:
-        r2 = await client.post(url_create, headers=_gh_headers(), json=payload)
-    if r2.status_code == 422:
-        raise HTTPException(status_code=409, detail="Ветка уже существует")
-    if r2.status_code >= 400:
-        raise HTTPException(
-            status_code=502,
-            detail=f"GitHub {r2.status_code}: {r2.text[:300]}",
-        )
-    return JSONResponse({"ok": True, "branch": body.name, "from": from_ref, "sha": sha})
 
 # --- /render (управление Render) ---
 
@@ -545,7 +595,6 @@ class RenderCreate(BaseModel):
 async def render_create(body: RenderCreate):
     if not RENDER_API_KEY:
         raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
-
     payload = {
         "type": "web_service",
         "name": body.name,
@@ -566,22 +615,14 @@ async def render_create(body: RenderCreate):
             },
         },
     }
-
     async with httpx.AsyncClient(timeout=60.0) as client:
-        r = await client.post(
-            f"{RENDER_API}/services",
-            headers=_rnd_headers(),
-            json=payload,
-        )
-
+        r = await client.post(f"{RENDER_API}/services", headers=_rnd_headers(), json=payload)
     if r.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
-
     data = r.json()
     service = data.get("service", data)
     service_id = service.get("id")
-
-    # подключить environment group, если указана
+    group_ok = False
     if body.env_group_id and service_id:
         async with httpx.AsyncClient(timeout=30.0) as client:
             rr = await client.post(
@@ -589,14 +630,9 @@ async def render_create(body: RenderCreate):
                 headers=_rnd_headers(),
             )
         group_ok = rr.status_code < 400
-    else:
-        group_ok = False
-
     return JSONResponse({
-        "ok": True,
-        "service_id": service_id,
-        "name": service.get("name"),
-        "branch": body.branch,
+        "ok": True, "service_id": service_id,
+        "name": service.get("name"), "branch": body.branch,
         "url": service.get("serviceDetails", {}).get("url", ""),
         "env_group_linked": group_ok,
     })
@@ -618,15 +654,13 @@ async def render_env_link(group_id: str, service_id: str):
 
 @app.post("/render/env-set-group")
 async def render_env_set_group(group_id: str, key: str, value: str):
-    """Задать переменную на ВСЕ сервисы, подключённые к группе."""
     if not RENDER_API_KEY:
         raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
     payload = {"envVars": [{"key": key, "value": value}]}
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.put(
             f"{RENDER_API}/env-groups/{group_id}",
-            headers=_rnd_headers(),
-            json=payload,
+            headers=_rnd_headers(), json=payload,
         )
     if r.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
@@ -635,15 +669,13 @@ async def render_env_set_group(group_id: str, key: str, value: str):
 
 @app.post("/render/env-set-service")
 async def render_env_set_service(service_id: str, key: str, value: str):
-    """Задать переменную ТОЛЬКО для одного сервиса."""
     if not RENDER_API_KEY:
         raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
     payload = {"envVars": [{"key": key, "value": value}]}
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.put(
             f"{RENDER_API}/services/{service_id}/env-vars",
-            headers=_rnd_headers(),
-            json=payload,
+            headers=_rnd_headers(), json=payload,
         )
     if r.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
@@ -681,6 +713,7 @@ async def render_owner():
     if r.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
     return JSONResponse(r.json())
+
 
 if __name__ == "__main__":
     import uvicorn
