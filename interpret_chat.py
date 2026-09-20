@@ -1,15 +1,21 @@
 # interpret_chat.py — интерпретация блока чата AI Monolog
-# Слой B. Выбор провайдера/ключа, сборка контекста, шина событий.
+# Слой B. Шина событий + выбор провайдера и ключа.
+# Условия — в data_chat (ERROR_RULES, SELECT_RULES, STATES).
 
 import time
-from data_chat import PROVIDERS, KEYS, PROMPTS, SETTINGS, MESSAGES
+from data_chat import (
+    PROVIDERS, KEYS, PROMPTS, PROMPT_ORDER, MESSAGES,
+    ERROR_RULES, SELECT_RULES, STATES,
+)
 
 HANDLERS = {}
 EVENTS = []
 
-def on(event, fn):
-    HANDLERS.setdefault(event, []).append(fn)
-    return fn
+def on(event):
+    def deco(fn):
+        HANDLERS.setdefault(event, []).append(fn)
+        return fn
+    return deco
 
 def emit(event, payload=None):
     for fn in HANDLERS.get(event, []):
@@ -18,124 +24,79 @@ def emit(event, payload=None):
 def SEND(event_type, data):
     EVENTS.append({"type": event_type, "data": data})
 
-def _keys_of(provider_id):
-    return [k for k in KEYS if k["provider_id"] == provider_id]
+def _alive_state(key):
+    return key["state"] in STATES["alive"]
 
-def _key_alive(key):
-    if key["state"] == "ok":
-        return True
-    if key["state"] == "cooldown":
-        return time.time() >= key["cooldown_until"]
-    return False
+def _wait_state(key):
+    return key["state"] in STATES["wait"] and time.time() >= key["cooldown_until"]
 
-def _provider_alive(p):
-    if not p["enabled"] or not p["base_url"]:
-        return False
-    keys = _keys_of(p["id"])
-    if not keys:
-        return False
-    return any(_key_alive(k) for k in keys)
+def _alive_key(key):
+    return _alive_state(key) or _wait_state(key)
+
+def _keys_of(pid):
+    return [k for k in KEYS if k["provider_id"] == pid]
+
+def _alive_provider(p):
+    flags = [
+        p["enabled"] or not SELECT_RULES["skip_disabled"],
+        bool(p["base_url"]) or not SELECT_RULES["skip_empty_url"],
+        bool(_keys_of(p["id"])) or not SELECT_RULES["skip_empty_keys"],
+    ]
+    return all(flags) and any(_alive_key(k) for k in _keys_of(p["id"]))
 
 def pick_provider():
-    mode = SETTINGS.get("provider_mode", "auto")
-    if mode == "manual":
-        pid = SETTINGS.get("manual_provider_id", "")
-        for p in PROVIDERS:
-            if p["id"] == pid:
-                return p if _provider_alive(p) else None
-        return None
-    alive = [p for p in PROVIDERS if _provider_alive(p)]
-    alive.sort(key=lambda p: p["priority"])
-    return alive[0] if alive else None
+    live = [p for p in PROVIDERS if _alive_provider(p)]
+    live.sort(key=lambda p: p[SELECT_RULES["sort_key"]])
+    return live[0] if live else None
 
 def pick_key(provider):
-    manual = SETTINGS.get("manual_key_id", "")
-    if manual:
-        for k in KEYS:
-            if k["id"] == manual and k["provider_id"] == provider["id"] and _key_alive(k):
-                k["last_used"] = time.time()
-                return k
-        return None
-    alive = [k for k in _keys_of(provider["id"]) if _key_alive(k)]
-    if not alive:
-        return None
+    alive = [k for k in _keys_of(provider["id"]) if _alive_key(k)]
     alive.sort(key=lambda k: k["last_used"])
-    alive[0]["last_used"] = time.time()
-    return alive[0]
-
-PROMPT_ORDER = ["layer_a", "layer_a_content", "layer_b", "layer_c", "layer_d"]
+    if alive:
+        alive[0]["last_used"] = time.time()
+    return alive[0] if alive else None
 
 def active_prompt(slot):
-    for p in PROMPTS:
-        if p["slot"] == slot and p["active"] and p["slot_enabled"] and p["text"].strip():
-            return p
-    return None
+    found = [p for p in PROMPTS if p["slot"] == slot and p["active"] and p["slot_enabled"] and p["text"].strip()]
+    return found[0] if found else None
 
 def build_system():
-    parts = []
-    for slot in PROMPT_ORDER:
-        p = active_prompt(slot)
-        if p:
-            parts.append(p["text"].strip())
+    parts = [active_prompt(s)["text"].strip() for s in PROMPT_ORDER if active_prompt(s)]
     return "\n\n".join(parts)
 
 def build_messages():
-    msgs = []
     system = build_system()
-    if system:
-        msgs.append({"role": "system", "content": system})
-    for m in MESSAGES:
-        msgs.append({"role": m["role"], "content": m["content"]})
-    return msgs
+    head = [{"role": "system", "content": system}] if system else []
+    return head + [{"role": m["role"], "content": m["content"]} for m in MESSAGES]
 
 @on("user_message")
 def handle_user_message(payload):
-    text = payload.get("text", "")
-    if not text:
-        SEND("error", {"where": "interpret", "msg": "пустое сообщение"})
-        return
     provider = pick_provider()
-    if not provider:
-        SEND("error", {"where": "interpret", "msg": "нет живых провайдеров"})
-        return
-    key = pick_key(provider)
-    if not key:
-        SEND("error", {"where": "interpret", "msg": "нет живых ключей"})
-        return
+    key = pick_key(provider) if provider else None
     emit("request_ready", {
         "provider": provider,
-        "key_id": key["id"],
-        "model": provider["model_default"],
+        "key_id": key["id"] if key else "",
+        "model": provider["model_default"] if provider else "",
         "messages": build_messages(),
-        "stream": SETTINGS.get("stream", True),
-        "text": text,
-    })
+        "text": payload.get("text", ""),
+    }) if provider and key else SEND("error", {"msg": "нет живых провайдеров или ключей"})
 
 @on("provider_fail")
 def handle_provider_fail(payload):
-    key_id = payload.get("key_id", "")
-    status = payload.get("status", 0)
+    rule = ERROR_RULES.get(payload.get("status"), ERROR_RULES["default"])
     for k in KEYS:
-        if k["id"] == key_id:
-            if status == 429:
-                k["state"] = "cooldown"
-                k["cooldown_until"] = time.time() + 60
-            elif status in (401, 403):
-                k["state"] = "exhausted"
-            else:
-                k["state"] = "cooldown"
-                k["cooldown_until"] = time.time() + 15
-    emit("retry", {"reason": "fail", "status": status, "text": payload.get("text", "")})
+        if k["id"] == payload.get("key_id"):
+            k["state"] = "cooldown" if rule["action"] == "cooldown" else "exhausted"
+            k["cooldown_until"] = time.time() + rule.get("seconds", 0)
+    emit("retry", {"text": payload.get("text", "")})
 
 @on("provider_ok")
 def handle_provider_ok(payload):
-    key_id = payload.get("key_id", "")
     for k in KEYS:
-        if k["id"] == key_id:
+        if k["id"] == payload.get("key_id"):
             k["state"] = "ok"
             k["cooldown_until"] = 0
 
-# ================= ЗАГРУЗКА СЛОЁВ =================
-# B грузит C. Дальше цепочка сама: C → D.
+# ================= ЗАГРУЗКА =================
 
 import solve_chat
