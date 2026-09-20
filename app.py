@@ -474,6 +474,43 @@ async def start_cycle():
     except Exception as e:
         raise HTTPException(status_code=502, detail=f"Ошибка ИИ: {e}")
 
+# --- создание ветки ---
+
+class BranchCreate(BaseModel):
+    name: str
+    from_branch: str = ""
+
+
+@app.post("/code/branch-create")
+async def code_branch_create(body: BranchCreate):
+    from_ref = body.from_branch or GITHUB_BRANCH
+    # 1. получить sha базовой ветки
+    url_ref = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/ref/heads/{from_ref}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url_ref, headers=_gh_headers())
+    if r.status_code != 200:
+        raise HTTPException(
+            status_code=502,
+            detail=f"Не найдена ветка {from_ref}: {r.status_code}",
+        )
+    sha = r.json().get("object", {}).get("sha")
+    if not sha:
+        raise HTTPException(status_code=502, detail="Не получен SHA базовой ветки")
+
+    # 2. создать новую ветку
+    url_create = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs"
+    payload = {"ref": f"refs/heads/{body.name}", "sha": sha}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r2 = await client.post(url_create, headers=_gh_headers(), json=payload)
+    if r2.status_code == 422:
+        raise HTTPException(status_code=409, detail="Ветка уже существует")
+    if r2.status_code >= 400:
+        raise HTTPException(
+            status_code=502,
+            detail=f"GitHub {r2.status_code}: {r2.text[:300]}",
+        )
+    return JSONResponse({"ok": True, "branch": body.name, "from": from_ref, "sha": sha})
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)))
