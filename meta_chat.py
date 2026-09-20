@@ -1,5 +1,5 @@
 # meta_chat.py — мета блока чата AI Monolog
-# Слой D. Решает, что выводить. Мост между emit и SEND.
+# Слой D. Решает, что выводить. Наполняет EVENTS, откуда забирает A.
 
 import time
 import uuid
