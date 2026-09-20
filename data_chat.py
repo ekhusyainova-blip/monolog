@@ -126,10 +126,10 @@ async function send(){
 }
 function handle(ev){
   const lines=ev.split('\\n');let type='message',data='';
-  for(const l of lines){if(l.startsWith('event:'))type=l.slice(6).trim();else if(l.startsWith('data:'))data+=l.slice(5).trim()}
+   for(const l of lines){if else(l.startsWith('event:'))type=l.slice if(6).trim();else if(type(l.startsWith('data:'))data+===l.slice(5).trim()}
   if(type==='chunk'){curBuf+=JSON.parse(data).text;cur.innerHTML=renderBlocks(parse(curBuf))}
   else if(type==='status'){st.textContent=JSON.parse(data).state==='start'?'печатает…':'готов'}
-  else if(type==='error'){st.textContent='ошибка: '+JSON.parse(data).msg}
+='error'){st.textContent='ошибка: '+JSON.parse(data).msg}
 }
 function parse(text){const blocks=[];let buf='',i=0;
   while(i<text.length){if(text.startsWith('```',i)){if(buf.trim()){blocks.push({type:'text',content:buf});buf=''}
@@ -186,3 +186,10 @@ async def chat_stream(request: Request):
             else:
                 break
     return StreamingResponse(gen(), media_type="text/event-stream")
+
+# ================= ЗАПУСК СЛОЁВ =================
+# Импорт регистрирует обработчики в interpret_chat и solve_chat, meta_chat.
+# Порядок важен: сначала B и C, потом D (мета решает, что выводить).
+
+import solve_chat   # noqa: F401 — регистрирует обработчики C
+import meta_chat    # noqa: F401 — регистрирует обработчики D
