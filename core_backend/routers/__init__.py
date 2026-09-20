@@ -1,1 +1,0 @@
-# core_backend/routers — пакет роутеров Monolog.
