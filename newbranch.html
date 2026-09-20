@@ -3,59 +3,92 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Новая ветка</title>
+  <title>Ветки</title>
   <style>
     body { font-family: system-ui, sans-serif; background: #0f1115; color: #e8eaed; padding: 20px; margin: 0; }
     h1 { font-size: 18px; margin: 0 0 16px; }
+    h2 { font-size: 14px; margin: 24px 0 8px; color: #8b92a0; }
     label { display: block; font-size: 13px; color: #8b92a0; margin: 12px 0 4px; }
     input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid #2a2e37; background: #161a20; color: #e8eaed; font-size: 14px; }
-    button { margin-top: 16px; width: 100%; padding: 12px; border-radius: 8px; border: none; background: #3b4cca; color: #fff; font-size: 14px; cursor: pointer; }
+    button { margin-top: 12px; padding: 12px; border-radius: 8px; border: none; background: #3b4cca; color: #fff; font-size: 14px; cursor: pointer; }
     button:disabled { opacity: 0.4; }
-    .result { margin-top: 16px; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+    .result { margin-top: 12px; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
     .ok  { background: #14321f; color: #6bff8f; }
-    .err { background: #321414; color: #ff6b6b; }
+    .err { background #321414; color: #ff6b6b; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 8px 12px; background: #161a20; border-radius: 8px; margin-bottom: 6px; font-family: monospace; font-size: 13px; }
   </style>
 </head>
 <body>
-  <h1>Создать ветку</h1>
-  <label>Имя новой ветки</label>
+  <h1>Ветки</h1>
+
+  <h2>Список</h2>
+  <button id="load">Обновить список</button>
+  <ul id="list"></ul>
+
+  <h2>Создать</h2>
+  <label>Имя</label>
   <input id="name" placeholder="B">
-  <label>От какой ветки</label>
-  <input id="from" placeholder="dev" value="dev">
-  <button id="go">Создать</button>
+  <label>От какой</label>
+  <input id="from" value="dev">
+  <button id="create">Создать</button>
+
   <div id="out" class="result" style="display:none;"></div>
 
   <script>
-    document.getElementById('go').addEventListener('click', async () => {
-      const btn = document.getElementById('go');
-      const out = document.getElementById('out');
+    const out = document.getElementById('out');
+
+    function show(cls, text) {
+      out.style.display = 'block';
+      out.className = 'result ' + cls;
+      out.textContent = text;
+    }
+
+    async function loadBranches() {
+      const list = document.getElementById('list');
+      list.innerHTML = '<li>загрузка...</li>';
+      try {
+        const r = await fetch('/code/branches');
+        const data = await r.json();
+        if (!r.ok) { list.innerHTML = '<li>ошибка ' + r.status + '</li>'; return; }
+        const names = data.branches || [];
+        list.innerHTML = names.map(n => '<li>' + n + '</li>').join('') || '<li>пусто</li>';
+      } catch (e) {
+        list.innerHTML = '<li>✗ ' + e + '</li>';
+      }
+    }
+
+    document.getElementById('load').addEventListener('click', loadBranches);
+
+    document.getElementById('create').addEventListener('click', async () => {
+      const btn = document.getElementById('create');
       const name = document.getElementById('name').value.trim();
       const from = document.getElementById('from').value.trim() || 'dev';
-      if (!name) return;
+      if (!name) { show('err', 'укажи имя'); return; }
       btn.disabled = true;
-      out.style.display = 'block';
-      out.className = 'result';
-      out.textContent = 'создаю...';
+      show('ok', 'создаю...');
       try {
         const r = await fetch('/code/branch-create', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ name, from_branch: from })
         });
-        const data = await r.json();
+        const txt = await r.text();
+        let data;
+        try { data = JSON.parse(txt); } catch (e) { data = txt; }
         if (r.ok) {
-          out.className = 'result ok';
-          out.textContent = '✓ ветка создана\n' + JSON.stringify(data, null, 2);
+          show('ok', '✓ ветка создана\n' + JSON.stringify(data, null, 2));
+          loadBranches();
         } else {
-          out.className = 'result err';
-          out.textContent = '✗ ошибка ' + r.status + '\n' + JSON.stringify(data, null, 2);
+          show('err', '✗ ' + r.status + '\n' + JSON.stringify(data, null, 2));
         }
       } catch (e) {
-        out.className = 'result err';
-        out.textContent = '✗ ' + e;
+        show('err', '✗ fetch error: ' + e);
       }
       btn.disabled = false;
     });
+
+    loadBranches();
   </script>
 </body>
 </html>
