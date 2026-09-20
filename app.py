@@ -315,35 +315,58 @@ class ClearBranch(BaseModel):
     branch: str
 
 
-@app.post("/code/branch-create")
-async def code_branch_create(body: BranchCreate):
-    from_ref = body.from_branch or GITHUB_BRANCH
-    url_ref = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/ref/heads/{from_ref}"
+@app.post("/code/branch-rename")
+async def code_branch_rename(body: BranchRename):
+    # проверить: не default ли ветка
+    url_repo = f"{GITHUB_API}/repos/{GITHUB_REPO}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        rr = await client.get(url_repo, headers=_gh_headers())
+    default_branch = rr.json().get("default_branch", "main") if rr.status_code == 200 else "main"
+    if body.old_name == default_branch:
+        raise HTTPException(
+            status_code=409,
+            detail=f"'{body.old_name}' — default ветка. Смени default вручную на GitHub (Settings → Branches), потом переименовывай.",
+        )
+    # получить SHA старой ветки
+    url_ref = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/ref/heads/{body.old_name}"
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.get(url_ref, headers=_gh_headers())
     if r.status_code != 200:
-        raise HTTPException(status_code=502, detail=f"Не найдена ветка {from_ref}: {r.status_code}")
+        raise HTTPException(status_code=502, detail=f"Ветка {body.old_name} не найдена")
     sha = r.json().get("object", {}).get("sha")
-    url_create = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs"
-    payload = {"ref": f"refs/heads/{body.name}", "sha": sha}
+    # создать новую
+    payload = {"ref": f"refs/heads/{body.new_name}", "sha": sha}
     async with httpx.AsyncClient(timeout=30.0) as client:
-        r2 = await client.post(url_create, headers=_gh_headers(), json=payload)
-    if r2.status_code == 422:
-        raise HTTPException(status_code=409, detail="Ветка уже существует")
+        r2 = await client.post(f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs",
+                               headers=_gh_headers(), json=payload)
     if r2.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"GitHub {r2.status_code}: {r2.text[:300]}")
-    return JSONResponse({"ok": True, "branch": body.name, "from": from_ref, "sha": sha})
-
+    # удалить старую
+    url_del = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs/heads/{body.old_name}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r3 = await client.request("DELETE", url_del, headers=_gh_headers())
+    if r3.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Создана {body.new_name}, но не удалена {body.old_name}")
+    return JSONResponse({"ok": True, "from": body.old_name, "to": body.new_name})
 
 @app.post("/code/branch-delete")
 async def code_branch_delete(body: BranchDelete):
+    # проверить: не default ли
+    url_repo = f"{GITHUB_API}/repos/{GITHUB_REPO}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        rr = await client.get(url_repo, headers=_gh_headers())
+    default_branch = rr.json().get("default_branch", "main") if rr.status_code == 200 else "main"
+    if body.name == default_branch:
+        raise HTTPException(
+            status_code=409,
+            detail=f"'{body.name}' — default ветка. Сначала смени default вручную на GitHub (Settings → Branches).",
+        )
     url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/refs/heads/{body.name}"
     async with httpx.AsyncClient(timeout=30.0) as client:
         r = await client.request("DELETE", url, headers=_gh_headers())
     if r.status_code >= 400:
         raise HTTPException(status_code=502, detail=f"GitHub {r.status_code}: {r.text[:300]}")
     return JSONResponse({"ok": True, "deleted": body.name})
-
 
 @app.post("/code/branch-rename")
 async def code_branch_rename(body: BranchRename):
@@ -395,6 +418,69 @@ async def code_clear(body: ClearBranch):
     return JSONResponse({"ok": True, "branch": body.branch,
                          "total": len(paths), "deleted": len(deleted), "errors": errors[:20]})
 
+class BranchCopy(BaseModel):
+    from_branch: str
+    to_branch: str
+    overwrite: bool = True
+
+
+@app.post("/code/branch-copy")
+async def code_branch_copy(body: BranchCopy):
+    # 1. дерево источника
+    url = f"{GITHUB_API}/repos/{GITHUB_REPO}/git/trees/{body.from_branch}"
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(url, headers=_gh_headers(), params={"recursive": "1"})
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Ветка {body.from_branch} не найдена: {r.status_code}")
+    tree = r.json().get("tree", [])
+    paths = [i["path"] for i in tree if i.get("type") == "blob"]
+
+    copied = []
+    skipped = []
+    errors = []
+
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        for p in paths:
+            # читать файл из источника
+            ur = f"{GITHUB_API}/repos/{GITHUB_REPO}/contents/{p}"
+            rr = await client.get(ur, headers=_gh_headers(), params={"ref": body.from_branch})
+            if rr.status_code != 200:
+                errors.append({"path": p, "stage": "read", "status": rr.status_code})
+                continue
+            data = rr.json()
+            content_b64 = data.get("content", "")
+
+            # проверить, есть ли файл в приёмнике
+            rt = await client.get(ur, headers=_gh_headers(), params={"ref": body.to_branch})
+            sha_target = rt.json().get("sha") if rt.status_code == 200 else None
+
+            if sha_target and not body.overwrite:
+                skipped.append(p)
+                continue
+
+            # записать
+            payload = {
+                "message": f"copy {p} from {body.from_branch} to {body.to_branch}",
+                "content": content_b64,
+                "branch": body.to_branch,
+            }
+            if sha_target:
+                payload["sha"] = sha_target
+            rw = await client.put(ur, headers=_gh_headers(), json=payload)
+            if rw.status_code < 400:
+                copied.append(p)
+            else:
+                errors.append({"path": p, "stage": "write", "status": rw.status_code})
+
+    return JSONResponse({
+        "ok": True,
+        "from": body.from_branch,
+        "to": body.to_branch,
+        "total": len(paths),
+        "copied": len(copied),
+        "skipped": len(skipped),
+        "errors": errors[:20],
+    })
 
 # --- /state ---
 
