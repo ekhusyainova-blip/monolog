@@ -1,24 +1,19 @@
 # meta_monolog.py — мета AI Monolog
 # Слой D. Решает, что выводить. Слушает события B и C, кладёт в EVENTS.
-# Сам не выводит — выводит A через EVENTS.
 
 import time
 import base64
-from fastapi import HTTPException, Request
-from fastapi.responses import JSONResponse
+import httpx
+from fastapi import HTTPException
 
 from interpret_monolog import (
     on, emit, SEND, EVENTS,
     github_get_json, github_put_json,
-    pick_provider_and_model,
 )
 from data_monolog import (
     PATHS, GITHUB_TOKEN, GITHUB_BRANCH, CODE_BRANCH, GITHUB_API, GITHUB_REPO,
-    MANAGEMENT_KEY, _safe_eq, PROVIDERS, MAX_MESSAGE_LEN,
-    check_author, check_management, safe_log,
+    safe_log,
 )
-
-import httpx
 
 # ================= ЧАТ =================
 
@@ -26,12 +21,8 @@ import httpx
 def on_chat_error(payload):
     SEND("error", payload)
 
-# Ответ /chat через events
-CHAT_RESULT = {}
-
 @on("chat_done")
 def on_chat_done(payload):
-    CHAT_RESULT["last"] = payload
     SEND("chat_response", payload)
 
 # ================= ХЕЛПЕРЫ GITHUB =================
@@ -42,7 +33,7 @@ async def _gh_get_sync(path):
 async def _gh_put_sync(path, obj, msg):
     return await github_put_json(path, obj, msg)
 
-# ================= ПУБЛИЧНЫЙ СЛОЙ — РОУТЫ ОБРАБОТЧИКИ =================
+# ================= ПУБЛИЧНЫЙ СЛОЙ =================
 
 async def pub_templates_list(sort: str, limit: int):
     data, _ = await _gh_get_sync(PATHS["templates"])
@@ -117,7 +108,7 @@ async def pub_lots_publish(body):
     user_rep["given"] = (user_rep.get("given") or 0) + 1
     rep[uid] = user_rep
     await _gh_put_sync(PATHS["reputation"], rep, f"Reputation: {uid} +given")
-_type    return {"ok": True, "lot": new_item}
+    return {"ok": True, "lot": new_item}
 
 async def pub_take(body):
     target_id = (body.get("target_id") or "").strip()
@@ -151,7 +142,7 @@ async def pub_review(body):
     verdict = (body.get("verdict") or "").strip()
     uid = (body.get("uid") or "").strip()
     if not target_id or not target_type or verdict not in ("help", "nohelp") or not uid:
-        raise HTTPException(status_code=400, detail="Нужны target_id, target, verdict (help|nohelp), uid")
+        raise HTTPException(status_code=400, detail="Нужны target_id, target_type, verdict (help|nohelp), uid")
     path = PATHS["templates"] if target_type == "template" else PATHS["lots"]
     data, _ = await _gh_get_sync(path)
     items = data if isinstance(data, list) else []
