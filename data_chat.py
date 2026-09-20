@@ -184,7 +184,7 @@ async def chat_stream(request: Request):
                 break
     return StreamingResponse(gen(), media_type="text/event-stream")
 
-# ================= ЗАПУСК СЛОЁВ =================
+# ================= ЗАГРУЗКА СЛОЁВ =================
+# A грузит B. Дальше цепочка сама: B → C → D.
 
-import solve_chat
-import meta_chat
+import interpret_chat
