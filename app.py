@@ -166,6 +166,9 @@ async def code_read(path: str, branch: str = ""):
         content = ""
     return JSONResponse({"exists": True, "path": path, "sha": data.get("sha"), "content": content})
 
+@app.get("/newbranch")
+async def newbranch_page():
+    return FileResponse("newbranch.html")
 
 class SaveRequest(BaseModel):
     branch: str = ""
