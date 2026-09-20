@@ -1,6 +1,6 @@
 # data_monolog.py — данные и точка входа AI Monolog
-# Слой A. Конфиг, правила, FastAPI app, все роуты.
-# Условия — здесь. B/C/D реагируют, A выводит.
+# Слой A. Конфиг, правила, FastAPI app, все роуты, интерфейс.
+# 4 самодостаточных файла. Никаких внешних зависимостей.
 
 import os
 import re
@@ -11,7 +11,7 @@ import logging
 from typing import List
 
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse, FileResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from dotenv import load_dotenv
 
@@ -109,19 +109,11 @@ PATHS = {"blog": "blog/posts.json", "releases": "releases.json",
          "templates": "public/templates.json", "lots": "public/lots.json",
          "reviews": "public/reviews.json", "reputation": "public/reputation.json"}
 
-# ================= ПРОМПТЫ =================
+# ================= ПРОМПТЫ (внутри файла) =================
 
-def _load(path: str) -> str:
-    try:
-        with open(path, "r", encoding="utf-8") as f:
-            return f.read().strip()
-    except FileNotFoundError:
-        log.warning(f"Prompt file not found: {path}")
-        return ""
-
-LAYER_A = _load("prompts/layer_a.txt")
-LAYER_B = _load("prompts/layer_b.txt")
-LAYER_A_CONTENT = _load("prompts/layer_a_content_prompt")
+LAYER_A = ""
+LAYER_B = ""
+LAYER_A_CONTENT = ""
 
 # ================= МЕТРИКИ =================
 
@@ -144,6 +136,85 @@ BASE_METRICS = {
     "ideas": [], "artifacts": [], "protocol_integrity": True, "management_mode": False,
     "public_index": {"given": 0, "taken": 0, "help_score": 0, "reputation": 0},
 }
+
+# ================= ИНТЕРФЕЙС =================
+
+INDEX_HTML = """<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monolog</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font:15px/1.5 -apple-system,Segoe UI,Roboto,sans-serif;background:#fafafa;color:#111}
+header{padding:12px 16px;border-bottom:1px solid #e5e5e5;display:flex;justify-content:space-between;align-items:center;background:#fff;position:sticky;top:0;z-index:5}
+header h1{font-size:17px;margin:0;font-weight:600}
+header .status{font-size:12px;color:#666}
+#log{padding:16px;max-width:820px;margin:0 auto}
+.msg{margin:16px 0}
+.msg.user .body{background:#eef4ff;padding:10px 14px;border-radius:14px;white-space:pre-wrap;word-break:break-word}
+.msg.assistant .body{white-space:pre-wrap;word-break:break-word}
+.block{background:#f4f4f4;border-radius:10px;margin:8px 0;overflow:hidden;border:1px solid #e5e5e5}
+.block .head{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-size:12px;color:#666;border-bottom:1px solid #e5e5e5;background:#efefef}
+.block pre{margin:0;padding:12px;overflow-x:auto;font:13px/1.45 ui-monospace,Menlo,monospace;white-space:pre}
+.copy{cursor:pointer;border:0;background:transparent;color:#555;font-size:12px;padding:2px 6px;border-radius:6px}
+.copy:hover{background:#e0e0e0}
+#bar{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e5e5;padding:10px 16px;display:flex;gap:8px;max-width:820px;margin:0 auto}
+#bar textarea{flex:1;resize:none;border:1px solid #ddd;border-radius:12px;padding:10px 12px;font:15px/1.4 inherit;min-height:46px;max-height:200px;outline:none}
+#bar textarea:focus{border-color:#888}
+#bar button{border:0;background:#111;color:#fff;border-radius:12px;padding:0 20px;cursor:pointer;font-size:15px}
+#bar button:disabled{background:#999;cursor:default}
+#status{font-size:12px;color:#888;padding:4px 16px;max-width:820px;margin:0 auto}
+</style></head><body>
+<header>
+  <h1>Monolog</h1>
+  <span class="status" id="hdr">готов</span>
+</header>
+<div id="status">Напишите сообщение, чтобы начать.</div>
+<div id="log"></div>
+<div id="bar">
+  <textarea id="inp" placeholder="Напишите сообщение…" rows="1"></textarea>
+  <button id="send" onclick="send()">→</button>
+</div>
+<script>
+const logEl=document.getElementById('log'),inp=document.getElementById('inp'),st=document.getElementById('status'),hdr=document.getElementById('hdr'),btn=document.getElementById('send');
+let lastMetrics={};
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function renderBlocks(blocks){return blocks.map(b=>{
+  if(b.type==='text')return '<div class="body">'+esc(b.content)+'</div>';
+  return '<div class="block"><div class="head"><span>'+esc(b.lang||b.type)+'</span><button class="copy" onclick="cp(this)">Копировать</button></div><pre>'+esc(b.content)+'</pre></div>';
+}).join('')}
+function addMsg(role,blocks){const d=document.createElement('div');d.className='msg '+role;d.innerHTML=renderBlocks(blocks);logEl.appendChild(d);window.scrollTo(0,document.body.scrollHeight);return d}
+function cp(b){const pre=b.closest('.block').querySelector('pre');navigator.clipboard.writeText(pre.textContent);b.textContent='скопировано';setTimeout(()=>b.textContent='Копировать',900)}
+function parseBlocks(text){const blocks=[];let buf='',i=0;text=text||'';
+  while(i<text.length){if(text.startsWith('```',i)){if(buf.trim()){blocks.push({type:'text',content:buf});buf=''}
+    const j=text.indexOf('\\n',i+3),lang=j>=0?text.slice(i+3,j).trim():'';
+    const end=j>=0?text.indexOf('```',j+1):-1;if(end<0){buf+=text.slice(i);break}
+    const body=text.slice(j+1,end);
+    const isJson=body.trim().startsWith('{')||body.trim().startsWith('[');
+    blocks.push({type:lang.toLowerCase()==='json'||(lang===''&&isJson)?'json':'code',lang:lang||'text',content:body.replace(/\\n$/,'')});i=end+3}
+  else{buf+=text[i];i++}}
+  if(buf.trim())blocks.push({type:'text',content:buf});
+  if(!blocks.length)blocks.push({type:'text',content:text});
+  return blocks}
+async function send(){
+  const t=inp.value.trim();if(!t)return;
+  addMsg('user',[{type:'text',content:t}]);
+  inp.value='';btn.disabled=true;st.textContent='Monolog думает…';hdr.textContent='думает';
+  try{
+    const r=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:t,carried_metrics:lastMetrics})});
+    const d=await r.json();
+    if(!r.ok){st.textContent='Ошибка: '+(d.detail||r.status);hdr.textContent='ошибка';addMsg('assistant',[{type:'text',content:'Ошибка: '+(d.detail||'неизвестная')}]);return}
+    lastMetrics=d.metrics||{};
+    addMsg('assistant',parseBlocks(d.reply_text||''));
+    st.textContent='Готово. Провайдер: '+(d.provider_used||'?')+', модель: '+(d.model_used||'?')+', ключ: '+(d.key_source||'?');
+    hdr.textContent='готов';
+  }catch(e){st.textContent='Ошибка сети: '+e.message;hdr.textContent='ошибка'}
+  finally{btn.disabled=false;inp.focus()}
+}
+inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.ctrlKey||e.metaKey)){e.preventDefault();send()}});
+async function ping(){try{const r=await fetch('/health');const d=await r.json();hdr.textContent='готов · ключей '+d.dev_keys}catch(e){}}
+ping();
+</script></body></html>"""
 
 # ================= FASTAPI =================
 
@@ -182,9 +253,9 @@ def check_management(request: Request):
 
 # ================= РОУТЫ: БАЗОВЫЕ =================
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return FileResponse("index.html")
+    return INDEX_HTML
 
 @app.get("/health")
 async def health():
