@@ -12,16 +12,23 @@ label{display:block;font-size:12px;color:#8b92a0;margin:10px 0 4px}
 input,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #2a2e37;background:#161a20;color:#e8eaed;font-size:14px}
 button{margin-top:10px;padding:11px;border-radius:8px;border:none;background:#3b4cca;color:#fff;font-size:14px;cursor:pointer;width:100%}
 button.small{width:auto;padding:6px 12px;font-size:12px;margin-top:0}
+button.danger{background:#b85450}
 button:disabled{opacity:.4}
 .row{display:flex;gap:6px;margin-top:10px}
 .row button{margin-top:0}
 ul{list-style:none;padding:0;margin:8px 0}
 li{padding:8px 10px;background:#161a20;border-radius:8px;margin-bottom:6px;font-family:monospace;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;word-break:break-all}
 li span{flex:1}
-.result{margin-top:12px;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto}
+.result{margin-top:12px;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:400px;overflow:auto}
 .ok{background:#14321f;color:#6bff8f}
 .err{background:#321414;color:#ff6b6b}
 .hint{font-size:11px;color:#8b92a0;margin:4px 0 10px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:99;padding:20px}
+.modal-bg.open{display:flex}
+.modal{background:#161a20;border-radius:12px;padding:20px;max-width:420px;width:100%}
+.modal h3{font-size:15px;margin:0 0 10px}
+.modal p{font-size:13px;color:#8b92a0;margin:0 0 16px}
+.modal .row{margin-top:0}
 </style>
 </head>
 <body>
@@ -35,26 +42,38 @@ li span{flex:1}
 
 <h2>Создать ветку</h2>
 <label>Имя новой ветки</label>
-<input id="nbName" placeholder="A">
+<input id="nbName" placeholder="ya">
 <label>От какой ветки</label>
-<input id="nbFrom" value="ya">
+<input id="nbFrom" value="main">
 <button id="createBranch">Создать ветку</button>
 
-<h2>Удалить / переименовать ветку</h2>
+<h2>Переименовать ветку</h2>
+<label>Текущее имя</label>
+<input id="oldName" placeholder="main">
+<label>Новое имя</label>
+<input id="newName" placeholder="ya">
+<button id="renameBranch">Переименовать</button>
+<div class="hint">Если ветка default — сначала смените default на GitHub вручную.</div>
+
+<h2>Удалить ветку</h2>
 <label>Имя ветки</label>
-<input id="brName" placeholder="main">
+<input id="delName" placeholder="main">
+<button class="danger" id="deleteBranch">Удалить</button>
+
+<h2>Скопировать содержимое ветки</h2>
+<label>Откуда (источник)</label>
+<input id="cpFrom" placeholder="dev">
+<label>Куда (приёмник)</label>
+<input id="cpTo" placeholder="ya">
 <div class="row">
-  <button class="small" id="deleteBranch">Удалить</button>
-  <button class="small" id="renameBranch">Переименовать</button>
+  <button class="small" id="copyBranch">Копировать (старое остаётся)</button>
 </div>
-<label>Новое имя (для переименования)</label>
-<input id="brNewName" placeholder="ya">
+<div class="hint">Файлы источника перезапишут совпадающие пути в приёмнике. Остальное в приёмнике не трогается.</div>
 
 <h2>Очистить ветку (удалить все файлы)</h2>
 <label>Имя ветки</label>
-<input id="clearBranch" placeholder="main">
-<button id="clearBtn">Очистить</button>
-<div class="hint">Удаляет все файлы по одному. Может занять минуту.</div>
+<input id="clearBranch" placeholder="ya">
+<button class="danger" id="clearBtn">Очистить</button>
 
 <h2>Render — сервисы</h2>
 <button id="loadServices">Обновить список сервисов</button>
@@ -64,19 +83,20 @@ li span{flex:1}
 <button id="loadGroups">Обновить список групп</button>
 <ul id="groups"></ul>
 
+<h2>Owner ID</h2>
+<button id="loadOwner">Узнать ownerId</button>
+<div id="ownerOut" class="result" style="display:none;margin-top:10px"></div>
+
 <h2>Создать Render-сервис</h2>
 <label>Имя сервиса</label>
 <input id="rsName" placeholder="monolog-ya">
 <label>Ветка GitHub</label>
 <input id="rsBranch" placeholder="ya">
-<label>Environment Group ID (необязательно)</label>
+<label>Environment Group ID</label>
 <input id="rsGroup" placeholder="evg-...">
-<label>Owner ID (получить ниже)</label>
-<input id="rsOwner" placeholder="own-...">
+<label>Owner ID</label>
+<input id="rsOwner" placeholder="tea-...">
 <button id="createService">Создать сервис</button>
-
-<h2>Получить Owner ID</h2>
-<button id="loadOwner">Узнать ownerId</button>
 
 <h2>Задать переменную</h2>
 <label>Ключ</label>
@@ -91,6 +111,18 @@ li span{flex:1}
 <label>ID группы или сервиса</label>
 <input id="envId" placeholder="evg-... или srv-...">
 <button id="setEnv">Задать переменную</button>
+
+<!-- модальное окно подтверждения -->
+<div class="modal-bg" id="confirmBg">
+  <div class="modal">
+    <h3 id="confirmTitle">Подтверждение</h3>
+    <p id="confirmText"></p>
+    <div class="row">
+      <button class="danger" id="confirmYes">Да, выполнить</button>
+      <button id="confirmNo" style="background:#2a2e37">Отмена</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const out = document.getElementById('out');
@@ -107,6 +139,18 @@ async function api(method, url, body) {
   const txt = await r.text();
   let data; try { data = JSON.parse(txt); } catch(e) { data = txt; }
   return { ok: r.ok, status: r.status, data };
+}
+
+function confirmAction(title, text, onYes) {
+  const bg = document.getElementById('confirmBg');
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  bg.classList.add('open');
+  const yes = document.getElementById('confirmYes');
+  const no = document.getElementById('confirmNo');
+  const close = () => { bg.classList.remove('open'); yes.onclick = null; no.onclick = null; };
+  yes.onclick = async () => { close(); await onYes(); };
+  no.onclick = close;
 }
 
 async function loadBranches() {
@@ -148,7 +192,7 @@ document.getElementById('loadGroups').onclick = loadGroups;
 
 document.getElementById('createBranch').onclick = async () => {
   const name = document.getElementById('nbName').value.trim();
-  const from = document.getElementById('nbFrom').value.trim() || 'ya';
+  const from = document.getElementById('nbFrom').value.trim() || 'main';
   if (!name) { show('err', 'укажи имя'); return; }
   show('ok', 'создаю...');
   const r = await api('POST', '/code/branch-create', { name, from_branch: from });
@@ -156,31 +200,46 @@ document.getElementById('createBranch').onclick = async () => {
   if (r.ok) loadBranches();
 };
 
-document.getElementById('deleteBranch').onclick = async () => {
-  const name = document.getElementById('brName').value.trim();
+document.getElementById('deleteBranch').onclick = () => {
+  const name = document.getElementById('delName').value.trim();
   if (!name) { show('err', 'укажи имя'); return; }
-  show('ok', 'удаляю...');
-  const r = await api('POST', '/code/branch-delete', { name });
-  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
-  if (r.ok) loadBranches();
+  confirmAction('Удалить ветку?', 'Ветка "' + name + '" и все файлы в ней будут удалены. Это опасно.', async () => {
+    show('ok', 'удаляю...');
+    const r = await api('POST', '/code/branch-delete', { name });
+    show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+    if (r.ok) loadBranches();
+  });
 };
 
-document.getElementById('renameBranch').onclick = async () => {
-  const old_name = document.getElementById('brName').value.trim();
-  const new_name = document.getElementById('brNewName').value.trim();
+document.getElementById('renameBranch').onclick = () => {
+  const old_name = document.getElementById('oldName').value.trim();
+  const new_name = document.getElementById('newName').value.trim();
   if (!old_name || !new_name) { show('err', 'укажи оба имени'); return; }
-  show('ok', 'переименовываю...');
-  const r = await api('POST', '/code/branch-rename', { old_name, new_name });
-  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
-  if (r.ok) loadBranches();
+  confirmAction('Переименовать ветку?', old_name + ' → ' + new_name + '. Старая ветка будет удалена.', async () => {
+    show('ok', 'переименовываю...');
+    const r = await api('POST', '/code/branch-rename', { old_name, new_name });
+    show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+    if (r.ok) loadBranches();
+  });
 };
 
-document.getElementById('clearBtn').onclick = async () => {
+document.getElementById('clearBtn').onclick = () => {
   const branch = document.getElementById('clearBranch').value.trim();
   if (!branch) { show('err', 'укажи ветку'); return; }
-  show('ok', 'очищаю...');
-  const r = await api('POST', '/code/clear', { branch });
-  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+  confirmAction('Очистить ветку?', 'Все файлы в ветке "' + branch + '" будут удалены.', async () => {
+    show('ok', 'очищаю...');
+    const r = await api('POST', '/code/clear', { branch });
+    show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+  });
+};
+
+document.getElementById('copyBranch').onclick = async () => {
+  const from_branch = document.getElementById('cpFrom').value.trim();
+  const to_branch = document.getElementById('cpTo').value.trim();
+  if (!from_branch || !to_branch) { show('err', 'укажи откуда и куда'); return; }
+  show('ok', 'копирую...');
+  const r = await api('POSTи', '/code/branch-copy', { fromмен_branch, to_branch });
+  showование(r.ok ? 'ok' : 'err', ** (r.ok ? '✓ ' : '✗ ' +ра r.status + ' ') + JSON.stringify(rбота.data, null, 2));
 };
 
 document.getElementById('createService').onclick = async () => {
@@ -196,8 +255,13 @@ document.getElementById('createService').onclick = async () => {
 };
 
 document.getElementById('loadOwner').onclick = async () => {
+  const el = document.getElementById('ownerOut');
+  el.style.display = 'block';
+  el.className = 'result';
+  el.textContent = 'загружаю...';
   const r = await api('GET', '/render/owner');
-  show(r.ok ? 'ok' : 'err', JSON.stringify(r.data, null, 2));
+  el.className = 'result ' + (r.ok ? 'ok' : 'err');
+  el.textContent = JSON.stringify(r.data, null, 2);
 };
 
 document.getElementById('setEnv').onclick = async () => {
