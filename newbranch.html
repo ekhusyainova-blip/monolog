@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Новая ветка</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background: #0f1115; color: #e8eaed; padding: 20px; margin: 0; }
+    h1 { font-size: 18px; margin: 0 0 16px; }
+    label { display: block; font-size: 13px; color: #8b92a0; margin: 12px 0 4px; }
+    input { width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 8px; border: 1px solid #2a2e37; background: #161a20; color: #e8eaed; font-size: 14px; }
+    button { margin-top: 16px; width: 100%; padding: 12px; border-radius: 8px; border: none; background: #3b4cca; color: #fff; font-size: 14px; cursor: pointer; }
+    button:disabled { opacity: 0.4; }
+    .result { margin-top: 16px; padding: 12px; border-radius: 8px; font-family: monospace; font-size: 12px; white-space: pre-wrap; word-break: break-all; }
+    .ok  { background: #14321f; color: #6bff8f; }
+    .err { background: #321414; color: #ff6b6b; }
+  </style>
+</head>
+<body>
+  <h1>Создать ветку</h1>
+  <label>Имя новой ветки</label>
+  <input id="name" placeholder="B">
+  <label>От какой ветки</label>
+  <input id="from" placeholder="dev" value="dev">
+  <button id="go">Создать</button>
+  <div id="out" class="result" style="display:none;"></div>
+
+  <script>
+    document.getElementById('go').addEventListener('click', async () => {
+      const btn = document.getElementById('go');
+      const out = document.getElementById('out');
+      const name = document.getElementById('name').value.trim();
+      const from = document.getElementById('from').value.trim() || 'dev';
+      if (!name) return;
+      btn.disabled = true;
+      out.style.display = 'block';
+      out.className = 'result';
+      out.textContent = 'создаю...';
+      try {
+        const r = await fetch('/code/branch-create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, from_branch: from })
+        });
+        const data = await r.json();
+        if (r.ok) {
+          out.className = 'result ok';
+          out.textContent = '✓ ветка создана\n' + JSON.stringify(data, null, 2);
+        } else {
+          out.className = 'result err';
+          out.textContent = '✗ ошибка ' + r.status + '\n' + JSON.stringify(data, null, 2);
+        }
+      } catch (e) {
+        out.className = 'result err';
+        out.textContent = '✗ ' + e;
+      }
+      btn.disabled = false;
+    });
+  </script>
+</body>
+</html>
