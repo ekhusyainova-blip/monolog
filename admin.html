@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Управление</title>
+<style>
+body{font-family:system-ui,sans-serif;background:#0f1115;color:#e8eaed;padding:16px;margin:0;font-size:14px}
+h1{font-size:18px;margin:0 0 16px}
+h2{font-size:13px;margin:24px 0 8px;color:#8b92a0;text-transform:uppercase;letter-spacing:.05em}
+label{display:block;font-size:12px;color:#8b92a0;margin:10px 0 4px}
+input,select{width:100%;box-sizing:border-box;padding:10px;border-radius:8px;border:1px solid #2a2e37;background:#161a20;color:#e8eaed;font-size:14px}
+button{margin-top:10px;padding:11px;border-radius:8px;border:none;background:#3b4cca;color:#fff;font-size:14px;cursor:pointer;width:100%}
+button.small{width:auto;padding:6px 12px;font-size:12px;margin-top:0}
+button:disabled{opacity:.4}
+.row{display:flex;gap:6px;margin-top:10px}
+.row button{margin-top:0}
+ul{list-style:none;padding:0;margin:8px 0}
+li{padding:8px 10px;background:#161a20;border-radius:8px;margin-bottom:6px;font-family:monospace;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;word-break:break-all}
+li span{flex:1}
+.result{margin-top:12px;padding:10px;border-radius:8px;font-family:monospace;font-size:11px;white-space:pre-wrap;word-break:break-all;max-height:300px;overflow:auto}
+.ok{background:#14321f;color:#6bff8f}
+.err{background:#321414;color:#ff6b6b}
+.hint{font-size:11px;color:#8b92a0;margin:4px 0 10px}
+</style>
+</head>
+<body>
+<h1>Управление</h1>
+
+<div id="out" class="result" style="display:none"></div>
+
+<h2>Ветки GitHub</h2>
+<button id="loadBranches">Обновить список веток</button>
+<ul id="branches"></ul>
+
+<h2>Создать ветку</h2>
+<label>Имя новой ветки</label>
+<input id="nbName" placeholder="A">
+<label>От какой ветки</label>
+<input id="nbFrom" value="ya">
+<button id="createBranch">Создать ветку</button>
+
+<h2>Удалить / переименовать ветку</h2>
+<label>Имя ветки</label>
+<input id="brName" placeholder="main">
+<div class="row">
+  <button class="small" id="deleteBranch">Удалить</button>
+  <button class="small" id="renameBranch">Переименовать</button>
+</div>
+<label>Новое имя (для переименования)</label>
+<input id="brNewName" placeholder="ya">
+
+<h2>Очистить ветку (удалить все файлы)</h2>
+<label>Имя ветки</label>
+<input id="clearBranch" placeholder="main">
+<button id="clearBtn">Очистить</button>
+<div class="hint">Удаляет все файлы по одному. Может занять минуту.</div>
+
+<h2>Render — сервисы</h2>
+<button id="loadServices">Обновить список сервисов</button>
+<ul id="services"></ul>
+
+<h2>Render — группы переменных</h2>
+<button id="loadGroups">Обновить список групп</button>
+<ul id="groups"></ul>
+
+<h2>Создать Render-сервис</h2>
+<label>Имя сервиса</label>
+<input id="rsName" placeholder="monolog-ya">
+<label>Ветка GitHub</label>
+<input id="rsBranch" placeholder="ya">
+<label>Environment Group ID (необязательно)</label>
+<input id="rsGroup" placeholder="evg-...">
+<label>Owner ID (получить ниже)</label>
+<input id="rsOwner" placeholder="own-...">
+<button id="createService">Создать сервис</button>
+
+<h2>Получить Owner ID</h2>
+<button id="loadOwner">Узнать ownerId</button>
+
+<h2>Задать переменную</h2>
+<label>Ключ</label>
+<input id="envKey" placeholder="MY_KEY">
+<label>Значение</label>
+<input id="envValue" placeholder="значение">
+<label>Куда</label>
+<select id="envTarget">
+  <option value="group">В группу (на все сервисы группы)</option>
+  <option value="service">В сервис (только один)</option>
+</select>
+<label>ID группы или сервиса</label>
+<input id="envId" placeholder="evg-... или srv-...">
+<button id="setEnv">Задать переменную</button>
+
+<script>
+const out = document.getElementById('out');
+function show(cls, text) {
+  out.style.display = 'block';
+  out.className = 'result ' + cls;
+  out.textContent = text;
+}
+
+async function api(method, url, body) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(url, opts);
+  const txt = await r.text();
+  let data; try { data = JSON.parse(txt); } catch(e) { data = txt; }
+  return { ok: r.ok, status: r.status, data };
+}
+
+async function loadBranches() {
+  const ul = document.getElementById('branches');
+  ul.innerHTML = '<li>загрузка...</li>';
+  const r = await api('GET', '/code/branches');
+  if (!r.ok) { ul.innerHTML = '<li>ошибка ' + r.status + '</li>'; return; }
+  const names = r.data.branches || [];
+  ul.innerHTML = names.map(n => '<li><span>' + n + '</span></li>').join('');
+}
+
+async function loadServices() {
+  const ul = document.getElementById('services');
+  ul.innerHTML = '<li>загрузка...</li>';
+  const r = await api('GET', '/render/services');
+  if (!r.ok) { ul.innerHTML = '<li>ошибка ' + r.status + ' ' + JSON.stringify(r.data).slice(0,200) + '</li>'; return; }
+  const arr = Array.isArray(r.data) ? r.data : (r.data.services || []);
+  ul.innerHTML = arr.map(s => {
+    const svc = s.service || s;
+    return '<li><span>' + (svc.name || '?') + ' · ' + (svc.id || '?') + ' · ' + (svc.branch || '') + '</span></li>';
+  }).join('') || '<li>пусто</li>';
+}
+
+async function loadGroups() {
+  const ul = document.getElementById('groups');
+  ul.innerHTML = '<li>загрузка...</li>';
+  const r = await api('GET', '/render/env-groups');
+  if (!r.ok) { ul.innerHTML = '<li>ошибка ' + r.status + ' ' + JSON.stringify(r.data).slice(0,200) + '</li>'; return; }
+  const arr = Array.isArray(r.data) ? r.data : (r.data.envGroups || []);
+  ul.innerHTML = arr.map(g => {
+    const grp = g.envGroup || g;
+    return '<li><span>' + (grp.name || '?') + ' · ' + (grp.id || '?') + '</span></li>';
+  }).join('') || '<li>пусто</li>';
+}
+
+document.getElementById('loadBranches').onclick = loadBranches;
+document.getElementById('loadServices').onclick = loadServices;
+document.getElementById('loadGroups').onclick = loadGroups;
+
+document.getElementById('createBranch').onclick = async () => {
+  const name = document.getElementById('nbName').value.trim();
+  const from = document.getElementById('nbFrom').value.trim() || 'ya';
+  if (!name) { show('err', 'укажи имя'); return; }
+  show('ok', 'создаю...');
+  const r = await api('POST', '/code/branch-create', { name, from_branch: from });
+  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+  if (r.ok) loadBranches();
+};
+
+document.getElementById('deleteBranch').onclick = async () => {
+  const name = document.getElementById('brName').value.trim();
+  if (!name) { show('err', 'укажи имя'); return; }
+  show('ok', 'удаляю...');
+  const r = await api('POST', '/code/branch-delete', { name });
+  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+  if (r.ok) loadBranches();
+};
+
+document.getElementById('renameBranch').onclick = async () => {
+  const old_name = document.getElementById('brName').value.trim();
+  const new_name = document.getElementById('brNewName').value.trim();
+  if (!old_name || !new_name) { show('err', 'укажи оба имени'); return; }
+  show('ok', 'переименовываю...');
+  const r = await api('POST', '/code/branch-rename', { old_name, new_name });
+  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+  if (r.ok) loadBranches();
+};
+
+document.getElementById('clearBtn').onclick = async () => {
+  const branch = document.getElementById('clearBranch').value.trim();
+  if (!branch) { show('err', 'укажи ветку'); return; }
+  show('ok', 'очищаю...');
+  const r = await api('POST', '/code/clear', { branch });
+  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+};
+
+document.getElementById('createService').onclick = async () => {
+  const name = document.getElementById('rsName').value.trim();
+  const branch = document.getElementById('rsBranch').value.trim();
+  const env_group_id = document.getElementById('rsGroup').value.trim() || null;
+  const owner_id = document.getElementById('rsOwner').value.trim() || null;
+  if (!name || !branch) { show('err', 'укажи имя и ветку'); return; }
+  show('ok', 'создаю сервис...');
+  const r = await api('POST', '/render/create', { name, branch, env_group_id, owner_id });
+  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+  if (r.ok) loadServices();
+};
+
+document.getElementById('loadOwner').onclick = async () => {
+  const r = await api('GET', '/render/owner');
+  show(r.ok ? 'ok' : 'err', JSON.stringify(r.data, null, 2));
+};
+
+document.getElementById('setEnv').onclick = async () => {
+  const key = document.getElementById('envKey').value.trim();
+  const value = document.getElementById('envValue').value;
+  const target = document.getElementById('envTarget').value;
+  const id = document.getElementById('envId').value.trim();
+  if (!key || !id) { show('err', 'укажи ключ и ID'); return; }
+  const url = target === 'group'
+    ? '/render/env-set-group?group_id=' + encodeURIComponent(id)
+    : '/render/env-set-service?service_id=' + encodeURIComponent(id);
+  const r = await api('POST', url, { key, value });
+  show(r.ok ? 'ok' : 'err', (r.ok ? '✓ ' : '✗ ' + r.status + ' ') + JSON.stringify(r.data, null, 2));
+};
+
+loadBranches();
+</script>
+</body>
+</html>
