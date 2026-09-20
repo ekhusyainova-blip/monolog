@@ -57,16 +57,20 @@ async def root():
     return FileResponse("index.html")
 
 
+RENDER_API_KEY = os.getenv("RENDER_API_KEY", "").strip()
+RENDER_API = "https://api.render.com/v1"
+
+
 @app.get("/health")
 async def health():
     return {
         "status": "ok",
-        "version": "structure-1.4",
+        "version": "structure-1.5",
         "branch": GITHUB_BRANCH,
         "github_ready": bool(GITHUB_TOKEN),
+        "render_ready": bool(RENDER_API_KEY),
         "groq_keys": len(_DEV_KEYS_GROQ),
     }
-
 
 @app.get("/ui")
 async def ui():
@@ -513,6 +517,170 @@ async def code_branch_create(body: BranchCreate):
             detail=f"GitHub {r2.status_code}: {r2.text[:300]}",
         )
     return JSONResponse({"ok": True, "branch": body.name, "from": from_ref, "sha": sha})
+
+# --- /render (управление Render) ---
+
+def _rnd_headers():
+    return {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {RENDER_API_KEY}",
+    }
+
+
+class RenderCreate(BaseModel):
+    name: str
+    branch: str
+    repo: str = "https://github.com/ekhusyainova-blip/monolog"
+    env_group_id: Optional[str] = None
+    owner_id: Optional[str] = None
+    region: str = "frankfurt"
+    plan: str = "free"
+    build_command: str = ""
+    start_command: str = "uvicorn app:app --host 0.0.0.0 --port $PORT"
+    python_version: str = "3.11.9"
+
+
+@app.post("/render/create")
+async def render_create(body: RenderCreate):
+    if not RENDER_API_KEY:
+        raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
+
+    payload = {
+        "type": "web_service",
+        "name": body.name,
+        "ownerId": body.owner_id or "self",
+        "repo": body.repo,
+        "branch": body.branch,
+        "autoDeploy": "yes",
+        "envVars": [],
+        "serviceDetails": {
+            "env": "python",
+            "plan": body.plan,
+            "region": body.region,
+            "healthCheckPath": "/health",
+            "envSpecificDetails": {
+                "buildCommand": body.build_command or "pip install -r requirements.txt",
+                "startCommand": body.start_command,
+                "pythonVersion": body.python_version,
+            },
+        },
+    }
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
+        r = await client.post(
+            f"{RENDER_API}/services",
+            headers=_rnd_headers(),
+            json=payload,
+        )
+
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
+
+    data = r.json()
+    service = data.get("service", data)
+    service_id = service.get("id")
+
+    # подключить environment group, если указана
+    if body.env_group_id and service_id:
+        async with httpx.AsyncClient(timeout=30.0) as client:
+            rr = await client.post(
+                f"{RENDER_API}/env-groups/{body.env_group_id}/services/{service_id}",
+                headers=_rnd_headers(),
+            )
+        group_ok = rr.status_code < 400
+    else:
+        group_ok = False
+
+    return JSONResponse({
+        "ok": True,
+        "service_id": service_id,
+        "name": service.get("name"),
+        "branch": body.branch,
+        "url": service.get("serviceDetails", {}).get("url", ""),
+        "env_group_linked": group_ok,
+    })
+
+
+@app.post("/render/env-link")
+async def render_env_link(group_id: str, service_id: str):
+    if not RENDER_API_KEY:
+        raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.post(
+            f"{RENDER_API}/env-groups/{group_id}/services/{service_id}",
+            headers=_rnd_headers(),
+        )
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
+    return {"ok": True, "group": group_id, "service": service_id}
+
+
+@app.post("/render/env-set-group")
+async def render_env_set_group(group_id: str, key: str, value: str):
+    """Задать переменную на ВСЕ сервисы, подключённые к группе."""
+    if not RENDER_API_KEY:
+        raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
+    payload = {"envVars": [{"key": key, "value": value}]}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.put(
+            f"{RENDER_API}/env-groups/{group_id}",
+            headers=_rnd_headers(),
+            json=payload,
+        )
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
+    return {"ok": True, "group": group_id, "key": key}
+
+
+@app.post("/render/env-set-service")
+async def render_env_set_service(service_id: str, key: str, value: str):
+    """Задать переменную ТОЛЬКО для одного сервиса."""
+    if not RENDER_API_KEY:
+        raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
+    payload = {"envVars": [{"key": key, "value": value}]}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.put(
+            f"{RENDER_API}/services/{service_id}/env-vars",
+            headers=_rnd_headers(),
+            json=payload,
+        )
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
+    return {"ok": True, "service": service_id, "key": key}
+
+
+@app.get("/render/services")
+async def render_services():
+    if not RENDER_API_KEY:
+        raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(f"{RENDER_API}/services", headers=_rnd_headers())
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
+    return JSONResponse(r.json())
+
+
+@app.get("/render/env-groups")
+async def render_env_groups():
+    if not RENDER_API_KEY:
+        raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(f"{RENDER_API}/env-groups", headers=_rnd_headers())
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
+    return JSONResponse(r.json())
+
+
+@app.get("/render/owner")
+async def render_owner():
+    if not RENDER_API_KEY:
+        raise HTTPException(status_code=503, detail="RENDER_API_KEY не задан")
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        r = await client.get(f"{RENDER_API}/owners", headers=_rnd_headers())
+    if r.status_code >= 400:
+        raise HTTPException(status_code=502, detail=f"Render {r.status_code}: {r.text[:400]}")
+    return JSONResponse(r.json())
 
 if __name__ == "__main__":
     import uvicorn
