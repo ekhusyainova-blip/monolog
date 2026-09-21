@@ -1,37 +1,37 @@
 # chat_b_chat.py
 # Тема: chat
 # Слой: B (условие)
-# Что: условие применения чата
 
-# A · данные (внутри B)
-# Какие данные для условия.
-# События чата.
+from chat_a_chat import on, emit, PROMPTS, SETTINGS
 
-# B · условие
 def when_chat_active(event: dict) -> bool:
-    """При каких условиях чат активен."""
-    return bool(event.get("text", "").strip())
+    return bool((event.get("text") or "").strip())
 
-# C · решение (внутри B)
 def build_request(event: dict, context: list) -> dict:
-    """Собрать запрос."""
     system = "\n".join([
-        "Ты — Monolog. Факты.",
-        "Ты — Monolog. Интерпретации.",
-        "Ты — Monolog. Решения.",
-        "Ты — Monolog. Мета.",
+        PROMPTS["layer_a"],
+        PROMPTS["layer_b"],
+        PROMPTS["layer_c"],
+        PROMPTS["layer_d"],
     ])
     messages = [{"role": "system", "content": system}]
-    for msg in context[-20:]:
+    for msg in (context or [])[-20:]:
         if isinstance(msg, dict) and "role" in msg and "content" in msg:
             messages.append(msg)
     messages.append({"role": "user", "content": event["text"]})
     return {
         "messages": messages,
-        "temperature": 0.7,
-        "max_tokens": 2048,
+        "temperature": SETTINGS["temperature"],
+        "max_tokens": SETTINGS["max_tokens"],
     }
 
-# D · мета (внутри B)
-# Куда выводится условие.
-# В C (решение чата).
+@on("user_message")
+def handle_user_message(event: dict):
+    if not when_chat_active(event):
+        return
+    context = event.get("context") or []
+    payload = build_request(event, context)
+    emit("request_built", {"event": event, "payload": payload})
+
+# B · импорт C в конце
+import chat_c_chat
