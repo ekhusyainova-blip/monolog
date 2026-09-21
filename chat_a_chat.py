@@ -160,7 +160,7 @@ button.send:disabled{opacity:0.5}
 var log=document.getElementById('log');
 var input=document.getElementById('input');
 var sendBtn=document.getElementById('send');
-var history=[];
+var chatHistory=[];
 
 function setTheme(t){document.documentElement.setAttribute('data-theme',t);localStorage.setItem('monolog_theme',t)}
 function toggleTheme(){var cur=document.documentElement.getAttribute('data-theme');setTheme(cur==='dark'?'light':'dark')}
