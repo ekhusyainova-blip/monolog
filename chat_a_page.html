@@ -69,6 +69,11 @@ input.addEventListener('keydown', function(e){
     send();
   }
 });
+
+// фрактал UI — стартуем
+if(window.UI_D && typeof window.UI_D.boot === 'function'){
+  window.UI_D.boot();
+}
 </script>
 </body>
 </html>
