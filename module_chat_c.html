@@ -1,0 +1,96 @@
+<!-- module_chat_c.html -->
+<!-- Модуль: chat -->
+<!-- Слой: C (решение: собрать DOM, добавить сообщение, обработать поток) -->
+
+<script>
+window.MODULE_CHAT_C = (function(){
+  var S = window.MODULE_CHAT_A;
+  var B = window.MODULE_CHAT_B;
+
+  // Собрать HTML модуля.
+  function buildHTML(){
+    var sc = S.schema;
+    return ''
+      + '<div id="' + sc.log.id + '" class="' + sc.log.class + '"></div>'
+      + '<form id="' + sc.form.id + '" class="' + sc.form.class + '" autocomplete="off">'
+      +   '<textarea id="' + sc.input.id + '" class="' + sc.input.class + '" rows="1" placeholder="' + S.strings.placeholder + '"></textarea>'
+      +   '<button type="submit" id="' + sc.submit.id + '" class="' + sc.submit.class + '">' + sc.submit.text + '</button>'
+      + '</form>';
+  }
+
+  function el(id){ return document.getElementById(id); }
+
+  function addMsg(role, text){
+    var logEl = el(S.schema.log.id);
+    if(!logEl) return;
+    var d = document.createElement('div');
+    d.className = 'msg ' + role;
+    var strong = document.createElement('strong');
+    strong.textContent = (role === 'user' ? S.strings.userLabel + ': ' : S.strings.botLabel + ': ');
+    d.appendChild(strong);
+    d.appendChild(document.createTextNode(text));
+    logEl.appendChild(d);
+    logEl.scrollTop = logEl.scrollHeight;
+  }
+
+  function setBusy(busy){
+    var formEl = el(S.schema.form.id);
+    var inputEl = el(S.schema.input.id);
+    if(formEl) formEl.dataset.busy = busy ? '1' : '0';
+    if(inputEl) inputEl.disabled = !!busy;
+  }
+
+  async function send(history){
+    var inputEl = el(S.schema.input.id);
+    if(!inputEl) return;
+    var text = inputEl.value.trim();
+    if(!text) return;
+    addMsg('user', text);
+    inputEl.value = '';
+    setBusy(true);
+    try{
+      var r = await fetch(S.endpoint, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(B.buildPayload(text, history))
+      });
+      var json = await r.json();
+      var res = B.parseAnswer(json);
+      if(res.kind === 'error'){
+        addMsg('bot', S.strings.errorGeneric + ' ' + res.text);
+      }else{
+        addMsg('bot', res.text);
+        history.push({role: 'user', content: text});
+        history.push({role: 'assistant', content: res.text});
+      }
+    }catch(e){
+      addMsg('bot', S.strings.errorNetwork + ' ' + e.message);
+    }finally{
+      setBusy(false);
+    }
+  }
+
+  function bind(history){
+    var formEl = el(S.schema.form.id);
+    var inputEl = el(S.schema.input.id);
+    if(!formEl || !inputEl) return;
+
+    formEl.addEventListener('submit', function(e){
+      e.preventDefault();
+      send(history);
+    });
+    inputEl.addEventListener('keydown', function(e){
+      if(e.key === 'Enter' && !e.shiftKey){
+        e.preventDefault();
+        send(history);
+      }
+    });
+    inputEl.addEventListener('input', function(){
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+    });
+  }
+
+  return { buildHTML: buildHTML, addMsg: addMsg, bind: bind };
+})();
+</script>
