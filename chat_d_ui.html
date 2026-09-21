@@ -1,13 +1,37 @@
 <!-- chat_d_ui.html -->
 <!-- Тема: ui -->
-<!-- Слой: D (мета) -->
-<!-- Что: как показать -->
+<!-- Слой: D (мета: решить какую тему применить, рендер) -->
 
-<div id="ui-display">
-  <!-- Куда и как показать -->
-  <script>
-    // Показ в #log.
-    // Показ в #menu.
-    // Показ в #settings.
-  </script>
-</div>
+<script>
+window.UI_D = (function(){
+  function currentTheme(){
+    var t = document.documentElement.getAttribute('data-theme');
+    if(t) return t;
+    if(window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+    return 'dark';
+  }
+
+  function setTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    localStorage.setItem('monolog_theme', t);
+  }
+
+  function toggleTheme(){
+    setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
+  }
+
+  async function boot(){
+    var vars = await window.UI_A.get();
+    var interp = window.UI_B.interpret(vars);
+    var css = window.UI_C.buildCSS(interp);
+    window.UI_C.apply(css);
+    var saved = localStorage.getItem('monolog_theme');
+    if(saved) setTheme(saved);
+  }
+
+  return { boot: boot, setTheme: setTheme, toggleTheme: toggleTheme, currentTheme: currentTheme };
+})();
+
+// автостарт
+window.UI_D.boot();
+</script>
