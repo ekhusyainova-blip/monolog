@@ -1,13 +1,35 @@
 <!-- chat_c_ui.html -->
 <!-- Тема: ui -->
-<!-- Слой: C (решение) -->
-<!-- Что: какую форму применить -->
+<!-- Слой: C (решение: собрать итоговый CSS) -->
 
-<div id="ui-solutions">
-  <!-- Решение: какую форму -->
-  <script>
-    // Форма default — при первой загрузке.
-    // Форма compact — при малом экране.
-    // Форма wide — при большом экране.
-  </script>
-</div>
+<script>
+window.UI_C = (function(){
+  function buildCSS(interpreted){
+    var lines = [];
+    ['dark','light'].forEach(function(theme){
+      var vars = interpreted[theme] || {};
+      var selector = theme === 'dark'
+        ? ':root'
+        : ':root[data-theme="light"]';
+      lines.push(selector + ' {');
+      Object.keys(vars).forEach(function(name){
+        lines.push('  --' + name + ': ' + vars[name].value + ';');
+      });
+      lines.push('}');
+    });
+    return lines.join('\n');
+  }
+
+  function apply(css){
+    var el = document.getElementById('monolog-ui-vars');
+    if(!el){
+      el = document.createElement('style');
+      el.id = 'monolog-ui-vars';
+      document.head.appendChild(el);
+    }
+    el.textContent = css;
+  }
+
+  return { buildCSS: buildCSS, apply: apply };
+})();
+</script>
