@@ -1,0 +1,50 @@
+<!-- chat_d_page.html -->
+<!-- Тема: page -->
+<!-- Слой: D (мета: рендер, раздача модулям, boot) -->
+
+<script>
+window.PAGE_D = (function(){
+  var mountedModules = {};
+
+  async function boot(){
+    // 1. A — данные (слоты, реестр)
+    var raw = await window.PAGE_A.get();
+
+    // 2. B — разложить по слотам
+    var slots = window.PAGE_B.normalize(raw);
+
+    // 3. C — собрать HTML
+    var html = window.PAGE_C.buildHTML(slots);
+
+    // 4. C — примонтировать в DOM
+    window.PAGE_C.mount(html);
+
+    // 5. UI — применить стили (фрактал UI уже подключён)
+    if(window.UI_D && typeof window.UI_D.boot === 'function'){
+      window.UI_D.boot();
+    }
+
+    // 6. Раздать модулям их слоты через UI_D
+    if(window.UI_D && typeof window.UI_D.registerModule === 'function'){
+      Object.keys(slots).forEach(function(slotName){
+        slots[slotName].forEach(function(moduleId){
+          if(mountedModules[moduleId]) return;
+          mountedModules[moduleId] = true;
+          window.UI_D.registerModule(moduleId, {
+            onVars: function(vars){
+              var el = document.querySelector('[data-module="' + moduleId + '"]');
+              if(!el) return;
+              el.dataset.slot = slotName;
+              el.dataset.ready = '1';
+            }
+          });
+        });
+      });
+    }
+
+    console.log('[PAGE_D] boot ok', { raw: raw, slots: slots });
+  }
+
+  return { boot: boot };
+})();
+</script>
