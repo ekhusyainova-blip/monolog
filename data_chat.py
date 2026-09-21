@@ -27,27 +27,23 @@ STUB = False
 PROVIDERS = {
     "groq": {
         "url": "https://api.groq.com/openai/v1/chat/completions",
-        "model": "llama-3.3-70b-versatile",
-        "reasoning_effort": "medium",
-        "env_keys": "GROQ_API_KEYS",
+        "model": "openai/gpt-oss-120b",
+        ...
     },
     "openrouter": {
         "url": "https://openrouter.ai/api/v1/chat/completions",
-        "model": "meta-llama/llama-3.3-70b-instruct:free",
-        "reasoning_effort": None,
-        "env_keys": "OPENROUTER_API_KEY",
+        "model": "meta-llama/llama-3.3-70b-instruct:free",  # пока оставь, потом проверишь
+        ...
     },
     "cerebras": {
         "url": "https://api.cerebras.ai/v1/chat/completions",
-        "model": "llama3.3-70b",
-        "reasoning_effort": "medium",
-        "env_keys": "CEREBRAS_API_KEY",
+        "model": "gpt-oss-120b",
+        ...
     },
     "sambanova": {
         "url": "https://api.sambanova.ai/v1/chat/completions",
-        "model": "Meta-Llama-3.3-70B-Instruct",
-        "reasoning_effort": None,
-        "env_keys": "SAMBANOVA_API_KEY",
+        "model": "gpt-oss-120b",
+        ...
     },
 }
 
