@@ -1,0 +1,25 @@
+<!-- раз chat_b_page.html -->
+<!-- Тложема: page -->
+<!-- Слой: B (условиить модули по слотам) -->
+
+<script>
+window.PAGE_B = (function(){
+  function normalize(raw){
+    var layout = (raw && raw.layout) || [];
+    var slots = {};
+    Object.keys(window.PAGE_A.SLOTS).forEach(function(s){
+      slots[s] = [];
+    });
+    layout.forEach(function(item){
+      var slot = item.slot;
+      var moduleId = item.module;
+      if(!slots[slot]) return;
+      if(!moduleId) return;
+      slots[slot].push(moduleId);
+    });
+    return slots;
+  }
+
+  return { normalize: normalize };
+})();
+</script>
