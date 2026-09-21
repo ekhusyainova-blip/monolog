@@ -1,23 +1,23 @@
 <!-- chat_b_ui.html -->
 <!-- Тема: ui -->
-<!-- Слой: B (условие: сопоставление имён переменных с CSS-свойствами) -->
+<!-- Слой: B (условие: интерпретация переменных оформления) -->
 
 <script>
 window.UI_B = (function(){
-  // Простая таблица: если имя начинается с X, то это CSS-свойство Y.
-  // Если совпадения нет — используем имя как есть: var(--<name>).
   var MAP = [
-    {test: /^bg/,           css: 'background'},
-    {test: /^fg|^text/,     css: 'color'},
-    {test: /^accent/,       css: 'accent'},
-    {test: /^border/,       css: 'border-color'},
-    {test: /^radius/,       css: 'border-radius'},
-    {test: /^shadow/,       css: 'box-shadow'},
-    {test: /^spacing|^gap/, css: 'gap'},
-    {test: /^font/,         css: 'font'},
-    {test: /^line/,         css: 'line-height'},
-    {test: /^transition/,   css: 'transition'},
-    {test: /^duration/,     css: 'transition-duration'}
+    {test: /^bg/,              css: 'background'},
+    {test: /^surface/,         css: 'background'},
+    {test: /^fg|^text/,        css: 'color'},
+    {test: /^muted/,           css: 'color'},
+    {test: /^accent/,          css: 'accent'},
+    {test: /^border/,          css: 'border-color'},
+    {test: /^radius/,          css: 'border-radius'},
+    {test: /^shadow/,          css: 'box-shadow'},
+    {test: /^spacing|^gap/,    css: 'gap'},
+    {test: /^font/,            css: 'font'},
+    {test: /^line/,            css: 'line-height'},
+    {test: /^transition/,      css: 'transition'},
+    {test: /^duration/,        css: 'transition-duration'}
   ];
 
   function describe(name){
@@ -28,7 +28,6 @@ window.UI_B = (function(){
   }
 
   function interpret(vars){
-    // vars = { dark: {name: value}, light: {name: value} }
     var out = { dark: {}, light: {} };
     ['dark','light'].forEach(function(theme){
       var src = vars[theme] || {};
