@@ -1,9 +1,12 @@
 <!-- chat_d_ui.html -->
 <!-- Тема: ui -->
-<!-- Слой: D (мета: решить какую тему применить, рендер) -->
+<!-- Слой: D (мета: применение, раздача модулям, boot) -->
 
 <script>
 window.UI_D = (function(){
+  var modules = [];
+  var currentVars = null;
+
   function currentTheme(){
     var t = document.documentElement.getAttribute('data-theme');
     if(t) return t;
@@ -14,24 +17,79 @@ window.UI_D = (function(){
   function setTheme(t){
     document.documentElement.setAttribute('data-theme', t);
     localStorage.setItem('monolog_theme', t);
+    notify();
   }
 
   function toggleTheme(){
     setTheme(currentTheme() === 'dark' ? 'light' : 'dark');
   }
 
-  async function boot(){
-    var vars = await window.UI_A.get();
-    var interp = window.UI_B.interpret(vars);
-    var css = window.UI_C.buildCSS(interp);
-    window.UI_C.apply(css);
-    var saved = localStorage.getItem('monolog_theme');
-    if(saved) setTheme(saved);
+  function registerModule(name, hooks){
+    modules.push({name: name, hooks: hooks || {}});
+    if(currentVars && hooks && typeof hooks.onVars === 'function'){
+      try{ hooks.onVars(currentVars); }catch(e){ console.error('[UI_D] onVars error', name, e); }
+    }
   }
 
-  return { boot: boot, setTheme: setTheme, toggleTheme: toggleTheme, currentTheme: currentTheme };
-})();
+  function notify(){
+    if(!currentVars) return;
+    modules.forEach(function(m){
+      if(m.hooks && typeof m.hooks.onVars === 'function'){
+        try{ m.hooks.onVars(currentVars); }catch(e){ console.error('[UI_D] notify error', m.name, e); }
+      }
+    });
+  }
 
-// автостарт
-window.UI_D.boot();
+  function getVars(){
+    return currentVars;
+  }
+
+  function pickTheme(vars, theme){
+    if(!vars || !vars[theme]) return {};
+    return vars[theme];
+  }
+
+  async function boot(){
+    // 1. A — получить переменные (из кэша или от ИИ)
+    var raw = await window.UI_A.get();
+    // 2. B — интерпретировать
+    var interp = window.UI_B.interpret(raw);
+    // 3. C — собрать CSS
+    var css = window.UI_C.buildCSS(interp);
+    // 4. C — применить <style>
+    window.UI_C.apply(css);
+    // 5. D — выбрать тему
+    var saved = localStorage.getItem('monolog_theme');
+    if(saved) setTheme(saved);
+    // 6. D — сохранить текущий набор для модулей
+    currentVars = {
+      raw: raw,
+      interpreted: interp,
+      current: pickTheme(interp, currentTheme())
+    };
+    // 7. D — уведомить модули
+    notify();
+    // 8. D — обновлять current при смене темы
+    var observer = new MutationObserver(function(muts){
+      muts.forEach(function(m){
+        if(m.attributeName === 'data-theme'){
+          currentVars.current = pickTheme(interp, currentTheme());
+          notify();
+        }
+      });
+    });
+    observer.observe(document.documentElement, {attributes: true});
+    // 9. Лог для отладки
+    console.log('[UI_D] boot ok', currentVars);
+  }
+
+  return {
+    boot: boot,
+    setTheme: setTheme,
+    toggleTheme: toggleTheme,
+    currentTheme: currentTheme,
+    registerModule: registerModule,
+    getVars: getVars
+  };
+})();
 </script>
