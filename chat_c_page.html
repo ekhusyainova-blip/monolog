@@ -1,0 +1,38 @@
+<!-- chat_c_page.html -->
+<!-- Тема: page -->
+<!-- Слой: C (решение: собрать конкретную структуру) -->
+
+<script>
+window.PAGE_C = (function(){
+  // Рендер одного блока обёртки для слота.
+  function wrapSlot(name, inner){
+    return '<div class="page-slot page-slot-' + name + '" data-slot="' + name + '">' + inner + '</div>';
+  }
+
+  // Собрать HTML каркаса страницы.
+  function buildHTML(slots){
+    var order = ['header','leftRail','main','rightRail','composer','sheet','overlay','status'];
+    var out = '';
+    order.forEach(function(name){
+      var mods = slots[name] || [];
+      var inner = mods.map(function(id){
+        return '<div class="page-module" data-module="' + id + '"></div>';
+      }).join('');
+      out += wrapSlot(name, inner);
+    });
+    return out;
+  }
+
+  function mount(html){
+    var root = document.getElementById('page-root');
+    if(!root){
+      root = document.createElement('div');
+      root.id = 'page-root';
+      document.body.appendChild(root);
+    }
+    root.innerHTML = html;
+  }
+
+  return { buildHTML: buildHTML, mount: mount };
+})();
+</script>
