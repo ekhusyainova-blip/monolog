@@ -1,23 +1,67 @@
 <!-- chat_a_ui.html -->
 <!-- Тема: ui -->
-<!-- Слой: A (данные) -->
-<!-- Что: данные о доступных формах, блоках -->
+<!-- Слой: A (данные: запрос к ИИ, приём, кэш, fallback) -->
 
-<div id="ui-templates">
-  <!-- Формы -->
-  <template id="form-default">...</template>
-  <template id="form-compact">...</template>
-  <template id="form-wide">...</template>
+<script>
+window.UI_A = (function(){
+  var CACHE_KEY = 'monolog_ui_vars';
 
-  <!-- Блоки -->
-  <template id="block-header">...</template>
-  <template id="block-messages">...</template>
-  <template id="block-input">...</template>
-  <template id="block-footer">...</template>
+  var PROMPT = [
+    'Заполни CSS-переменные для UI.',
+    'Верни JSON:',
+    '{',
+    '  "dark":  { "имя": "значение" },',
+    '  "light": { "имя": "значение" }',
+    '}',
+    'Имен — как можно больше.',
+    'Значения — в формате CSS (hex, rgba, px, em, s).',
+    'Только JSON.'
+  ].join('\n');
 
-  <!-- Стили -->
-  <style>
-    :root[data-theme="dark"] { --bg: #0f0f10; --fg: #e8e8ea; }
-    :root[data-theme="light"] { --bg: #fafafa; --fg: #1a1a1c; }
-  </style>
-</div>
+  function getCache(){
+    try{
+      var raw = localStorage.getItem(CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+
+  function setCache(data){
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch(e){}
+  }
+
+  async function requestFromAI(){
+    var r = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: PROMPT, context: []})
+    });
+    var j = await r.json();
+    if(!j || !j.data || !j.data.answer) throw new Error('empty');
+    var txt = j.data.answer.trim();
+    txt = txt.replace(/```json/gi, '').replace(/```/g, '').trim();
+    var first = txt.indexOf('{');
+    var last = txt.lastIndexOf('}');
+    if(first < 0 || last < 0) throw new Error('no json');
+    return JSON.parse(txt.slice(first, last + 1));
+  }
+
+  async function get(){
+    var cached = getCache();
+    if(cached) return cached;
+    try{
+      var fresh = await requestFromAI();
+      setCache(fresh);
+      return fresh;
+    }catch(e){
+      return {};
+    }
+  }
+
+  return {
+    get: get,
+    getCache: getCache,
+    setCache: setCache,
+    PROMPT: PROMPT
+  };
+})();
+</script>
