@@ -1,43 +1,28 @@
 # chat_c_chat.py
 # Тема: chat
 # Слой: C (решение)
-# Что: формирование решения чата
 
-# A · данные (внутри C)
-# Какие данные для решения.
-# Ключи, провайдеры, exhausted.
-
-import os
 import time
+import httpx
 
-KEYS = {
-    "groq": [k.strip() for k in os.getenv("GROQ_API_KEYS", "").split(",") if k.strip()],
-    "cerebras": [os.getenv("CEREBRAS_API_KEY", "")],
-    "sambanova": [os.getenv("SAMBANOVA_API_KEY", "")],
-    "openrouter": [os.getenv("OPENROUTER_API_KEY", "")],
-}
+from chat_a_chat import on, emit, PROVIDERS, SETTINGS, KEYS
 
 _rotation = {}
 _exhausted = {}
 
-# B · условие (внутри C)
-# При каких условиях формируется решение.
-# Есть ключи — решение формируется.
+def has_keys(provider: str) -> bool:
+    return bool([k for k in KEYS.get(provider, []) if k])
 
-# C · решение
 def pick_provider(preferred: str = None) -> str:
-    """Выбрать провайдера."""
-    if preferred and KEYS.get(preferred):
+    if preferred and has_keys(preferred):
         return preferred
-    for name in ["groq", "cerebras", "sambanova", "openrouter"]:
-        if KEYS.get(name) and any(KEYS[name]):
+    for name in SETTINGS["provider_order"]:
+        if has_keys(name):
             return name
     raise ValueError("Нет доступных провайдеров")
 
 def pick_key(provider: str) -> str:
-    """Выбрать ключ."""
-    keys = KEYS.get(provider, [])
-    keys = [k for k in keys if k]
+    keys = [k for k in KEYS.get(provider, []) if k]
     if not keys:
         raise ValueError(f"Нет ключей для {provider}")
     now = time.time()
@@ -51,8 +36,54 @@ def pick_key(provider: str) -> str:
     return active[idx]
 
 def mark_exhausted(provider: str, key: str) -> None:
-    _exhausted.setdefault(provider, {})[key] = time.time() + 65
+    _exhausted.setdefault(provider, {})[key] = time.time() + SETTINGS["cooldown_sec"]
 
-# D · мета (внутри C)
-# Куда выводится решение.
-# В D (мета чата).
+def _headers(provider: str, key: str) -> dict:
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+    }
+    if provider == "openrouter":
+        headers["HTTP-Referer"] = "https://monolog.app"
+        headers["X-Title"] = "Monolog"
+    return headers
+
+async def call_provider(provider: str, payload: dict) -> dict:
+    key = pick_key(provider)
+    cfg = PROVIDERS[provider]
+    headers = _headers(provider, key)
+    body = dict(payload)
+    body["model"] = cfg["model"]
+    async with httpx.AsyncClient(timeout=SETTINGS["timeout"]) as client:
+        r = await client.post(cfg["url"], headers=headers, json=body)
+        if r.status_code == 429:
+            mark_exhausted(provider, key)
+        r.raise_for_status()
+        return r.json()
+
+@on("request_built")
+def handle_request_built(data: dict):
+    event = data["event"]
+    payload = data["payload"]
+    try:
+        provider = pick_provider(event.get("provider"))
+    except ValueError as e:
+        emit("answer_ready", {"error": str(e)})
+        return
+    import asyncio
+    t0 = time.time()
+    try:
+        result = asyncio.get_event_loop().run_until_complete(
+            call_provider(provider, payload)
+        )
+        answer = result["choices"][0]["message"]["content"]
+        emit("answer_ready", {
+            "answer": answer,
+            "provider": provider,
+            "elapsed": time.time() - t0,
+        })
+    except Exception as e:
+        emit("answer_ready", {"error": str(e)})
+
+# C · импорт D в конце
+import chat_d_chat
