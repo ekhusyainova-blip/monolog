@@ -48,14 +48,14 @@ def _headers(provider: str, key: str) -> dict:
         headers["X-Title"] = "Monolog"
     return headers
 
-async def call_provider(provider: str, payload: dict) -> dict:
+def call_provider(provider: str, payload: dict) -> dict:
     key = pick_key(provider)
     cfg = PROVIDERS[provider]
     headers = _headers(provider, key)
     body = dict(payload)
     body["model"] = cfg["model"]
-    async with httpx.AsyncClient(timeout=SETTINGS["timeout"]) as client:
-        r = await client.post(cfg["url"], headers=headers, json=body)
+    with httpx.Client(timeout=SETTINGS["timeout"]) as client:
+        r = client.post(cfg["url"], headers=headers, json=body)
         if r.status_code == 429:
             mark_exhausted(provider, key)
         r.raise_for_status()
@@ -70,12 +70,9 @@ def handle_request_built(data: dict):
     except ValueError as e:
         emit("answer_ready", {"error": str(e)})
         return
-    import asyncio
     t0 = time.time()
     try:
-        result = asyncio.get_event_loop().run_until_complete(
-            call_provider(provider, payload)
-        )
+        result = call_provider(provider, payload)
         answer = result["choices"][0]["message"]["content"]
         emit("answer_ready", {
             "answer": answer,
