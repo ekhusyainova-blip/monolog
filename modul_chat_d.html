@@ -1,0 +1,49 @@
+<!-- module_chat_d.html -->
+<!-- Модуль: chat -->
+<!-- Слой: D (мета: вставить в слот, зарегистрироваться в UI, стартовать) -->
+
+<script>
+window.MODULE_CHAT_D = (function(){
+  var A = window.MODULE_CHAT_A;
+  var B = window.MODULE_CHAT_B;
+  var C = window.MODULE_CHAT_C;
+
+  var history = [];
+
+  function mount(container){
+    if(!container) return;
+    container.innerHTML = C.buildHTML();
+    C.bind(history);
+  }
+
+  function onVars(vars){
+    // UI передал переменные оформления. Применяем к корню модуля.
+    var root = document.querySelector('[data-module="' + A.id + '"]');
+    if(!root) return;
+    root.dataset.uiReady = '1';
+    // Тонкий сигнал: CSS-переменные применились, модуль готов использовать var(--...).
+    // Пока никаких стилей навешивать не будем — стили придут отдельным шагом.
+  }
+
+  function register(){
+    if(!window.UI_D || typeof window.UI_D.registerModule !== 'function') return;
+    window.UI_D.registerModule(A.id, { onVars: onVars });
+  }
+
+  function boot(){
+    // Ждём, пока PAGE_D отрисует каркас.
+    var check = function(){
+      var container = document.querySelector('[data-module="' + A.id + '"]');
+      if(container){
+        mount(container);
+        register();
+      }else{
+        setTimeout(check, 30);
+      }
+    };
+    if(B.whenActive()) check();
+  }
+
+  return { boot: boot };
+})();
+</script>
