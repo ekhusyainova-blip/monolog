@@ -1,0 +1,12 @@
+{
+  "when_apply": {
+    "theme": "при загрузке",
+    "stream": "при запросе",
+    "provider_order": "при выборе провайдера",
+    "soft_limit": "при вводе",
+    "hard_limit": "при вводе",
+    "max_attachments": "при вложении",
+    "max_attach_len": "при вложении",
+    "cooldown_sec": "при 429"
+  }
+}
