@@ -1,0 +1,10 @@
+{
+  "theme": "dark",
+  "stream": false,
+  "provider_order": ["groq", "cerebras", "sambanova", "openrouter"],
+  "soft_limit": 16000,
+  "hard_limit": 32000,
+  "max_attachments": 3,
+  "max_attach_len": 3000,
+  "cooldown_sec": 65
+}
