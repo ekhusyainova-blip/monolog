@@ -62,9 +62,9 @@ PROMPTS = {
     "layer_a_content": "Ты — Monolog.",
 }
 
-# A · путь к HTML
+# A · путь к странице чата
 BASE_DIR = Path(__file__).resolve().parent
-UI_PATH = BASE_DIR / "chat_a_ui.html"
+UI_PATH = BASE_DIR / "chat_a_page.html"
 
 def read_ui() -> str:
     try:
