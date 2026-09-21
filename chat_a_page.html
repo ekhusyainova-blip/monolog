@@ -18,8 +18,10 @@ window.PAGE_A = (function(){
     status:    { label: 'Статус' }
   };
 
-  // Реестр модулей. Пока пустой — модулей нет.
-  var MODULES = [];
+// Реестр модулей.
+  var MODULES = [
+    { id: 'chat', slot: 'main', active: true }
+  ];
 
   // Запрос к ИИ: какие блоки и в каком порядке.
   var PROMPT = [
