@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monolog</title>
+<script src="/chat_a_ui.html"></script>
+<script src="/chat_b_ui.html"></script>
+<script src="/chat_c_ui.html"></script>
+<script src="/chat_d_ui.html"></script>
+</head>
+<body>
+<div id="log"></div>
+<form id="form">
+  <textarea id="input" rows="1" placeholder="Напиши..."></textarea>
+  <button type="submit">Отправить</button>
+</form>
+<script>
+var log = document.getElementById('log');
+var form = document.getElementById('form');
+var input = document.getElementById('input');
+var chatHistory = [];
+
+function addMsg(role, text){
+  var d = document.createElement('div');
+  d.className = 'msg ' + role;
+  var strong = document.createElement('strong');
+  strong.textContent = (role === 'user' ? 'Я: ' : 'Monolog: ');
+  d.appendChild(strong);
+  d.appendChild(document.createTextNode(text));
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function send(){
+  var text = input.value.trim();
+  if(!text) return;
+  addMsg('user', text);
+  input.value = '';
+  try{
+    var r = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text, context: chatHistory})
+    });
+    var j = await r.json();
+    if(j.ok && j.data && j.data.answer){
+      addMsg('bot', j.data.answer);
+      chatHistory.push({role: 'user', content: text});
+      chatHistory.push({role: 'assistant', content: j.data.answer});
+    }else if(j.error){
+      addMsg('bot', '[ошибка] ' + (j.error.message || 'неизвестно'));
+    }else{
+      addMsg('bot', '[ошибка] пустой ответ');
+    }
+  }catch(e){
+    addMsg('bot', '[ошибка сети] ' + e.message);
+  }
+}
+
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  send();
+});
+
+input.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    send();
+  }
+});
+</script>
+</body>
+</html>
