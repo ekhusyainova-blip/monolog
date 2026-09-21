@@ -140,6 +140,14 @@ INDEX_HTML = """<!DOCTYPE html>
 if(window.PAGE_D && typeof window.PAGE_D.boot === 'function'){
   window.PAGE_D.boot();
 }
+<script>
+if(window.PAGE_D && typeof window.PAGE_D.boot === 'function'){
+  window.PAGE_D.boot();
+}
+if(window.MODULE_CHAT_D && typeof window.MODULE_CHAT_D.boot === 'function'){
+  window.MODULE_CHAT_D.boot();
+}
+</script>
 </script>
 </body>
 </html>"""
