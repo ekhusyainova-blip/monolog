@@ -1,20 +1,11 @@
 # chat_d_chat.py
 # Тема: chat
 # Слой: D (мета)
-# Что: мета, маршрутизация чата
 
-# A · данные (внутри D)
-# Какие данные для мета.
-# Результат C.
+import time
 
-# B · условие (внутри D)
-# При каких условиях мета срабатывает.
-# После C.
+from chat_a_chat import on, EVENTS
 
-# C · решение (внутри D)
-# Решение: что делать с результатом.
-
-# D · мета
 def build_response(answer: str, provider: str, elapsed: float) -> dict:
     return {
         "ok": True,
@@ -26,18 +17,20 @@ def build_response(answer: str, provider: str, elapsed: float) -> dict:
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
-def build_error(code: int, cls: str, msg: str) -> dict:
+def build_error(cls: str, msg: str) -> dict:
     return {
         "ok": False,
-        "error": {"code": code, "class": cls, "message": msg},
+        "error": {"code": 500, "class": cls, "message": msg},
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
-def route(result: dict, event: dict) -> dict:
-    """Куда отдать результат."""
-    if not result.get("ok"):
-        return {"target": "error", "payload": result}
-    return {"target": "user", "payload": result}
-
-# Куда выводится мета.
-# В A (обратно).
+@on("answer_ready")
+def handle_answer_ready(data: dict):
+    if data.get("error"):
+        EVENTS.append(build_error("provider", data["error"]))
+        return
+    EVENTS.append(build_response(
+        data["answer"],
+        data.get("provider", "unknown"),
+        data.get("elapsed", 0.0),
+    ))
