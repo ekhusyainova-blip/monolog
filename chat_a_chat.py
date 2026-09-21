@@ -1,3 +1,120 @@
+# chat_a_chat.py
+# Тема: chat
+# Слой: A (данные, точка входа, шина, app, роуты)
+
+import os
+import time
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
+
+# A · данные
+PROVIDERS = {
+    "groq": {
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "model": "openai/gpt-oss-120b",
+        "env_keys": "GROQ_API_KEYS",
+    },
+    "cerebras": {
+        "url": "https://api.cerebras.ai/v1/chat/completions",
+        "model": "gpt-oss-120b",
+        "env_keys": "CEREBRAS_API_KEY",
+    },
+    "sambanova": {
+        "url": "https://api.sambanova.ai/v1/chat/completions",
+        "model": "Meta-Llama-3.3-70B-Instruct",
+        "env_keys": "SAMBANOVA_API_KEY",
+    },
+    "openrouter": {
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "model": "nvidia/nemotron-3-ultra",
+        "env_keys": "OPENROUTER_API_KEY",
+    },
+}
+
+SETTINGS = {
+    "temperature": 0.7,
+    "max_tokens": 2048,
+    "timeout": 120,
+    "provider_order": ["groq", "cerebras", "sambanova", "openrouter"],
+    "cooldown_sec": 65,
+}
+
+def load_keys(env_name: str) -> list:
+    raw = os.getenv(env_name, "").strip()
+    if not raw:
+        return []
+    return [k.strip() for k in raw.split(",") if k.strip()]
+
+KEYS = {
+    "groq": load_keys("GROQ_API_KEYS"),
+    "cerebras": load_keys("CEREBRAS_API_KEY"),
+    "sambanova": load_keys("SAMBANOVA_API_KEY"),
+    "openrouter": load_keys("OPENROUTER_API_KEY"),
+}
+
+PROMPTS = {
+    "layer_a": "Ты — Monolog.",
+    "layer_b": "Ты — Monolog.",
+    "layer_c": "Ты — Monolog.",
+    "layer_d": "Ты — Monolog.",
+    "layer_a_content": "Ты — Monolog.",
+}
+
+# A · шина
+HANDLERS = {}
+EVENTS = []
+
+def on(event_name: str):
+    def wrapper(fn):
+        HANDLERS.setdefault(event_name, []).append(fn)
+        return fn
+    return wrapper
+
+def emit(event_name: str, payload: dict):
+    for fn in HANDLERS.get(event_name, []):
+        fn(payload)
+
+# A · app и роуты
+app = FastAPI(title="Monolog Chat")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=os.getenv("CORS_ORIGINS", "*").split(","),
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.get("/health")
+async def health():
+    return {
+        "ok": True,
+        "status": "alive",
+        "providers": {name: len(KEYS.get(name, [])) for name in PROVIDERS},
+    }
+
+@app.post("/chat")
+async def chat(request: Request):
+    body = await request.json()
+    event = {
+        "text": (body.get("text") or "").strip(),
+        "context": body.get("context"),
+        "provider": body.get("provider"),
+    }
+    if not event["text"]:
+        return JSONResponse(
+            {"ok": False, "error": {"code": 400, "class": "validation", "message": "Пустой текст"}},
+            status_code=400,
+        )
+    EVENTS.clear()
+    emit("user_message", event)
+    if not EVENTS:
+        return JSONResponse(
+            {"ok": False, "error": {"code": 500, "class": "internal", "message": "Нет ответа от цепочки"}},
+            status_code=500,
+        )
+    return JSONResponse(EVENTS[-1])
+
+# A · интерфейс
 INDEX_HTML = """<!DOCTYPE html>
 <html lang="ru" data-theme="dark" data-fontsize="md">
 <head>
@@ -52,7 +169,6 @@ body{
   height:100dvh;position:relative;overflow:hidden;
 }
 
-/* Верхняя полупрозрачная полоса */
 .topbar{
   position:absolute;top:0;left:0;right:0;
   height:44px;z-index:20;
@@ -132,7 +248,6 @@ table th,table td{padding:9px 12px;text-align:left;border-bottom:1px solid var(-
 table th{font-weight:600;color:var(--muted);font-size:calc(var(--fs) - 4px);text-transform:uppercase;letter-spacing:0.5px}
 table tr:last-child td{border-bottom:none}
 
-/* Композер */
 .composer-wrap{
   flex-shrink:0;position:relative;z-index:15;
   background:var(--bg);
@@ -144,7 +259,6 @@ table tr:last-child td{border-bottom:none}
   pointer-events:none;
 }
 
-/* Язычок шторки */
 .sheet-handle{
   display:flex;flex-direction:column;align-items:center;gap:0;
   padding:8px 0 2px;
@@ -203,7 +317,6 @@ table tr:last-child td{border-bottom:none}
 #input:focus{outline:none}
 #input::placeholder{color:var(--dim);transition:opacity 0.3s}
 
-/* ===== Шторка — матовое стекло ===== */
 .sheet{
   position:absolute;left:0;right:0;bottom:0;
   background:transparent;
@@ -241,7 +354,6 @@ table tr:last-child td{border-bottom:none}
 .sheet .sheet-item:hover{background:var(--glass)}
 .sheet .sheet-item .ico{width:18px;height:18px;flex-shrink:0;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:14px}
 
-/* Затемнение фона под шторкой */
 .scrim{
   position:absolute;inset:0;z-index:25;
   background:rgba(0,0,0,0.28);
@@ -337,7 +449,6 @@ var fontKnob=document.getElementById('fontKnob');
 var ICON_COPY='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 var ICON_CHECK='<svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>';
 
-/* ===== Плейсхолдер от ИИ ===== */
 var PH_KEY='monolog_placeholder';
 var PH_CACHE_KEY='monolog_placeholder_at';
 var PH_TTL=1000*60*30;
@@ -373,7 +484,6 @@ async function fetchPlaceholder(){
 }
 fetchPlaceholder();
 
-/* Тема */
 function setTheme(t){
   document.documentElement.setAttribute('data-theme',t);
   localStorage.setItem('monolog_theme',t);
@@ -389,7 +499,6 @@ function toggleTheme(){
   else setTheme('dark');
 })();
 
-/* Размер шрифта */
 var FONT_STEPS=['sm','md','lg','xl'];
 function setFont(idx){
   idx=Math.max(0,Math.min(FONT_STEPS.length-1,idx));
@@ -420,7 +529,6 @@ fontTrack.addEventListener('pointerdown',function(e){draggingFont=true;setFontFr
 fontTrack.addEventListener('pointermove',function(e){if(draggingFont)setFontFromEvent(e.clientX);});
 fontTrack.addEventListener('pointerup',function(e){draggingFont=false;try{fontTrack.releasePointerCapture(e.pointerId)}catch(_){}});
 
-/* ===== Шторка ===== */
 var sheetOpen=false;
 var sheetH=0;
 var drag={active:false,startY:0,currentY:0,startTranslate:0};
@@ -466,13 +574,11 @@ function onMove(e){
   var newTranslate=drag.startTranslate+dy;
   newTranslate=Math.max(0,Math.min(sheetH,newTranslate));
   sheet.style.transform='translateY('+newTranslate+'px)';
-  /* Матовое стекло проявляется пропорционально подъёму */
   var progress=1-(newTranslate/sheetH);
   var blur=progress*28;
   var alpha=progress;
   sheet.style.backdropFilter='blur('+blur+'px) saturate('+(100+progress*80)+'%)';
   sheet.style.webkitBackdropFilter='blur('+blur+'px) saturate('+(100+progress*80)+'%)';
-  /* Фон проявляется */
   var bg=document.documentElement.getAttribute('data-theme')==='dark'
     ? 'rgba(28,28,32,'+(0.72*alpha)+')'
     : 'rgba(255,255,255,'+(0.72*alpha)+')';
@@ -523,7 +629,6 @@ document.addEventListener('pointercancel',onUp);
 
 scrim.addEventListener('click',closeSheet);
 
-/* Один раз мигнём подсказкой */
 (function(){
   if(localStorage.getItem('monolog_handle_seen'))return;
   setTimeout(function(){
@@ -535,13 +640,11 @@ scrim.addEventListener('click',closeSheet);
   },900);
 })();
 
-/* Верхняя полоса при скролле */
 log.addEventListener('scroll',function(){
   if(log.scrollTop>4)topbar.classList.add('scrolled');
   else topbar.classList.remove('scrolled');
 });
 
-/* ===== Markdown ===== */
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function renderMarkdown(text){
@@ -650,3 +753,10 @@ input.addEventListener('input',function(){
 </script>
 </body>
 </html>"""
+
+@app.get("/", response_class=HTMLResponse)
+async def index():
+    return INDEX_HTML
+
+# A · импорт B в конце
+import chat_b_chat
