@@ -1,79 +1,82 @@
-<!DOCTYPE html>
-<html lang="ru">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Monolog</title>
-<script src="/chat_a_ui.html"></script>
-<script src="/chat_b_ui.html"></script>
-<script src="/chat_c_ui.html"></script>
-<script src="/chat_d_ui.html"></script>
-</head>
-<body>
-<div id="log"></div>
-<form id="form">
-  <textarea id="input" rows="1" placeholder="Напиши..."></textarea>
-  <button type="submit">Отправить</button>
-</form>
+<!-- chat_a_page.html -->
+<!-- Тема: page -->
+<!-- Слой: A (данные: слоты, реестр модулей, запрос к ИИ) -->
+
 <script>
-var log = document.getElementById('log');
-var form = document.getElementById('form');
-var input = document.getElementById('input');
-var chatHistory = [];
+window.PAGE_A = (function(){
+  var CACHE_KEY = 'monolog_page_layout';
 
-function addMsg(role, text){
-  var d = document.createElement('div');
-  d.className = 'msg ' + role;
-  var strong = document.createElement('strong');
-  strong.textContent = (role === 'user' ? 'Я: ' : 'Monolog: ');
-  d.appendChild(strong);
-  d.appendChild(document.createTextNode(text));
-  log.appendChild(d);
-  log.scrollTop = log.scrollHeight;
-}
+  // Слоты страницы. Ключ — имя, значение — что в нём может быть.
+  var SLOTS = {
+    header:    { label: 'Верхняя полоса' },
+    leftRail:  { label: 'Левая колонка' },
+    main:      { label: 'Основная область' },
+    rightRail: { label: 'Правая колонка' },
+    composer:  { label: 'Нижняя плашка' },
+    sheet:     { label: 'Шторка' },
+    overlay:   { label: 'Оверлей' },
+    status:    { label: 'Статус' }
+  };
 
-async function send(){
-  var text = input.value.trim();
-  if(!text) return;
-  addMsg('user', text);
-  input.value = '';
-  try{
+  // Реестр модулей. Пока пустой — модулей нет.
+  var MODULES = [];
+
+  // Запрос к ИИ: какие блоки и в каком порядке.
+  var PROMPT = [
+    'Ты — сборщик страницы.',
+    'Есть слоты: header, leftRail, main, rightRail, composer, sheet, overlay, status.',
+    'Есть модули: ' + (MODULES.map(function(m){return m.id;}).join(', ') || '(нет)') + '.',
+    'Верни JSON:',
+    '{ "layout": [ { "slot": "<имя>", "module": "<id>" } ] }',
+    'Только JSON.'
+  ].join('\n');
+
+  function getCache(){
+    try{
+      var raw = localStorage.getItem(CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+
+  function setCache(data){
+    try{ localStorage.setItem(CACHE_KEY, JSON.stringify(data)); }catch(e){}
+  }
+
+  async function requestFromAI(){
+    if(MODULES.length === 0) return { layout: [] };
     var r = await fetch('/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text: text, context: chatHistory})
+      body: JSON.stringify({text: PROMPT, context: []})
     });
     var j = await r.json();
-    if(j.ok && j.data && j.data.answer){
-      addMsg('bot', j.data.answer);
-      chatHistory.push({role: 'user', content: text});
-      chatHistory.push({role: 'assistant', content: j.data.answer});
-    }else if(j.error){
-      addMsg('bot', '[ошибка] ' + (j.error.message || 'неизвестно'));
-    }else{
-      addMsg('bot', '[ошибка] пустой ответ');
+    if(!j || !j.data || !j.data.answer) throw new Error('empty');
+    var txt = j.data.answer.trim().replace(/```json/gi,'').replace(/```/g,'').trim();
+    var first = txt.indexOf('{');
+    var last = txt.lastIndexOf('}');
+    if(first < 0 || last < 0) throw new Error('no json');
+    return JSON.parse(txt.slice(first, last + 1));
+  }
+
+  async function get(){
+    var cached = getCache();
+    if(cached) return cached;
+    try{
+      var fresh = await requestFromAI();
+      setCache(fresh);
+      return fresh;
+    }catch(e){
+      return { layout: [] };
     }
-  }catch(e){
-    addMsg('bot', '[ошибка сети] ' + e.message);
   }
-}
 
-form.addEventListener('submit', function(e){
-  e.preventDefault();
-  send();
-});
-
-input.addEventListener('keydown', function(e){
-  if(e.key === 'Enter' && !e.shiftKey){
-    e.preventDefault();
-    send();
-  }
-});
-
-// фрактал UI — стартуем
-if(window.UI_D && typeof window.UI_D.boot === 'function'){
-  window.UI_D.boot();
-}
+  return {
+    get: get,
+    getCache: getCache,
+    setCache: setCache,
+    SLOTS: SLOTS,
+    MODULES: MODULES,
+    PROMPT: PROMPT
+  };
+})();
 </script>
-</body>
-</html>
