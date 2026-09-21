@@ -1,0 +1,12 @@
+{
+  "output_to": {
+    "theme": "ui",
+    "stream": "chat",
+    "provider_order": "chat",
+    "soft_limit": "chat",
+    "hard_limit": "chat",
+    "max_attachments": "chat",
+    "max_attach_len": "chat",
+    "cooldown_sec": "chat"
+  }
+}
