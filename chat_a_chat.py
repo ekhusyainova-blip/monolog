@@ -4,7 +4,6 @@
 
 import os
 import time
-from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -62,17 +61,6 @@ PROMPTS = {
     "layer_a_content": "Ты — Monolog.",
 }
 
-# A · путь к странице чата
-BASE_DIR = Path(__file__).resolve().parent
-UI_PATH = BASE_DIR / "chat_a_page.html"
-
-def read_ui() -> str:
-    try:
-        return UI_PATH.read_text(encoding="utf-8")
-    except Exception as e:
-        print(f"[chat_a_chat] UI read error: {e}", flush=True)
-        return "<!DOCTYPE html><html><body><h1>Monolog</h1><p>UI не найден.</p></body></html>"
-
 # A · шина
 HANDLERS = {}
 EVENTS = []
@@ -126,9 +114,35 @@ async def chat(request: Request):
         )
     return JSONResponse(EVENTS[-1])
 
+# A · стартовая оболочка
+INDEX_HTML = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" отде content="width=device-width, initial-scale=льно1">
+<title>Monolog</title>
+<script src="/chat_a_ui.html"></script>
+<script src="/chat_b_ui.html"></script>
+<script src="/chat_c_ui.html"></script>
+<script src="/chat_d_ui.html"></script>
+<script src="/chat_a_page.html"></script>
+<script src="/chat_b_page.html"></script>
+<script src="/chat_c_page.html"></script>
+<script src="/chat_d_page.html"></script>
+</head>
+<body>
+<div id="page-root"></div>
+<script>
+if(window.PAGE_D && typeof window.PAGE_D.boot === 'function'){
+  window.PAGE_D.boot();
+}
+</script>
+</body>
+</html>"""
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return read_ui()
+    return INDEX_HTML
 
 # A · импорт B в конце
 import chat_b_chat
