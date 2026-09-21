@@ -129,6 +129,10 @@ INDEX_HTML = """<!DOCTYPE html>
 <script src="/chat_b_page.html"></script>
 <script src="/chat_c_page.html"></script>
 <script src="/chat_d_page.html"></script>
+<script src="/module_chat_a.html"></script>
+<script src="/module_chat_b.html"></script>
+<script src="/module_chat_c.html"></script>
+<script src="/module_chat_d.html"></script>
 </head>
 <body>
 <div id="page-root"></div>
