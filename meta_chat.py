@@ -1,11 +1,11 @@
 # meta_chat.py
 # Тема: chat
-# Папка: D (мета)
+# Папка: D (мета, маршрутизатор)
 
 import time
 import json
 import re
-from data_chat import on, EVENTS
+import data_chat
 
 def extract_json(text):
     if not text:
@@ -24,23 +24,24 @@ def extract_json(text):
 
 def default_output(text=""):
     return {
-        "text": text,
-        "metrics": [],
-        "style": {"theme": "dark", "density": "airy", "accent": "soft"},
-        "modules": ["chat"],
-        "navigation": {"where": "chat", "sphere_visible": False, "menu_available": True},
-        "mode": "clarity",
-        "screen": "conversation",
+        "vars": {"text": text},
+        "routes": [{"to": "user"}],
         "silence": False,
-        "allow_leave": True,
+        "prompts_new": None,
     }
 
-def build_response(answer, provider, elapsed):
-    parsed = extract_json(answer)
-    if parsed and isinstance(parsed, dict) and parsed.get("text"):
+def apply_prompts(new):
+    if not new or not isinstance(new, dict):
+        return
+    for k, v in new.items():
+        if isinstance(v, str) and v.strip():
+            data_chat.PROMPTS[k] = v
+
+def build_response(parsed, provider, elapsed):
+    if parsed and isinstance(parsed, dict) and ("vars" in parsed or "silence" in parsed):
         output = parsed
     else:
-        output = default_output(answer)
+        output = default_output(parsed if isinstance(parsed, str) else "")
     return {
         "ok": True,
         "data": {
@@ -58,13 +59,20 @@ def build_error(cls, msg):
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
-@on("answer_ready")
+@data_chat.on("answer_ready")
 def handle(data):
-    if data.get("error"):
-        EVENTS.append(build_error("provider", data["error"]))
-        return
-    EVENTS.append(build_response(
-        data["answer"],
+    answer = data.get("answer", "")
+    parsed = extract_json(answer)
+    if not parsed or not isinstance(parsed, dict):
+        parsed = default_output(answer)
+    if parsed.get("prompts_new"):
+        apply_prompts(parsed.get("prompts_new"))
+    data_chat.EVENTS.append(build_response(
+        parsed,
         data.get("provider", "unknown"),
         data.get("elapsed", 0.0),
     ))
+
+@data_chat.on("answer_failed")
+def handle_failed(data):
+    data_chat.emit("need_a_content", data)
