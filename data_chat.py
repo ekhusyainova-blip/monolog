@@ -103,32 +103,98 @@ INDEX_HTML = """<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Monolog</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font:17px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0e0e10;color:#e6e6e8;max-width:680px;margin:0 auto;padding:24px 20px 120px;min-height:100vh}
-#log{display:flex;flex-direction:column;gap:20px}
-.msg.bot{font-size:17px;line-height:1.75;white-space:pre-wrap;word-wrap:break-word}
-.msg.user{color:#8a8a8f;font-size:15px;text-align:right;white-space:pre-wrap;word-wrap:break-word}
-.pulse{width:8px;height:8px;border-radius:50%;background:#7fb1ff;display:inline-block;animation:pulse 1.4s infinite}
-@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
-form{position:fixed;left:0;right:0;bottom:0;background:#0e0e10;padding:14px 20px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid #1e1e21;display:flex;gap:8px;align-items:flex-end}
-form .inner{max-width:680px;margin:0 auto;width:100%;display:flex;gap:8px;align-items:flex-end}
-textarea{flex:1;resize:none;background:transparent;color:#e6e6e8;border:1px solid #1e1e21;border-radius:10px;padding:10px 12px;font:inherit;min-height:44px;max-height:160px}
-textarea:focus{outline:none;border-color:#7fb1ff}
-button{background:#7fb1ff;color:#fff;border:none;padding:0 18px;height:44px;border-radius:10px;cursor:pointer;font:inherit;font-weight:500;flex-shrink:0}
-button:disabled{opacity:0.4;cursor:not-allowed}
+html,body{height:100%}
+body{
+  font:17px/1.75 -apple-system,BlinkMacSystemFont,"Inter","SF Pro Text","Segoe UI",Roboto,sans-serif;
+  background:#0f0f11;
+  color:#e8e8ea;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  letter-spacing:-0.005em;
+}
+.wrap{
+  max-width:680px;margin:0 auto;
+  padding:56px 24px 160px;
+  min-height:100vh;
+}
+#log{display:flex;flex-direction:column;gap:32px}
+.msg.bot{
+  font-size:17px;line-height:1.78;color:#e8e8ea;
+  white-space:pre-wrap;word-wrap:break-word;
+  animation:fadeIn 0.5s ease;
+}
+.msg.user{
+  align-self:flex-end;max-width:82%;
+  background:rgba(255,255,255,0.055);
+  border:1px solid rgba(255,255,255,0.07);
+  backdrop-filter:blur(14px) saturate(140%);
+  -webkit-backdrop-filter:blur(14px) saturate(140%);
+  border-radius:16px;
+  padding:10px 14px;
+  font-size:15px;line-height:1.55;
+  color:#a8a8ae;
+  white-space:pre-wrap;word-wrap:break-word;
+  animation:fadeIn 0.3s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.pulse{display:inline-flex;gap:4px;align-items:center;height:20px}
+.pulse span{width:6px;height:6px;border-radius:50%;background:#7fb1ff;animation:pulse 1.4s infinite}
+.pulse span:nth-child(2){animation-delay:0.2s}
+.pulse span:nth-child(3){animation-delay:0.4s}
+@keyframes pulse{0%,100%{opacity:0.25;transform:scale(0.7)}50%{opacity:1;transform:scale(1)}}
+
+form{
+  position:fixed;left:0;right:0;bottom:0;
+  background:rgba(15,15,17,0.72);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border-top:1px solid rgba(255,255,255,0.05);
+  padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));
+}
+form .inner{
+  max-width:680px;margin:0 auto;
+  display:flex;gap:10px;align-items:flex-end;
+}
+textarea{
+  flex:1;resize:none;background:transparent;
+  color:#e8e8ea;border:none;outline:none;
+  padding:10px 4px;
+  font:inherit;font-size:17px;line-height:1.55;
+  min-height:44px;max-height:200px;
+  white-space:pre-wrap;
+}
+textarea::placeholder{color:#58585e}
+button.send{
+  flex-shrink:0;
+  width:40px;height:40px;
+  background:#7fb1ff;color:#0f0f11;
+  border:none;border-radius:50%;
+  cursor:pointer;padding:0;
+  display:flex;align-items:center;justify-content:center;
+  transition:opacity 0.15s,transform 0.1s;
+}
+button.send:hover{opacity:0.9}
+button.send:active{transform:scale(0.94)}
+button.send:disabled{opacity:0.35;cursor:not-allowed}
+button.send svg{width:18px;height:18px;stroke:#0f0f11;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
 <body>
 
-<div id="log"></div>
+<div class="wrap">
+  <div id="log"></div>
+</div>
 
 <form id="form">
   <div class="inner">
-    <textarea id="input" rows="1" placeholder="Напиши..."></textarea>
-    <button type="submit" id="send">→</button>
+    <textarea id="input" rows="1" placeholder="Напиши..." autocomplete="off"></textarea>
+    <button type="submit" id="send" aria-label="Отправить">
+      <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </button>
   </div>
 </form>
 
@@ -156,7 +222,7 @@ async function send(){
 
   var pulse = document.createElement('div');
   pulse.className = 'msg bot';
-  pulse.innerHTML = '<span class="pulse"></span>';
+  pulse.innerHTML = '<span class="pulse"><span></span><span></span><span></span></span>';
   log.appendChild(pulse);
   log.scrollTop = log.scrollHeight;
 
@@ -175,7 +241,7 @@ async function send(){
       chatHistory.push({role: 'user', content: text});
       chatHistory.push({role: 'assistant', content: answer});
     } else if(j.ok && j.data && j.data.output && j.data.output.silence){
-      // молчание — ничего не показываем
+      // молчание
     } else if(j.error){
       addMsg('bot', '[ошибка] ' + (j.error.message || ''));
     } else {
@@ -202,7 +268,7 @@ input.addEventListener('keydown', function(e){
 });
 input.addEventListener('input', function(){
   this.style.height = 'auto';
-  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
+  this.style.height = Math.min(this.scrollHeight, 200) + 'px';
 });
 </script>
 </body>
