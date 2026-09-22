@@ -305,6 +305,55 @@ function addLog(role, text){
   log.scrollTop = log.scrollHeight;
 }
 
+function renderText(text){
+  if(!text){ slotText.textContent = ''; return; }
+  var parts = [];
+  var re = /```(\w*)\n?([\s\S]*?)```/g;
+  var last = 0, m;
+  while((m = re.exec(text)) !== null){
+    if(m.index > last) parts.push({type:'text', value: text.slice(last, m.index)});
+    parts.push({type:'code', lang: m[1] || 'code', value: m[2]});
+    last = m.index + m[0].length;
+  }
+  if(last < text.length) parts.push({type:'text', value: text.slice(last)});
+
+  slotText.innerHTML = '';
+  parts.forEach(function(p){
+    if(p.type === 'text'){
+      var d = document.createElement('div');
+      d.textContent = p.value;
+      d.style.whiteSpace = 'pre-wrap';
+      slotText.appendChild(d);
+    } else {
+      var wrap = document.createElement('div');
+      wrap.style.cssText = 'position:relative;margin:12px 0;border:1px solid var(--line);border-radius:8px;background:#0b0b0d;overflow:hidden';
+
+      var pre = document.createElement('pre');
+      pre.style.cssText = 'margin:0;padding:32px 14px 14px;overflow-x:auto;font:13px/1.6 ui-monospace,monospace';
+      pre.textContent = p.value;
+
+      var lang = document.createElement('span');
+      lang.style.cssText = 'position:absolute;top:8px;left:12px;font-size:10px;color:#8a8a8f;letter-spacing:0.6px';
+      lang.textContent = (p.lang || 'code').toUpperCase();
+
+      var btn = document.createElement('button');
+      btn.style.cssText = 'position:absolute;top:6px;right:6px;background:transparent;border:1px solid var(--line);color:#8a8a8f;font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer;font-family:inherit';
+      btn.textContent = 'копировать';
+      btn.onclick = function(){
+        navigator.clipboard.writeText(p.value).then(function(){
+          btn.textContent = 'скопировано';
+          setTimeout(function(){ btn.textContent = 'копировать'; }, 1400);
+        });
+      };
+
+      wrap.appendChild(lang);
+      wrap.appendChild(btn);
+      wrap.appendChild(pre);
+      slotText.appendChild(wrap);
+    }
+  });
+}
+
 function escapeHtml(s){
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
