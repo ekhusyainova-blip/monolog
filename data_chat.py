@@ -29,37 +29,27 @@ def load_keys(name):
 
 KEYS = {name: load_keys(cfg["env"]) for name, cfg in PROVIDERS.items()}
 
-# Промпты v2.0
-PROMPTS = {
-    # Промпты v2.1
-PROMPTS = {
-    "layer_a": (
-        "Ты — Monolog, слой A. "
-        "Дай анализ: что есть, факты, без интерпретаций. "
-        "Формат ответа: 'A · Анализ' и текст после."
-    ),
-    "layer_b": (
-        "Ты — Monolog, слой B. "
-        "Найди противоречия: что не сходится, где разрыв. "
-        "Формат ответа: 'B · Противоречия' и текст после."
-    ),
-    "layer_c": (
-        "Ты — Monolog, слой C. "
-        "Дай решение: что делать, без давления и без навязывания. "
-        "Формат ответа: 'C · Решение' и текст после."
-    ),
-    "layer_d": (
-        "Ты — Monolog, слой D. "
-        "Дай адаптацию: разверни ответ в мерности, дай контекст. "
-        "Формат ответа: 'D · Адаптация' и текст после."
-    ),
-    "layer_a_content": (
-        "Ты — Monolog, аварийный слой A_CONTENT. "
-        "Основной ABCD недоступен. Дай минимальный ответ: "
-        "A — что есть. B — что может значить. C — одно действие сейчас. D — когда вернёмся. "
-        "Формат: 4 строки. Не оставляй без ответа."
-    ),
-}
+
+# Промпты грузятся из prompts_chat.json
+import json
+from pathlib import Path
+
+PROMPTS_PATH = Path(__file__).resolve().parent / "prompts_chat.json"
+
+def load_prompts():
+    try:
+        return json.loads(PROMPTS_PATH.read_text(encoding="utf-8")).get("prompts", {})
+    except Exception as e:
+        print(f"[data_chat] prompts load error: {e}", flush=True)
+        return {
+            "layer_a": "Ты — Monolog, слой A.",
+            "layer_b": "Ты — Monolog, слой B.",
+            "layer_c": "Ты — Monolog, слой C.",
+            "layer_d": "Ты — Monolog, слой D.",
+            "layer_a_content": "Ты — Monolog, аварийный слой.",
+        }
+
+PROMPTS = load_prompts()
 
 HANDLERS = {}
 EVENTS = []
