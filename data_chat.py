@@ -84,7 +84,6 @@ async def chat(request: Request):
     event = {
         "text": (body.get("text") or "").strip(),
         "context": body.get("context") or [],
-        "content_mode": bool(body.get("content_mode")),
     }
     if not event["text"]:
         return JSONResponse(
@@ -101,322 +100,67 @@ async def chat(request: Request):
     return JSONResponse(EVENTS[-1])
 
 INDEX_HTML = """<!DOCTYPE html>
-<html lang="ru" data-theme="dark" data-density="airy" data-accent="soft" data-font="sans" data-layout="narrow">
+<html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Monolog</title>
 <style>
-:root[data-theme="dark"]{--bg:#0e0e10;--fg:#e6e6e8;--soft:#a8a8ae;--muted:#6a6a70;--line:#1e1e21;--accent:#7fb1ff}
-:root[data-theme="light"]{--bg:#fbfbfc;--fg:#18181a;--soft:#4a4a50;--muted:#8a8a8f;--line:#e7e7ea;--accent:#2563eb}
-:root[data-density="airy"]{--lh:1.85;--gap:22px}
-:root[data-density="compact"]{--lh:1.55;--gap:14px}
-:root[data-accent="sharp"]{--accent:#ff5b5b}
-:root[data-font="serif"]{--font:Georgia,serif}
-:root[data-font="sans"]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-:root[data-font="mono"]{--font:ui-monospace,Menlo,monospace}
-:root[data-layout="wide"]{--maxw:960px}
-:root[data-layout="narrow"]{--maxw:720px}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font:16px/var(--lh) var(--font);background:var(--bg);color:var(--fg);padding:20px;max-width:var(--maxw);margin:0 auto}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--line);position:relative;z-index:10}
-.topbar .left{display:flex;align-items:center;gap:6px}
-.topbar .right{display:flex;align-items:center;gap:2px}
-.state-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);display:inline-block;transition:background 0.3s}
-.state-dot[data-state="clarity"]{background:#6ee7a8}
-.state-dot[data-state="search"]{background:#f4c46a}
-.state-dot[data-state="return"]{background:#f08a8a}
-.state-dot[data-state="support"]{background:#7fb1ff}
-.icon-btn{background:none;border:none;color:var(--muted);font-size:18px;padding:4px 8px;cursor:pointer;border-radius:6px;line-height:1;font-family:inherit}
-.icon-btn:hover{color:var(--fg);background:rgba(255,255,255,0.05)}
-.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--line)}
-.topbar .left{display:flex;gap:8px;align-items:center}
-.topbar .right{display:flex;gap:8px}
-.badge{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border:1px solid var(--line);border-radius:6px}
-.badge.accent{border-color:var(--accent);color:var(--accent)}
-.btn{background:none;border:1px solid var(--line);color:var(--soft);font-size:13px;padding:5px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
-.btn:hover{color:var(--fg);border-color:var(--accent)}
-.slot{margin:0 0 var(--gap)}
-.slot-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
-.slot-label .toggle{font-size:10px;cursor:pointer;color:var(--muted)}
-.slot-label .toggle:hover{color:var(--fg)}
-#slot-text{font-size:16px;line-height:var(--lh);white-space:pre-wrap;min-height:20px}
-#slot-text:empty::before{content:'—';color:var(--muted)}
-.state-grid{display:flex;gap:10px;flex-wrap:wrap}
-.state-pill{border:1px solid var(--line);padding:4px 10px;border-radius:12px;font-size:12px;color:var(--soft)}
-.state-pill.active{border-color:var(--accent);color:var(--accent)}
-.metrics{display:flex;gap:12px;flex-wrap:wrap}
-.metric{background:rgba(127,177,255,0.06);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;position:relative}
-.metric .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
-.metric .v{font-weight:600;margin-top:2px}
-.metric .save{position:absolute;top:4px;right:4px;font-size:10px;color:var(--muted);cursor:pointer;opacity:0.5;background:none;border:none;padding:2px 4px}
-.metric .save:hover{opacity:1;color:var(--accent)}
-.metric .save.saved{color:var(--accent);opacity:1}
-#slot-extra .row{padding:4px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--soft)}
-#slot-extra .row .k{color:var(--muted);margin-right:8px}
-#slot-debug{font:11px/1.5 ui-monospace,monospace;background:#0b0b0d;color:#8a8a8f;padding:10px;border-radius:8px;white-space:pre-wrap;max-height:280px;overflow:auto}
-#slot-debug.collapsed{display:none}
-#log{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--soft);margin-top:10px}
-#log.collapsed{display:none}
-#log .msg strong{color:var(--fg);margin-right:6px}
-#log .msg.user{color:var(--muted)}
-.pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 1.4s infinite}
+body{font:17px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:#0e0e10;color:#e6e6e8;max-width:680px;margin:0 auto;padding:24px 20px 120px;min-height:100vh}
+#log{display:flex;flex-direction:column;gap:20px}
+.msg.bot{font-size:17px;line-height:1.75;white-space:pre-wrap;word-wrap:break-word}
+.msg.user{color:#8a8a8f;font-size:15px;text-align:right;white-space:pre-wrap;word-wrap:break-word}
+.pulse{width:8px;height:8px;border-radius:50%;background:#7fb1ff;display:inline-block;animation:pulse 1.4s infinite}
 @keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
-form{display:flex;gap:8px;align-items:flex-end;margin-top:16px}
-textarea{flex:1;resize:none;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;min-height:44px;max-height:180px}
-textarea:focus{outline:none;border-color:var(--accent)}
-button.send{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-family:inherit}
+form{position:fixed;left:0;right:0;bottom:0;background:#0e0e10;padding:14px 20px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid #1e1e21;display:flex;gap:8px;align-items:flex-end}
+form .inner{max-width:680px;margin:0 auto;width:100%;display:flex;gap:8px;align-items:flex-end}
+textarea{flex:1;resize:none;background:transparent;color:#e6e6e8;border:1px solid #1e1e21;border-radius:10px;padding:10px 12px;font:inherit;min-height:44px;max-height:160px}
+textarea:focus{outline:none;border-color:#7fb1ff}
+button{background:#7fb1ff;color:#fff;border:none;padding:0 18px;height:44px;border-radius:10px;cursor:pointer;font:inherit;font-weight:500;flex-shrink:0}
+button:disabled{opacity:0.4;cursor:not-allowed}
 </style>
 </head>
 <body>
 
-<div class="topbar">
-  <div class="left" id="slot-state" title="состояние">
-    <span class="state-dot" data-state="clarity"></span>
-  </div>
-  <div class="right">
-    <button class="icon-btn" onclick="resetAll()" title="сброс">⟲</button>
-    <button class="icon-btn" onclick="toggleHistory()" title="история">☰</button>
-    <button class="icon-btn" onclick="toggleDebug()" title="отладка">⌥</button>
-  </div>
-</div>
-
-<div class="slot">
-  <div class="slot-label">Отражение</div>
-  <div id="slot-reflection"><span class="state-pill">не вижу</span></div>
-</div>
-
-<div class="slot">
-  <div class="slot-label">Полезность</div>
-  <div id="slot-usefulness"><span class="state-pill">—</span></div>
-</div>
-
-<div class="slot">
-  <div class="slot-label">Ответ</div>
-  <div id="slot-text"></div>
-</div>
-
-<div class="slot">
-  <div class="slot-label">Метрики</div>
-  <div class="metrics" id="slot-metrics"></div>
-</div>
-
-<div class="slot">
-  <div class="slot-label">Дополнительно</div>
-  <div id="slot-extra"></div>
-</div>
-
-<div class="slot">
-  <div class="slot-label">
-    <span>Отладка</span>
-    <span class="toggle" onclick="toggleDebug()">показать</span>
-  </div>
-  <div id="slot-debug" class="collapsed"></div>
-</div>
-
-<div class="slot">
-  <div class="slot-label">Ход диалога</div>
-  <div id="log" class="collapsed"></div>
-</div>
+<div id="log"></div>
 
 <form id="form">
-  <textarea id="input" rows="1" placeholder="Напиши..."></textarea>
-  <button class="send" type="submit">Отправить</button>
+  <div class="inner">
+    <textarea id="input" rows="1" placeholder="Напиши..."></textarea>
+    <button type="submit" id="send">→</button>
+  </div>
 </form>
 
 <script>
-var $ = function(id){ return document.getElementById(id); };
-var slotText = $('slot-text');
-var slotMetrics = $('slot-metrics');
-var slotExtra = $('slot-extra');
-var slotDebug = $('slot-debug');
-var slotState = $('slot-state');
-var slotReflection = $('slot-reflection');
-var slotUsefulness = $('slot-usefulness');
-var log = $('log');
-var form = $('form');
-var input = $('input');
+var log = document.getElementById('log');
+var form = document.getElementById('form');
+var input = document.getElementById('input');
+var sendBtn = document.getElementById('send');
 var chatHistory = [];
 
-var KNOWN = ['text','state','reflection','usefulness','metrics','style','theme','density','accent','font','layout','routes','silence','prompts_new','a_content'];
-
-function applyStyle(v){
-  if(!v) return;
-  var h = document.documentElement;
-  var s = v.style || {};
-  var theme = v.theme || s.theme;
-  var density = v.density || s.density;
-  var accent = v.accent || s.accent;
-  var font = v.font || s.font;
-  var layout = v.layout || s.layout;
-  if(theme) h.setAttribute('data-theme', theme);
-  if(density) h.setAttribute('data-density', density);
-  if(accent) h.setAttribute('data-accent', accent);
-  if(font) h.setAttribute('data-font', font);
-  if(layout) h.setAttribute('data-layout', layout);
-}
-
-function setState(state){
-  var dot = slotState.querySelector('.state-dot');
-  if(!dot) return;
-  if(!state){ dot.removeAttribute('data-state'); return; }
-  dot.setAttribute('data-state', state);
-}
-
-function setReflection(value){
-  if(!value){ slotReflection.innerHTML = '<span class="state-pill">не вижу</span>'; return; }
-  slotReflection.innerHTML = '<span class="state-pill active">' + value + '</span>';
-}
-
-function setUsefulness(value){
-  if(value === undefined || value === null){ slotUsefulness.innerHTML = '<span class="state-pill">—</span>'; return; }
-  slotUsefulness.innerHTML = '<span class="state-pill active">' + value + '</span>';
-}
-
-function renderMetrics(list){
-  slotMetrics.innerHTML = '';
-  if(!Array.isArray(list) || !list.length) return;
-  list.forEach(function(m){
-    var d = document.createElement('div');
-    d.className = 'metric';
-    var k = document.createElement('div'); k.className='k'; k.textContent = m.key || '';
-    var v = document.createElement('div'); v.className='v'; v.textContent = m.value || '';
-    var s = document.createElement('button'); s.className='save'; s.textContent = 'сохранить';
-    s.onclick = function(){
-      var saved = JSON.parse(localStorage.getItem('monolog_saved_metrics') || '[]');
-      saved.push({key: m.key, value: m.value, ts: Date.now()});
-      localStorage.setItem('monolog_saved_metrics', JSON.stringify(saved));
-      s.classList.add('saved');
-      s.textContent = 'сохранено';
-    };
-    d.appendChild(k); d.appendChild(v); d.appendChild(s);
-    slotMetrics.appendChild(d);
-  });
-}
-
-function renderExtra(v){
-  slotExtra.innerHTML = '';
-  if(!v) return;
-  Object.keys(v).forEach(function(k){
-    if(KNOWN.indexOf(k) >= 0) return;
-    var row = document.createElement('div');
-    row.className = 'row';
-    row.innerHTML = '<span class="k">' + k + '</span>' + String(v[k]);
-    slotExtra.appendChild(row);
-  });
-}
-
-function addLog(role, text){
+function addMsg(role, text){
   var d = document.createElement('div');
   d.className = 'msg ' + role;
-  d.innerHTML = '<strong>' + (role === 'user' ? 'Я:' : 'Monolog:') + '</strong>' + escapeHtml(text);
+  d.textContent = text;
   log.appendChild(d);
   log.scrollTop = log.scrollHeight;
-}
-
-function renderText(text){
-  if(!text){ slotText.textContent = ''; return; }
-  var parts = [];
-  var re = /```(\w*)\n?([\s\S]*?)```/g;
-  var last = 0, m;
-  while((m = re.exec(text)) !== null){
-    if(m.index > last) parts.push({type:'text', value: text.slice(last, m.index)});
-    parts.push({type:'code', lang: m[1] || 'code', value: m[2]});
-    last = m.index + m[0].length;
-  }
-  if(last < text.length) parts.push({type:'text', value: text.slice(last)});
-
-  slotText.innerHTML = '';
-  parts.forEach(function(p){
-    if(p.type === 'text'){
-      var d = document.createElement('div');
-      d.textContent = p.value;
-      d.style.whiteSpace = 'pre-wrap';
-      slotText.appendChild(d);
-    } else {
-      var wrap = document.createElement('div');
-      wrap.style.cssText = 'position:relative;margin:12px 0;border:1px solid var(--line);border-radius:8px;background:#0b0b0d;overflow:hidden';
-
-      var pre = document.createElement('pre');
-      pre.style.cssText = 'margin:0;padding:32px 14px 14px;overflow-x:auto;font:13px/1.6 ui-monospace,monospace';
-      pre.textContent = p.value;
-
-      var lang = document.createElement('span');
-      lang.style.cssText = 'position:absolute;top:8px;left:12px;font-size:10px;color:#8a8a8f;letter-spacing:0.6px';
-      lang.textContent = (p.lang || 'code').toUpperCase();
-
-      var btn = document.createElement('button');
-      btn.style.cssText = 'position:absolute;top:6px;right:6px;background:transparent;border:1px solid var(--line);color:#8a8a8f;font-size:11px;padding:3px 8px;border-radius:5px;cursor:pointer;font-family:inherit';
-      btn.textContent = 'копировать';
-      btn.onclick = function(){
-        navigator.clipboard.writeText(p.value).then(function(){
-          btn.textContent = 'скопировано';
-          setTimeout(function(){ btn.textContent = 'копировать'; }, 1400);
-        });
-      };
-
-      wrap.appendChild(lang);
-      wrap.appendChild(btn);
-      wrap.appendChild(pre);
-      slotText.appendChild(wrap);
-    }
-  });
-}
-
-function escapeHtml(s){
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function renderOutput(out){
-  if(!out) return;
-  var v = out.vars || {};
-  if(out.silence){
-    slotText.textContent = '';
-    slotMetrics.innerHTML = '';
-    slotExtra.innerHTML = '';
-    return;
-  }
-  renderText(v.text || '');
-  if(v.state) setState(v.state);
-  if(v.reflection) setReflection(v.reflection);
-  if(v.usefulness !== undefined) setUsefulness(v.usefulness);
-  renderMetrics(v.metrics);
-  renderExtra(v);
-  applyStyle(v);
-  slotDebug.textContent = JSON.stringify(out, null, 2);
-}
-
-function resetAll(){
-  chatHistory = [];
-  slotText.textContent = '';
-  slotMetrics.innerHTML = '';
-  slotExtra.innerHTML = '';
-  slotDebug.textContent = '';
-  log.innerHTML = '';
-  setReflection(null);
-  setUsefulness(null);
-  setState(null);
-}
-
-function toggleDebug(){
-  slotDebug.classList.toggle('collapsed');
-  var t = slotDebug.previousElementSibling.querySelector('.toggle');
-  t.textContent = slotDebug.classList.contains('collapsed') ? 'показать' : 'скрыть';
-}
-
-function toggleHistory(){
-  log.classList.toggle('collapsed');
 }
 
 async function send(){
   var text = input.value.trim();
   if(!text) return;
-  addLog('user', text);
+  addMsg('user', text);
   input.value = '';
-  var pulse = document.createElement('span');
-  pulse.className = 'pulse';
-  slotText.innerHTML = '';
-  slotText.appendChild(pulse);
+  input.style.height = 'auto';
+
+  var pulse = document.createElement('div');
+  pulse.className = 'msg bot';
+  pulse.innerHTML = '<span class="pulse"></span>';
+  log.appendChild(pulse);
+  log.scrollTop = log.scrollHeight;
+
+  sendBtn.disabled = true;
   try {
     var r = await fetch('/chat', {
       method: 'POST',
@@ -424,22 +168,25 @@ async function send(){
       body: JSON.stringify({text: text, context: chatHistory})
     });
     var j = await r.json();
-    slotText.innerHTML = '';
-    if(j.ok && j.data && j.data.output){
-      renderOutput(j.data.output);
+    pulse.remove();
+    if(j.ok && j.data && j.data.output && j.data.output.vars && j.data.output.vars.text){
+      var answer = j.data.output.vars.text;
+      addMsg('bot', answer);
       chatHistory.push({role: 'user', content: text});
-      var v = j.data.output.vars || {};
-      if(v.text){
-        chatHistory.push({role: 'assistant', content: v.text});
-        addLog('bot', v.text);
-      }
+      chatHistory.push({role: 'assistant', content: answer});
+    } else if(j.ok && j.data && j.data.output && j.data.output.silence){
+      // молчание — ничего не показываем
     } else if(j.error){
-      slotText.textContent = '[ошибка] ' + (j.error.message || '');
+      addMsg('bot', '[ошибка] ' + (j.error.message || ''));
     } else {
-      slotText.textContent = '[ошибка] пустой ответ';
+      addMsg('bot', '[ошибка] пустой ответ');
     }
   } catch(e){
-    slotText.textContent = '[ошибка сети] ' + e.message;
+    pulse.remove();
+    addMsg('bot', '[ошибка сети] ' + e.message);
+  } finally {
+    sendBtn.disabled = false;
+    input.focus();
   }
 }
 
@@ -452,6 +199,10 @@ input.addEventListener('keydown', function(e){
     e.preventDefault();
     send();
   }
+});
+input.addEventListener('input', function(){
+  this.style.height = 'auto';
+  this.style.height = Math.min(this.scrollHeight, 160) + 'px';
 });
 </script>
 </body>
