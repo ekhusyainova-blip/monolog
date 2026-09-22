@@ -119,6 +119,16 @@ INDEX_HTML = """<!DOCTYPE html>
 :root[data-layout="narrow"]{--maxw:720px}
 *{box-sizing:border-box;margin:0;padding:0}
 body{font:16px/var(--lh) var(--font);background:var(--bg);color:var(--fg);padding:20px;max-width:var(--maxw);margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:10px;border-bottom:1px solid var(--line);position:relative;z-index:10}
+.topbar .left{display:flex;align-items:center;gap:6px}
+.topbar .right{display:flex;align-items:center;gap:2px}
+.state-dot{width:10px;height:10px;border-radius:50%;background:var(--muted);display:inline-block;transition:background 0.3s}
+.state-dot[data-state="clarity"]{background:#6ee7a8}
+.state-dot[data-state="search"]{background:#f4c46a}
+.state-dot[data-state="return"]{background:#f08a8a}
+.state-dot[data-state="support"]{background:#7fb1ff}
+.icon-btn{background:none;border:none;color:var(--muted);font-size:18px;padding:4px 8px;cursor:pointer;border-radius:6px;line-height:1;font-family:inherit}
+.icon-btn:hover{color:var(--fg);background:rgba(255,255,255,0.05)}
 .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--line)}
 .topbar .left{display:flex;gap:8px;align-items:center}
 .topbar .right{display:flex;gap:8px}
@@ -161,15 +171,13 @@ button.send{background:var(--accent);color:#fff;border:none;padding:10px 18px;bo
 <body>
 
 <div class="topbar">
-  <div class="left" id="slot-state">
-    <span class="badge" data-state="clarity">ясность</span>
-    <span class="badge" data-state="search">поиск</span>
-    <span class="badge" data-state="return">возврат</span>
-    <span class="badge" data-state="support">сопровождение</span>
+  <div class="left" id="slot-state" title="состояние">
+    <span class="state-dot" data-state="clarity"></span>
   </div>
   <div class="right">
-    <button class="btn" onclick="resetAll()">Сброс</button>
-    <button class="btn" onclick="toggleHistory()">История</button>
+    <button class="icon-btn" onclick="resetAll()" title="сброс">⟲</button>
+    <button class="icon-btn" onclick="toggleHistory()" title="история">☰</button>
+    <button class="icon-btn" onclick="toggleDebug()" title="отладка">⌥</button>
   </div>
 </div>
 
@@ -249,9 +257,10 @@ function applyStyle(v){
 }
 
 function setState(state){
-  slotState.querySelectorAll('.badge').forEach(function(b){
-    b.classList.toggle('active', b.getAttribute('data-state') === state);
-  });
+  var dot = slotState.querySelector('.state-dot');
+  if(!dot) return;
+  if(!state){ dot.removeAttribute('data-state'); return; }
+  dot.setAttribute('data-state', state);
 }
 
 function setReflection(value){
