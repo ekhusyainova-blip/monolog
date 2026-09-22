@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "events": [
+    { "type": "open",    "desc": "открытие приложения" },
+    { "type": "message", "desc": "ввод сообщения" },
+    { "type": "click",   "desc": "клик по элементу" },
+    { "type": "close",   "desc": "закрытие приложения" },
+    { "type": "timeout", "desc": "истечение таймаута" },
+    { "type": "error",   "desc": "ошибка" }
+  ]
+}
