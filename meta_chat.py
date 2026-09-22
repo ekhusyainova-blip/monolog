@@ -17,31 +17,30 @@ def extract_json(text):
     b = t.rfind("}")
     if a < 0 or b < 0:
         return None
+    candidate = t[a:b+1]
     try:
-        return json.loads(t[a:b+1])
+        return json.loads(candidate)
     except Exception:
-        return None
+        try:
+            fixed = re.sub(r'(?<!\\)\n', r'\\n', candidate)
+            return json.loads(fixed)
+        except Exception:
+            return None
 
-def default_output(text=""):
+def wrap_text(text):
+    """Если ИИ вернул текст, а не JSON — оборачиваем в vars."""
     return {
-        "vars": {"text": text},
+        "vars": {"text": text or ""},
         "routes": [{"to": "user"}],
         "silence": False,
         "prompts_new": None,
     }
 
-def apply_prompts(new):
-    if not new or not isinstance(new, dict):
-        return
-    for k, v in new.items():
-        if isinstance(v, str) and v.strip():
-            data_chat.PROMPTS[k] = v
-
-def build_response(parsed, provider, elapsed):
+def build_response(parsed, provider, elapsed, raw=""):
     if parsed and isinstance(parsed, dict) and ("vars" in parsed or "silence" in parsed):
         output = parsed
     else:
-        output = default_output(parsed if isinstance(parsed, str) else "")
+        output = wrap_text(raw if raw else (parsed if isinstance(parsed, str) else ""))
     return {
         "ok": True,
         "data": {
@@ -52,6 +51,13 @@ def build_response(parsed, provider, elapsed):
         "ts": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
     }
 
+def apply_prompts(new):
+    if not new or not isinstance(new, dict):
+        return
+    for k, v in new.items():
+        if isinstance(v, str) and v.strip():
+            data_chat.PROMPTS[k] = v
+
 def build_error(cls, msg):
     return {
         "ok": False,
@@ -61,16 +67,15 @@ def build_error(cls, msg):
 
 @data_chat.on("answer_ready")
 def handle(data):
-    answer = data.get("answer", "")
-    parsed = extract_json(answer)
-    if not parsed or not isinstance(parsed, dict):
-        parsed = default_output(answer)
-    if parsed.get("prompts_new"):
+    raw = data.get("answer", "")
+    parsed = extract_json(raw)
+    if parsed and parsed.get("prompts_new"):
         apply_prompts(parsed.get("prompts_new"))
     data_chat.EVENTS.append(build_response(
         parsed,
         data.get("provider", "unknown"),
         data.get("elapsed", 0.0),
+        raw=raw,
     ))
 
 @data_chat.on("answer_failed")
