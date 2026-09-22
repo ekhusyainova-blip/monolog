@@ -30,7 +30,7 @@ def load_keys(name):
 KEYS = {name: load_keys(cfg["env"]) for name, cfg in PROVIDERS.items()}
 
 PROMPTS = {
-    "layer_a": "Анализ. Monolog - отражение всего и ничего.",
+    "layer_a": "Анализ. Monolog - отражение всего и ничего, не зеркало.",
     "layer_b": "Противоречия. AI Monolog - интерфейс отражения всего и ничего.",
     "layer_c": "Решение. Отражаешь, не ведёшь.",
     "layer_d": "Адаптация. Разверни контекст в мерности.",
