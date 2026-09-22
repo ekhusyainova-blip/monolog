@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monolog · Карта сейчас</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="title">Карта сейчас</div>
+    <button class="theme-btn" id="themeBtn" onclick="App.toggleTheme()" aria-label="Тема">◐</button>
+  </header>
+
+  <section class="block" id="where">
+    <div class="label">Где я</div>
+    <div class="content" id="whereContent">—</div>
+  </section>
+
+  <section class="block" id="todo">
+    <div class="label">Что делать</div>
+    <ol class="steps" id="todoContent"></ol>
+  </section>
+
+  <section class="block" id="metrics">
+    <div class="label">Метрики сейчас</div>
+    <div class="metrics" id="metricsContent"></div>
+  </section>
+
+  <section class="block" id="blockers">
+    <div class="label">Блокеры</div>
+    <div class="content" id="blockersContent">—</div>
+  </section>
+
+  <section class="block" id="history">
+    <div class="label">Что было</div>
+    <div class="history" id="historyContent"></div>
+  </section>
+
+  <footer>
+    <span id="updated">—</span>
+  </footer>
+
+</div>
+<script src="app.js"></script>
+</body>
+</html>
