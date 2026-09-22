@@ -35,4 +35,4 @@ def handle(event):
     payload = build_request(event)
     data_chat.emit("request_built", {"event": event, "payload": payload})
 
-import solve_chat
+import solve_abcd
