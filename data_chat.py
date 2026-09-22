@@ -29,9 +29,10 @@ def load_keys(name):
 
 KEYS = {name: load_keys(cfg["env"]) for name, cfg in PROVIDERS.items()}
 
+# Промпты v2.0
 PROMPTS = {
-    "layer_a": "Анализ. Monolog - отражение всего и ничего, не зеркало.",
-    "layer_b": "Противоречия. AI Monolog - интерфейс отражения всего и ничего.",
+    "layer_a": "Анализ. Monolog — отражение всего и ничего, не зеркало.",
+    "layer_b": "Противоречия. AI Monolog — интерфейс отражения всего и ничего.",
     "layer_c": "Решение. Отражаешь, не ведёшь.",
     "layer_d": "Адаптация. Разверни контекст в мерности.",
 }
@@ -125,13 +126,13 @@ async function send(){
     var r = await fetch('/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text: text, context: history})
+      body: JSON.stringify({text: text, context: chatHistory})
     });
     var j = await r.json();
     if(j.ok && j.data && j.data.answer){
       addMsg('bot', j.data.answer);
-      history.push({role: 'user', content: text});
-      history.push({role: 'assistant', content: j.data.answer});
+      chatHistory.push({role: 'user', content: text});
+      chatHistory.push({role: 'assistant', content: j.data.answer});
     } else if (j.error) {
       addMsg('bot', '[ошибка] ' + (j.error.message || ''));
     } else {
