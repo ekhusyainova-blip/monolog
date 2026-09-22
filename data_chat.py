@@ -86,9 +86,79 @@ async def chat(request: Request):
         )
     return JSONResponse(EVENTS[-1])
 
+INDEX_HTML = """<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Monolog</title>
+</head>
+<body>
+<div id="log"></div>
+<form id="form">
+  <textarea id="input" rows="1" placeholder="Напиши..."></textarea>
+  <button type="submit">Отправить</button>
+</form>
+<script>
+var log = document.getElementById('log');
+var form = document.getElementById('form');
+var input = document.getElementById('input');
+var history = [];
+
+function addMsg(role, text){
+  var d = document.createElement('div');
+  d.className = 'msg ' + role;
+  var b = document.createElement('strong');
+  b.textContent = (role === 'user' ? 'Я: ' : 'Monolog: ');
+  d.appendChild(b);
+  d.appendChild(document.createTextNode(text));
+  log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+async function send(){
+  var text = input.value.trim();
+  if(!text) return;
+  addMsg('user', text);
+  input.value = '';
+  try {
+    var r = await fetch('/chat', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({text: text, context: history})
+    });
+    var j = await r.json();
+    if(j.ok && j.data && j.data.answer){
+      addMsg('bot', j.data.answer);
+      history.push({role: 'user', content: text});
+      history.push({role: 'assistant', content: j.data.answer});
+    } else if (j.error) {
+      addMsg('bot', '[ошибка] ' + (j.error.message || ''));
+    } else {
+      addMsg('bot', '[ошибка] пустой ответ');
+    }
+  } catch (e) {
+    addMsg('bot', '[ошибка сети] ' + e.message);
+  }
+}
+
+form.addEventListener('submit', function(e){
+  e.preventDefault();
+  send();
+});
+input.addEventListener('keydown', function(e){
+  if(e.key === 'Enter' && !e.shiftKey){
+    e.preventDefault();
+    send();
+  }
+});
+</script>
+</body>
+</html>"""
+
 @app.get("/", response_class=HTMLResponse)
 async def index():
-    return "<!DOCTYPE html><html><body><h1>Monolog</h1><p>chat работает</p></body></html>"
+    return INDEX_HTML
 
 # A → B
 import interpret_chat
