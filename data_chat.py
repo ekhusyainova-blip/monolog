@@ -367,7 +367,7 @@ function renderOutput(out){
     slotExtra.innerHTML = '';
     return;
   }
-  slotText.textContent = v.text || '';
+  renderText(v.text || '');
   if(v.state) setState(v.state);
   if(v.reflection) setReflection(v.reflection);
   if(v.usefulness !== undefined) setUsefulness(v.usefulness);
