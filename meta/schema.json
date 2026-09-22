@@ -1,0 +1,13 @@
+{
+  "version": "1.0",
+  "description": "Схема ответа мета-слоя от ИИ",
+  "type": "object",
+  "required": ["layer", "action", "payload"],
+  "properties": {
+    "layer": { "type": "string", "enum": ["A", "B", "C", "D"] },
+    "action": { "type": "string" },
+    "payload": { "type": "object" },
+    "ts": { "type": "string", "format": "date-time" },
+    "note": { "type": "string" }
+  }
+}
