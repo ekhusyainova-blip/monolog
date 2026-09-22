@@ -31,7 +31,6 @@ def load_keys(name):
 
 KEYS = {name: load_keys(cfg["env"]) for name, cfg in PROVIDERS.items()}
 
-# Стартовые промпты
 PROMPTS_PATH = Path(__file__).resolve().parent / "prompts_chat.json"
 
 def load_prompts():
@@ -45,7 +44,7 @@ def load_prompts():
             "layer_b": "Ты — Monolog.",
             "layer_c": "Ты — Monolog.",
             "layer_d": "Ты — Monolog.",
-            "layer_a_content": "Ты — Monolog, аварийный.",
+            "layer_a_content": "Ты — Monolog, другой голос.",
         }
 
 PROMPTS = load_prompts()
@@ -85,6 +84,7 @@ async def chat(request: Request):
     event = {
         "text": (body.get("text") or "").strip(),
         "context": body.get("context") or [],
+        "content_mode": bool(body.get("content_mode")),
     }
     if not event["text"]:
         return JSONResponse(
@@ -101,127 +101,253 @@ async def chat(request: Request):
     return JSONResponse(EVENTS[-1])
 
 INDEX_HTML = """<!DOCTYPE html>
-<html lang="ru" data-theme="dark" data-density="airy" data-accent="soft">
+<html lang="ru" data-theme="dark" data-density="airy" data-accent="soft" data-font="sans" data-layout="narrow">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Monolog</title>
 <style>
-:root[data-theme="dark"]{--bg:#0e0e10;--fg:#e6e6e8;--soft:#a8a8ae;--muted:#6a6a70;--accent:#7fb1ff;--line:#1e1e21}
-:root[data-theme="light"]{--bg:#fbfbfc;--fg:#18181a;--soft:#4a4a50;--muted:#8a8a8f;--accent:#2563eb;--line:#e7e7ea}
+:root[data-theme="dark"]{--bg:#0e0e10;--fg:#e6e6e8;--soft:#a8a8ae;--muted:#6a6a70;--line:#1e1e21;--accent:#7fb1ff}
+:root[data-theme="light"]{--bg:#fbfbfc;--fg:#18181a;--soft:#4a4a50;--muted:#8a8a8f;--line:#e7e7ea;--accent:#2563eb}
 :root[data-density="airy"]{--lh:1.85;--gap:22px}
 :root[data-density="compact"]{--lh:1.55;--gap:14px}
 :root[data-accent="sharp"]{--accent:#ff5b5b}
+:root[data-font="serif"]{--font:Georgia,serif}
+:root[data-font="sans"]{--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
+:root[data-font="mono"]{--font:ui-monospace,Menlo,monospace}
+:root[data-layout="wide"]{--maxw:960px}
+:root[data-layout="narrow"]{--maxw:720px}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font:16px/var(--lh) -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:24px;max-width:720px;margin:0 auto}
+body{font:16px/var(--lh) var(--font);background:var(--bg);color:var(--fg);padding:20px;max-width:var(--maxw);margin:0 auto}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+.topbar .left{display:flex;gap:8px;align-items:center}
+.topbar .right{display:flex;gap:8px}
+.badge{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border:1px solid var(--line);border-radius:6px}
+.badge.accent{border-color:var(--accent);color:var(--accent)}
+.btn{background:none;border:1px solid var(--line);color:var(--soft);font-size:13px;padding:5px 10px;border-radius:6px;cursor:pointer;font-family:inherit}
+.btn:hover{color:var(--fg);border-color:var(--accent)}
 .slot{margin:0 0 var(--gap)}
-.slot-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.slot-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.slot-label .toggle{font-size:10px;cursor:pointer;color:var(--muted)}
+.slot-label .toggle:hover{color:var(--fg)}
 #slot-text{font-size:16px;line-height:var(--lh);white-space:pre-wrap;min-height:20px}
 #slot-text:empty::before{content:'—';color:var(--muted)}
-#slot-metrics{display:flex;gap:12px;flex-wrap:wrap}
-.metric{background:rgba(127,177,255,0.08);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
+.state-grid{display:flex;gap:10px;flex-wrap:wrap}
+.state-pill{border:1px solid var(--line);padding:4px 10px;border-radius:12px;font-size:12px;color:var(--soft)}
+.state-pill.active{border-color:var(--accent);color:var(--accent)}
+.metrics{display:flex;gap:12px;flex-wrap:wrap}
+.metric{background:rgba(127,177,255,0.06);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px;position:relative}
 .metric .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
 .metric .v{font-weight:600;margin-top:2px}
-.metric .v.ok{color:#6ee7a8}
-.metric .v.warn{color:#f4c46a}
-.metric .v.bad{color:#f08a8a}
-#slot-extra{font-size:13px;color:var(--soft)}
-#slot-extra .row{padding:4px 0;border-bottom:1px solid var(--line)}
+.metric .save{position:absolute;top:4px;right:4px;font-size:10px;color:var(--muted);cursor:pointer;opacity:0.5;background:none;border:none;padding:2px 4px}
+.metric .save:hover{opacity:1;color:var(--accent)}
+.metric .save.saved{color:var(--accent);opacity:1}
+#slot-extra .row{padding:4px 0;border-bottom:1px solid var(--line);font-size:13px;color:var(--soft)}
 #slot-extra .row .k{color:var(--muted);margin-right:8px}
-#slot-debug{font:11px/1.5 ui-monospace,monospace;background:#0b0b0d;color:#8a8a8f;padding:10px;border-radius:8px;white-space:pre-wrap;max-height:240px;overflow:auto}
-#slot-debug:empty{display:none}
-#log{margin-top:32px;border-top:1px solid var(--line);padding-top:16px}
-#log .msg{margin-bottom:12px;font-size:14px;color:var(--soft)}
-#log .msg strong{color:var(--fg)}
-form{margin-top:16px;display:flex;gap:8px;align-items:flex-end}
-textarea{flex:1;resize:none;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;min-height:44px}
-button{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font:inherit}
+#slot-debug{font:11px/1.5 ui-monospace,monospace;background:#0b0b0d;color:#8a8a8f;padding:10px;border-radius:8px;white-space:pre-wrap;max-height:280px;overflow:auto}
+#slot-debug.collapsed{display:none}
+#log{display:flex;flex-direction:column;gap:6px;font-size:13px;color:var(--soft);margin-top:10px}
+#log.collapsed{display:none}
+#log .msg strong{color:var(--fg);margin-right:6px}
+#log .msg.user{color:var(--muted)}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--accent);display:inline-block;animation:pulse 1.4s infinite}
+@keyframes pulse{0%,100%{opacity:0.3;transform:scale(0.8)}50%{opacity:1;transform:scale(1)}}
+form{display:flex;gap:8px;align-items:flex-end;margin-top:16px}
+textarea{flex:1;resize:none;background:transparent;color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;min-height:44px;max-height:180px}
+textarea:focus{outline:none;border-color:var(--accent)}
+button.send{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-radius:8px;cursor:pointer;font-family:inherit}
 </style>
 </head>
 <body>
 
-<div class="slot"><div class="slot-label">text</div><div id="slot-text"></div></div>
-<div class="slot"><div class="slot-label">metrics</div><div id="slot-metrics"></div></div>
-<div class="slot"><div class="slot-label">extra</div><div id="slot-extra"></div></div>
-<div class="slot"><div class="slot-label">debug</div><div id="slot-debug"></div></div>
+<div class="topbar">
+  <div class="left" id="slot-state">
+    <span class="badge" data-state="clarity">ясность</span>
+    <span class="badge" data-state="search">поиск</span>
+    <span class="badge" data-state="return">возврат</span>
+    <span class="badge" data-state="support">сопровождение</span>
+  </div>
+  <div class="right">
+    <button class="btn" onclick="resetAll()">Сброс</button>
+    <button class="btn" onclick="toggleHistory()">История</button>
+  </div>
+</div>
 
-<div id="log"></div>
+<div class="slot">
+  <div class="slot-label">Отражение</div>
+  <div id="slot-reflection"><span class="state-pill">не вижу</span></div>
+</div>
+
+<div class="slot">
+  <div class="slot-label">Полезность</div>
+  <div id="slot-usefulness"><span class="state-pill">—</span></div>
+</div>
+
+<div class="slot">
+  <div class="slot-label">Ответ</div>
+  <div id="slot-text"></div>
+</div>
+
+<div class="slot">
+  <div class="slot-label">Метрики</div>
+  <div class="metrics" id="slot-metrics"></div>
+</div>
+
+<div class="slot">
+  <div class="slot-label">Дополнительно</div>
+  <div id="slot-extra"></div>
+</div>
+
+<div class="slot">
+  <div class="slot-label">
+    <span>Отладка</span>
+    <span class="toggle" onclick="toggleDebug()">показать</span>
+  </div>
+  <div id="slot-debug" class="collapsed"></div>
+</div>
+
+<div class="slot">
+  <div class="slot-label">Ход диалога</div>
+  <div id="log" class="collapsed"></div>
+</div>
 
 <form id="form">
   <textarea id="input" rows="1" placeholder="Напиши..."></textarea>
-  <button type="submit">Отправить</button>
+  <button class="send" type="submit">Отправить</button>
 </form>
 
 <script>
-var slotText = document.getElementById('slot-text');
-var slotMetrics = document.getElementById('slot-metrics');
-var slotExtra = document.getElementById('slot-extra');
-var slotDebug = document.getElementById('slot-debug');
-var log = document.getElementById('log');
-var form = document.getElementById('form');
-var input = document.getElementById('input');
+var $ = function(id){ return document.getElementById(id); };
+var slotText = $('slot-text');
+var slotMetrics = $('slot-metrics');
+var slotExtra = $('slot-extra');
+var slotDebug = $('slot-debug');
+var slotState = $('slot-state');
+var slotReflection = $('slot-reflection');
+var slotUsefulness = $('slot-usefulness');
+var log = $('log');
+var form = $('form');
+var input = $('input');
 var chatHistory = [];
 
-var KNOWN = ['text', 'theme', 'density', 'accent', 'metrics', 'style', 'modules', 'navigation', 'mode', 'screen', 'silence', 'allow_leave', 'routes', 'prompts_new'];
+var KNOWN = ['text','state','reflection','usefulness','metrics','style','theme','density','accent','font','layout','routes','silence','prompts_new','a_content'];
 
-function applyStyle(vars){
-  if(!vars) return;
-  var html = document.documentElement;
-  if(vars.theme) html.setAttribute('data-theme', vars.theme);
-  if(vars.density) html.setAttribute('data-density', vars.density);
-  if(vars.accent) html.setAttribute('data-accent', vars.accent);
-  if(vars.style){
-    if(vars.style.theme) html.setAttribute('data-theme', vars.style.theme);
-    if(vars.style.density) html.setAttribute('data-density', vars.style.density);
-    if(vars.style.accent) html.setAttribute('data-accent', vars.style.accent);
-  }
+function applyStyle(v){
+  if(!v) return;
+  var h = document.documentElement;
+  var s = v.style || {};
+  var theme = v.theme || s.theme;
+  var density = v.density || s.density;
+  var accent = v.accent || s.accent;
+  var font = v.font || s.font;
+  var layout = v.layout || s.layout;
+  if(theme) h.setAttribute('data-theme', theme);
+  if(density) h.setAttribute('data-density', density);
+  if(accent) h.setAttribute('data-accent', accent);
+  if(font) h.setAttribute('data-font', font);
+  if(layout) h.setAttribute('data-layout', layout);
 }
 
-function renderMetrics(vars){
+function setState(state){
+  slotState.querySelectorAll('.badge').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-state') === state);
+  });
+}
+
+function setReflection(value){
+  if(!value){ slotReflection.innerHTML = '<span class="state-pill">не вижу</span>'; return; }
+  slotReflection.innerHTML = '<span class="state-pill active">' + value + '</span>';
+}
+
+function setUsefulness(value){
+  if(value === undefined || value === null){ slotUsefulness.innerHTML = '<span class="state-pill">—</span>'; return; }
+  slotUsefulness.innerHTML = '<span class="state-pill active">' + value + '</span>';
+}
+
+function renderMetrics(list){
   slotMetrics.innerHTML = '';
-  var list = vars.metrics || [];
-  if(!Array.isArray(list)) return;
+  if(!Array.isArray(list) || !list.length) return;
   list.forEach(function(m){
     var d = document.createElement('div');
     d.className = 'metric';
     var k = document.createElement('div'); k.className='k'; k.textContent = m.key || '';
-    var v = document.createElement('div'); v.className='v ' + (m.status || ''); v.textContent = m.value || '';
-    d.appendChild(k); d.appendChild(v);
+    var v = document.createElement('div'); v.className='v'; v.textContent = m.value || '';
+    var s = document.createElement('button'); s.className='save'; s.textContent = 'сохранить';
+    s.onclick = function(){
+      var saved = JSON.parse(localStorage.getItem('monolog_saved_metrics') || '[]');
+      saved.push({key: m.key, value: m.value, ts: Date.now()});
+      localStorage.setItem('monolog_saved_metrics', JSON.stringify(saved));
+      s.classList.add('saved');
+      s.textContent = 'сохранено';
+    };
+    d.appendChild(k); d.appendChild(v); d.appendChild(s);
     slotMetrics.appendChild(d);
   });
 }
 
-function renderExtra(vars){
+function renderExtra(v){
   slotExtra.innerHTML = '';
-  if(!vars) return;
-  Object.keys(vars).forEach(function(k){
+  if(!v) return;
+  Object.keys(v).forEach(function(k){
     if(KNOWN.indexOf(k) >= 0) return;
     var row = document.createElement('div');
     row.className = 'row';
-    var kk = document.createElement('span'); kk.className='k'; kk.textContent = k;
-    var vv = document.createElement('span'); vv.textContent = String(vars[k]);
-    row.appendChild(kk); row.appendChild(vv);
+    row.innerHTML = '<span class="k">' + k + '</span>' + String(v[k]);
     slotExtra.appendChild(row);
   });
 }
 
-function renderResponse(data){
-  var vars = (data && data.vars) || {};
-  slotText.textContent = vars.text || '';
-  renderMetrics(vars);
-  renderExtra(vars);
-  applyStyle(vars);
-  slotDebug.textContent = JSON.stringify(data, null, 2);
-}
-
 function addLog(role, text){
   var d = document.createElement('div');
-  d.className = 'msg';
-  var b = document.createElement('strong');
-  b.textContent = (role === 'user' ? 'Я: ' : 'Monolog: ');
-  d.appendChild(b);
-  d.appendChild(document.createTextNode(text));
+  d.className = 'msg ' + role;
+  d.innerHTML = '<strong>' + (role === 'user' ? 'Я:' : 'Monolog:') + '</strong>' + escapeHtml(text);
   log.appendChild(d);
+  log.scrollTop = log.scrollHeight;
+}
+
+function escapeHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function renderOutput(out){
+  if(!out) return;
+  var v = out.vars || {};
+  if(out.silence){
+    slotText.textContent = '';
+    slotMetrics.innerHTML = '';
+    slotExtra.innerHTML = '';
+    return;
+  }
+  slotText.textContent = v.text || '';
+  if(v.state) setState(v.state);
+  if(v.reflection) setReflection(v.reflection);
+  if(v.usefulness !== undefined) setUsefulness(v.usefulness);
+  renderMetrics(v.metrics);
+  renderExtra(v);
+  applyStyle(v);
+  slotDebug.textContent = JSON.stringify(out, null, 2);
+}
+
+function resetAll(){
+  chatHistory = [];
+  slotText.textContent = '';
+  slotMetrics.innerHTML = '';
+  slotExtra.innerHTML = '';
+  slotDebug.textContent = '';
+  log.innerHTML = '';
+  setReflection(null);
+  setUsefulness(null);
+  setState(null);
+}
+
+function toggleDebug(){
+  slotDebug.classList.toggle('collapsed');
+  var t = slotDebug.previousElementSibling.querySelector('.toggle');
+  t.textContent = slotDebug.classList.contains('collapsed') ? 'показать' : 'скрыть';
+}
+
+function toggleHistory(){
+  log.classList.toggle('collapsed');
 }
 
 async function send(){
@@ -229,6 +355,10 @@ async function send(){
   if(!text) return;
   addLog('user', text);
   input.value = '';
+  var pulse = document.createElement('span');
+  pulse.className = 'pulse';
+  slotText.innerHTML = '';
+  slotText.appendChild(pulse);
   try {
     var r = await fetch('/chat', {
       method: 'POST',
@@ -236,18 +366,21 @@ async function send(){
       body: JSON.stringify({text: text, context: chatHistory})
     });
     var j = await r.json();
+    slotText.innerHTML = '';
     if(j.ok && j.data && j.data.output){
-      renderResponse(j.data.output);
+      renderOutput(j.data.output);
       chatHistory.push({role: 'user', content: text});
-      if(j.data.output.vars && j.data.output.vars.text){
-        chatHistory.push({role: 'assistant', content: j.data.output.vars.text});
+      var v = j.data.output.vars || {};
+      if(v.text){
+        chatHistory.push({role: 'assistant', content: v.text});
+        addLog('bot', v.text);
       }
     } else if(j.error){
       slotText.textContent = '[ошибка] ' + (j.error.message || '');
     } else {
       slotText.textContent = '[ошибка] пустой ответ';
     }
-  } catch (e) {
+  } catch(e){
     slotText.textContent = '[ошибка сети] ' + e.message;
   }
 }
@@ -270,5 +403,4 @@ input.addEventListener('keydown', function(e){
 async def index():
     return INDEX_HTML
 
-# A → B
 import interpret_chat
