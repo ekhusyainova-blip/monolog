@@ -4,6 +4,8 @@
 
 import os
 import time
+import json
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,6 +30,25 @@ def load_keys(name):
     return [k.strip() for k in raw.split(",") if k.strip()] if raw else []
 
 KEYS = {name: load_keys(cfg["env"]) for name, cfg in PROVIDERS.items()}
+
+# Стартовые промпты
+PROMPTS_PATH = Path(__file__).resolve().parent / "prompts_chat.json"
+
+def load_prompts():
+    try:
+        data = json.loads(PROMPTS_PATH.read_text(encoding="utf-8"))
+        return data.get("prompts", {})
+    except Exception as e:
+        print(f"[data_chat] prompts load error: {e}", flush=True)
+        return {
+            "layer_a": "Ты — Monolog.",
+            "layer_b": "Ты — Monolog.",
+            "layer_c": "Ты — Monolog.",
+            "layer_d": "Ты — Monolog.",
+            "layer_a_content": "Ты — Monolog, аварийный.",
+        }
+
+PROMPTS = load_prompts()
 
 HANDLERS = {}
 EVENTS = []
@@ -95,7 +116,8 @@ INDEX_HTML = """<!DOCTYPE html>
 body{font:16px/var(--lh) -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--fg);padding:24px;max-width:720px;margin:0 auto}
 .slot{margin:0 0 var(--gap)}
 .slot-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
-#slot-text{font-size:16px;line-height:var(--lh);white-space:pre-wrap}
+#slot-text{font-size:16px;line-height:var(--lh);white-space:pre-wrap;min-height:20px}
+#slot-text:empty::before{content:'—';color:var(--muted)}
 #slot-metrics{display:flex;gap:12px;flex-wrap:wrap}
 .metric{background:rgba(127,177,255,0.08);border:1px solid var(--line);border-radius:8px;padding:8px 12px;font-size:13px}
 .metric .k{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.5px}
@@ -103,6 +125,9 @@ body{font:16px/var(--lh) -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans
 .metric .v.ok{color:#6ee7a8}
 .metric .v.warn{color:#f4c46a}
 .metric .v.bad{color:#f08a8a}
+#slot-extra{font-size:13px;color:var(--soft)}
+#slot-extra .row{padding:4px 0;border-bottom:1px solid var(--line)}
+#slot-extra .row .k{color:var(--muted);margin-right:8px}
 #slot-debug{font:11px/1.5 ui-monospace,monospace;background:#0b0b0d;color:#8a8a8f;padding:10px;border-radius:8px;white-space:pre-wrap;max-height:240px;overflow:auto}
 #slot-debug:empty{display:none}
 #log{margin-top:32px;border-top:1px solid var(--line);padding-top:16px}
@@ -115,9 +140,10 @@ button{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-
 </head>
 <body>
 
-<div class="slot"><div class="slot-label">text</div><div id="slot-text">—</div></div>
+<div class="slot"><div class="slot-label">text</div><div id="slot-text"></div></div>
 <div class="slot"><div class="slot-label">metrics</div><div id="slot-metrics"></div></div>
-<div class="slot"><div class="slot-label">debug (output от D)</div><div id="slot-debug"></div></div>
+<div class="slot"><div class="slot-label">extra</div><div id="slot-extra"></div></div>
+<div class="slot"><div class="slot-label">debug</div><div id="slot-debug"></div></div>
 
 <div id="log"></div>
 
@@ -129,23 +155,32 @@ button{background:var(--accent);color:#fff;border:none;padding:10px 18px;border-
 <script>
 var slotText = document.getElementById('slot-text');
 var slotMetrics = document.getElementById('slot-metrics');
+var slotExtra = document.getElementById('slot-extra');
 var slotDebug = document.getElementById('slot-debug');
 var log = document.getElementById('log');
 var form = document.getElementById('form');
 var input = document.getElementById('input');
 var chatHistory = [];
 
-function applyStyle(style){
-  if(!style) return;
+var KNOWN = ['text', 'theme', 'density', 'accent', 'metrics', 'style', 'modules', 'navigation', 'mode', 'screen', 'silence', 'allow_leave', 'routes', 'prompts_new'];
+
+function applyStyle(vars){
+  if(!vars) return;
   var html = document.documentElement;
-  if(style.theme)   html.setAttribute('data-theme', style.theme);
-  if(style.density) html.setAttribute('data-density', style.density);
-  if(style.accent)  html.setAttribute('data-accent', style.accent);
+  if(vars.theme) html.setAttribute('data-theme', vars.theme);
+  if(vars.density) html.setAttribute('data-density', vars.density);
+  if(vars.accent) html.setAttribute('data-accent', vars.accent);
+  if(vars.style){
+    if(vars.style.theme) html.setAttribute('data-theme', vars.style.theme);
+    if(vars.style.density) html.setAttribute('data-density', vars.style.density);
+    if(vars.style.accent) html.setAttribute('data-accent', vars.style.accent);
+  }
 }
 
-function renderMetrics(list){
+function renderMetrics(vars){
   slotMetrics.innerHTML = '';
-  if(!list || !list.length) return;
+  var list = vars.metrics || [];
+  if(!Array.isArray(list)) return;
   list.forEach(function(m){
     var d = document.createElement('div');
     d.className = 'metric';
@@ -156,13 +191,27 @@ function renderMetrics(list){
   });
 }
 
-function renderOutput(output){
-  if(!output){ slotText.textContent = '—'; return; }
-  if(output.text) slotText.textContent = output.text;
-  else slotText.textContent = '—';
-  renderMetrics(output.metrics || []);
-  applyStyle(output.style || {});
-  slotDebug.textContent = JSON.stringify(output, null, 2);
+function renderExtra(vars){
+  slotExtra.innerHTML = '';
+  if(!vars) return;
+  Object.keys(vars).forEach(function(k){
+    if(KNOWN.indexOf(k) >= 0) return;
+    var row = document.createElement('div');
+    row.className = 'row';
+    var kk = document.createElement('span'); kk.className='k'; kk.textContent = k;
+    var vv = document.createElement('span'); vv.textContent = String(vars[k]);
+    row.appendChild(kk); row.appendChild(vv);
+    slotExtra.appendChild(row);
+  });
+}
+
+function renderResponse(data){
+  var vars = (data && data.vars) || {};
+  slotText.textContent = vars.text || '';
+  renderMetrics(vars);
+  renderExtra(vars);
+  applyStyle(vars);
+  slotDebug.textContent = JSON.stringify(data, null, 2);
 }
 
 function addLog(role, text){
@@ -188,9 +237,11 @@ async function send(){
     });
     var j = await r.json();
     if(j.ok && j.data && j.data.output){
-      renderOutput(j.data.output);
+      renderResponse(j.data.output);
       chatHistory.push({role: 'user', content: text});
-      if(j.data.output.text) chatHistory.push({role: 'assistant', content: j.data.output.text});
+      if(j.data.output.vars && j.data.output.vars.text){
+        chatHistory.push({role: 'assistant', content: j.data.output.vars.text});
+      }
     } else if(j.error){
       slotText.textContent = '[ошибка] ' + (j.error.message || '');
     } else {
