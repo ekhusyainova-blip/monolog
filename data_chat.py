@@ -13,7 +13,7 @@ from fastapi.middleware.cors import CORSMiddleware
 PROVIDERS = {
     "groq": {
         "url": "https://api.groq.com/openai/v1/chat/completions",
-        "model": "openai/gpt-oss-20b",
+        "model": "openai/gpt-oss-120b",
         "env": "GROQ_API_KEYS",
     },
 }
