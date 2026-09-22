@@ -7,12 +7,16 @@ import data_chat
 def build_request(event):
     prompts = data_chat.PROMPTS
     settings = data_chat.SETTINGS
-    system = "\n".join([
-        prompts.get("layer_a", ""),
-        prompts.get("layer_b", ""),
-        prompts.get("layer_c", ""),
-        prompts.get("layer_d", ""),
-    ])
+    content_mode = bool(event.get("content_mode"))
+    if content_mode:
+        system = prompts.get("layer_a_content", "")
+    else:
+        system = "\n\n".join([
+            prompts.get("layer_a", ""),
+            prompts.get("layer_b", ""),
+            prompts.get("layer_c", ""),
+            prompts.get("layer_d", ""),
+        ])
     messages = [{"role": "system", "content": system}]
     for m in (event.get("context") or [])[-20:]:
         if isinstance(m, dict) and "role" in m and "content" in m:
