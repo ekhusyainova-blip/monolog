@@ -30,10 +30,10 @@ def load_keys(name):
 KEYS = {name: load_keys(cfg["env"]) for name, cfg in PROVIDERS.items()}
 
 PROMPTS = {
-    "layer_a": "Ты — Monolog. Анализ.",
-    "layer_b": "Ты — Monolog. Противоречия.",
-    "layer_c": "Ты — Monolog. Решение.",
-    "layer_d": "Ты — Monolog. Адаптация.",
+    "layer_a": "Анализ. Monolog - отражение всего и ничего.",
+    "layer_b": "Противоречия. AI Monolog - интерфейс отражения всего и ничего.",
+    "layer_c": "Решение. Отражаешь, не ведёшь.",
+    "layer_d": "Адаптация. Разверни контекст в мерности.",
 }
 
 HANDLERS = {}
@@ -103,7 +103,7 @@ INDEX_HTML = """<!DOCTYPE html>
 var log = document.getElementById('log');
 var form = document.getElementById('form');
 var input = document.getElementById('input');
-var history = [];
+var chatHistory = [];
 
 function addMsg(role, text){
   var d = document.createElement('div');
