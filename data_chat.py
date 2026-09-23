@@ -113,6 +113,27 @@ body{
   background:#0f0f11;color:#e8e8ea;
   -webkit-font-smoothing:antialiased;letter-spacing:-0.005em;
   overflow:hidden;
+  transition:background 1.5s ease;
+  position:relative;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  pointer-events:none;
+  background:radial-gradient(ellipse at 20% 10%, rgba(127,177,255,0.05), transparent 50%);
+  transition:background 2s ease;
+  z-index:0;
+}
+body[data-mood="search"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(244,196,106,0.06), transparent 50%)}
+body[data-mood="return"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(240,138,138,0.06), transparent 50%)}
+body[data-mood="clarity"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(110,231,168,0.06), transparent 50%)}
+body[data-mood="support"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(127,177,255,0.08), transparent 50%)}
+body[data-mood="idle"]::before{background:none}
+
+.wrap{
+  max-width:680px;margin:0 auto;
+  padding:80px 24px 200px;min-height:100vh;
+  position:relative;z-index:1;
 }
 
 /* ==== Сфера ==== */
@@ -130,7 +151,7 @@ body{
     inset 0 0 8px rgba(255,255,255,0.25),
     inset -2px -2px 6px rgba(127,177,255,0.35),
     0 2px 6px rgba(0,0,0,0.35);
-  transition:opacity 0.6s ease, box-shadow 0.6s ease;
+  transition:opacity 0.8s ease, box-shadow 0.8s ease, transform 0.8s ease, border-radius 0.8s ease, filter 0.8s ease;
 }
 .sphere::after{
   content:'';
@@ -141,58 +162,56 @@ body{
   filter:blur(1px);
 }
 
-@keyframes breathe{
-  0%,100%{transform:scale(1);opacity:0.85}
-  50%{transform:scale(1.08);opacity:1}
-}
-@keyframes spin{
-  0%{transform:scale(1)}
-  50%{transform:scale(1.15)}
-  100%{transform:scale(1)}
-}
-@keyframes flash{
-  0%{transform:scale(1);opacity:1}
-  40%{transform:scale(1.35);opacity:1;box-shadow:0 0 24px rgba(127,177,255,0.9)}
-  100%{transform:scale(1);opacity:0.85;box-shadow:none}
-}
-@keyframes shaky{
-  0%,100%{transform:translateX(0) scale(1)}
-  25%{transform:translateX(-1px) scale(0.98)}
-  75%{transform:translateX(1px) scale(1.02)}
-}
-@keyframes glad{
-  0%,100%{transform:scale(1);filter:brightness(1)}
-  50%{transform:scale(1.12);filter:brightness(1.35)}
-}
+/* ==== Дыхания — разные скорости ==== */
+@keyframes breathe-slow{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.06);opacity:0.95}}
+@keyframes breathe-mid{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.1);opacity:1}}
+@keyframes breathe-fast{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.16);opacity:1}}
+@keyframes flash{0%{transform:scale(1)}40%{transform:scale(1.4);box-shadow:0 0 28px rgba(127,177,255,0.9)}100%{transform:scale(1)}}
+@keyframes shaky{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.5px) scale(0.97)}75%{transform:translateX(1.5px) scale(1.03)}}
+@keyframes glad{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.14);filter:brightness(1.4)}}
+@keyframes ripple{0%{transform:scale(1);opacity:0.9}50%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:0.9}}
 
-.sphere[data-state="clarity"]{box-shadow:inset 0 0 8px rgba(110,231,168,0.4), inset -2px -2px 6px rgba(110,231,168,0.45), 0 2px 6px rgba(0,0,0,0.35)}
-.sphere[data-state="search"]{box-shadow:inset 0 0 8px rgba(244,196,106,0.4), inset -2px -2px 6px rgba(244,196,106,0.45), 0 2px 6px rgba(0,0,0,0.35)}
-.sphere[data-state="return"]{box-shadow:inset 0 0 8px rgba(240,138,138,0.4), inset -2px -2px 6px rgba(240,138,138,0.45), 0 2px 6px rgba(0,0,0,0.35)}
-.sphere[data-state="support"]{box-shadow:inset 0 0 8px rgba(127,177,255,0.5), inset -2px -2px 6px rgba(127,177,255,0.55), 0 2px 6px rgba(0,0,0,0.35)}
+/* ==== Состояния цвета ==== */
+.sphere[data-state="clarity"]{box-shadow:inset 0 0 8px rgba(110,231,168,0.5), inset -2px -2px 6px rgba(110,231,168,0.5), 0 0 20px rgba(110,231,168,0.2), 0 2px 6px rgba(0,0,0,0.35)}
+.sphere[data-state="search"]{box-shadow:inset 0 0 8px rgba(244,196,106,0.5), inset -2px -2px 6px rgba(244,196,106,0.5), 0 0 20px rgba(244,196,106,0.2), 0 2px 6px rgba(0,0,0,0.35)}
+.sphere[data-state="return"]{box-shadow:inset 0 0 8px rgba(240,138,138,0.5), inset -2px -2px 6px rgba(240,138,138,0.5), 0 0 20px rgba(240,138,138,0.2), 0 2px 6px rgba(0,0,0,0.35)}
+.sphere[data-state="support"]{box-shadow:inset 0 0 8px rgba(127,177,255,0.55), inset -2px -2px 6px rgba(127,177,255,0.55), 0 0 20px rgba(127,177,255,0.25), 0 2px 6px rgba(0,0,0,0.35)}
 
-.sphere[data-mode="calm"]{animation:breathe 4.5s ease-in-out infinite}
-.sphere[data-mode="think"]{animation:spin 1.1s ease-in-out infinite;opacity:0.95}
-.sphere[data-mode="say"]{animation:flash 1.2s ease-out}
-.sphere[data-mode="idle"]{animation:none;opacity:0.3;filter:grayscale(0.4)}
+/* ==== Стекло — состояния ==== */
+.sphere[data-glass="clear"]{backdrop-filter:blur(2px);opacity:1}
+.sphere[data-glass="foggy"]{backdrop-filter:blur(12px) saturate(60%);opacity:0.7}
+.sphere[data-glass="cracked"]{border-radius:48% 52% 46% 54%;filter:contrast(1.3)}
+.sphere[data-glass="warm"]{background:radial-gradient(circle at 30% 25%, rgba(255,235,200,0.6), rgba(255,200,120,0.1) 40%, rgba(255,180,100,0.15) 70%, rgba(255,140,80,0.3) 100%)}
+.sphere[data-glass="cold"]{background:radial-gradient(circle at 30% 25%, rgba(230,240,255,0.6), rgba(180,200,255,0.1) 40%, rgba(140,180,255,0.15) 70%, rgba(100,150,255,0.3) 100%)}
+
+/* ==== Форма ==== */
+.sphere[data-shape="soft"]{transform:scale(1.05);border-radius:50%}
+.sphere[data-shape="stretched"]{border-radius:45% 55% 45% 55%;transform:scaleY(1.12) scaleX(0.92)}
+.sphere[data-shape="squashed"]{border-radius:55% 45% 55% 45%;transform:scaleY(0.9) scaleX(1.1)}
+
+/* ==== Режимы ==== */
+.sphere[data-mode="calm"]{animation:breathe-slow 5s ease-in-out infinite}
+.sphere[data-mode="think"]{animation:breathe-fast 1.4s ease-in-out infinite}
+.sphere[data-mode="say"]{animation:flash 1.3s ease-out}
+.sphere[data-mode="idle"]{animation:none;opacity:0.25;filter:grayscale(0.6)}
 .sphere[data-mode="warn"]{animation:shaky 0.5s ease-in-out 3;box-shadow:0 0 16px rgba(240,138,138,0.7), inset -2px -2px 6px rgba(240,138,138,0.55)}
 .sphere[data-mode="glad"]{animation:glad 1.4s ease-in-out}
+.sphere[data-mode="listen"]{animation:ripple 2.2s ease-in-out infinite;box-shadow:0 0 24px rgba(127,177,255,0.5), inset 0 0 12px rgba(255,255,255,0.35)}
+.sphere[data-mode="gone"]{opacity:0;transform:scale(0.6)}
+.sphere[data-mode="arrive"]{animation:flash 1.6s ease-out}
 
-/* ==== Лента — один ответ ==== */
-.wrap{
-  max-width:680px;margin:0 auto;
-  padding:80px 24px 200px;min-height:100vh;
-}
+/* ==== Лента ==== */
 #log{display:flex;flex-direction:column;gap:24px}
 .msg.bot{
   font-size:17px;line-height:1.78;
   white-space:pre-wrap;word-wrap:break-word;
-  animation:fadeIn 0.6s ease;
+  animation:fadeIn 0.7s ease;
 }
 .msg.user{
   align-self:flex-end;max-width:80%;
   color:#8a8a8f;font-size:14px;text-align:right;
   white-space:pre-wrap;word-wrap:break-word;
-  animation:fadeIn 0.3s ease, fadeOut 0.6s ease 1.8s forwards;
+  animation:fadeIn 0.3s ease, fadeOut 0.8s ease 2s forwards;
   opacity:0.7;
 }
 .msg.cycle{
@@ -216,7 +235,7 @@ body{
 .pulse span:nth-child(3){animation-delay:0.4s}
 @keyframes pulse{0%,100%{opacity:0.25;transform:scale(0.7)}50%{opacity:1;transform:scale(1)}}
 
-/* ==== Нижняя плашка — матовое стекло ==== */
+/* ==== Ввод — плавное укатывание ==== */
 form{
   position:fixed;left:0;right:0;bottom:0;
   background:rgba(20,20,24,0.55);
@@ -224,9 +243,11 @@ form{
   -webkit-backdrop-filter:blur(32px) saturate(180%);
   border-top:1px solid rgba(255,255,255,0.05);
   padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));
-  transition:transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  transition:transform 0.6s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease;
+  will-change:transform;
 }
-form.hidden{transform:translateY(110%)}
+form.hidden{transform:translateY(115%);opacity:0}
+form.fast{transition:transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease}
 form .inner{
   max-width:680px;margin:0 auto;
   display:flex;gap:10px;align-items:flex-end;
@@ -253,10 +274,10 @@ button.send:disabled{opacity:0.35;cursor:not-allowed}
 button.send svg{width:18px;height:18px;stroke:#0f0f11;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
-<body>
+<body data-mood="calm">
 
 <div class="sphere-wrap">
-  <div class="sphere" id="sphere" data-mode="calm"></div>
+  <div class="sphere" id="sphere" data-mode="calm" data-glass="clear" data-shape="soft"></div>
 </div>
 
 <div class="wrap">
@@ -280,26 +301,29 @@ var sendBtn = document.getElementById('send');
 var sphere = document.getElementById('sphere');
 var chatHistory = [];
 
-// ==== Состояние сферы ====
 function setState(state){
   if(state){
     sphere.setAttribute('data-state', state);
+    document.body.setAttribute('data-mood', state);
   } else {
     sphere.removeAttribute('data-state');
+    document.body.setAttribute('data-mood', 'calm');
   }
 }
 
 function setSphereMode(mode){
   if(!mode) return;
   sphere.setAttribute('data-mode', mode);
-  if(mode === 'say' || mode === 'glad' || mode === 'warn'){
+  if(mode === 'say' || mode === 'glad' || mode === 'warn' || mode === 'arrive'){
     setTimeout(function(){
       sphere.setAttribute('data-mode', 'calm');
     }, mode === 'warn' ? 1600 : 1300);
   }
 }
 
-// ==== Лента ====
+function setGlass(glass){ if(glass) sphere.setAttribute('data-glass', glass); }
+function setShape(shape){ if(shape) sphere.setAttribute('data-shape', shape); }
+
 function clearLog(){ log.innerHTML = ''; }
 
 function addMsg(role, text){
@@ -324,18 +348,20 @@ function addBadges(items){
   log.appendChild(d);
 }
 
-// ==== Маркеры ====
 function parseMarkers(text){
-  var out = { clean: text, state: null, reflection: null, usefulness: null, route: null, routeData: '', sphere: null };
+  var out = { clean: text, state: null, reflection: null, usefulness: null, route: null, routeData: '', sphere: null, glass: null, shape: null };
   text = text.replace(/\\[state:\\s*(\\w+)\\]/gi, function(_, s){ out.state = s.toLowerCase(); return ''; });
   text = text.replace(/\\[reflection:\\s*([^\\]]+)\\]/gi, function(_, s){ out.reflection = s.trim(); return ''; });
   text = text.replace(/\\[usefulness:\\s*([^\\]]+)\\]/gi, function(_, s){ out.usefulness = s.trim(); return ''; });
 
   var mSphere = text.match(/\\[sphere:\\s*(\\w+)\\]/i);
-  if(mSphere){
-    out.sphere = mSphere[1].toLowerCase();
-    text = text.replace(/\\[sphere:\\s*\\w+\\]/i, '');
-  }
+  if(mSphere){ out.sphere = mSphere[1].toLowerCase(); text = text.replace(/\\[sphere:\\s*\\w+\\]/i, ''); }
+
+  var mGlass = text.match(/\\[glass:\\s*(\\w+)\\]/i);
+  if(mGlass){ out.glass = mGlass[1].toLowerCase(); text = text.replace(/\\[glass:\\s*\\w+\\]/i, ''); }
+
+  var mShape = text.match(/\\[shape:\\s*(\\w+)\\]/i);
+  if(mShape){ out.shape = mShape[1].toLowerCase(); text = text.replace(/\\[shape:\\s*\\w+\\]/i, ''); }
 
   var routeRe = /—\\s*—\\s*—\\s*route:\\s*(\\w+)\\s*—\\s*—\\s*—([\\s\\S]*)$/i;
   var m = text.match(routeRe);
@@ -348,7 +374,6 @@ function parseMarkers(text){
   return out;
 }
 
-// ==== Отправка ====
 async function send(){
   var text = input.value.trim();
   if(!text) return;
@@ -358,9 +383,7 @@ async function send(){
 
   input.value = '';
   input.style.height = 'auto';
-
   clearLog();
-
   setSphereMode('think');
 
   var pulse = document.createElement('div');
@@ -383,6 +406,8 @@ async function send(){
       var parsed = parseMarkers(raw);
 
       if(parsed.state) setState(parsed.state);
+      if(parsed.glass) setGlass(parsed.glass);
+      if(parsed.shape) setShape(parsed.shape);
       if(parsed.sphere) setSphereMode(parsed.sphere);
       else setSphereMode('say');
 
@@ -418,26 +443,26 @@ async function send(){
       }
     } else if(j.error){
       setSphereMode('warn');
-      addMsg('bot', '[тихо] Monolog сейчас не отвечает.');
+      setState('return');
     } else {
       setSphereMode('idle');
-      addMsg('bot', '[тихо] Monolog молчит.');
+      setState(null);
     }
   } catch(e){
     pulse.remove();
     setSphereMode('warn');
-    addMsg('bot', '[тихо] Monolog не отвечает.');
+    setState('return');
   } finally {
     sendBtn.disabled = false;
     input.focus();
   }
 }
 
-// ==== Укатывание ввода ====
 var lastScroll = 0;
 document.addEventListener('scroll', function(){
   var y = window.scrollY || document.documentElement.scrollTop;
-  if(y > lastScroll && y > 60 && document.activeElement !== input){
+  var focused = document.activeElement === input;
+  if(y > lastScroll && y > 60 && !focused){
     form.classList.add('hidden');
   } else if(y < lastScroll - 10 || y < 30){
     form.classList.remove('hidden');
@@ -448,11 +473,18 @@ document.addEventListener('scroll', function(){
 document.addEventListener('click', function(e){
   if(e.target.closest('form') || e.target.closest('.sphere-wrap')) return;
   if(e.target.closest('.msg')) return;
-  form.classList.toggle('hidden');
-  if(!form.classList.contains('hidden')) input.focus();
+  if(!form.classList.contains('hidden')){
+    form.classList.add('fast');
+    form.classList.add('hidden');
+    setTimeout(function(){ form.classList.remove('fast'); }, 300);
+  } else {
+    form.classList.remove('hidden');
+    form.classList.add('fast');
+    setTimeout(function(){ form.classList.remove('fast'); }, 300);
+    input.focus();
+  }
 });
 
-// ==== Обработчики ====
 form.addEventListener('submit', function(e){ e.preventDefault(); send(); });
 input.addEventListener('keydown', function(e){
   if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); send(); }
