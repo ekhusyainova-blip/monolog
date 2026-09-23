@@ -130,7 +130,6 @@ body{
     inset 0 0 8px rgba(255,255,255,0.25),
     inset -2px -2px 6px rgba(127,177,255,0.35),
     0 2px 6px rgba(0,0,0,0.35);
-  animation:breathe 4.5s ease-in-out infinite;
   transition:opacity 0.6s ease, box-shadow 0.6s ease;
 }
 .sphere::after{
@@ -141,15 +140,42 @@ body{
   border-radius:50%;
   filter:blur(1px);
 }
+
 @keyframes breathe{
   0%,100%{transform:scale(1);opacity:0.85}
   50%{transform:scale(1.08);opacity:1}
 }
+@keyframes spin{
+  0%{transform:scale(1)}
+  50%{transform:scale(1.15)}
+  100%{transform:scale(1)}
+}
+@keyframes flash{
+  0%{transform:scale(1);opacity:1}
+  40%{transform:scale(1.35);opacity:1;box-shadow:0 0 24px rgba(127,177,255,0.9)}
+  100%{transform:scale(1);opacity:0.85;box-shadow:none}
+}
+@keyframes shaky{
+  0%,100%{transform:translateX(0) scale(1)}
+  25%{transform:translateX(-1px) scale(0.98)}
+  75%{transform:translateX(1px) scale(1.02)}
+}
+@keyframes glad{
+  0%,100%{transform:scale(1);filter:brightness(1)}
+  50%{transform:scale(1.12);filter:brightness(1.35)}
+}
+
 .sphere[data-state="clarity"]{box-shadow:inset 0 0 8px rgba(110,231,168,0.4), inset -2px -2px 6px rgba(110,231,168,0.45), 0 2px 6px rgba(0,0,0,0.35)}
 .sphere[data-state="search"]{box-shadow:inset 0 0 8px rgba(244,196,106,0.4), inset -2px -2px 6px rgba(244,196,106,0.45), 0 2px 6px rgba(0,0,0,0.35)}
 .sphere[data-state="return"]{box-shadow:inset 0 0 8px rgba(240,138,138,0.4), inset -2px -2px 6px rgba(240,138,138,0.45), 0 2px 6px rgba(0,0,0,0.35)}
 .sphere[data-state="support"]{box-shadow:inset 0 0 8px rgba(127,177,255,0.5), inset -2px -2px 6px rgba(127,177,255,0.55), 0 2px 6px rgba(0,0,0,0.35)}
-.sphere.idle{opacity:0.4;animation-duration:6s}
+
+.sphere[data-mode="calm"]{animation:breathe 4.5s ease-in-out infinite}
+.sphere[data-mode="think"]{animation:spin 1.1s ease-in-out infinite;opacity:0.95}
+.sphere[data-mode="say"]{animation:flash 1.2s ease-out}
+.sphere[data-mode="idle"]{animation:none;opacity:0.3;filter:grayscale(0.4)}
+.sphere[data-mode="warn"]{animation:shaky 0.5s ease-in-out 3;box-shadow:0 0 16px rgba(240,138,138,0.7), inset -2px -2px 6px rgba(240,138,138,0.55)}
+.sphere[data-mode="glad"]{animation:glad 1.4s ease-in-out}
 
 /* ==== Лента — один ответ ==== */
 .wrap{
@@ -211,6 +237,7 @@ textarea{
   padding:10px 4px;font:inherit;font-size:17px;line-height:1.55;
   min-height:44px;max-height:180px;
   white-space:pre-wrap;
+  caret-color:#7fb1ff;
 }
 textarea::placeholder{color:#58585e}
 button.send{
@@ -229,7 +256,7 @@ button.send svg{width:18px;height:18px;stroke:#0f0f11;fill:none;stroke-width:2.2
 <body>
 
 <div class="sphere-wrap">
-  <div class="sphere idle" id="sphere"></div>
+  <div class="sphere" id="sphere" data-mode="calm"></div>
 </div>
 
 <div class="wrap">
@@ -253,21 +280,27 @@ var sendBtn = document.getElementById('send');
 var sphere = document.getElementById('sphere');
 var chatHistory = [];
 
-// ==== Состояние через сферу ====
+// ==== Состояние сферы ====
 function setState(state){
   if(state){
     sphere.setAttribute('data-state', state);
-    sphere.classList.remove('idle');
   } else {
     sphere.removeAttribute('data-state');
-    sphere.classList.add('idle');
   }
 }
 
-// ==== Лента — один ответ ====
-function clearLog(){
-  log.innerHTML = '';
+function setSphereMode(mode){
+  if(!mode) return;
+  sphere.setAttribute('data-mode', mode);
+  if(mode === 'say' || mode === 'glad' || mode === 'warn'){
+    setTimeout(function(){
+      sphere.setAttribute('data-mode', 'calm');
+    }, mode === 'warn' ? 1600 : 1300);
+  }
 }
+
+// ==== Лента ====
+function clearLog(){ log.innerHTML = ''; }
 
 function addMsg(role, text){
   var d = document.createElement('div');
@@ -291,12 +324,19 @@ function addBadges(items){
   log.appendChild(d);
 }
 
-// ==== Маркеры в тексте ====
+// ==== Маркеры ====
 function parseMarkers(text){
-  var out = { clean: text, state: null, reflection: null, usefulness: null, route: null, routeData: '' };
+  var out = { clean: text, state: null, reflection: null, usefulness: null, route: null, routeData: '', sphere: null };
   text = text.replace(/\\[state:\\s*(\\w+)\\]/gi, function(_, s){ out.state = s.toLowerCase(); return ''; });
   text = text.replace(/\\[reflection:\\s*([^\\]]+)\\]/gi, function(_, s){ out.reflection = s.trim(); return ''; });
   text = text.replace(/\\[usefulness:\\s*([^\\]]+)\\]/gi, function(_, s){ out.usefulness = s.trim(); return ''; });
+
+  var mSphere = text.match(/\\[sphere:\\s*(\\w+)\\]/i);
+  if(mSphere){
+    out.sphere = mSphere[1].toLowerCase();
+    text = text.replace(/\\[sphere:\\s*\\w+\\]/i, '');
+  }
+
   var routeRe = /—\\s*—\\s*—\\s*route:\\s*(\\w+)\\s*—\\s*—\\s*—([\\s\\S]*)$/i;
   var m = text.match(routeRe);
   if(m){
@@ -313,15 +353,15 @@ async function send(){
   var text = input.value.trim();
   if(!text) return;
 
-  // твоё сообщение — показываем кратко и исчезает
   var userMsg = addMsg('user', text);
   setTimeout(function(){ userMsg.remove(); }, 2400);
 
   input.value = '';
   input.style.height = 'auto';
 
-  // очищаем ленту от предыдущего ответа
   clearLog();
+
+  setSphereMode('think');
 
   var pulse = document.createElement('div');
   pulse.className = 'msg bot';
@@ -343,6 +383,8 @@ async function send(){
       var parsed = parseMarkers(raw);
 
       if(parsed.state) setState(parsed.state);
+      if(parsed.sphere) setSphereMode(parsed.sphere);
+      else setSphereMode('say');
 
       if(parsed.clean) addMsg('bot', parsed.clean);
 
@@ -354,9 +396,9 @@ async function send(){
       chatHistory.push({role: 'user', content: text});
       chatHistory.push({role: 'assistant', content: parsed.clean});
 
-      // D → A
       if(parsed.route === 'A' && parsed.routeData){
         addMsg('cycle', '↻ Monolog продолжил: ' + parsed.routeData);
+        setSphereMode('think');
         try {
           var r2 = await fetch('/chat', {
             method: 'POST',
@@ -368,29 +410,34 @@ async function send(){
             var p2 = parseMarkers(j2.data.output.vars.text);
             if(p2.clean) addMsg('bot', p2.clean);
             if(p2.state) setState(p2.state);
+            if(p2.sphere) setSphereMode(p2.sphere);
+            else setSphereMode('say');
             chatHistory.push({role: 'assistant', content: p2.clean});
           }
         } catch(e2){}
       }
     } else if(j.error){
-      addMsg('bot', '[ошибка] ' + (j.error.message || ''));
+      setSphereMode('warn');
+      addMsg('bot', '[тихо] Monolog сейчас не отвечает.');
     } else {
-      addMsg('bot', '[ошибка] пустой ответ');
+      setSphereMode('idle');
+      addMsg('bot', '[тихо] Monolog молчит.');
     }
   } catch(e){
     pulse.remove();
-    addMsg('bot', '[ошибка сети] ' + e.message);
+    setSphereMode('warn');
+    addMsg('bot', '[тихо] Monolog не отвечает.');
   } finally {
     sendBtn.disabled = false;
     input.focus();
   }
 }
 
-// ==== Укатывание ввода при скролле ====
+// ==== Укатывание ввода ====
 var lastScroll = 0;
 document.addEventListener('scroll', function(){
   var y = window.scrollY || document.documentElement.scrollTop;
-  if(y > lastScroll && y > 60){
+  if(y > lastScroll && y > 60 && document.activeElement !== input){
     form.classList.add('hidden');
   } else if(y < lastScroll - 10 || y < 30){
     form.classList.remove('hidden');
@@ -398,11 +445,9 @@ document.addEventListener('scroll', function(){
   lastScroll = y;
 }, { passive: true });
 
-// ==== Тап по середине экрана — укатить ввод ====
 document.addEventListener('click', function(e){
   if(e.target.closest('form') || e.target.closest('.sphere-wrap')) return;
   if(e.target.closest('.msg')) return;
-  // тап по пустому месту
   form.classList.toggle('hidden');
   if(!form.classList.contains('hidden')) input.focus();
 });
