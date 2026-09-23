@@ -79,3 +79,34 @@
   opacity: 0;
   transition: transform 0.4s ease, opacity 0.3s ease;
 }
+
+.range-bar {
+  position: fixed;
+  right: 18px;
+  bottom: 90px;
+  z-index: 105;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.6;
+  transition: opacity 0.3s;
+}
+
+.range-bar:hover,
+.range-bar:focus-within {
+  opacity: 1;
+}
+
+.range-bar input[type="range"] {
+  width: 120px;
+  transform: rotate(-90deg);
+  accent-color: #7fb1ff;
+}
+
+.range-label {
+  font-size: 11px;
+  color: #8a8a8f;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
