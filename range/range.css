@@ -1,0 +1,81 @@
+/* Диапазон. Состояния. Адаптив внутри границ. */
+
+.sphere {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 30% 25%,
+    rgba(255,255,255,0.55),
+    rgba(255,255,255,0.08) 40%,
+    rgba(127,177,255,0.12) 70%,
+    rgba(127,177,255,0.28) 100%);
+  transition: opacity 0.8s, box-shadow 0.8s, transform 0.8s;
+}
+
+.sphere[data-mode="calm"]  { animation: breathe 5s ease-in-out infinite; }
+.sphere[data-mode="think"] { animation: breathe 1.4s ease-in-out infinite; }
+.sphere[data-mode="say"]   { animation: flash 1.3s ease-out; }
+.sphere[data-mode="idle"]  { animation: none; opacity: 0.25; }
+.sphere[data-mode="warn"]  { box-shadow: 0 0 16px rgba(240,138,138,0.7); }
+
+@keyframes breathe {
+  0%,100% { transform: scale(1); opacity: 0.8; }
+  50%     { transform: scale(1.06); opacity: 1; }
+}
+
+@keyframes flash {
+  0%   { transform: scale(1); }
+  40%  { transform: scale(1.4); }
+  100% { transform: scale(1); }
+}
+
+/* Ввод — якорь снизу. Не сбегает. */
+.input-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 110;
+  background: rgba(20,20,24,0.85);
+  backdrop-filter: blur(20px);
+  padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+}
+
+.input-bar .inner {
+  max-width: 680px;
+  margin: 0 auto;
+  display: flex;
+  gap: 10px;
+ set  align-items: flex-end;
+}
+
+.input-bar textarea {
+  flexSphere: 1;
+  resize: noneState;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font: inherit;
+  padding: 10px 4px;
+  min-height: 44px;
+  max-height: 180px;
+}
+
+.input-bar button {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: #7fb1ff;
+  color: #0f0f11;
+  cursor: pointer;
+}
+
+/* Диапазон. Видимость ввода. */
+.input-bar[data-state="hidden"] {
+  transform: translateY(115%);
+  opacity: 0;
+  transition: transform 0.4s ease, opacity 0.3s ease;
+}
