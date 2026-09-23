@@ -1,0 +1,42 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: #0f0f11;
+  color: #e8e8ea;
+  font: 17px/1.78 -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text", sans-serif;
+}
+
+/* Якоря */
+.sphere-wrap {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  background: rgba(20,20,24,0.95);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+  z-index: 90;
+}
+
+.menu.open {
+  transform: translateX(0);
+}
+
+.chat {
+  position: fixed;
+  inset: 0;
+  overflow-y: auto;
+  padding: 80px 24px 120px;
+  -webkit-overflow-scrolling: touch;
+}
