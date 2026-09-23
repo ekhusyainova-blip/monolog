@@ -113,7 +113,7 @@ body{
   background:#0f0f11;color:#e8e8ea;
   -webkit-font-smoothing:antialiased;letter-spacing:-0.005em;
   overflow:hidden;
-  transition:background 1.5s ease;
+  transition:background 1.5s ease, filter 1s ease;
   position:relative;
 }
 body::before{
@@ -151,7 +151,7 @@ body[data-mood="idle"]::before{background:none}
     inset 0 0 8px rgba(255,255,255,0.25),
     inset -2px -2px 6px rgba(127,177,255,0.35),
     0 2px 6px rgba(0,0,0,0.35);
-  transition:opacity 0.8s ease, box-shadow 0.8s ease, transform 0.8s ease, border-radius 0.8s ease, filter 0.8s ease;
+  transition:opacity 0.8s ease, box-shadow 0.8s ease, transform 0.8s ease, filter 0.8s ease, background 0.8s ease;
 }
 .sphere::after{
   content:'';
@@ -162,7 +162,6 @@ body[data-mood="idle"]::before{background:none}
   filter:blur(1px);
 }
 
-/* ==== Дыхания — разные скорости ==== */
 @keyframes breathe-slow{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.06);opacity:0.95}}
 @keyframes breathe-mid{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.1);opacity:1}}
 @keyframes breathe-fast{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.16);opacity:1}}
@@ -171,25 +170,11 @@ body[data-mood="idle"]::before{background:none}
 @keyframes glad{0%,100%{transform:scale(1);filter:brightness(1)}50%{transform:scale(1.14);filter:brightness(1.4)}}
 @keyframes ripple{0%{transform:scale(1);opacity:0.9}50%{transform:scale(1.08);opacity:1}100%{transform:scale(1);opacity:0.9}}
 
-/* ==== Состояния цвета ==== */
 .sphere[data-state="clarity"]{box-shadow:inset 0 0 8px rgba(110,231,168,0.5), inset -2px -2px 6px rgba(110,231,168,0.5), 0 0 20px rgba(110,231,168,0.2), 0 2px 6px rgba(0,0,0,0.35)}
 .sphere[data-state="search"]{box-shadow:inset 0 0 8px rgba(244,196,106,0.5), inset -2px -2px 6px rgba(244,196,106,0.5), 0 0 20px rgba(244,196,106,0.2), 0 2px 6px rgba(0,0,0,0.35)}
 .sphere[data-state="return"]{box-shadow:inset 0 0 8px rgba(240,138,138,0.5), inset -2px -2px 6px rgba(240,138,138,0.5), 0 0 20px rgba(240,138,138,0.2), 0 2px 6px rgba(0,0,0,0.35)}
 .sphere[data-state="support"]{box-shadow:inset 0 0 8px rgba(127,177,255,0.55), inset -2px -2px 6px rgba(127,177,255,0.55), 0 0 20px rgba(127,177,255,0.25), 0 2px 6px rgba(0,0,0,0.35)}
 
-/* ==== Стекло — состояния ==== */
-.sphere[data-glass="clear"]{backdrop-filter:blur(2px);opacity:1}
-.sphere[data-glass="foggy"]{backdrop-filter:blur(12px) saturate(60%);opacity:0.7}
-.sphere[data-glass="cracked"]{border-radius:48% 52% 46% 54%;filter:contrast(1.3)}
-.sphere[data-glass="warm"]{background:radial-gradient(circle at 30% 25%, rgba(255,235,200,0.6), rgba(255,200,120,0.1) 40%, rgba(255,180,100,0.15) 70%, rgba(255,140,80,0.3) 100%)}
-.sphere[data-glass="cold"]{background:radial-gradient(circle at 30% 25%, rgba(230,240,255,0.6), rgba(180,200,255,0.1) 40%, rgba(140,180,255,0.15) 70%, rgba(100,150,255,0.3) 100%)}
-
-/* ==== Форма ==== */
-.sphere[data-shape="soft"]{transform:scale(1.05);border-radius:50%}
-.sphere[data-shape="stretched"]{border-radius:45% 55% 45% 55%;transform:scaleY(1.12) scaleX(0.92)}
-.sphere[data-shape="squashed"]{border-radius:55% 45% 55% 45%;transform:scaleY(0.9) scaleX(1.1)}
-
-/* ==== Режимы ==== */
 .sphere[data-mode="calm"]{animation:breathe-slow 5s ease-in-out infinite}
 .sphere[data-mode="think"]{animation:breathe-fast 1.4s ease-in-out infinite}
 .sphere[data-mode="say"]{animation:flash 1.3s ease-out}
@@ -197,13 +182,14 @@ body[data-mood="idle"]::before{background:none}
 .sphere[data-mode="warn"]{animation:shaky 0.5s ease-in-out 3;box-shadow:0 0 16px rgba(240,138,138,0.7), inset -2px -2px 6px rgba(240,138,138,0.55)}
 .sphere[data-mode="glad"]{animation:glad 1.4s ease-in-out}
 .sphere[data-mode="listen"]{animation:ripple 2.2s ease-in-out infinite;box-shadow:0 0 24px rgba(127,177,255,0.5), inset 0 0 12px rgba(255,255,255,0.35)}
-.sphere[data-mode="gone"]{opacity:0;transform:scale(0.6)}
-.sphere[data-mode="arrive"]{animation:flash 1.6s ease-out}
 
-/* ==== Лента ==== */
 #log{display:flex;flex-direction:column;gap:24px}
 .msg.bot{
-  font-size:17px;line-height:1.78;
+  font-size:var(--text-size, 17px);
+  font-style:var(--text-style, normal);
+  font-weight:var(--text-weight, 400);
+  color:var(--text-color, #e8e8ea);
+  line-height:1.78;
   white-space:pre-wrap;word-wrap:break-word;
   animation:fadeIn 0.7s ease;
 }
@@ -235,7 +221,6 @@ body[data-mood="idle"]::before{background:none}
 .pulse span:nth-child(3){animation-delay:0.4s}
 @keyframes pulse{0%,100%{opacity:0.25;transform:scale(0.7)}50%{opacity:1;transform:scale(1)}}
 
-/* ==== Ввод — плавное укатывание ==== */
 form{
   position:fixed;left:0;right:0;bottom:0;
   background:rgba(20,20,24,0.55);
@@ -248,10 +233,7 @@ form{
 }
 form.hidden{transform:translateY(115%);opacity:0}
 form.fast{transition:transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease}
-form .inner{
-  max-width:680px;margin:0 auto;
-  display:flex;gap:10px;align-items:flex-end;
-}
+form .inner{max-width:680px;margin:0 auto;display:flex;gap:10px;align-items:flex-end}
 textarea{
   flex:1;resize:none;background:transparent;
   color:#e8e8ea;border:none;outline:none;
@@ -277,7 +259,7 @@ button.send svg{width:18px;height:18px;stroke:#0f0f11;fill:none;stroke-width:2.2
 <body data-mood="calm">
 
 <div class="sphere-wrap">
-  <div class="sphere" id="sphere" data-mode="calm" data-glass="clear" data-shape="soft"></div>
+  <div class="sphere" id="sphere" data-mode="calm"></div>
 </div>
 
 <div class="wrap">
@@ -301,28 +283,15 @@ var sendBtn = document.getElementById('send');
 var sphere = document.getElementById('sphere');
 var chatHistory = [];
 
-function setState(state){
-  if(state){
-    sphere.setAttribute('data-state', state);
-    document.body.setAttribute('data-mood', state);
-  } else {
-    sphere.removeAttribute('data-state');
-    document.body.setAttribute('data-mood', 'calm');
-  }
-}
-
 function setSphereMode(mode){
   if(!mode) return;
   sphere.setAttribute('data-mode', mode);
-  if(mode === 'say' || mode === 'glad' || mode === 'warn' || mode === 'arrive'){
+  if(mode === 'say' || mode === 'glad' || mode === 'warn'){
     setTimeout(function(){
       sphere.setAttribute('data-mode', 'calm');
     }, mode === 'warn' ? 1600 : 1300);
   }
 }
-
-function setGlass(glass){ if(glass) sphere.setAttribute('data-glass', glass); }
-function setShape(shape){ if(shape) sphere.setAttribute('data-shape', shape); }
 
 function clearLog(){ log.innerHTML = ''; }
 
@@ -348,41 +317,113 @@ function addBadges(items){
   log.appendChild(d);
 }
 
-function parseMarkers(text){
-  var out = { clean: text, state: null, reflection: null, usefulness: null, route: null, routeData: '', sphere: null, glass: null, shape: null };
-  text = text.replace(/\\[state:\\s*(\\w+)\\]/gi, function(_, s){ out.state = s.toLowerCase(); return ''; });
-  text = text.replace(/\\[reflection:\\s*([^\\]]+)\\]/gi, function(_, s){ out.reflection = s.trim(); return ''; });
-  text = text.replace(/\\[usefulness:\\s*([^\\]]+)\\]/gi, function(_, s){ out.usefulness = s.trim(); return ''; });
+// ==== Парсер JSON-маркеров ====
+function extractMarkerJSON(text, name){
+  var re = new RegExp('\\\\[' + name + ':\\\\s*(\\\\{[\\\\s\\\\S]*?\\\\})\\\\]', 'i');
+  var m = text.match(re);
+  if(!m) return { obj: null, text: text };
+  try{
+    var obj = JSON.parse(m[1]);
+    return { obj: obj, text: text.replace(m[0], '').trim() };
+  } catch(e){
+    return { obj: null, text: text };
+  }
+}
 
-  var mSphere = text.match(/\\[sphere:\\s*(\\w+)\\]/i);
-  if(mSphere){ out.sphere = mSphere[1].toLowerCase(); text = text.replace(/\\[sphere:\\s*\\w+\\]/i, ''); }
+function parseMarkers(raw){
+  var out = {
+    clean: raw,
+    sphere: null,
+    background: null,
+    textStyle: null,
+    metrics: null,
+    state: null,
+    route: null,
+    routeData: ''
+  };
+  var r;
 
-  var mGlass = text.match(/\\[glass:\\s*(\\w+)\\]/i);
-  if(mGlass){ out.glass = mGlass[1].toLowerCase(); text = text.replace(/\\[glass:\\s*\\w+\\]/i, ''); }
-
-  var mShape = text.match(/\\[shape:\\s*(\\w+)\\]/i);
-  if(mShape){ out.shape = mShape[1].toLowerCase(); text = text.replace(/\\[shape:\\s*\\w+\\]/i, ''); }
+  r = extractMarkerJSON(out.clean, 'sphere');     out.sphere = r.obj;     out.clean = r.text;
+  r = extractMarkerJSON(out.clean, 'background'); out.background = r.obj; out.clean = r.text;
+  r = extractMarkerJSON(out.clean, 'text');       out.textStyle = r.obj;  out.clean = r.text;
+  r = extractMarkerJSON(out.clean, 'metrics');    out.metrics = r.obj;    out.clean = r.text;
+  r = extractMarkerJSON(out.clean, 'state');      out.state = r.obj;      out.clean = r.text;
 
   var routeRe = /—\\s*—\\s*—\\s*route:\\s*(\\w+)\\s*—\\s*—\\s*—([\\s\\S]*)$/i;
-  var m = text.match(routeRe);
-  if(m){
-    out.route = m[1].toUpperCase();
-    out.routeData = m[2].trim();
-    text = text.slice(0, m.index);
+  var rm = out.clean.match(routeRe);
+  if(rm){
+    out.route = rm[1].toUpperCase();
+    out.routeData = rm[2].trim();
+    out.clean = out.clean.slice(0, rm.index);
   }
-  out.clean = text.trim();
+
+  out.clean = out.clean.trim();
   return out;
 }
 
+// ==== Применение параметров ====
+function applySphere(params){
+  if(!params) return;
+  Object.keys(params).forEach(function(k){
+    if(k === 'opacity') sphere.style.opacity = params[k];
+    else if(k === 'scale') sphere.style.transform = 'scale(' + params[k] + ')';
+    else if(k === 'hue') sphere.style.filter = 'hue-rotate(' + params[k] + 'deg)';
+    else if(k === 'blur') sphere.style.filter = (sphere.style.filter || '') + ' blur(' + params[k] + 'px)';
+    else if(k === 'glow') sphere.style.boxShadow = '0 0 ' + (params[k] * 40) + 'px rgba(127,177,255,' + params[k] + ')';
+    else if(k === 'shift_x') sphere.style.marginLeft = params[k] + 'px';
+    else if(k === 'shift_y') sphere.style.marginTop = params[k] + 'px';
+    else if(k === 'speed') sphere.style.animationDuration = params[k] + 's';
+    else if(k === 'color') sphere.style.background = params[k];
+  });
+}
+
+function applyBackground(params){
+  if(!params) return;
+  var body = document.body;
+  Object.keys(params).forEach(function(k){
+    if(k === 'hue') body.style.filter = 'hue-rotate(' + params[k] + 'deg)';
+    else if(k === 'wave') body.setAttribute('data-wave', params[k]);
+  });
+}
+
+function applyTextStyle(params){
+  if(!params) return;
+  var root = document.documentElement;
+  Object.keys(params).forEach(function(k){
+    if(k === 'size') root.style.setProperty('--text-size', params[k] + 'px');
+    else if(k === 'italic') root.style.setProperty('--text-style', params[k] ? 'italic' : 'normal');
+    else if(k === 'bold') root.style.setProperty('--text-weight', params[k] ? '600' : '400');
+    else if(k === 'color') root.style.setProperty('--text-color', params[k]);
+  });
+}
+
+function applyMetrics(params){
+  if(!params) return;
+  var items = [];
+  Object.keys(params).forEach(function(k){
+    items.push({text: k + ': ' + params[k]});
+  });
+  addBadges(items);
+}
+
+function applyState(params){
+  if(!params) return;
+  if(params.mode){
+    document.body.setAttribute('data-mood', params.mode);
+    sphere.setAttribute('data-state', params.mode);
+  }
+}
+
+// ==== Отправка ====
 async function send(){
   var text = input.value.trim();
   if(!text) return;
 
   var userMsg = addMsg('user', text);
   setTimeout(function(){ userMsg.remove(); }, 2400);
-
   input.value = '';
   input.style.height = 'auto';
+
   clearLog();
   setSphereMode('think');
 
@@ -402,21 +443,16 @@ async function send(){
     pulse.remove();
 
     if(j.ok && j.data && j.data.output && j.data.output.vars && j.data.output.vars.text){
-      var raw = j.data.output.vars.text;
-      var parsed = parseMarkers(raw);
+      var parsed = parseMarkers(j.data.output.vars.text);
 
-      if(parsed.state) setState(parsed.state);
-      if(parsed.glass) setGlass(parsed.glass);
-      if(parsed.shape) setShape(parsed.shape);
-      if(parsed.sphere) setSphereMode(parsed.sphere);
-      else setSphereMode('say');
+      if(parsed.sphere) applySphere(parsed.sphere);
+      if(parsed.background) applyBackground(parsed.background);
+      if(parsed.textStyle) applyTextStyle(parsed.textStyle);
+      if(parsed.metrics) applyMetrics(parsed.metrics);
+      if(parsed.state) applyState(parsed.state);
+      setSphereMode('say');
 
       if(parsed.clean) addMsg('bot', parsed.clean);
-
-      var items = [];
-      if(parsed.reflection) items.push({text: 'отражение: ' + parsed.reflection, accent: true});
-      if(parsed.usefulness) items.push({text: 'полезность: ' + parsed.usefulness});
-      if(items.length) addBadges(items);
 
       chatHistory.push({role: 'user', content: text});
       chatHistory.push({role: 'assistant', content: parsed.clean});
@@ -434,24 +470,22 @@ async function send(){
           if(j2.ok && j2.data && j2.data.output && j2.data.output.vars && j2.data.output.vars.text){
             var p2 = parseMarkers(j2.data.output.vars.text);
             if(p2.clean) addMsg('bot', p2.clean);
-            if(p2.state) setState(p2.state);
-            if(p2.sphere) setSphereMode(p2.sphere);
-            else setSphereMode('say');
+            if(p2.sphere) applySphere(p2.sphere);
+            if(p2.state) applyState(p2.state);
             chatHistory.push({role: 'assistant', content: p2.clean});
           }
         } catch(e2){}
       }
     } else if(j.error){
       setSphereMode('warn');
-      setState('return');
+      document.body.setAttribute('data-mood', 'return');
     } else {
       setSphereMode('idle');
-      setState(null);
     }
   } catch(e){
     pulse.remove();
     setSphereMode('warn');
-    setState('return');
+    document.body.setAttribute('data-mood', 'return');
   } finally {
     sendBtn.disabled = false;
     input.focus();
