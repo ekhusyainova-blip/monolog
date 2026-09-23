@@ -184,15 +184,8 @@ button.send svg{width:18px;height:18px;stroke:#0f0f11;fill:none;stroke-width:2.2
 </head>
 <body>
 
-<div class="topbar">
-  <div class="state">
-    <span class="state-dot" id="stateDot"></span>
-    <span class="state-label" id="stateLabel">Monolog</span>
-  </div>
-  <div class="right">
-    <button class="icon-btn" onclick="openSheet()" title="история">☰</button>
-    <button class="icon-btn" onclick="resetAll()" title="сброс">⟲</button>
-  </div>
+<div class="sphere-wrap" id="sphereWrap">
+  <div class="sphere" id="sphere"></div>
 </div>
 
 <div class="badges" id="badges"></div>
@@ -282,13 +275,15 @@ function addMsg(role, text){
 
 function setState(state){
   if(state){
-    stateDot.setAttribute('data-state', state);
-    stateLabel.textContent = ({
-      clarity: 'ясность', search: 'поиск', return: 'возврат', support: 'сопровождение'
-    })[state] || 'Monolog';
+    var sphere = document.getElementById('sphere');
+
+function setState(state){
+  if(state){
+    sphere.setAttribute('data-state', state);
+    sphere.classList.remove('idle');
   } else {
-    stateDot.removeAttribute('data-state');
-    stateLabel.textContent = 'Monolog';
+    sphere.removeAttribute('data-state');
+    sphere.classList.add('idle');
   }
 }
 
@@ -466,3 +461,39 @@ async def index():
     return INDEX_HTML
 
 import interpret_chat
+
+
+.sphere-wrap{
+  position:fixed;top:16px;left:16px;z-index:20;
+  pointer-events:none;
+}
+.sphere{
+  width:26px;height:26px;border-radius:50%;
+  position:relative;
+  background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.55), rgba(255,255,255,0.08) 40%, rgba(127,177,255,0.12) 70%, rgba(127,177,255,0.28) 100%);
+  backdrop-filter:blur(6px) saturate(160%);
+  -webkit-backdrop-filter:blur(6px) saturate(160%);
+  box-shadow:
+    inset 0 0 8px rgba(255,255,255,0.25),
+    inset -2px -2px 6px rgba(127,177,255,0.35),
+    0 2px 6px rgba(0,0,0,0.35);
+  animation:breathe 4.5s ease-in-out infinite;
+  transition:opacity 0.6s ease, box-shadow 0.6s ease;
+}
+.sphere::after{
+  content:'';
+  position:absolute;top:18%;left:24%;
+  width:30%;height:24%;
+  background:radial-gradient(ellipse, rgba(255,255,255,0.85), transparent 70%);
+  border-radius:50%;
+  filter:blur(1px);
+}
+@keyframes breathe{
+  0%,100%{transform:scale(1);opacity:0.85}
+  50%{transform:scale(1.08);opacity:1}
+}
+.sphere[data-state="clarity"]{box-shadow:inset 0 0 8px rgba(110,231,168,0.4), inset -2px -2px 6px rgba(110,231,168,0.45), 0 2px 6px rgba(0,0,0,0.35)}
+.sphere[data-state="search"]{box-shadow:inset 0 0 8px rgba(244,196,106,0.4), inset -2px -2px 6px rgba(244,196,106,0.45), 0 2px 6px rgba(0,0,0,0.35)}
+.sphere[data-state="return"]{box-shadow:inset 0 0 8px rgba(240,138,138,0.4), inset -2px -2px 6px rgba(240,138,138,0.45), 0 2px 6px rgba(0,0,0,0.35)}
+.sphere[data-state="support"]{box-shadow:inset 0 0 8px rgba(127,177,255,0.5), inset -2px -2px 6px rgba(127,177,255,0.55), 0 2px 6px rgba(0,0,0,0.35)}
+.sphere.idle{opacity:0.4;animation-duration:6s}
