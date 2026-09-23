@@ -3,7 +3,6 @@
 # Папка: A (запрос)
 
 import os
-import time
 import json
 from pathlib import Path
 from fastapi import FastAPI, Request
@@ -22,7 +21,6 @@ SETTINGS = {
     "temperature": 0.7,
     "max_tokens": 2048,
     "timeout": 120,
-    "cooldown_sec": 65,
 }
 
 def load_keys(name):
@@ -31,23 +29,17 @@ def load_keys(name):
 
 KEYS = {name: load_keys(cfg["env"]) for name, cfg in PROVIDERS.items()}
 
-PROMPTS_PATH = Path(__file__).resolve().parent / "prompts_chat.json"
+# ==== Стартер ====
+STARTER_PATH = Path(__file__).resolve().parent / "starter.md"
 
-def load_prompts():
+def load_starter():
     try:
-        data = json.loads(PROMPTS_PATH.read_text(encoding="utf-8"))
-        return data.get("prompts", {})
+        return STARTER_PATH.read_text(encoding="utf-8")
     except Exception as e:
-        print(f"[data_chat] prompts load error: {e}", flush=True)
-        return {
-            "layer_a": "Ты — Monolog.",
-            "layer_b": "Ты — Monolog.",
-            "layer_c": "Ты — Monolog.",
-            "layer_d": "Ты — Monolog.",
-            "layer_a_content": "Ты — Monolog, другой голос.",
-        }
+        print(f"[data_chat] starter load error: {e}", flush=True)
+        return "Ты — интерфейс отражения восприятия."
 
-PROMPTS = load_prompts()
+STARTER = load_starter()
 
 HANDLERS = {}
 EVENTS = []
@@ -84,6 +76,8 @@ async def chat(request: Request):
     event = {
         "text": (body.get("text") or "").strip(),
         "context": body.get("context") or [],
+        "reflection": body.get("reflection") or "",
+        "first_time": bool(body.get("first_time", False)),
     }
     if not event["text"]:
         return JSONResponse(
@@ -107,33 +101,20 @@ INDEX_HTML = """<!DOCTYPE html>
 <title>Monolog</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
+html,body{height:100%;margin:0;padding:0;overflow:hidden}
 body{
   font:17px/1.78 -apple-system,BlinkMacSystemFont,"Inter","SF Pro Text","Segoe UI",Roboto,sans-serif;
   background:#0f0f11;color:#e8e8ea;
   -webkit-font-smoothing:antialiased;letter-spacing:-0.005em;
-  overflow:hidden;
-  transition:background 1.5s ease, filter 1s ease;
-  position:relative;
 }
-body::before{
-  content:'';
-  position:fixed;inset:0;
-  pointer-events:none;
-  background:radial-gradient(ellipse at 20% 10%, rgba(127,177,255,0.05), transparent 50%);
-  transition:background 2s ease;
-  z-index:0;
-}
-body[data-mood="search"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(244,196,106,0.06), transparent 50%)}
-body[data-mood="return"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(240,138,138,0.06), transparent 50%)}
-body[data-mood="clarity"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(110,231,168,0.06), transparent 50%)}
-body[data-mood="support"]::before{background:radial-gradient(ellipse at 20% 10%, rgba(127,177,255,0.08), transparent 50%)}
-body[data-mood="idle"]::before{background:none}
 
 .wrap{
   max-width:680px;margin:0 auto;
-  padding:80px 24px 200px;min-height:100vh;
-  position:relative;z-index:1;
+  padding:80px 24px 120px;
+  height:100%;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  position:relative;
 }
 
 /* ==== Сфера ==== */
@@ -163,7 +144,6 @@ body[data-mood="idle"]::before{background:none}
 }
 
 @keyframes breathe-slow{0%,100%{transform:scale(1);opacity:0.8}50%{transform:scale(1.06);opacity:0.95}}
-@keyframes breathe-mid{0%,100%{transform:scale(1);opacity:0.85}50%{transform:scale(1.1);opacity:1}}
 @keyframes breathe-fast{0%,100%{transform:scale(1);opacity:0.9}50%{transform:scale(1.16);opacity:1}}
 @keyframes flash{0%{transform:scale(1)}40%{transform:scale(1.4);box-shadow:0 0 28px rgba(127,177,255,0.9)}100%{transform:scale(1)}}
 @keyframes shaky{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.5px) scale(0.97)}75%{transform:translateX(1.5px) scale(1.03)}}
@@ -200,10 +180,6 @@ body[data-mood="idle"]::before{background:none}
   animation:fadeIn 0.3s ease, fadeOut 0.8s ease 2s forwards;
   opacity:0.7;
 }
-.msg.cycle{
-  border-left:2px solid #7fb1ff;padding-left:12px;
-  color:#8a8a8f;font-size:15px;
-}
 .msg.badges{display:flex;gap:8px;flex-wrap:wrap;padding-top:4px}
 .badge{
   font-size:12px;color:#a8a8ae;
@@ -230,6 +206,7 @@ form{
   padding:14px 20px calc(16px + env(safe-area-inset-bottom,0px));
   transition:transform 0.6s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease;
   will-change:transform;
+  z-index:10;
 }
 form.hidden{transform:translateY(115%);opacity:0}
 form.fast{transition:transform 0.25s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease}
@@ -256,13 +233,13 @@ button.send:disabled{opacity:0.35;cursor:not-allowed}
 button.send svg{width:18px;height:18px;stroke:#0f0f11;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 </style>
 </head>
-<body data-mood="calm">
+<body>
 
 <div class="sphere-wrap">
   <div class="sphere" id="sphere" data-mode="calm"></div>
 </div>
 
-<div class="wrap">
+<div class="wrap" id="wrap">
   <div id="log"></div>
 </div>
 
@@ -278,11 +255,56 @@ button.send svg{width:18px;height:18px;stroke:#0f0f11;fill:none;stroke-width:2.2
 <script>
 var log = document.getElementById('log');
 var form = document.getElementById('form');
+var wrap = document.getElementById('wrap');
 var input = document.getElementById('input');
 var sendBtn = document.getElementById('send');
 var sphere = document.getElementById('sphere');
 var chatHistory = [];
+var firstTime = true;
 
+// ==== IndexedDB ====
+var DB_NAME = 'monolog';
+var STORE = 'reflection';
+
+function openDB(){
+  return new Promise(function(resolve, reject){
+    var req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = function(){
+      req.result.createObjectStore(STORE, { keyPath: 'id', autoIncrement: true });
+    };
+    req.onsuccess = function(){ resolve(req.result); };
+    req.onerror = function(){ reject(req.error); };
+  });
+}
+
+async function saveReflection(text){
+  try{
+    var db = await openDB();
+    var tx = db.transaction(STORE, 'readwrite');
+    tx.objectStore(STORE).add({ text: text, ts: Date.now() });
+  } catch(e){ console.warn('saveReflection', e); }
+}
+
+async function getReflection(){
+  try{
+    var db = await openDB();
+    var tx = db.transaction(STORE, 'readonly');
+    var req = tx.objectStore(STORE).getAll();
+    return await new Promise(function(resolve){
+      req.onsuccess = function(){ resolve(req.result || []); };
+      req.onerror = function(){ resolve([]); };
+    });
+  } catch(e){ return []; }
+}
+
+function reflectionToText(items){
+  if(!items || !items.length) return '';
+  // берём последние 20 записей, собираем в сводку
+  var tail = items.slice(-20);
+  return 'ОТРАЖЕНИЕ ВОСПРИЯТИЯ\n\n' + tail.map(function(r){ return r.text; }).join('\n\n');
+}
+
+// ==== Сфера ====
 function setSphereMode(mode){
   if(!mode) return;
   sphere.setAttribute('data-mode', mode);
@@ -300,7 +322,7 @@ function addMsg(role, text){
   d.className = 'msg ' + role;
   d.textContent = text;
   log.appendChild(d);
-  log.scrollTop = log.scrollHeight;
+  wrap.scrollTop = wrap.scrollHeight;
   return d;
 }
 
@@ -317,7 +339,7 @@ function addBadges(items){
   log.appendChild(d);
 }
 
-// ==== Парсер JSON-маркеров ====
+// ==== Парсер маркеров ====
 function extractMarkerJSON(text, name){
   var re = new RegExp('\\\\[' + name + ':\\\\s*(\\\\{[\\\\s\\\\S]*?\\\\})\\\\]', 'i');
   var m = text.match(re);
@@ -361,7 +383,7 @@ function parseMarkers(raw){
   return out;
 }
 
-// ==== Применение параметров ====
+// ==== Применение ====
 function applySphere(params){
   if(!params) return;
   Object.keys(params).forEach(function(k){
@@ -379,10 +401,10 @@ function applySphere(params){
 
 function applyBackground(params){
   if(!params) return;
-  var body = document.body;
+  // фон управляется через body.style, без ::before
   Object.keys(params).forEach(function(k){
-    if(k === 'hue') body.style.filter = 'hue-rotate(' + params[k] + 'deg)';
-    else if(k === 'wave') body.setAttribute('data-wave', params[k]);
+    if(k === 'hue') document.body.style.filter = 'hue-rotate(' + params[k] + 'deg)';
+    else if(k === 'color') document.body.style.background = params[k];
   });
 }
 
@@ -409,7 +431,6 @@ function applyMetrics(params){
 function applyState(params){
   if(!params) return;
   if(params.mode){
-    document.body.setAttribute('data-mood', params.mode);
     sphere.setAttribute('data-state', params.mode);
   }
 }
@@ -434,10 +455,17 @@ async function send(){
 
   sendBtn.disabled = true;
   try {
+    var reflectionText = firstTime ? reflectionToText(await getReflection()) : '';
+
     var r = await fetch('/chat', {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({text: text, context: chatHistory})
+      body: JSON.stringify({
+        text: text,
+        context: chatHistory,
+        reflection: reflectionText,
+        first_time: firstTime
+      })
     });
     var j = await r.json();
     pulse.remove();
@@ -456,15 +484,22 @@ async function send(){
 
       chatHistory.push({role: 'user', content: text});
       chatHistory.push({role: 'assistant', content: parsed.clean});
+      await saveReflection(parsed.clean);
+
+      firstTime = false;
 
       if(parsed.route === 'A' && parsed.routeData){
-        addMsg('cycle', '↻ Monolog продолжил: ' + parsed.routeData);
         setSphereMode('think');
         try {
           var r2 = await fetch('/chat', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({text: parsed.routeData, context: chatHistory})
+            body: JSON.stringify({
+              text: parsed.routeData,
+              context: chatHistory,
+              reflection: '',
+              first_time: false
+            })
           });
           var j2 = await r2.json();
           if(j2.ok && j2.data && j2.data.output && j2.data.output.vars && j2.data.output.vars.text){
@@ -473,28 +508,28 @@ async function send(){
             if(p2.sphere) applySphere(p2.sphere);
             if(p2.state) applyState(p2.state);
             chatHistory.push({role: 'assistant', content: p2.clean});
+            await saveReflection(p2.clean);
           }
         } catch(e2){}
       }
     } else if(j.error){
       setSphereMode('warn');
-      document.body.setAttribute('data-mood', 'return');
     } else {
       setSphereMode('idle');
     }
   } catch(e){
     pulse.remove();
     setSphereMode('warn');
-    document.body.setAttribute('data-mood', 'return');
   } finally {
     sendBtn.disabled = false;
     input.focus();
   }
 }
 
+// ==== Скролл: ввод уезжает/появляется ====
 var lastScroll = 0;
-document.addEventListener('scroll', function(){
-  var y = window.scrollY || document.documentElement.scrollTop;
+wrap.addEventListener('scroll', function(){
+  var y = wrap.scrollTop;
   var focused = document.activeElement === input;
   if(y > lastScroll && y > 60 && !focused){
     form.classList.add('hidden');
