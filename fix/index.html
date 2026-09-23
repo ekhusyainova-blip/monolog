@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>AI Monolog</title>
+<link rel="stylesheet" href="/static/fix/core.css">
+<link rel="stylesheet" href="/static/range/range.css">
+</head>
+<body>
+
+<!-- Фикс · якоря -->
+<div class="sphere-wrap">
+  <div class="sphere" id="sphere" data-mode="calm"></div>
+</div>
+
+<aside class="menu" id="menu"></aside>
+
+<div class="chat" id="chat"></div>
+
+<!-- Диапазон · состояние -->
+<form id="form" class="input-bar">
+  <div class="inner">
+    <textarea id="input" rows="1" autocomplete="off"></textarea>
+    <button type="submit" id="send" aria-label="Отправить">
+      <svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+    </button>
+  </div>
+</form>
+
+<!-- Фикс · ядро -->
+<script src="/static/fix/core.js"></script>
+<!-- Диапазон · состояние -->
+<script src="/static/range/sphere.js"></script>
+<script src="/static/range/input.js"></script>
+<script src="/static/range/menu.js"></script>
+<!-- Абсолютный · контент -->
+<script src="/static/adaptive/chat.js"></script>
+</body>
+</html>
