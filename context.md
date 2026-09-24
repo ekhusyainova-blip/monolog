@@ -1,3 +1,36 @@
+
+
+ai-monolog/
+├── api/
+│   ├── data_chat.py
+│   ├── interpret_chat.py
+│   ├── solve_chat.py
+│   └── meta_chat.py
+├── static/
+│   ├── fix/
+│   │   ├── index.html
+│   │   ├── core.css
+│   │   └── core.js
+│   ├── range/
+│   │   ├── range.css
+│   │   ├── sphere.js
+│   │   ├── input.js
+│   │   ├── menu.js
+│   │   ├── dash.js
+│   │   ├── slider.js
+│   │   ├── quiet.js
+│   │   ├── leave.js
+│   │   └── mode.js
+│   └── adaptive/
+│       ├── chat.js
+│       ├── metrics.js
+│       ├── files.js
+│       └── interactive.js
+├── docs/
+├── starter.md
+└── requirements.txt
+
+
 Принял. Содержание.
 
 ---
