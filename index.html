@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>1 : 1 : 1</title>
+  <style>
+    body {
+      margin: 0;
+      background: #0a0a12;
+      color: #e0e0e0;
+      font-family: 'SF Mono', monospace;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+    }
+    /* ... */
+  </style>
+</head>
+<body>
+  <header id="formula">1 : 1 : 1</header>
+  <main id="presence"></main>
+  <footer id="state"></footer>
+  <script>
+    const ws = new WebSocket(`ws://${location.host}/ws`);
+    ws.onmessage = (e) => render(JSON.parse(e.data));
+    function render(data) { /* ... */ }
+  </script>
+</body>
+</html>
